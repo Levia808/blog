@@ -270,9 +270,10 @@
   .editor-toolbar button{
     width:30px;height:30px;display:flex;align-items:center;justify-content:center;
     background:transparent;border:1px solid transparent;border-radius:4px;
-    color:var(--muted);font-size:14px;cursor:pointer;
+    color:var(--muted);font-size:15px;cursor:pointer;
     transition:border-color .2s,color .2s,transform .15s;
   }
+  .editor-toolbar button svg{width:15px;height:15px}
   .editor-toolbar button:hover{border-color:var(--border);color:var(--fg);transform:scale(1.05)}
   .editor-toolbar button.et-media{border-color:var(--border);color:var(--accent)}
 
@@ -1172,7 +1173,7 @@
     <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
       <div class="auth-overlay" style="position:relative;background:transparent;">
         <div class="auth-modal">
-          <button class="am-close">✕</button>
+          <button class="am-close" aria-label="Close"><svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg></button>
           <div class="am-title">Sign in</div>
           <div class="am-field"><label>Email</label><input placeholder="you@email.com" value="levia808@users.noreply"></div>
           <div class="am-field"><label>Password</label><input type="password" placeholder="········" value="········"></div>
@@ -1294,20 +1295,20 @@
         <!-- icons: text-b, text-italic, code, link, text-h, list-bullets, quotes, table, image, video, speaker-high, floppy-disk, paper-plane -->
         <div class="editor-toolbar">
           <div class="et-group">
-            <button title="Bold" aria-label="Bold">B</button><button title="Italic" aria-label="Italic"><i>I</i></button><button title="Code" aria-label="Code">&lt;/&gt;</button><button title="Link" aria-label="Insert Link">🔗</button>
+            <button title="Bold" aria-label="Bold"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M170.5,115.7A44,44,0,0,0,144,40H80a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8h80a48,48,0,0,0,10.5-94.3ZM104,56h40a28,28,0,0,1,0,56H104Zm64,136H104V128h64a32,32,0,0,1,0,64Z"/></svg></button><button title="Italic" aria-label="Italic"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M200,56a8,8,0,0,1-8,8H157.8L115.1,192H144a8,8,0,0,1,0,16H64a8,8,0,0,1,0-16H98.2L140.9,64H112a8,8,0,0,1,0-16h80A8,8,0,0,1,200,56Z"/></svg></button><button title="Code" aria-label="Code"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M69.1,86.6,24.1,128l45,41.4a8,8,0,0,1-5.2,14.2,7.8,7.8,0,0,1-5.2-2l-48-44a8,8,0,0,1,0-11.2l48-44a8,8,0,0,1,10.4,10.4Zm170.8,32.6-48-44a8,8,0,0,0-10.4,10.4L226.9,128l-45,41.4a8,8,0,0,0,5.2,14.2,7.8,7.8,0,0,0,5.2-2l48-44A8,8,0,0,0,239.9,119.2ZM152,36a8,8,0,0,0-10,4.2l-56,152a8,8,0,1,0,14.8,5.4l56-152A8,8,0,0,0,152,36Z"/></svg></button><button title="Link" aria-label="Insert Link"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M127.5,80.5a44,44,0,0,0-62.2,62.2L86,164a43.9,43.9,0,0,0,30.8,13.1,44,44,0,0,0,29.5-11.2,8,8,0,0,0-10.6-12c-9.1,8.1-23.1,7.5-31.5-1.4L83.5,131.8A28,28,0,0,1,123.1,92.3l4.2,2.8a8,8,0,1,0,9-13.2Zm69,29.5L176,88.3a44,44,0,0,0-60.5,1.6,8,8,0,0,0,10.6,12c9.2-8.4,23.4-7.8,32,1.6l20.2,20.7A28,28,0,0,1,139,163.7l-4.9-4.9a8,8,0,1,0-11.3,11.3l4.9,4.9a44,44,0,0,0,68.8-50.5Z"/></svg></button>
           </div>
           <div class="et-group">
-            <button title="Heading" aria-label="Heading">H</button><button title="List" aria-label="List">≡</button><button title="Quote" aria-label="Quote">❝</button><button title="Table" aria-label="Table">⊞</button>
+            <button title="Heading" aria-label="Heading"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,48v48a8,8,0,0,1-16,0V56H136V200h24a8,8,0,0,1,0,16H96a8,8,0,0,1,0-16h24V56H64v40a8,8,0,0,1-16,0V48a8,8,0,0,1,8-8H200A8,8,0,0,1,208,48Z"/></svg></button><button title="List" aria-label="List"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button><button title="Quote" aria-label="Quote"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,100,56Zm0,80H40V72h60Zm116-80H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></svg></button>
           </div>
           <div class="et-group">
-            <button class="et-media" title="Insert Image" aria-label="Insert Image">🖼</button>
-            <button class="et-media" title="Insert Video" aria-label="Insert Video">▶</button>
-            <button class="et-media" title="Insert Audio" aria-label="Insert Audio">♫</button>
+            <button class="et-media" title="Insert Image" aria-label="Insert Image"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.8l-26.1-26.1a4,4,0,0,0-5.8,0L139.8,176l-28.9-28.9a3.9,3.9,0,0,0-5.6,0L77,175.5a15.9,15.9,0,0,1-3.7,5.1L40,145.5V56ZM40,172l35.5-37.5,26.2,26.2a4,4,0,0,0,5.8,0L152,116l40,40v44H40Zm56-36a12,12,0,1,1,12,12A12,12,0,0,1,96,136Z"/></svg></button>
+            <button class="et-media" title="Insert Video" aria-label="Insert Video"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M164.4,121.3l-48-32A8,8,0,0,0,104,96v64a8,8,0,0,0,12.4,6.7l48-32a8,8,0,0,0,0-13.4ZM120,145.1V110.9L145.7,128ZM216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200Z"/></svg></button>
+            <button class="et-media" title="Insert Audio" aria-label="Insert Audio"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M212.9,25.4a8,8,0,0,0-7.1-1l-80,24A8,8,0,0,0,120,56V172.3A36,36,0,1,0,136,200V106.8l72-21.6v61.1A36,36,0,1,0,224,176V32A8,8,0,0,0,212.9,25.4ZM128,200a20,20,0,1,1-20-20A20,20,0,0,1,128,200Zm80-32a20,20,0,1,1-20-20A20,20,0,0,1,208,168Z"/></svg></button>
           </div>
           <div style="flex:1;"></div>
           <div class="et-group">
-            <button title="Save draft" aria-label="Save draft" style="color:var(--muted);">💾</button>
-            <button title="Publish" aria-label="Publish" style="color:var(--accent);font-weight:500;">PUBLISH</button>
+            <button title="Save draft" aria-label="Save draft"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,32H80A16,16,0,0,0,64,48V72H48A16,16,0,0,0,32,88V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V48ZM176,208H48V88h64v12.7L99.7,112.7a8,8,0,1,0,11.3,11.3L120,115v53a24,24,0,0,0,48,0v-8h8Zm32-40H192V112a8,8,0,0,0-8-8H136V48h72Z"/></svg></button>
+            <button title="Publish" aria-label="Publish" style="color:var(--accent);font-weight:500;"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor" style="margin-right:4px;"><path d="M229.7,109.7l-48,48a8.2,8.2,0,0,1-11.4,0,8.1,8.1,0,0,1,0-11.4L204.7,112H128a88,88,0,0,0-85.2,66,8,8,0,0,1-15.5-4A104,104,0,0,1,128,96h76.7L170.3,61.7a8.1,8.1,0,0,1,11.4-11.4l48,48A8.1,8.1,0,0,1,229.7,109.7Z"/></svg>PUBLISH</button>
           </div>
         </div>
 
@@ -1388,7 +1389,7 @@ cover:
     <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
       <div class="auth-overlay" style="position:relative;background:transparent;">
         <div class="media-modal">
-          <button class="am-close">✕</button>
+          <button class="am-close" aria-label="Close"><svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg></button>
           <div class="mm-title">Insert Media</div>
           <div class="mm-tabs">
             <button class="active">image</button>
@@ -1528,6 +1529,66 @@ cover:
     <strong>侧栏</strong>：6 个导航项 + 底部当前用户信息。当前页高亮 + translateX(3px) 动效。<br>
     <strong>仪表盘</strong>：4 格统计卡片 + 文章列表表。hover 行背景加深。<br>
     <strong>写文章</strong>：通过 Sveltia CMS（/admin-cms/）或 Supabase 直写。
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ ICON SYSTEM ═══════════ -->
+<section id="icons">
+  <div class="label">06c · 图标系统</div>
+  <h2>Phosphor Icons · 统一图标语言</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全站使用 <a href="https://phosphoricons.com" target="_blank" class="link" style="color:var(--accent);">Phosphor Icons</a>（MIT 开源）。6 种粗细可选，项目统一使用 <strong>Regular</strong> 粗细——线条精准、几何感强，与 Space Grotesk / JetBrains Mono 的冷冽排版天然契合。不自行绘制 UI 图标。</p>
+
+  <div class="box" style="border-left-color:var(--accent);">
+    <span class="mono" style="color:var(--accent);">▶ cdn</span><br>
+    <span class="mono" style="font-size:11px;color:var(--muted);">&lt;script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"&gt;&lt;/script&gt;</span><br>
+    或按需导入: <span class="mono" style="font-size:11px;color:var(--muted);">npm i @phosphor-icons/web</span>
+  </div>
+
+  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 按场景分配图标</h3>
+  <table class="table">
+    <thead><tr><th>场景</th><th>图标名</th><th>Phosphor 名称</th><th>用法</th></tr></thead>
+    <tbody>
+      <tr><td><strong>导航</strong></td><td><span style="font-size:16px;">☰</span></td><td><span class="mono">ph-list</span></td><td>移动端汉堡菜单</td></tr>
+      <tr><td><strong>导航</strong></td><td><span style="font-size:16px;">✕</span></td><td><span class="mono">ph-x</span></td><td>关闭/取消操作</td></tr>
+      <tr><td><strong>搜索</strong></td><td><span style="font-size:16px;">⌕</span></td><td><span class="mono">ph-magnifying-glass</span></td><td>搜索图标/按钮</td></tr>
+      <tr><td><strong>主题</strong></td><td><span style="font-size:16px;">◐</span></td><td><span class="mono">ph-moon / ph-sun</span></td><td>暗色/亮色模式切换</td></tr>
+      <tr><td><strong>用户</strong></td><td><span style="font-size:16px;">👤</span></td><td><span class="mono">ph-user-circle</span></td><td>登录按钮/头像占位</td></tr>
+      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">↑</span></td><td><span class="mono">ph-arrow-up</span></td><td>向上/发送/提升</td></tr>
+      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">↗</span></td><td><span class="mono">ph-arrow-up-right</span></td><td>外链 · "在新窗口打开"</td></tr>
+      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">+</span></td><td><span class="mono">ph-plus</span></td><td>新建/添加</td></tr>
+      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">✓</span></td><td><span class="mono">ph-check</span></td><td>成功 · 已完成 · 确认</td></tr>
+      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">⚠</span></td><td><span class="mono">ph-warning</span></td><td>警告 · 需要注意</td></tr>
+      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">ⓘ</span></td><td><span class="mono">ph-info</span></td><td>提示/帮助信息</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;"><b>B</b></span></td><td><span class="mono">ph-text-bolder</span></td><td>粗体</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;"><i>I</i></span></td><td><span class="mono">ph-text-italic</span></td><td>斜体</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">&lt;/&gt;</span></td><td><span class="mono">ph-code</span></td><td>代码/等宽</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">🔗</span></td><td><span class="mono">ph-link</span></td><td>插入链接</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">H</span></td><td><span class="mono">ph-text-h</span></td><td>标题</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">≡</span></td><td><span class="mono">ph-list</span></td><td>无序列表</td></tr>
+      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">"</span></td><td><span class="mono">ph-quotes</span></td><td>引用</td></tr>
+      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">🖼</span></td><td><span class="mono">ph-image</span></td><td>插入图片</td></tr>
+      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">▶</span></td><td><span class="mono">ph-video</span></td><td>插入视频</td></tr>
+      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">♫</span></td><td><span class="mono">ph-music-notes</span></td><td>插入音频</td></tr>
+      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">💾</span></td><td><span class="mono">ph-floppy-disk</span></td><td>保存草稿</td></tr>
+      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">→</span></td><td><span class="mono">ph-paper-plane-tilt</span></td><td>发布/发送</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">▦</span></td><td><span class="mono">ph-squares-four</span></td><td>Dashboard</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">📄</span></td><td><span class="mono">ph-files</span></td><td>文章管理</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">💬</span></td><td><span class="mono">ph-chats</span></td><td>评论管理</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">👥</span></td><td><span class="mono">ph-users</span></td><td>用户管理</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">🖼</span></td><td><span class="mono">ph-images</span></td><td>媒体库</td></tr>
+      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">⚙</span></td><td><span class="mono">ph-gear</span></td><td>设置</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ icon-rules</span><br>
+    <strong>尺寸</strong>: 导航 20px · 工具栏 15px · 内联 1em<br>
+    <strong>颜色</strong>: 继承父级 <span class="mono">currentColor</span> · 默认 <span class="mono">var(--muted)</span> · 激活态 <span class="mono">var(--accent)</span><br>
+    <strong>粗细</strong>: 全局使用 Regular · 不使用 Fill/Duotone/Bold 变体<br>
+    <strong>禁止</strong>: 不使用 emoji 作 UI 图标 · 不自行绘制 SVG · 不混用多套图标库<br>
+    <strong>动画</strong>: hover → <span class="mono">transform: scale(1.1)</span> · 120ms ease-out
   </div>
 </section>
 
