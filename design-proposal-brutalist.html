@@ -3,27 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自然科技 · 凌厉冷淡 — 博客设计方案 v6</title>
+<title>自然科技 · 凌厉冷淡 — 博客设计方案 v7</title>
 <style>
   :root {
-    --bg:      #0C0C0B;
-    --surface: #161615;
-    --border:  #2C2C2A;
-    --fg:      #E8E8E3;
-    --muted:   #7A7A75;
-    --faint:   #3E3E3C;
-    --accent:  #6B8B6B;
-    --white:   #F2F2ED;
-    --bw:      1px;
-    --sp:      4px;
+    --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
+    --fg:#E8E8E3; --muted:#7A7A75; --faint:#3E3E3C;
+    --accent:#6B8B6B; --white:#F2F2ED; --bw:1px;
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   body{
     background:var(--bg);color:var(--fg);
     font-family:"Inter","Space Grotesk","Noto Sans SC",sans-serif;
     font-size:15px;line-height:1.75;font-weight:350;
-    -webkit-font-smoothing:antialiased;
-    letter-spacing:-0.1px;
+    -webkit-font-smoothing:antialiased;letter-spacing:-0.1px;
   }
   .container{max-width:960px;margin:0 auto;padding:0 32px}
   h1{font-size:clamp(32px,5.5vw,52px);font-weight:500;letter-spacing:-1.5px;line-height:1.1}
@@ -31,14 +23,11 @@
   h3{font-size:15px;font-weight:550;letter-spacing:-0.2px;color:var(--white)}
   .mono{font-family:"JetBrains Mono","IBM Plex Mono",monospace;font-size:11.5px;font-weight:400}
   .label{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:450;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
-
-  /* ── BUTTON (cold, precise) ── */
   .btn{
-    display:inline-flex;align-items:center;gap:7px;
-    padding:9px 22px;font-size:12px;font-weight:500;text-decoration:none;
+    display:inline-flex;align-items:center;gap:7px;padding:9px 22px;
+    font-size:12px;font-weight:500;text-decoration:none;
     border:var(--bw) solid var(--border);border-radius:4px;
-    background:transparent;color:var(--fg);
-    letter-spacing:0.3px;
+    background:transparent;color:var(--fg);letter-spacing:0.3px;
     transition:transform .15s ease-out,border-color .3s;
   }
   .btn:hover{transform:scale(1.03);border-color:var(--muted)}
@@ -46,22 +35,45 @@
   .btn-primary{background:var(--white);color:var(--bg);border-color:var(--white);font-weight:500}
   .btn-primary:hover{transform:scale(1.03);border-color:var(--white)}
 
-  /* ── CARD ── */
-  .card{background:var(--surface);border:var(--bw) solid var(--border);padding:32px;border-radius:6px}
-  .card-accent{border-left:2px solid var(--accent)}
-
-  /* ── SECTION ── */
   section{padding:72px 0}
   hr{border:none;border-top:1px solid var(--border);margin:0}
 
-  /* ── HEADER ── */
   .header{padding:96px 0 56px;text-align:center;border-bottom:var(--bw) solid var(--border)}
   .header .sub{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:24px;letter-spacing:3px}
   .header h1{max-width:640px;margin:0 auto 16px}
   .header h1 em{font-style:normal;color:var(--accent)}
   .header p{color:var(--muted);max-width:440px;margin:0 auto 32px;font-size:14px}
 
-  /* ── PRINCIPLES ── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  @media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin:28px 0}
+  .table th,.table td{padding:9px 16px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:2px;font-family:"JetBrains Mono",monospace}
+  .table td{background:var(--bg)}.table tr:last-child td{border-bottom:none}
+  .box{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);padding:18px 24px;line-height:1.9;font-size:12px;margin:28px 0}
+  .link{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--faint);padding-bottom:1px;transition:border-color .3s}
+  .link:hover{border-bottom-color:var(--accent)}
+
+  .swatch-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+  .swatch{width:64px;height:64px;border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;justify-content:flex-end;padding:6px;font-family:"JetBrains Mono",monospace;font-size:9px}
+  .swatch .hex{color:inherit;mix-blend-mode:difference;font-weight:500}
+  .typo-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:28px}
+
+  .terminal{background:#0A0A09;border:1px solid var(--faint);overflow:hidden;margin:24px 0}
+  .term-bar{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#101010;border-bottom:1px solid var(--faint)}
+  .term-dot{width:9px;height:9px;border-radius:3px;background:#555}
+  .term-body{padding:22px 28px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:2;color:var(--muted)}
+  .term-body .prompt{color:var(--accent)}.term-body .output{color:var(--fg)}
+
+  .mockup{border:1px solid var(--border);overflow:hidden;margin-top:28px}
+  .mockup-bar{display:flex;align-items:center;gap:7px;padding:7px 16px;background:#101010;border-bottom:1px solid var(--border)}
+  .mockup-dot{width:9px;height:9px;border-radius:3px;background:#555}
+  .mockup-body{padding:48px 36px}
+
   .principle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin:24px 0}
   .principle-card{background:var(--surface);padding:36px 28px;text-align:center}
   .principle-card .idx{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:14px;letter-spacing:1px}
@@ -69,72 +81,38 @@
   .principle-card p{font-size:11px;color:var(--muted);line-height:1.6}
   @media(max-width:768px){.principle-grid{grid-template-columns:1fr 1fr}}
 
-  /* ── GRID ── */
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-  @media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
+  /* ── BLOG COMPONENTS ── */
+  .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}
+  .blog-nav .logo{font-size:17px;font-weight:550;letter-spacing:1px;color:var(--white)}
+  .blog-nav .links{display:flex;gap:32px}
+  .blog-nav .links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:transform .15s}
+  .blog-nav .links a:hover{transform:translateY(-1px);color:var(--fg)}
 
-  /* ── TABLE ── */
-  .table{width:100%;border-collapse:collapse;font-size:12px;margin:28px 0}
-  .table th,.table td{padding:9px 16px;text-align:left;border-bottom:1px solid var(--border)}
-  .table th{background:var(--surface);color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:2px;font-family:"JetBrains Mono",monospace}
-  .table td{background:var(--bg)}.table tr:last-child td{border-bottom:none}
+  .blog-hero{border:1px solid var(--border);padding:52px 48px;margin-bottom:40px;border-radius:6px;background:var(--surface);transition:transform .3s}
+  .blog-hero:hover{transform:scale(1.005)}
+  .blog-hero .hero-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px}
+  .blog-hero .hero-title{font-size:30px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);max-width:420px;line-height:1.7;margin-bottom:16px}
 
-  /* ── BOX ── */
-  .box{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);padding:18px 24px;line-height:1.9;font-size:12px;margin:28px 0}
+  .post-card-cover{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease-out,border-color .35s}
+  .post-card-cover:hover{transform:translateY(-4px);border-color:var(--accent)}
+  .post-card-cover .pc-img{width:100%;aspect-ratio:3/2;background:var(--bg);border-bottom:1px solid var(--border);overflow:hidden}
+  .post-card-cover .pc-img .pc-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--faint)}
+  .post-card-cover .pc-body{padding:20px 22px 22px;flex:1}
+  .post-card-cover .pc-body .pc-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.5px}
+  .post-card-cover .pc-body .pc-title{font-size:15px;font-weight:500;line-height:1.35;margin-bottom:6px;color:var(--white)}
+  .post-card-cover .pc-body .pc-excerpt{font-size:11px;color:var(--muted);line-height:1.55}
 
-  /* ── SWATCH ── */
-  .swatch-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
-  .swatch{width:64px;height:64px;border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;justify-content:flex-end;padding:6px;font-family:"JetBrains Mono",monospace;font-size:9px}
-  .swatch .hex{color:inherit;mix-blend-mode:difference;font-weight:500}
-
-  /* ── TYPO ── */
-  .typo-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:28px}
-
-  /* ── TERMINAL ── */
-  .terminal{background:#0A0A09;border:1px solid var(--faint);border-radius:0;overflow:hidden;margin:24px 0}
-  .term-bar{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#101010;border-bottom:1px solid var(--faint)}
-  .term-dot{width:9px;height:9px;border-radius:3px}
-  .term-dot:nth-child(1){background:#555}.term-dot:nth-child(2){background:#555}.term-dot:nth-child(3){background:#555}
-  .term-body{padding:22px 28px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:2;color:var(--muted)}
-  .term-body .prompt{color:var(--accent)}
-  .term-body .output{color:var(--fg)}
-
-  /* ── MOCKUP ── */
-  .mockup{border:1px solid var(--border);border-radius:0;overflow:hidden;margin-top:28px}
-  .mockup-bar{display:flex;align-items:center;gap:7px;padding:7px 16px;background:#101010;border-bottom:1px solid var(--border)}
-  .mockup-dot{width:9px;height:9px;border-radius:3px}
-  .mockup-dot:nth-child(1){background:#555}.mockup-dot:nth-child(2){background:#555}.mockup-dot:nth-child(3){background:#555}
-  .mockup-body{padding:48px 36px}
-
-  /* ── WELCOME FULLSCREEN ── */
+  /* ── WELCOME ── */
   @keyframes term-line-in{0%,7%{opacity:0}10%,92%{opacity:1}100%{opacity:0}}
-  @keyframes term-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
   @keyframes term-cursor-flash{0%,49%{opacity:1}50%,100%{opacity:0}}
   @keyframes scroll-hint{0%,100%{opacity:0;transform:translateX(-50%) translateY(0)}40%,60%{opacity:1;transform:translateX(-50%) translateY(6px)}}
+  @keyframes fade-up{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
 
-  .welcome-full{
-    height:100vh;min-height:600px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;position:relative;overflow:hidden;
-    background:var(--bg);
-  }
-  .welcome-full .term-box{
-    font-family:"JetBrains Mono",monospace;font-size:clamp(11px,1.8vw,14px);
-    color:var(--muted);text-align:left;
-    width:clamp(280px,50vw,420px);
-    line-height:2.4;
-  }
-  .welcome-full .term-box .tl{
-    white-space:nowrap;overflow:hidden;opacity:0;
-  }
-  .welcome-full .term-box .tl .blink-cursor{
-    display:inline-block;width:8px;height:14px;background:var(--accent);
-    vertical-align:middle;margin-left:2px;
-    animation:term-cursor-flash 1s step-end infinite;
-  }
-  /* 8-line animation loop ~10s */
+  .welcome-full{height:100vh;min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;background:var(--bg)}
+  .welcome-full .term-box{font-family:"JetBrains Mono",monospace;font-size:clamp(11px,1.8vw,14px);color:var(--muted);text-align:left;width:clamp(280px,50vw,420px);line-height:2.4}
+  .welcome-full .term-box .tl{white-space:nowrap;overflow:hidden;opacity:0}
+  .welcome-full .term-box .tl .blink-cursor{display:inline-block;width:8px;height:14px;background:var(--accent);vertical-align:middle;margin-left:2px;animation:term-cursor-flash 1s step-end infinite}
   .welcome-full .term-box .tl:nth-child(1){animation:term-line-in 10s infinite;color:var(--faint)}
   .welcome-full .term-box .tl:nth-child(2){animation:term-line-in 10s .7s infinite;color:var(--muted)}
   .welcome-full .term-box .tl:nth-child(3){animation:term-line-in 10s 1.4s infinite;color:var(--muted)}
@@ -144,245 +122,11 @@
   .welcome-full .term-box .tl:nth-child(7){animation:term-line-in 10s 4.2s infinite;color:var(--muted)}
   .welcome-full .term-box .tl:nth-child(8){animation:term-line-in 10s 4.9s infinite}
   .welcome-full .term-box .tl:nth-child(8) .blink-cursor{display:inline-block}
+  .welcome-full .scroll-hint{position:absolute;bottom:36px;left:50%;display:flex;flex-direction:column;align-items:center;gap:8px;animation:scroll-hint 2s ease-in-out infinite;font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);letter-spacing:2px}
+  .welcome-full .scroll-hint .sh-arrow{width:1px;height:28px;background:linear-gradient(to bottom,var(--faint),transparent);position:relative}
+  .welcome-full .scroll-hint .sh-arrow::after{content:"";position:absolute;bottom:0;left:-3px;width:7px;height:7px;border-right:1px solid var(--faint);border-bottom:1px solid var(--faint);transform:rotate(45deg)}
 
-  .welcome-full .scroll-hint{
-    position:absolute;bottom:36px;left:50%;
-    display:flex;flex-direction:column;align-items:center;gap:8px;
-    animation:scroll-hint 2s ease-in-out infinite;
-    font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);
-    letter-spacing:2px;
-  }
-  .welcome-full .scroll-hint .sh-arrow{
-    width:1px;height:28px;background:linear-gradient(to bottom,var(--faint),transparent);
-  }
-  .welcome-full .scroll-hint .sh-arrow::after{
-    content:"";position:absolute;bottom:0;left:-3px;
-    width:7px;height:7px;
-    border-right:1px solid var(--faint);border-bottom:1px solid var(--faint);
-    transform:rotate(45deg);
-  }
-
-  /* ── BLOG CONTENT (below welcome) ── */
-  .blog-section{min-height:100vh;padding:80px 0}
-
-  /* ── ARTICLE CARD WITH COVER ── */
-  .post-card-cover{
-    background:var(--surface);border:1px solid var(--border);border-radius:8px;
-    overflow:hidden;
-    display:flex;flex-direction:column;
-    transition:transform .25s ease-out,border-color .35s;
-  }
-  .post-card-cover:hover{transform:translateY(-4px);border-color:var(--accent)}
-  .post-card-cover .pc-img{
-    width:100%;aspect-ratio:3/2;
-    background:var(--bg);
-    border-bottom:1px solid var(--border);
-    overflow:hidden;
-    position:relative;
-  }
-  .post-card-cover .pc-img .pc-img-placeholder{
-    width:100%;height:100%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:40px;color:var(--faint);
-    background:linear-gradient(135deg,var(--surface),var(--bg));
-  }
-  .post-card-cover .pc-img img{
-    width:100%;height:100%;object-fit:cover;
-  }
-  .post-card-cover .pc-body{
-    padding:20px 22px 22px;
-    flex:1;display:flex;flex-direction:column;
-  }
-  .post-card-cover .pc-body .pc-date{
-    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);
-    margin-bottom:8px;letter-spacing:.5px;
-  }
-  .post-card-cover .pc-body .pc-title{
-    font-size:15px;font-weight:500;line-height:1.35;margin-bottom:6px;color:var(--white);
-  }
-  .post-card-cover .pc-body .pc-excerpt{
-    font-size:11px;color:var(--muted);line-height:1.55;
-  }
-
-  /* ── ADMIN PANEL ── */
-  .admin-frame{
-    display:grid;grid-template-columns:200px 1fr;min-height:520px;
-    border:1px solid var(--border);border-radius:6px;overflow:hidden;
-    background:var(--bg);
-  }
-  @media(max-width:768px){.admin-frame{grid-template-columns:1fr}}
-  .admin-sidebar{
-    background:var(--surface);border-right:1px solid var(--border);
-    padding:24px 0;
-    display:flex;flex-direction:column;
-  }
-  .admin-sidebar .as-logo{
-    padding:0 20px 20px;font-size:14px;font-weight:550;letter-spacing:1px;
-    color:var(--white);border-bottom:1px solid var(--border);margin-bottom:12px;
-  }
-  .admin-sidebar .as-nav{
-    display:flex;flex-direction:column;
-  }
-  .admin-sidebar .as-nav a{
-    padding:8px 20px;font-size:12px;color:var(--muted);text-decoration:none;
-    border-left:2px solid transparent;
-    transition:color .3s,border-color .3s,transform .15s;
-    font-family:"JetBrains Mono",monospace;letter-spacing:.3px;
-  }
-  .admin-sidebar .as-nav a:hover,
-  .admin-sidebar .as-nav a.active{
-    color:var(--fg);border-left-color:var(--accent);
-    transform:translateX(2px);
-  }
-  .admin-main{padding:28px 32px;display:flex;flex-direction:column;gap:20px}
-  .admin-main .am-header{display:flex;justify-content:space-between;align-items:center}
-  .admin-main .am-title{font-size:16px;font-weight:500;color:var(--white)}
-  .admin-main .am-actions{display:flex;gap:8px}
-
-  .admin-table{width:100%;border-collapse:collapse;font-size:11px}
-  .admin-table th,.admin-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-  .admin-table th{color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:"JetBrains Mono",monospace}
-  .admin-table td{color:var(--fg)}
-  .admin-table .status-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:6px}
-  .status-published{background:var(--accent)}
-  .status-draft{background:var(--faint)}
-
-  .admin-btn{
-    padding:6px 14px;font-size:11px;font-weight:500;border:1px solid var(--border);
-    border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;
-    font-family:"JetBrains Mono",monospace;
-    transition:transform .15s,border-color .3s;
-  }
-  .admin-btn:hover{transform:scale(1.04);border-color:var(--accent)}
-  .admin-btn.danger{color:var(--muted)}
-  .admin-btn.danger:hover{border-color:#8B4B4B;color:#C08080}
-
-  /* ── ICON ── */
-  .ph-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-  .ph-icon.sm{font-size:14px;width:16px;height:16px}
-  .ph-icon.md{font-size:18px;width:20px;height:20px}
-
-  /* ── EDITOR ── */
-  .editor-frame{display:flex;flex-direction:column;min-height:520px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
-  .editor-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
-  .editor-toolbar .et-group{display:flex;align-items:center;gap:2px;padding:0 8px;border-right:1px solid var(--border)}
-  .editor-toolbar .et-group:last-child{border-right:none}
-  .editor-toolbar button{
-    width:30px;height:30px;display:flex;align-items:center;justify-content:center;
-    background:transparent;border:1px solid transparent;border-radius:4px;
-    color:var(--muted);font-size:15px;cursor:pointer;
-    transition:border-color .2s,color .2s,transform .15s;
-  }
-  .editor-toolbar button svg{width:15px;height:15px}
-  .editor-toolbar button:hover{border-color:var(--border);color:var(--fg);transform:scale(1.05)}
-  .editor-toolbar button.et-media{border-color:var(--border);color:var(--accent)}
-
-  .editor-body{display:grid;grid-template-columns:1fr 1fr;flex:1}
-  @media(max-width:768px){.editor-body{grid-template-columns:1fr}}
-  .editor-body .eb-pane{display:flex;flex-direction:column}
-  .editor-body .eb-pane+.eb-pane{border-left:1px solid var(--border)}
-  .editor-body .eb-pane-header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);
-    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);
-    text-transform:uppercase;letter-spacing:1.5px;
-  }
-  .editor-body .eb-textarea{
-    flex:1;padding:20px 24px;
-    background:var(--bg);color:var(--fg);
-    font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.8;
-    border:none;outline:none;resize:none;
-  }
-  .editor-body .eb-preview{
-    flex:1;padding:20px 24px;overflow-y:auto;
-    font-size:13px;line-height:1.85;color:var(--fg);
-  }
-  .editor-body .eb-preview img,.editor-body .eb-preview video{max-width:100%;border-radius:4px;margin:12px 0}
-  .editor-body .eb-preview audio{width:100%;margin:12px 0}
-  .editor-body .eb-preview .media-placeholder{
-    background:var(--surface);border:1px dashed var(--border);border-radius:6px;
-    padding:28px 20px;text-align:center;margin:12px 0;color:var(--muted);
-    font-family:"JetBrains Mono",monospace;font-size:11px;
-  }
-
-  /* ── MEDIA INSERT MODAL ── */
-  .media-modal{
-    background:var(--surface);border:1px solid var(--border);border-radius:8px;
-    width:420px;max-width:90vw;padding:28px;
-  }
-  .media-modal .mm-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:20px}
-  .media-modal .mm-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
-  .media-modal .mm-tabs button{
-    padding:8px 18px;font-size:12px;background:transparent;border:none;border-bottom:2px solid transparent;
-    color:var(--muted);cursor:pointer;font-family:"JetBrains Mono",monospace;
-    transition:color .2s,border-color .2s;
-  }
-  .media-modal .mm-tabs button.active,.media-modal .mm-tabs button:hover{color:var(--fg);border-bottom-color:var(--accent)}
-  .media-modal .mm-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-  .media-modal .mm-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:"JetBrains Mono",monospace}
-  .media-modal .mm-preview{border:1px solid var(--border);border-radius:4px;padding:8px;text-align:center;margin-top:8px;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--faint)}
-
-  .admin-stat-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:6px;
-    padding:20px 22px;
-    display:flex;flex-direction:column;gap:6px;
-    transition:transform .2s,border-color .3s;
-  }
-  .admin-stat-card:hover{transform:translateY(-2px);border-color:var(--muted)}
-  .admin-stat-card .asc-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
-  .admin-stat-card .asc-value{font-size:24px;font-weight:400;color:var(--white)}
-
-  /* ── BLOG MOCKUP ── */
-  .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}
-  .blog-nav .logo{font-size:17px;font-weight:550;letter-spacing:1px;color:var(--white)}
-  .blog-nav .links{display:flex;gap:32px}
-  .blog-nav .links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:transform .15s}
-  .blog-nav .links a:hover{transform:translateY(-1px);color:var(--fg)}
-
-  .blog-hero{border:1px solid var(--border);margin-bottom:40px;border-radius:6px;background:var(--surface);transition:transform .3s;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden}
-  .blog-hero:hover{transform:scale(1.005)}
-  .blog-hero .hero-cover{aspect-ratio:2/3;background:var(--bg);border-right:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-  .blog-hero .hero-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,var(--surface),transparent 40%)}
-  .blog-hero .hero-body{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
-  .blog-hero .hero-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px}
-  .blog-hero .hero-title{font-size:26px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
-  .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px}
-  @media(max-width:768px){.blog-hero{grid-template-columns:1fr}.blog-hero .hero-cover{aspect-ratio:3/2}}}
-
-  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:transform .25s ease-out,border-color .3s,box-shadow .3s;display:flex;flex-direction:column;aspect-ratio:3/2}
-  .post-card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.4)}
-  .post-card .pc-cover{flex:0 0 52%;background:var(--bg);position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
-  .post-card .pc-cover img{width:100%;height:100%;object-fit:cover;display:block}
-  .post-card .pc-cover .pc-cover-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--faint);opacity:.5}
-  .post-card .pc-body{padding:16px 20px;flex:1;display:flex;flex-direction:column;justify-content:center}
-  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--muted);margin-bottom:6px;letter-spacing:.5px}
-  .post-card .pc-title{font-size:14px;font-weight:500;line-height:1.35;margin-bottom:4px;color:var(--fg)}
-  .post-card .pc-excerpt{font-size:11px;color:var(--muted);line-height:1.5}
-
-  /* ── ADMIN PANEL ── */
-  .admin-page{display:grid;grid-template-columns:220px 1fr;min-height:600px;border:1px solid var(--border);border-radius:0;overflow:hidden}
-  @media(max-width:768px){.admin-page{grid-template-columns:1fr}}
-  .admin-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column}
-  .admin-sidebar .as-logo{font-size:14px;font-weight:500;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;letter-spacing:1px;color:var(--white)}
-  .admin-sidebar .as-nav{display:flex;flex-direction:column;padding:0 12px}
-  .admin-sidebar .as-nav a{font-size:12px;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:4px;transition:background .2s,transform .15s;font-family:"JetBrains Mono",monospace;letter-spacing:.5px}
-  .admin-sidebar .as-nav a:hover,.admin-sidebar .as-nav a.active{background:var(--bg);color:var(--fg);transform:translateX(3px)}
-  .admin-main{background:var(--bg);padding:32px 36px;overflow-y:auto}
-  .admin-main .am-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
-  .admin-main .am-title{font-size:18px;font-weight:500;color:var(--white)}
-  .admin-table{width:100%;border-collapse:collapse;font-size:12px}
-  .admin-table th,.admin-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
-  .admin-table th{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:450}
-  .admin-table td{color:var(--fg)}
-  .admin-table tr:hover td{background:var(--surface)}
-  .admin-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
-  @media(max-width:768px){.admin-stat-grid{grid-template-columns:repeat(2,1fr)}}
-  .admin-stat{border:1px solid var(--border);border-radius:6px;padding:20px 22px;background:var(--surface)}
-  .admin-stat .ast-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
-  .admin-stat .ast-val{font-size:28px;font-weight:400;color:var(--white)}
-  .admin-stat .ast-sub{font-size:11px;color:var(--muted);margin-top:4px}
-
-  /* ── TRANSFORM MOTION DEMOS ── */
+  /* ── MOTION ── */
   .motion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:24px 0}
   .motion-demo{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
   .motion-demo .name{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
@@ -391,31 +135,7 @@
   @keyframes subtle-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   @keyframes rotate-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-  /* ── LINK ── */
-  .link{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--faint);padding-bottom:1px;transition:border-color .3s}
-  .link:hover{border-bottom-color:var(--accent)}
-
-  /* ── FOOTER ── */
-  footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;font-size:11px;color:var(--faint);font-family:"JetBrains Mono",monospace}
-
-  /* ── SKELETON ── */
-  @keyframes skeleton{0%,100%{opacity:.25}50%{opacity:.45}}
-  .skeleton-block{background:var(--faint);animation:skeleton 2s infinite;height:12px;border-radius:3px}
-
-  /* ── FOCUS ── */
-  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-
-  /* ── INPUT / TEXTAREA ── */
-  .input,textarea.input{
-    background:var(--bg);border:1px solid var(--border);border-radius:4px;
-    padding:10px 14px;font-size:13px;color:var(--fg);outline:none;
-    font-family:inherit;width:100%;resize:vertical;
-    transition:border-color .2s;
-  }
-  .input:focus,textarea.input:focus{border-color:var(--accent)}
-  .input::placeholder,textarea.input::placeholder{color:var(--faint)}
-
-  /* ── ARTICLE ── */
+  /* ── ARTICLE PAGE ── */
   .article-layout{display:grid;grid-template-columns:1fr 200px;gap:36px;align-items:start}
   @media(max-width:768px){.article-layout{grid-template-columns:1fr}}
   .article-main{border:1px solid var(--border);padding:44px 40px;background:var(--surface);border-radius:6px}
@@ -424,22 +144,12 @@
   .article-toc a{display:block;font-size:11px;color:var(--muted);text-decoration:none;padding:3px 0;border-left:1px solid transparent;padding-left:10px;line-height:1.6;transition:border-color .3s,transform .15s}
   .article-toc a:hover,.article-toc a.active{border-left-color:var(--accent);color:var(--fg);transform:translateX(2px)}
 
-  /* ── COMPARE ── */
-  .compare-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
-  .compare-cell{border:1px solid var(--border);padding:20px;border-radius:4px;text-align:center;font-size:12px}
-
-  /* ── NAVIGATION DETAIL ── */
-  .nav-full{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:14px 28px;border-bottom:1px solid var(--border);
-    background:var(--bg);
-    position:sticky;top:0;z-index:50;
-    transition:transform .25s ease-out;
-  }
+  /* ── NAV ── */
+  .nav-full{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;transition:transform .25s ease-out}
   .nav-full.nav-hidden{transform:translateY(-100%)}
   .nav-full .nf-logo{font-size:16px;font-weight:550;letter-spacing:1.5px;color:var(--white)}
   .nav-full .nf-links{display:flex;align-items:center;gap:28px}
-  .nav-full .nf-links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:color .3s,transform .15s;position:relative}
+  .nav-full .nf-links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:color .3s,transform .15s}
   .nav-full .nf-links a:hover,.nav-full .nf-links a.active{color:var(--fg);transform:translateY(-1px)}
   .nav-full .nf-links a.active::after{content:"";position:absolute;bottom:-15px;left:0;right:0;height:2px;background:var(--accent)}
   .nav-full .nf-actions{display:flex;align-items:center;gap:16px}
@@ -447,14 +157,16 @@
   .nav-full .nf-actions .nf-avatar:hover{border-color:var(--accent)}
   .nav-full .nf-actions .nf-icon{font-size:14px;color:var(--muted);cursor:pointer;transition:color .3s,transform .15s}
   .nav-full .nf-actions .nf-icon:hover{color:var(--fg);transform:scale(1.1)}
+  .theme-toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;transition:transform .15s,border-color .3s}
+  .theme-toggle:hover{transform:rotate(15deg);border-color:var(--accent)}
+  .dropdown{position:relative;display:inline-block}
+  .dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;z-index:50;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s}
+  .dropdown:hover .dropdown-menu,.dropdown-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+  .dropdown-menu a,.dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 16px;font-size:12px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;transition:color .2s,transform .15s;font-family:"JetBrains Mono",monospace}
+  .dropdown-menu a:hover,.dropdown-menu button:hover{color:var(--fg);transform:translateX(2px)}
+  .dropdown-menu .dm-divider{height:1px;background:var(--border);margin:4px 0}
 
-  /* ── MOBILE NAV ── */
-  .nav-mobile{
-    display:none;align-items:center;justify-content:space-between;
-    padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);
-    position:sticky;top:0;z-index:50;
-    transition:transform .25s ease-out;
-  }
+  .nav-mobile{display:none;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:50;transition:transform .25s ease-out}
   .nav-mobile.nav-hidden{transform:translateY(-100%)}
   .nav-mobile .nm-logo{font-size:15px;font-weight:550;color:var(--white)}
   .nav-mobile .nm-toggle{font-size:18px;color:var(--muted);cursor:pointer;background:none;border:none;padding:6px;transition:transform .15s}
@@ -481,7 +193,7 @@
   .auth-modal .am-footer a{color:var(--accent);text-decoration:none;transition:opacity .3s}
   .auth-modal .am-footer a:hover{opacity:.7}
 
-  /* ── SEARCH OVERLAY ── */
+  /* ── SEARCH ── */
   .search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;z-index:101}
   .search-box{width:480px;max-width:90vw}
   .search-box .sb-input-wrap{display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:border-color .3s}
@@ -494,22 +206,23 @@
   .search-box .sb-results .sr-item{padding:10px 14px;border-radius:4px;color:var(--muted);font-size:13px;cursor:pointer;transition:background .2s,color .2s}
   .search-box .sb-results .sr-item:hover,.search-box .sb-results .sr-item.selected{background:var(--surface);color:var(--fg)}
 
-  /* ── PAGINATION ── */
+  /* ── INPUT ── */
+  .input,textarea.input{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-size:13px;color:var(--fg);outline:none;font-family:inherit;width:100%;resize:vertical;transition:border-color .2s}
+  .input:focus,textarea.input:focus{border-color:var(--accent)}
+  .input::placeholder,textarea.input::placeholder{color:var(--faint)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  /* ── BREADCRUMB / TAGS / PAGINATION ── */
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:"JetBrains Mono",monospace;padding:16px 0}
+  .breadcrumb a{color:var(--muted);text-decoration:none;transition:color .3s}.breadcrumb a:hover{color:var(--fg)}
+  .breadcrumb .bc-sep{color:var(--faint)}
+  .tag-pill{display:inline-flex;align-items:center;padding:3px 12px;border:1px solid var(--border);border-radius:99px;font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--muted);text-decoration:none;transition:transform .15s,border-color .3s,color .3s}
+  .tag-pill:hover{transform:scale(1.05);border-color:var(--accent);color:var(--accent)}
   .pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:40px 0}
   .pagination .pg-item{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;font-size:12px;color:var(--muted);text-decoration:none;font-family:"JetBrains Mono",monospace;transition:transform .15s,border-color .3s,color .3s}
   .pagination .pg-item:hover{transform:scale(1.08);border-color:var(--muted)}
   .pagination .pg-item.active{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:500}
   .pagination .pg-ellipsis{color:var(--faint);padding:0 4px}
-
-  /* ── BREADCRUMB ── */
-  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:"JetBrains Mono",monospace;padding:16px 0}
-  .breadcrumb a{color:var(--muted);text-decoration:none;transition:color .3s}
-  .breadcrumb a:hover{color:var(--fg)}
-  .breadcrumb .bc-sep{color:var(--faint)}
-
-  /* ── TAG PILL ── */
-  .tag-pill{display:inline-flex;align-items:center;padding:3px 12px;border:1px solid var(--border);border-radius:99px;font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--muted);text-decoration:none;transition:transform .15s,border-color .3s,color .3s}
-  .tag-pill:hover{transform:scale(1.05);border-color:var(--accent);color:var(--accent)}
 
   /* ── COMMENT ── */
   .comment-thread{display:flex;flex-direction:column;gap:20px;margin:24px 0}
@@ -526,7 +239,7 @@
   .comment-reply{margin-left:46px}
 
   /* ── FOOTER ── */
-  .site-footer{padding:48px 0 32px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px}
+  .site-footer{padding:32px 36px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px}
   @media(max-width:768px){.site-footer{grid-template-columns:1fr;text-align:center;gap:16px}}
   .site-footer .sf-left{font-size:11px;color:var(--faint)}
   .site-footer .sf-center{font-size:14px;font-weight:500;color:var(--white)}
@@ -535,20 +248,68 @@
   .site-footer .sf-right a{color:var(--muted);text-decoration:none;transition:transform .15s}
   .site-footer .sf-right a:hover{transform:translateY(-1px);color:var(--fg)}
 
-  /* ── THEME TOGGLE ── */
-  .theme-toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;transition:transform .15s,border-color .3s}
-  .theme-toggle:hover{transform:rotate(15deg);border-color:var(--accent)}
+  /* ── ADMIN ── */
+  .admin-page{display:grid;grid-template-columns:200px 1fr;min-height:520px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
+  @media(max-width:768px){.admin-page{grid-template-columns:1fr}}
+  .admin-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column}
+  .admin-sidebar .as-logo{padding:0 20px 20px;font-size:14px;font-weight:550;letter-spacing:1px;color:var(--white);border-bottom:1px solid var(--border);margin-bottom:12px}
+  .admin-sidebar .as-nav{display:flex;flex-direction:column}
+  .admin-sidebar .as-nav a{padding:8px 20px;font-size:12px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;transition:color .3s,border-color .3s,transform .15s;font-family:"JetBrains Mono",monospace;letter-spacing:.3px}
+  .admin-sidebar .as-nav a:hover,.admin-sidebar .as-nav a.active{color:var(--fg);border-left-color:var(--accent);transform:translateX(2px)}
+  .admin-main{padding:28px 32px;display:flex;flex-direction:column;gap:20px}
+  .admin-main .am-header{display:flex;justify-content:space-between;align-items:center}
+  .admin-main .am-title{font-size:16px;font-weight:500;color:var(--white)}
+  .admin-btn{padding:6px 14px;font-size:11px;font-weight:500;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;font-family:"JetBrains Mono",monospace;transition:transform .15s,border-color .3s}
+  .admin-btn:hover{transform:scale(1.04);border-color:var(--accent)}
+  .admin-btn.danger{color:var(--muted)}.admin-btn.danger:hover{border-color:#8B4B4B;color:#C08080}
+  .admin-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+  @media(max-width:768px){.admin-stat-grid{grid-template-columns:repeat(2,1fr)}}
+  .admin-stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px 20px;transition:transform .2s,border-color .3s;display:flex;flex-direction:column;gap:4px}
+  .admin-stat:hover{transform:translateY(-2px);border-color:var(--muted)}
+  .admin-stat .asc-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+  .admin-stat .asc-value{font-size:28px;font-weight:400;color:var(--white)}
+  .admin-table{width:100%;border-collapse:collapse;font-size:11px}
+  .admin-table th,.admin-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .admin-table th{color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:"JetBrains Mono",monospace}
+  .admin-table td{color:var(--fg)}
+  .status-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:6px}
+  .status-published{background:var(--accent)}.status-draft{background:var(--faint)}
 
-  /* ── DROPDOWN ── */
-  .dropdown{position:relative;display:inline-block}
-  .dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;z-index:50;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s}
-  .dropdown:hover .dropdown-menu,.dropdown-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
-  .dropdown-menu a,.dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 16px;font-size:12px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;transition:color .2s,transform .15s;font-family:"JetBrains Mono",monospace}
-  .dropdown-menu a:hover,.dropdown-menu button:hover{color:var(--fg);transform:translateX(2px)}
-  .dropdown-menu .dm-divider{height:1px;background:var(--border);margin:4px 0}
+  /* ── EDITOR ── */
+  .editor-frame{display:flex;flex-direction:column;min-height:520px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
+  .editor-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .editor-toolbar .et-group{display:flex;align-items:center;gap:2px;padding:0 8px;border-right:1px solid var(--border)}
+  .editor-toolbar .et-group:last-child{border-right:none}
+  .editor-toolbar button{width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid transparent;border-radius:4px;color:var(--muted);font-size:15px;cursor:pointer;transition:border-color .2s,color .2s,transform .15s}
+  .editor-toolbar button svg{width:15px;height:15px}
+  .editor-toolbar button:hover{border-color:var(--border);color:var(--fg);transform:scale(1.05)}
+  .editor-toolbar button.et-media{border-color:var(--border);color:var(--accent)}
+  .editor-body{display:grid;grid-template-columns:1fr 1fr;flex:1}
+  @media(max-width:768px){.editor-body{grid-template-columns:1fr}}
+  .editor-body .eb-pane{display:flex;flex-direction:column}
+  .editor-body .eb-pane+.eb-pane{border-left:1px solid var(--border)}
+  .editor-body .eb-pane-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+  .editor-body .eb-textarea{flex:1;padding:20px 24px;background:var(--bg);color:var(--fg);font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.8;border:none;outline:none;resize:none}
+  .editor-body .eb-preview{flex:1;padding:20px 24px;overflow-y:auto;font-size:13px;line-height:1.85;color:var(--fg)}
+  .editor-body .eb-preview .media-placeholder{background:var(--surface);border:1px dashed var(--border);border-radius:6px;padding:28px 20px;text-align:center;margin:12px 0;color:var(--muted);font-family:"JetBrains Mono",monospace;font-size:11px}
+
+  .media-modal{background:var(--surface);border:1px solid var(--border);border-radius:8px;width:420px;max-width:90vw;padding:28px}
+  .media-modal .mm-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:20px}
+  .media-modal .mm-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+  .media-modal .mm-tabs button{padding:8px 18px;font-size:12px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-family:"JetBrains Mono",monospace;transition:color .2s,border-color .2s}
+  .media-modal .mm-tabs button.active,.media-modal .mm-tabs button:hover{color:var(--fg);border-bottom-color:var(--accent)}
+  .media-modal .mm-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .media-modal .mm-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:"JetBrains Mono",monospace}
+  .media-modal .mm-preview{border:1px solid var(--border);border-radius:4px;padding:8px;text-align:center;margin-top:8px;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--faint)}
+
+  .compare-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
+  .compare-cell{border:1px solid var(--border);padding:20px;border-radius:4px;text-align:center;font-size:12px}
   .compare-cell.current{border-color:var(--accent);background:var(--surface)}
   .compare-cell .c-name{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-family:"JetBrains Mono",monospace}
   .compare-cell .c-val{font-size:13px;color:var(--fg);font-weight:500}
+
+  @keyframes skeleton{0%,100%{opacity:.25}50%{opacity:.45}}
+  .skeleton-block{background:var(--faint);animation:skeleton 2s infinite;height:12px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -557,767 +318,278 @@
 
 <!-- ═══════════ HEADER ═══════════ -->
 <header class="header">
-  <div class="sub">natur ＋ technik · version 6</div>
+  <div class="sub">natur ＋ technik · version 7</div>
   <h1>自然与科技<br><em>凌厉冷淡</em></h1>
   <p>单色矿物肌理 · 建筑般精密排版 · 变换驱动的克制动效 · 退出喧嚣，进入秩序。</p>
   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-    <a href="#palette" class="btn">色彩</a>
-    <a href="#motion" class="btn">动效</a>
-    <a href="#welcome" class="btn">欢迎页</a>
-    <a href="#mockup" class="btn btn-primary">Mockup</a>
+    <a href="#palette" class="btn">色彩</a><a href="#motion" class="btn">动效</a><a href="#welcome" class="btn">欢迎页</a><a href="#cards" class="btn btn-primary">卡片</a>
   </div>
 </header>
 
 <hr>
 
-<!-- ═══════════ 01 PHILOSOPHY ═══════════ -->
+<!-- ═══════════ 01 设计哲学 ═══════════ -->
 <section>
   <div class="label">01 · 设计哲学</div>
   <h2>五种材质</h2>
   <div class="principle-grid">
-    <div class="principle-card">
-      <div class="idx">黑曜石</div>
-      <div class="title">底色 · 深邃</div>
-      <p>#0C0C0B 不纯黑。像抛光石面吸收光线，沉降一切视觉噪音。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">石英</div>
-      <div class="title">白 · 洁净</div>
-      <p>#F2F2ED 不纯白。矿物白，不是屏幕白。仅在关键处出现。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">石灰岩</div>
-      <div class="title">灰阶 · 过渡</div>
-      <p>从 #161615 到 #7A7A75。五级岩层灰阶，无跳跃。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">苔藓</div>
-      <div class="title">唯一点缀</div>
-      <p>#6B8B6B 暗哑绿。唯一的彩色。用在焦点、链接、分割。不超过屏面 5%。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">钢材</div>
-      <div class="title">边框 · 精确</div>
-      <p>1px hairline。所有分隔由单一线条完成。无阴影、无渐变、无模糊。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">玻璃</div>
-      <div class="title">动效 · 变换</div>
-      <p>仅用 transform: scale / translate / rotate。无色彩渐变、无透明度闪烁。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">冰</div>
-      <div class="title">间距 · 克制</div>
-      <p>6 级间距 8→64px。大量空白，信息被冷空气包围。每屏只放一件事。</p>
-    </div>
-    <div class="principle-card">
-      <div class="idx">化石</div>
-      <div class="title">终端 · 沉淀</div>
-      <p>JetBrains Mono 等宽字体作结构标记。系统信息式呈现。冷，但精确。</p>
-    </div>
+    <div class="principle-card"><div class="idx">黑曜石</div><div class="title">底色 · 深邃</div><p>#0C0C0B 不纯黑。像抛光石面吸收光线。</p></div>
+    <div class="principle-card"><div class="idx">石英</div><div class="title">白 · 洁净</div><p>#F2F2ED 矿物白，不是屏幕白。仅关键处出现。</p></div>
+    <div class="principle-card"><div class="idx">石灰岩</div><div class="title">灰阶 · 过渡</div><p>#161615 → #7A7A75 五级岩层灰阶。</p></div>
+    <div class="principle-card"><div class="idx">苔藓</div><div class="title">唯一点缀</div><p>#6B8B6B 暗哑绿。屏面 ≤5%。</p></div>
+    <div class="principle-card"><div class="idx">钢材</div><div class="title">边框 · 精确</div><p>1px hairline。无阴影/渐变/模糊。</p></div>
+    <div class="principle-card"><div class="idx">玻璃</div><div class="title">动效 · 变换</div><p>仅 transform。无色彩动画/opacity。</p></div>
+    <div class="principle-card"><div class="idx">冰</div><div class="title">间距 · 克制</div><p>6 级间距 8→64px。每屏一事。</p></div>
+    <div class="principle-card"><div class="idx">化石</div><div class="title">终端 · 沉淀</div><p>JetBrains Mono 结构标记。冷而精确。</p></div>
   </div>
-
   <div class="grid-2" style="margin-top:20px;">
-    <div class="box" style="border-left-color:var(--accent);">
-      <span class="mono" style="color:var(--accent);">accept: ✓</span><br>
-      <span class="mono" style="line-height:2.4;">
-        <span style="color:var(--fg);">transform: scale / translate / rotate</span><br>
-        <span style="color:var(--fg);">1px hairline 单色分隔</span><br>
-        <span style="color:var(--fg);">#6B8B6B 唯一 accent</span><br>
-        <span style="color:var(--fg);">大面积留白 · 每屏一事</span><br>
-        <span style="color:var(--fg);">终端提示符作结构标点</span>
-      </span>
-    </div>
-    <div class="box" style="border-left-color:var(--faint);">
-      <span class="mono" style="color:var(--faint);">reject: ✗</span><br>
-      <span class="mono" style="line-height:2.4;color:var(--faint);">
-        box-shadow / gradient / blur<br>
-        多彩酸性色板<br>
-        border-radius &gt; 8px<br>
-        glitch / RGB shift / neon<br>
-        opacity 过渡 / 色彩动画<br>
-        CRT scanline 等装饰层
-      </span>
-    </div>
+    <div class="box"><span class="mono" style="color:var(--accent);">accept: ✓</span><br><span class="mono" style="line-height:2.4;"><span style="color:var(--fg);">transform: scale / translate / rotate</span><br><span style="color:var(--fg);">1px hairline 单色分隔</span><br><span style="color:var(--fg);">#6B8B6B 唯一 accent</span><br><span style="color:var(--fg);">大面积留白 · 每屏一事</span><br><span style="color:var(--fg);">终端提示符作结构标点</span></span></div>
+    <div class="box" style="border-left-color:var(--faint);"><span class="mono" style="color:var(--faint);">reject: ✗</span><br><span class="mono" style="line-height:2.4;color:var(--faint);">box-shadow / gradient / blur<br>多彩酸性色板<br>border-radius &gt; 8px<br>glitch / RGB shift / neon<br>opacity 过渡 / 色彩动画<br>CRT scanline 等装饰层</span></div>
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ 02 PALETTE ═══════════ -->
+<!-- ═══════════ 02 色彩 ═══════════ -->
 <section id="palette">
   <div class="label">02 · 色彩</div>
   <h2>矿物单色 · 单点苔绿</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">五个中性色 + 一个 accent。拒绝多彩，拒绝渐变。色彩本身就是一种克制。</p>
-
   <div class="swatch-row">
-    <div class="swatch" style="background:#0C0C0B;"><span class="hex">#0C0C0B</span></div>
-    <div class="swatch" style="background:#161615;"><span class="hex">#161615</span></div>
-    <div class="swatch" style="background:#2C2C2A;"><span class="hex">#2C2C2A</span></div>
-    <div class="swatch" style="background:#7A7A75;"><span class="hex">#7A7A75</span></div>
-    <div class="swatch" style="background:#F2F2ED;"><span class="hex">#F2F2ED</span></div>
-    <div style="width:8px;"></div>
-    <div class="swatch" style="background:#6B8B6B;"><span class="hex">#6B8B6B</span></div>
+    <div class="swatch" style="background:#0C0C0B;"><span class="hex">#0C0C0B</span></div><div class="swatch" style="background:#161615;"><span class="hex">#161615</span></div><div class="swatch" style="background:#2C2C2A;"><span class="hex">#2C2C2A</span></div><div class="swatch" style="background:#7A7A75;"><span class="hex">#7A7A75</span></div><div class="swatch" style="background:#F2F2ED;"><span class="hex">#F2F2ED</span></div><div style="width:8px;"></div><div class="swatch" style="background:#6B8B6B;"><span class="hex">#6B8B6B</span></div>
   </div>
-
   <table class="table" style="margin-top:16px;">
     <thead><tr><th>Token</th><th>Hex</th><th>角色</th><th>占比</th></tr></thead>
     <tbody>
-      <tr><td><span class="mono">--bg</span></td><td><span class="mono">#0C0C0B</span></td><td>画布底色</td><td>~75%</td></tr>
-      <tr><td><span class="mono">--surface</span></td><td><span class="mono">#161615</span></td><td>卡片/区块</td><td>~15%</td></tr>
-      <tr><td><span class="mono">--border</span></td><td><span class="mono">#2C2C2A</span></td><td>分隔线</td><td>~4%</td></tr>
+      <tr><td><span class="mono">--bg</span></td><td><span class="mono">#0C0C0B</span></td><td>画布</td><td>~75%</td></tr>
+      <tr><td><span class="mono">--surface</span></td><td><span class="mono">#161615</span></td><td>卡片</td><td>~15%</td></tr>
+      <tr><td><span class="mono">--border</span></td><td><span class="mono">#2C2C2A</span></td><td>分隔</td><td>~4%</td></tr>
       <tr><td><span class="mono">--fg</span></td><td><span class="mono">#E8E8E3</span></td><td>正文</td><td>~3%</td></tr>
-      <tr><td><span class="mono">--muted</span></td><td><span class="mono">#7A7A75</span></td><td>次要文字</td><td>~2%</td></tr>
-      <tr><td><span class="mono">--accent</span></td><td><span class="mono" style="color:var(--accent);">#6B8B6B</span></td><td>焦点/链接</td><td>≤1%</td></tr>
+      <tr><td><span class="mono">--muted</span></td><td><span class="mono">#7A7A75</span></td><td>次要</td><td>~2%</td></tr>
+      <tr><td><span class="mono">--accent</span></td><td><span class="mono" style="color:var(--accent);">#6B8B6B</span></td><td>焦点</td><td>≤1%</td></tr>
     </tbody>
   </table>
-
-  <h3 style="margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:13px;color:var(--muted);">字体系统</h3>
+  <h3 style="margin:32px 0 16px;font-size:13px;color:var(--muted);">字体系统</h3>
   <div class="grid-2">
-    <div class="typo-card" style="border-left:2px solid var(--accent);">
-      <div style="font-size:28px;font-weight:400;letter-spacing:-1px;">Inter · Space Grotesk</div>
-      <div class="mono" style="color:var(--muted);margin-top:8px;">标题 300-500 · 正文 350</div>
-    </div>
-    <div class="typo-card" style="border-left:2px solid var(--faint);">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:400;">JetBrains Mono</div>
-      <div class="mono" style="color:var(--muted);margin-top:8px;">标签 · 终端 · 代码 · 数字 · 元信息</div>
-    </div>
-    <div class="typo-card">
-      <div style="font-family:'Noto Sans SC',sans-serif;font-size:24px;font-weight:400;">Noto Sans SC</div>
-      <div class="mono" style="color:var(--muted);margin-top:8px;">中文正文 · 备选</div>
-    </div>
-    <div class="typo-card">
-      <span style="font-size:10px;color:var(--muted);display:block;">H1</span><span style="font-size:44px;font-weight:400;">44 / 400</span>
-      <span style="font-size:10px;color:var(--muted);display:block;margin-top:8px;">H2</span><span style="font-size:24px;font-weight:450;">24 / 450</span>
-      <span style="font-size:10px;color:var(--muted);display:block;margin-top:8px;">Body</span><span style="font-size:15px;font-weight:350;">15 / 350</span>
-    </div>
+    <div class="typo-card" style="border-left:2px solid var(--accent);"><div style="font-size:28px;font-weight:400;">Inter · Space Grotesk</div><div class="mono" style="color:var(--muted);margin-top:8px;">标题 300-500 · 正文 350</div></div>
+    <div class="typo-card" style="border-left:2px solid var(--faint);"><div style="font-family:'JetBrains Mono',monospace;font-size:24px;">JetBrains Mono</div><div class="mono" style="color:var(--muted);margin-top:8px;">标签 · 终端 · 代码 · 元信息</div></div>
+    <div class="typo-card"><div style="font-family:'Noto Sans SC',sans-serif;font-size:24px;">Noto Sans SC</div><div class="mono" style="color:var(--muted);margin-top:8px;">中文正文</div></div>
+    <div class="typo-card"><span style="font-size:10px;color:var(--muted);display:block;">H1</span><span style="font-size:44px;font-weight:400;">44/400</span><span style="font-size:10px;color:var(--muted);display:block;margin-top:8px;">Body</span><span style="font-size:15px;font-weight:350;">15/350</span></div>
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ BLOG CARDS ═══════════ -->
-<section id="cards">
-  <div class="label">05 · 文章卡片</div>
-  <h2>3:2 封面 · 悬停上浮</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">竖向比例 <span class="mono">aspect-ratio: 3/2</span>。上半封面图（<span class="mono">object-fit: cover</span>），下半标题+日期+摘要。hover 平滑上浮 <span class="mono">translateY(-4px)</span> + 苔绿边框过渡。</p>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts · 3-column grid · cover cards</span></div>
-    <div class="mockup-body">
-      <div class="blog-nav">
-        <div class="logo">LEVIA808</div>
-        <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
-      </div>
-      <div class="grid-3">
-        <div class="post-card-cover">
-          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1a18,#22221e);font-size:52px;">▦</div></div>
-          <div class="pc-body"><div class="pc-date">2026 · 08 · 06</div><div class="pc-title">构建现代化个人博客</div><div class="pc-excerpt">从 Hugo 到双线部署的完整实践。一份代码，两边构建。</div></div>
-        </div>
-        <div class="post-card-cover">
-          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1e1a,#1e221e);font-size:52px;">{ }</div></div>
-          <div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">深入理解 ownership 与 borrowing 的核心机制。</div></div>
-        </div>
-        <div class="post-card-cover">
-          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1e1a1a,#221e1e);font-size:52px;">#</div></div>
-          <div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries 指南</div><div class="pc-excerpt">用组件级响应式设计告别 Media Queries。</div></div>
-        </div>
-      </div>
-      <div class="box" style="margin-top:24px;">
-        <span class="mono" style="color:var(--accent);">▶ card-spec</span><br>
-        <strong>比例</strong>: <span class="mono">3/2</span> 竖矩形 · <strong>封面</strong>: 上半 <span class="mono">object-fit: cover</span> · <strong>hover</strong>: <span class="mono">translateY(-4px)</span> 250ms + <span class="mono">border-color → --accent</span> 350ms · <strong>Hugo</strong>: Front Matter 设置 <span class="mono">cover.image</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ ADMIN PANEL ═══════════ -->
-<section id="admin">
-  <div class="label">06 · 管理后台</div>
-  <h2>管理员面板</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">仅超级管理员 (<span class="mono">role: superadmin</span>) 可访问。裂成左侧导航 + 右侧内容区。风格与博客完全一致——冷冽单色、精密排版、transform 动效。</p>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /admin · dashboard</span></div>
-    <div class="mockup-body" style="padding:0;">
-      <div class="admin-frame">
-        <!-- SIDEBAR -->
-        <div class="admin-sidebar">
-          <div class="as-logo">LEVIA808<br><span style="font-size:10px;color:var(--muted);font-weight:400;">superadmin</span></div>
-          <div class="as-nav">
-            <!-- icons: squares-four, article, chat-centered-text, users, image, gear -->
-            <a href="#" class="active">/dashboard</a>
-            <a href="#">/posts</a>
-            <a href="#">/comments</a>
-            <a href="#">/users</a>
-            <a href="#">/media</a>
-            <a href="#">/settings</a>
-          </div>
-        </div>
-        <!-- MAIN -->
-        <div class="admin-main">
-          <div class="am-header">
-            <div class="am-title">Dashboard</div>
-            <div class="am-actions">
-              <button class="admin-btn">+ New Post</button>
-            </div>
-          </div>
-
-          <!-- Stat cards -->
-          <div class="grid-3">
-            <div class="admin-stat-card">
-              <div class="asc-label">Total Posts</div>
-              <div class="asc-value">22</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="asc-label">Comments</div>
-              <div class="asc-value">47</div>
-            </div>
-            <div class="admin-stat-card">
-              <div class="asc-label">Users</div>
-              <div class="asc-value">12</div>
-            </div>
-          </div>
-
-          <!-- Posts table -->
-          <div style="font-size:13px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">Recent Posts</div>
-          <table class="admin-table">
-            <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>构建现代化个人博客</td>
-                <td><span class="status-dot status-published"></span>published</td>
-                <td style="color:var(--muted);">2026-08-06</td>
-                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
-              </tr>
-              <tr>
-                <td>Rust 所有权模型 — 深入理解 ownership</td>
-                <td><span class="status-dot status-published"></span>published</td>
-                <td style="color:var(--muted);">2025-06-15</td>
-                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
-              </tr>
-              <tr>
-                <td>Container Queries 完全指南</td>
-                <td><span class="status-dot status-draft"></span>draft</td>
-                <td style="color:var(--muted);">2025-04-10</td>
-                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
-              </tr>
-              <tr>
-                <td style="color:var(--muted);">编辑器配置 · 高效的 VS Code 工作流</td>
-                <td><span class="status-dot status-draft"></span>draft</td>
-                <td style="color:var(--muted);">2025-05-20</td>
-                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div style="font-size:11px;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-top:8px;">
-            showing 4 of 22 · page 1/6
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <table class="table" style="margin-top:24px;">
-    <thead><tr><th>页面</th><th>路由</th><th>权限</th><th>功能</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Dashboard</strong></td><td><span class="mono">/admin/</span></td><td>admin+</td><td>统计卡片 · 最近文章 · 快速操作</td></tr>
-      <tr><td><strong>Posts</strong></td><td><span class="mono">/admin/posts</span></td><td>author+</td><td>文章 CRUD · 批量操作 · 状态筛选</td></tr>
-      <tr><td><strong>Comments</strong></td><td><span class="mono">/admin/comments</span></td><td>admin+</td><td>审核/删除评论 · 垃圾过滤</td></tr>
-      <tr><td><strong>Users</strong></td><td><span class="mono">/admin/users</span></td><td>superadmin</td><td>用户列表 · 角色管理 · 禁用</td></tr>
-      <tr><td><strong>Media</strong></td><td><span class="mono">/admin/media</span></td><td>author+</td><td>Supabase Storage · 上传/删除</td></tr>
-      <tr><td><strong>Settings</strong></td><td><span class="mono">/admin/settings</span></td><td>superadmin</td><td>站点配置 · Hugo 参数热更新</td></tr>
-    </tbody>
-  </table>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ admin-tech</span><br>
-    后端复用 Supabase (<span class="mono">iyquixzprfwkglaqptxj.supabase.co</span>)。认证通过 <span class="mono">Auth.user()</span> 获取当前用户 → 查 <span class="mono">profiles.role</span> → <span class="mono">superadmin</span> 或 <span class="mono">admin</span> 可进入。前端用 Sveltia CMS (<span class="mono">/admin-cms/</span>) 做内容编辑，统计面板用纯 JS + Supabase 查询构建。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ 03 MOTION ═══════════ -->
+<!-- ═══════════ 03 动效 ═══════════ -->
 <section id="motion">
   <div class="label">03 · 动效</div>
   <h2>变换驱动 · 克制运动</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">仅使用 CSS <span class="mono">transform</span> (scale, translate, rotate)。禁用 opacity 过渡、色彩动画、glitch、粒子效果。动效不需要"炫"，只需要"准"。</p>
-
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">仅使用 <span class="mono">transform</span>。禁用 opacity / color / background / box-shadow / filter 过渡。</p>
   <div class="motion-grid">
-    <div class="motion-demo">
-      <div class="name">scale · hover</div>
-      <div class="target" onmouseenter="this.style.transform='scale(1.06)'" onmouseleave="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">▣</div>
-      <div class="desc">按钮/卡片 hover<br>scale(1.03-1.06)</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">scale · press</div>
-      <div class="target" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;">▢</div>
-      <div class="desc">点击反馈<br>scale(0.95-0.98)</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">translateY · hover</div>
-      <div class="target" onmouseenter="this.style.transform='translateY(-3px)'" onmouseleave="this.style.transform='translateY(0)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">▤</div>
-      <div class="desc">卡片悬浮上移<br>translateY(-2~-4px)</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">translateX · link</div>
-      <div class="target" onmouseenter="this.style.transform='translateX(3px)'" onmouseleave="this.style.transform='translateX(0)'" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg);">→ hover me</div>
-      <div class="desc">侧栏/链接微移<br>translateX(2-3px)</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">rotate · loading</div>
-      <div class="target" style="animation:rotate-slow 3s linear infinite;width:28px;height:28px;border:1px solid var(--faint);border-radius:3px;border-top-color:var(--accent);"></div>
-      <div class="desc">旋转加载指示器<br>rotate 360°</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">float · idle</div>
-      <div class="target" style="animation:subtle-float 3s ease-in-out infinite;font-size:20px;">◆</div>
-      <div class="desc">装饰元素呼吸<br>translateY(-4px)</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">fade-up · enter</div>
-      <div class="target" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">opacity 0→1<br>translateY 8→0</div>
-      <div class="desc">页面进入动画<br>唯一 opacity 例外</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">stagger · list</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <div style="width:100%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s both;"></div>
-        <div style="width:80%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s .1s both;"></div>
-        <div style="width:60%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s .2s both;"></div>
-      </div>
-      <div class="desc">列表渐进呈现<br>50-80ms stagger</div>
-    </div>
+    <div class="motion-demo"><div class="name">scale · hover</div><div class="target" onmouseenter="this.style.transform='scale(1.06)'" onmouseleave="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;">▣</div><div class="desc">按钮/卡片<br>scale(1.03-1.06)</div></div>
+    <div class="motion-demo"><div class="name">scale · press</div><div class="target" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;">▢</div><div class="desc">点击反馈<br>scale(0.95-0.98)</div></div>
+    <div class="motion-demo"><div class="name">translateY</div><div class="target" onmouseenter="this.style.transform='translateY(-3px)'" onmouseleave="this.style.transform='translateY(0)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;">▤</div><div class="desc">hover 上浮<br>translateY(-2~-4px)</div></div>
+    <div class="motion-demo"><div class="name">translateX</div><div class="target" onmouseenter="this.style.transform='translateX(3px)'" onmouseleave="this.style.transform='translateX(0)'" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg);">→ hover me</div><div class="desc">侧栏/链接<br>translateX(2-3px)</div></div>
+    <div class="motion-demo"><div class="name">rotate</div><div class="target" style="animation:rotate-slow 3s linear infinite;width:28px;height:28px;border:1px solid var(--faint);border-radius:3px;border-top-color:var(--accent);"></div><div class="desc">加载指示<br>rotate 360°</div></div>
+    <div class="motion-demo"><div class="name">float</div><div class="target" style="animation:subtle-float 3s ease-in-out infinite;font-size:20px;">◆</div><div class="desc">装饰呼吸<br>translateY(-4px)</div></div>
+    <div class="motion-demo"><div class="name">fade-up</div><div class="target" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);animation:fade-up .8s both;">opacity 0→1<br>translateY 8→0</div><div class="desc">页面进入<br>唯一 opacity 例外</div></div>
+    <div class="motion-demo"><div class="name">stagger</div><div style="display:flex;flex-direction:column;gap:4px;width:100%;"><div class="skeleton-block" style="width:100%;animation:fade-up .4s both;"></div><div class="skeleton-block" style="width:80%;animation:fade-up .4s .1s both;"></div><div class="skeleton-block" style="width:60%;animation:fade-up .4s .2s both;"></div></div><div class="desc">列表渐进<br>50-80ms stagger</div></div>
   </div>
-
-  <div class="terminal">
-    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">motion-tokens.css</span></div>
-    <div class="term-body">
-      <span class="prompt">$</span> <span class="output">cat tokens.css</span><br>
-      <span style="color:var(--faint);">--ease-out:</span> <span style="color:var(--fg);">cubic-bezier(0.16,1,0.3,1)</span><br>
-      <span style="color:var(--faint);">--dur-fast:</span>  <span style="color:var(--fg);">120ms</span>  <span style="color:var(--faint);">// hover/press 反馈</span><br>
-      <span style="color:var(--faint);">--dur-normal:</span><span style="color:var(--fg);">200ms</span>  <span style="color:var(--faint);">// 卡片/元素过渡</span><br>
-      <span style="color:var(--faint);">--dur-slow:</span>  <span style="color:var(--fg);">350ms</span>  <span style="color:var(--faint);">// 页面进入 fade</span><br>
-      <span style="color:var(--faint);">--dur-idle:</span>  <span style="color:var(--fg);">3000ms</span> <span style="color:var(--faint);">// 循环漂浮</span><br>
-      <br>
-      <span style="color:var(--faint);">// 禁止使用的属性:</span><br>
-      <span style="color:var(--faint);">// transition-property 不包含: opacity, color, background, box-shadow, filter</span><br>
-      <span class="prompt">$</span> <span style="color:var(--accent);">█</span>
-    </div>
-  </div>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ motion-rule</span><br>
-    唯一允许的 opacity 变化：页面首屏 fade-up 进入动画。此后所有交互反馈仅使用 <strong>transform</strong>。色彩和透明度在整个交互生命周期中保持不变。这创建了一种<strong>物理质感</strong>——元素像有质量的物体一样移动，而不是像 LED 屏幕一样闪烁。
-  </div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ motion-rule</span><br>唯一允许的 opacity 变化：页面首屏 fade-up。此后所有交互仅用 transform。动效时长 <strong>120ms fast · 200ms normal · 350ms slow</strong>。淡出比淡入快。</div>
 </section>
 
 <hr>
 
-<!-- ═══════════ 04 WELCOME PAGE ═══════════ -->
+<!-- ═══════════ 04 欢迎页 ═══════════ -->
 <section id="welcome">
   <div class="label">04 · 欢迎页</div>
   <h2>100vh 终端动画 · 全屏循环</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">首屏 = 完整视口的居中终端动画。循环播放系统引导序列，无按钮、无标题、无干扰——仅 8 行文字 + 闪烁光标。下滑后进入博客内容。</p>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">welcome — 100vh — terminal loop</span></div>
-    <div class="mockup-body" style="padding:0;">
-
-      <!-- FULLSCREEN WELCOME -->
-      <div class="welcome-full" style="min-height:560px;">
-        <!-- Terminal Animation -->
-        <div class="term-box">
-          <div class="tl">$ ssh blog.levia808.dev</div>
-          <div class="tl">$ loading kernel modules...</div>
-          <div class="tl">$ hugo v0.164.0 — 22 pages mounted</div>
-          <div class="tl">$ theme PaperMod — initialized</div>
-          <div class="tl">$ blog.service — <span style="color:var(--accent);">active (running)</span></div>
-          <div class="tl">$ deploy: Cloudflare Pages ✓</div>
-          <div class="tl">$ auth: Supabase GitHub OAuth ✓</div>
-          <div class="tl">$ <span class="blink-cursor"></span></div>
-        </div>
-        <!-- Scroll Hint -->
-        <div class="scroll-hint">
-          <div>scroll</div>
-          <div class="sh-arrow"></div>
-        </div>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">welcome — 100vh — terminal loop</span></div>
+  <div class="mockup-body" style="padding:0;">
+    <div class="welcome-full" style="min-height:560px;">
+      <div class="term-box">
+        <div class="tl">$ ssh blog.levia808.dev</div>
+        <div class="tl">$ loading kernel modules...</div>
+        <div class="tl">$ hugo v0.164.0 — 22 pages mounted</div>
+        <div class="tl">$ theme PaperMod — initialized</div>
+        <div class="tl">$ blog.service — <span style="color:var(--accent);">active (running)</span></div>
+        <div class="tl">$ deploy: Cloudflare Pages ✓</div>
+        <div class="tl">$ auth: Supabase GitHub OAuth ✓</div>
+        <div class="tl">$ <span class="blink-cursor"></span></div>
       </div>
-
-      <!-- BELOW: BLOG CONTENT -->
-      <div style="padding:48px 36px;">
-        <div class="blog-nav">
-          <div class="logo">LEVIA808</div>
-          <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
-        </div>
-        <div class="blog-hero">
-          <div class="hero-cover" style="background:linear-gradient(135deg,#1a1a18 0%,#1f1f1c 50%,#1a1f19 100%);">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:2px;position:relative;z-index:1;">cover image<br>2026 · 08</span>
-          </div>
-          <div class="hero-body">
-            <div class="hero-date">2026 · 08 · 06</div>
-            <div class="hero-title">构建现代化个人博客</div>
-            <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
-            <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
-          </div>
-        </div>
-        <div class="grid-3">
-          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1a18,#22221e);">▦</div></div><div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">深入理解 ownership 与 borrowing。</div></div></div>
-          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1e1a,#1e221e);">{ }</div></div><div class="pc-body"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div></div>
-          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1e1a1a,#221e1e);">#</div></div><div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div></div>
-        </div>
-      </div>
+      <div class="scroll-hint"><div>scroll</div><div class="sh-arrow"></div></div>
     </div>
-  </div>
-
+  </div></div>
   <table class="table" style="margin-top:24px;">
     <thead><tr><th>时间</th><th>行为</th><th>CSS</th></tr></thead>
     <tbody>
-      <tr><td><span class="mono">0.0s</span></td><td>第 1 行淡入</td><td><span class="mono">term-line-in 10s infinite</span></td></tr>
-      <tr><td><span class="mono">~0.7s</span></td><td>每行递增 0.7s 延迟出现</td><td><span class="mono">animation-delay: .7s, 1.4s, 2.1s...</span></td></tr>
-      <tr><td><span class="mono">~5.6s</span></td><td>8 行全部显示 · 光标闪烁</td><td><span class="mono">term-cursor-flash 1s step-end</span></td></tr>
-      <tr><td><span class="mono">~7-10s</span></td><td>所有行渐隐 → 重播</td><td><span class="mono">opacity 1→0 · infinite</span></td></tr>
+      <tr><td>0.0s</td><td>第 1 行淡入</td><td><span class="mono">term-line-in 10s infinite</span></td></tr>
+      <tr><td>~0.7s</td><td>每行递增 0.7s stagger</td><td><span class="mono">animation-delay: .7s, 1.4s...</span></td></tr>
+      <tr><td>~5.6s</td><td>8 行全显示 · 光标闪烁</td><td><span class="mono">term-cursor-flash 1s step-end</span></td></tr>
+      <tr><td>~10s</td><td>渐隐 → 重播</td><td><span class="mono">opacity 1→0 · infinite loop</span></td></tr>
     </tbody>
   </table>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ pure-css-loop</span><br>
-    纯 CSS 实现，无需 JS。<span class="mono">term-line-in</span> 关键帧控制每行的 opacity 进出，<span class="mono">animation-delay</span> 做行间 stagger，<span class="mono">infinite</span> 自动循环。总周期 10s。<br>
-    下滑提示用 <span class="mono">scroll-hint</span> 浮动动画，箭头用 <span class="mono">::after</span> 伪元素画 45° 线条。
-  </div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ pure-css-loop</span><br>纯 CSS 实现，无需 JS。下滑后进入博客内容区（见下一节）。</div>
 </section>
 
+<hr>
 
+<!-- ═══════════ 05 文章卡片 ═══════════ -->
+<section id="cards">
+  <div class="label">05 · 文章卡片</div>
+  <h2>3:2 封面 · 悬停上浮</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts · 3-column · cover cards</span></div>
+  <div class="mockup-body">
+    <div class="blog-nav"><div class="logo">LEVIA808</div><div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div></div>
+    <div class="blog-hero"><div class="hero-date">2026 · 08 · 06</div><div class="hero-title">构建现代化个人博客</div><div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，两边构建。</div><div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div></div>
+    <div class="grid-3">
+      <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1a18,#22221e);">▦</div></div><div class="pc-body"><div class="pc-date">2026 · 08 · 06</div><div class="pc-title">构建现代化个人博客</div><div class="pc-excerpt">从 Hugo 到双线部署的完整实践。</div></div></div>
+      <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1e1a,#1e221e);">{ }</div></div><div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">深入理解 ownership 与 borrowing。</div></div></div>
+      <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1e1a1a,#221e1e);">#</div></div><div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries 指南</div><div class="pc-excerpt">组件级响应式设计。</div></div></div>
+    </div>
+    <div class="box" style="margin-top:24px;"><span class="mono" style="color:var(--accent);">▶ card-spec</span><br><strong>比例</strong>: <span class="mono">3/2</span> · <strong>封面</strong>: 上半 <span class="mono">object-fit: cover</span> · <strong>hover</strong>: <span class="mono">translateY(-4px)</span> 250ms + <span class="mono">border-color → --accent</span> 350ms · <strong>Hugo</strong>: Front Matter <span class="mono">cover.image</span></div>
+  </div></div>
+</section>
 
-<!-- ═══════════ 05 ARTICLE ═══════════ -->
+<hr>
+
+<!-- ═══════════ 06 文章页 ═══════════ -->
 <section>
-  <div class="label">05 · 文章页</div>
+  <div class="label">06 · 文章页</div>
   <h2>阅读布局</h2>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts/hello-world</span></div>
-    <div class="mockup-body">
-      <div class="article-layout">
-        <div class="article-main">
-          <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:16px;">2026-08-06 · 5 min · hugo cloudflare devops</div>
-          <div style="font-size:32px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:16px;">构建现代化个人博客</div>
-          <div style="color:var(--muted);font-size:13px;margin-bottom:32px;line-height:1.7;">从 Hugo 静态站点生成器到 GitHub Pages + Cloudflare Pages 双线部署的完整实践。</div>
-          <div style="line-height:1.9;color:var(--fg);font-size:14px;font-weight:350;">
-            <p style="margin-bottom:14px;">本文带你从零搭建一个现代化个人博客。</p>
-            <h3 style="font-size:16px;font-weight:500;margin:28px 0 10px;color:var(--white);">Hugo 静态站点</h3>
-            <p style="margin-bottom:14px;">Hugo 是 Go 编写的静态站点生成器，构建 22 页耗时 43ms。</p>
-            <div style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);padding:16px 20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;">
-              <span style="color:var(--muted);"># hugo.yaml</span><br>
-              <span style="color:var(--fg);">baseURL</span>: <span style="color:var(--accent);">https://blog-go3.pages.dev</span><br>
-              <span style="color:var(--fg);">theme</span>: <span style="color:var(--accent);">PaperMod</span>
-            </div>
-            <blockquote style="border-left:1px solid var(--faint);padding:10px 18px;margin:16px 0;color:var(--muted);font-style:italic;font-size:13px;">
-              部署的本质不是"放在哪里"，而是"如何让内容最快到达读者"。
-            </blockquote>
-          </div>
-        </div>
-        <div class="article-toc">
-          <div class="toc-t">On this page</div>
-          <a href="#" class="active">Hugo 静态站点</a>
-          <a href="#">双线部署策略</a>
-          <a href="#">GitHub OAuth</a>
-          <a href="#">性能优化</a>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts/hello-world</span></div>
+  <div class="mockup-body">
+    <div class="article-layout">
+      <div class="article-main">
+        <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:16px;">2026-08-06 · 5 min · hugo cloudflare devops</div>
+        <div style="font-size:32px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:16px;">构建现代化个人博客</div>
+        <div style="color:var(--muted);font-size:13px;margin-bottom:32px;line-height:1.7;">从 Hugo 到双线部署的完整实践。</div>
+        <div style="line-height:1.9;font-size:14px;font-weight:350;">
+          <p style="margin-bottom:14px;">本文带你从零搭建一个现代化个人博客。</p>
+          <h3 style="font-size:16px;font-weight:500;margin:28px 0 10px;color:var(--white);">Hugo 静态站点</h3>
+          <p style="margin-bottom:14px;">Hugo 构建 22 页耗时 43ms。</p>
+          <div style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);padding:16px 20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;"><span style="color:var(--muted);"># hugo.yaml</span><br><span style="color:var(--fg);">baseURL</span>: <span style="color:var(--accent);">https://blog-go3.pages.dev</span><br><span style="color:var(--fg);">theme</span>: <span style="color:var(--accent);">PaperMod</span></div>
+          <blockquote style="border-left:1px solid var(--faint);padding:10px 18px;margin:16px 0;color:var(--muted);font-style:italic;font-size:13px;">部署的本质不是"放在哪里"，而是"如何让内容最快到达读者"。</blockquote>
         </div>
       </div>
+      <div class="article-toc"><div class="toc-t">On this page</div><a href="#" class="active">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">GitHub OAuth</a><a href="#">性能优化</a></div>
     </div>
-  </div>
+  </div></div>
 </section>
 
 <hr>
 
-<!-- ═══════════ DETAIL COMPONENTS ═══════════ -->
+<!-- ═══════════ 07 细节组件 ═══════════ -->
 <section id="details">
-  <div class="label">06 · 细节组件</div>
-  <h2>导航 · 搜索 · 评论 · 页脚</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全部组件遵循统一设计语言：1px 边框 · 4-6px 圆角 · 单色灰阶 + 苔绿 accent · transform 动效。以下均提供完整 mockup。</p>
+  <div class="label">07 · 细节组件</div>
+  <h2>导航 · 搜索 · 认证 · 评论 · 页脚</h2>
 
-  <!-- ── NAVIGATION ── -->
-  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Desktop)</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — navigation · sticky-top · scroll-aware</span></div>
-    <div class="mockup-body" style="padding:0;">
-      <!-- sticky indicator -->
-      <div style="font-size:9px;color:var(--faint);text-align:center;padding:6px;font-family:'JetBrains Mono',monospace;border-bottom:1px dashed var(--faint);letter-spacing:1px;">▲ scroll up → nav shows &nbsp;|&nbsp; ▼ scroll down → nav hides &nbsp;|&nbsp; ● at top → always visible</div>
-      <div class="nav-full" style="position:relative;"> <!-- relative for mockup only -->
-        <div class="nf-logo">LEVIA808</div>
-        <div class="nf-links">
-          <a href="#" class="active">Posts</a>
-          <a href="#">Archive</a>
-          <a href="#">Tags</a>
-          <a href="#">About</a>
-        </div>
-        <div class="nf-actions">
-          <button class="theme-toggle" title="toggle theme">◐</button>
-          <span class="nf-icon" title="search">⌕</span>
-          <div class="dropdown">
-            <div class="nf-avatar">L</div>
-            <div class="dropdown-menu">
-              <a href="#">Profile</a>
-              <a href="#">Admin</a>
-              <div class="dm-divider"></div>
-              <button style="color:var(--muted);">Sign out</button>
-            </div>
-          </div>
-        </div>
+  <!-- NAV DESKTOP -->
+  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (sticky · scroll-aware)</h3>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">nav — sticky-top · scroll hide/show</span></div>
+  <div class="mockup-body" style="padding:0;">
+    <div style="font-size:9px;color:var(--faint);text-align:center;padding:6px;font-family:'JetBrains Mono',monospace;border-bottom:1px dashed var(--faint);letter-spacing:1px;">▲ scroll up → nav shows &nbsp;|&nbsp; ▼ scroll down → nav hides &nbsp;|&nbsp; ● at top → always visible</div>
+    <div class="nav-full" style="position:relative;">
+      <div class="nf-logo">LEVIA808</div>
+      <div class="nf-links"><a href="#" class="active">Posts</a><a href="#">Archive</a><a href="#">Tags</a><a href="#">About</a></div>
+      <div class="nf-actions">
+        <button class="theme-toggle">◐</button>
+        <span class="nf-icon">⌕</span>
+        <div class="dropdown"><div class="nf-avatar">L</div><div class="dropdown-menu"><a href="#">Profile</a><a href="#">Admin</a><div class="dm-divider"></div><button>Sign out</button></div></div>
       </div>
     </div>
-  </div>
+  </div></div>
+  <div class="box" style="margin-top:12px;"><span class="mono" style="color:var(--accent);">▶ scroll behavior</span><br><strong>position: sticky; top: 0</strong> · ↓下滑 &gt;60px → <span class="mono">translateY(-100%)</span> · ↑上滑 &gt;60px → <span class="mono">translateY(0)</span> · 250ms ease-out · rAF 节流</div>
 
-  <!-- SCROLL BEHAVIOR SPEC -->
-  <div class="box" style="margin-top:20px;border-left-color:var(--accent);">
-    <span class="mono" style="color:var(--accent);">▶ scroll-aware-nav.js</span><br>
-    <strong>trigger</strong>: scroll delta &gt; 60px<br>
-    <strong>↓ 下滑</strong>: nav → <span class="mono">translateY(-100%)</span> · 250ms ease-out · 隐藏为内容腾空间<br>
-    <strong>↑ 上滑</strong>: nav → <span class="mono">translateY(0)</span> · 250ms ease-out · 立即浮现<br>
-    <strong>顶部</strong>: 始终显示 (scrollY &lt; 60px 时强制 visible)<br>
-    <strong>实现</strong>: <span class="mono">position: sticky; top: 0</span> + JS 监听 scroll 切换 <span class="mono">.nav-hidden</span> class
-  </div>
+  <!-- NAV MOBILE -->
+  <h3 style="color:var(--muted);margin:28px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Mobile ≤ 768px)</h3>
+  <div class="mockup" style="max-width:400px;"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">nav — mobile</span></div>
+  <div class="mockup-body" style="padding:0;">
+    <div class="nav-mobile"><div class="nm-logo">LEVIA808</div><button class="nm-toggle">☰</button></div>
+    <div class="nav-mobile-menu" style="display:flex;"><a href="#" class="active">Posts</a><a href="#">Archive</a><a href="#">About</a><a href="#" style="margin-top:8px;border-top:1px solid var(--border);padding-top:16px;">Sign in</a></div>
+  </div></div>
 
-  <!-- SCROLL ANIMATION TIMELINE -->
-  <table class="table" style="margin-top:16px;">
-    <thead><tr><th>滚动方向</th><th>scrollY 条件</th><th>CSS class</th><th>视觉</th><th>时长</th></tr></thead>
-    <tbody>
-      <tr><td>↓ 下滑</td><td><span class="mono" style="color:var(--muted);">&gt; 60px delta</span></td><td><span class="mono" style="color:var(--muted);">.nav-hidden</span></td><td><span class="mono" style="color:var(--muted);">translateY(-100%)</span> · 导航上滑消失</td><td>250ms</td></tr>
-      <tr><td>↑ 上滑</td><td><span class="mono" style="color:var(--accent);">&gt; 60px delta</span></td><td><span class="mono" style="color:var(--accent);">:not(.nav-hidden)</span></td><td><span class="mono" style="color:var(--accent);">translateY(0)</span> · 导航滑入浮现</td><td>250ms</td></tr>
-      <tr><td>↕ 顶部</td><td><span class="mono" style="color:var(--faint);">&lt; 60px</span></td><td><span class="mono" style="color:var(--faint);">force visible</span></td><td>始终可见 · 不参与隐藏逻辑</td><td>—</td></tr>
-      <tr><td>— 静止</td><td>delta &lt; 60px</td><td>保持当前状态</td><td>无变化 · 避免微小滚动抖动</td><td>—</td></tr>
-    </tbody>
-  </table>
+  <!-- SEARCH -->
+  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 搜索 (Ctrl+K)</h3>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">overlay — search</span></div>
+  <div class="mockup-body"><div class="search-overlay" style="position:relative;background:transparent;padding:0;"><div class="search-box"><div class="sb-input-wrap"><span class="sb-prefix">$</span><input placeholder="search posts..." value="rust"></div><div class="sb-hint">⌘K to open · esc to close · ↑↓ to navigate</div><div class="sb-results"><div class="sr-item selected">Rust 所有权模型 — <span style="color:var(--faint);">2025 · 06 · 15</span></div><div class="sr-item">深入理解 Rust async — <span style="color:var(--faint);">2025 · 03 · 22</span></div></div></div></div></div></div>
 
-  <!-- JS IMPLEMENTATION -->
-  <div class="terminal" style="margin-top:16px;">
-    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">scroll-nav.js</span></div>
-    <div class="term-body">
-      <span class="prompt">$</span> <span class="output">cat scroll-nav.js</span><br>
-      <span style="color:var(--faint);">const nav = document.querySelector('.nav-full');</span><br>
-      <span style="color:var(--faint);">let lastY = 0, ticking = false;</span><br>
-      <span style="color:var(--faint);">const DELTA = 60;</span><br>
-      <br>
-      <span style="color:var(--muted);">document.addEventListener('scroll', () =&gt; {</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;if (!ticking) {</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;requestAnimationFrame(() =&gt; {</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const y = window.scrollY;</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const delta = y - lastY;</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Math.abs(delta) &gt; DELTA) {</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nav.classList.toggle('nav-hidden', delta &gt; 0 &amp;&amp; y &gt; 60);</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lastY = y;</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ticking = false;</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;});</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;ticking = true;</span><br>
-      <span style="color:var(--muted);">&nbsp;&nbsp;}</span><br>
-      <span style="color:var(--muted);">});</span><br>
-      <br>
-      <span class="prompt">$</span> <span style="color:var(--accent);">█</span>
-    </div>
-  </div>
-
-  <div class="box" style="border-left-color:var(--faint);margin-top:16px;">
-    <span class="mono" style="color:var(--muted);">▶ performance-note</span><br>
-    使用 <span class="mono">requestAnimationFrame</span> 做节流，避免 scroll 事件阻塞主线程。<span class="mono">position: sticky</span> 确保导航在隐藏时仍占据布局空间（不引起 CLS）。仅在 delta 超过 60px 阈值时切换 class，消除手指微颤导致的闪烁。
-  </div>
-
-  <!-- MOBILE NAV -->
-  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Mobile ≤ 768px)</h3>
-  <div class="mockup" style="margin-top:12px;max-width:400px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — navigation · mobile</span></div>
-    <div class="mockup-body" style="padding:0;">
-      <div class="nav-mobile">
-        <div class="nm-logo">LEVIA808</div>
-        <button class="nm-toggle">☰</button>
-      </div>
-      <div class="nav-mobile-menu" style="display:flex;">
-        <a href="#" class="active">Posts</a>
-        <a href="#">Archive</a>
-        <a href="#">Tags</a>
-        <a href="#">About</a>
-        <a href="#" style="margin-top:8px;border-top:1px solid var(--border);padding-top:16px;">Sign in</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SEARCH ── -->
-  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 搜索 (Ctrl+K 唤起)</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">overlay — search</span></div>
-    <div class="mockup-body">
-      <div class="search-overlay" style="position:relative;background:transparent;padding:0;">
-        <div class="search-box">
-          <div class="sb-input-wrap">
-            <span class="sb-prefix">$</span>
-            <input placeholder="search posts..." value="rust">
-          </div>
-          <div class="sb-hint">⌘K to open · esc to close · ↑↓ to navigate</div>
-          <div class="sb-results">
-            <div class="sr-item selected">Rust 所有权模型 — <span style="color:var(--faint);">2025 · 06 · 15</span></div>
-            <div class="sr-item">深入理解 Rust async 运行时 — <span style="color:var(--faint);">2025 · 03 · 22</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── AUTH MODAL ── -->
+  <!-- AUTH -->
   <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 登录弹窗</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">modal — sign in</span></div>
-    <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
-      <div class="auth-overlay" style="position:relative;background:transparent;">
-        <div class="auth-modal">
-          <button class="am-close" aria-label="Close"><svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg></button>
-          <div class="am-title">Sign in</div>
-          <div class="am-field"><label>Email</label><input placeholder="you@email.com" value="levia808@users.noreply"></div>
-          <div class="am-field"><label>Password</label><input type="password" placeholder="········" value="········"></div>
-          <button class="btn" style="width:100%;justify-content:center;margin-top:8px;">> Sign in</button>
-          <div class="am-divider">or</div>
-          <button class="btn" style="width:100%;justify-content:center;border-color:var(--border);">GitHub</button>
-          <div class="am-footer">No account? <a href="#">Create one</a> · <a href="#">Forgot?</a></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">modal — sign in</span></div>
+  <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
+    <div class="auth-overlay" style="position:relative;background:transparent;"><div class="auth-modal">
+      <button class="am-close" aria-label="Close"><svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg></button>
+      <div class="am-title">Sign in</div>
+      <div class="am-field"><label>Email</label><input placeholder="you@email.com"></div>
+      <div class="am-field"><label>Password</label><input type="password" placeholder="········"></div>
+      <button class="btn" style="width:100%;justify-content:center;margin-top:8px;">> Sign in</button>
+      <div class="am-divider">or</div>
+      <button class="btn" style="width:100%;justify-content:center;border-color:var(--border);">GitHub</button>
+      <div class="am-footer">No account? <a href="#">Create one</a> · <a href="#">Forgot?</a></div>
+    </div></div>
+  </div></div>
 
-  <!-- ── BREADCRUMB + TAGS ── -->
-  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 面包屑 · 标签云 · 分页</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">components — breadcrumb / tags / pagination</span></div>
-    <div class="mockup-body">
-      <!-- Breadcrumb -->
-      <div class="breadcrumb">
-        <a href="#">~</a><span class="bc-sep">/</span>
-        <a href="#">posts</a><span class="bc-sep">/</span>
-        <span style="color:var(--fg);">hello-world</span>
-      </div>
+  <!-- BREADCRUMB + TAGS + PAGINATION -->
+  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 面包屑 · 标签 · 分页</h3>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">breadcrumb / tags / pagination</span></div>
+  <div class="mockup-body">
+    <div class="breadcrumb"><a href="#">~</a><span class="bc-sep">/</span><a href="#">posts</a><span class="bc-sep">/</span><span style="color:var(--fg);">hello-world</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0;"><a href="#" class="tag-pill">hugo</a><a href="#" class="tag-pill">cloudflare</a><a href="#" class="tag-pill">rust</a><a href="#" class="tag-pill" style="border-color:var(--accent);color:var(--accent);">css</a></div>
+    <div class="pagination"><a href="#" class="pg-item">←</a><a href="#" class="pg-item active">1</a><a href="#" class="pg-item">2</a><a href="#" class="pg-item">3</a><span class="pg-ellipsis">…</span><a href="#" class="pg-item">8</a><a href="#" class="pg-item">→</a></div>
+  </div></div>
 
-      <!-- Tags -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:20px 0;">
-        <a href="#" class="tag-pill">hugo</a>
-        <a href="#" class="tag-pill">cloudflare</a>
-        <a href="#" class="tag-pill">devops</a>
-        <a href="#" class="tag-pill">rust</a>
-        <a href="#" class="tag-pill" style="border-color:var(--accent);color:var(--accent);">css</a>
-      </div>
-
-      <!-- Pagination -->
-      <div class="pagination">
-        <a href="#" class="pg-item">←</a>
-        <a href="#" class="pg-item active">1</a>
-        <a href="#" class="pg-item">2</a>
-        <a href="#" class="pg-item">3</a>
-        <span class="pg-ellipsis">…</span>
-        <a href="#" class="pg-item">8</a>
-        <a href="#" class="pg-item">→</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── COMMENTS ── -->
+  <!-- COMMENTS -->
   <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 评论区</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — comments</span></div>
-    <div class="mockup-body">
-      <!-- Comment form -->
-      <div style="display:flex;gap:12px;margin-bottom:28px;">
-        <div class="comment-item" style="width:100%;">
-          <div class="ci-avatar" style="background:var(--bg);">L</div>
-          <div class="ci-body">
-            <textarea class="input" rows="3" placeholder="Write a comment... (Markdown)"></textarea>
-            <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-              <button class="btn" style="font-size:11px;padding:6px 16px;">> Submit</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comment thread -->
-      <div class="comment-thread">
-        <div class="comment-item">
-          <div class="ci-avatar" style="background:var(--bg);">A</div>
-          <div class="ci-body">
-            <div class="ci-header"><span class="ci-author">alex_dev</span><span class="ci-date">2026-08-06 · 14:32</span></div>
-            <div class="ci-text">非常好的教程！双线部署的部分尤其有用。想问一下 Cloudflare Pages 的冷启动时间大概多久？</div>
-            <div class="ci-actions"><button>reply</button><button>▲ 3</button></div>
-          </div>
-        </div>
-        <div class="comment-item comment-reply">
-          <div class="ci-avatar" style="background:var(--surface);border-color:var(--accent);">L</div>
-          <div class="ci-body">
-            <div class="ci-header"><span class="ci-author" style="color:var(--accent);">Levia808</span><span class="ci-date">2026-08-06 · 15:10</span></div>
-            <div class="ci-text">冷启动通常在 30-80ms 内完成，Hugo 构建非常快。</div>
-            <div class="ci-actions"><button>reply</button><button>▲ 5</button></div>
-          </div>
-        </div>
-      </div>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — comments</span></div>
+  <div class="mockup-body">
+    <div style="display:flex;gap:12px;margin-bottom:28px;"><div class="comment-item" style="width:100%;"><div class="ci-avatar">L</div><div class="ci-body"><textarea class="input" rows="3" placeholder="Write a comment... (Markdown)"></textarea><div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="btn" style="font-size:11px;padding:6px 16px;">> Submit</button></div></div></div></div>
+    <div class="comment-thread">
+      <div class="comment-item"><div class="ci-avatar">A</div><div class="ci-body"><div class="ci-header"><span class="ci-author">alex_dev</span><span class="ci-date">2026-08-06 · 14:32</span></div><div class="ci-text">双线部署的部分尤其有用。想问 Cloudflare Pages 冷启动时间多久？</div><div class="ci-actions"><button>reply</button><button>▲ 3</button></div></div></div>
+      <div class="comment-item comment-reply"><div class="ci-avatar" style="border-color:var(--accent);">L</div><div class="ci-body"><div class="ci-header"><span class="ci-author" style="color:var(--accent);">Levia808</span><span class="ci-date">2026-08-06 · 15:10</span></div><div class="ci-text">冷启动 30-80ms，Hugo 构建非常快。</div><div class="ci-actions"><button>reply</button><button>▲ 5</button></div></div></div>
     </div>
-  </div>
+  </div></div>
 
-  <!-- ── FOOTER ── -->
+  <!-- FOOTER -->
   <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 页脚</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — footer</span></div>
-    <div class="mockup-body" style="padding:0;">
-      <div class="site-footer" style="padding:32px 36px;">
-        <div class="sf-left">build 2026 · hugo v0.164.0</div>
-        <div class="sf-center">LEVIA808</div>
-        <div class="sf-right">
-          <a href="#">github</a>
-          <a href="#">rss</a>
-          <a href="#">sitemap</a>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — footer</span></div>
+  <div class="mockup-body" style="padding:0;"><div class="site-footer"><div class="sf-left">build 2026 · hugo v0.164.0</div><div class="sf-center">LEVIA808</div><div class="sf-right"><a href="#">github</a><a href="#">rss</a><a href="#">sitemap</a></div></div></div></div>
 </section>
 
 <hr>
 
-<!-- ═══════════ MARKDOWN EDITOR ═══════════ -->
+<!-- ═══════════ 08 文章编辑器 ═══════════ -->
 <section id="editor">
-  <div class="label">06b · 文章编辑器</div>
+  <div class="label">08 · 文章编辑器</div>
   <h2>Markdown 编辑 · 媒体嵌入</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">管理后台的文章编辑页。左右分屏（Markdown 源码 + 实时预览），工具栏支持文本格式化与图片/视频/音频嵌入。Hugo shortcode 自动生成。</p>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">admin — /admin/posts/edit?id=hello-world</span></div>
-    <div class="mockup-body" style="padding:0;">
-
-      <div class="editor-frame">
-        <!-- TOOLBAR -->
-        <!-- icons: text-b, text-italic, code, link, text-h, list-bullets, quotes, table, image, video, speaker-high, floppy-disk, paper-plane -->
-        <div class="editor-toolbar">
-          <div class="et-group">
-            <button title="Bold" aria-label="Bold"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M170.5,115.7A44,44,0,0,0,144,40H80a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8h80a48,48,0,0,0,10.5-94.3ZM104,56h40a28,28,0,0,1,0,56H104Zm64,136H104V128h64a32,32,0,0,1,0,64Z"/></svg></button><button title="Italic" aria-label="Italic"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M200,56a8,8,0,0,1-8,8H157.8L115.1,192H144a8,8,0,0,1,0,16H64a8,8,0,0,1,0-16H98.2L140.9,64H112a8,8,0,0,1,0-16h80A8,8,0,0,1,200,56Z"/></svg></button><button title="Code" aria-label="Code"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M69.1,86.6,24.1,128l45,41.4a8,8,0,0,1-5.2,14.2,7.8,7.8,0,0,1-5.2-2l-48-44a8,8,0,0,1,0-11.2l48-44a8,8,0,0,1,10.4,10.4Zm170.8,32.6-48-44a8,8,0,0,0-10.4,10.4L226.9,128l-45,41.4a8,8,0,0,0,5.2,14.2,7.8,7.8,0,0,0,5.2-2l48-44A8,8,0,0,0,239.9,119.2ZM152,36a8,8,0,0,0-10,4.2l-56,152a8,8,0,1,0,14.8,5.4l56-152A8,8,0,0,0,152,36Z"/></svg></button><button title="Link" aria-label="Insert Link"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M127.5,80.5a44,44,0,0,0-62.2,62.2L86,164a43.9,43.9,0,0,0,30.8,13.1,44,44,0,0,0,29.5-11.2,8,8,0,0,0-10.6-12c-9.1,8.1-23.1,7.5-31.5-1.4L83.5,131.8A28,28,0,0,1,123.1,92.3l4.2,2.8a8,8,0,1,0,9-13.2Zm69,29.5L176,88.3a44,44,0,0,0-60.5,1.6,8,8,0,0,0,10.6,12c9.2-8.4,23.4-7.8,32,1.6l20.2,20.7A28,28,0,0,1,139,163.7l-4.9-4.9a8,8,0,1,0-11.3,11.3l4.9,4.9a44,44,0,0,0,68.8-50.5Z"/></svg></button>
-          </div>
-          <div class="et-group">
-            <button title="Heading" aria-label="Heading"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,48v48a8,8,0,0,1-16,0V56H136V200h24a8,8,0,0,1,0,16H96a8,8,0,0,1,0-16h24V56H64v40a8,8,0,0,1-16,0V48a8,8,0,0,1,8-8H200A8,8,0,0,1,208,48Z"/></svg></button><button title="List" aria-label="List"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button><button title="Quote" aria-label="Quote"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,100,56Zm0,80H40V72h60Zm116-80H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></svg></button>
-          </div>
-          <div class="et-group">
-            <button class="et-media" title="Insert Image" aria-label="Insert Image"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.8l-26.1-26.1a4,4,0,0,0-5.8,0L139.8,176l-28.9-28.9a3.9,3.9,0,0,0-5.6,0L77,175.5a15.9,15.9,0,0,1-3.7,5.1L40,145.5V56ZM40,172l35.5-37.5,26.2,26.2a4,4,0,0,0,5.8,0L152,116l40,40v44H40Zm56-36a12,12,0,1,1,12,12A12,12,0,0,1,96,136Z"/></svg></button>
-            <button class="et-media" title="Insert Video" aria-label="Insert Video"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M164.4,121.3l-48-32A8,8,0,0,0,104,96v64a8,8,0,0,0,12.4,6.7l48-32a8,8,0,0,0,0-13.4ZM120,145.1V110.9L145.7,128ZM216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200Z"/></svg></button>
-            <button class="et-media" title="Insert Audio" aria-label="Insert Audio"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M212.9,25.4a8,8,0,0,0-7.1-1l-80,24A8,8,0,0,0,120,56V172.3A36,36,0,1,0,136,200V106.8l72-21.6v61.1A36,36,0,1,0,224,176V32A8,8,0,0,0,212.9,25.4ZM128,200a20,20,0,1,1-20-20A20,20,0,0,1,128,200Zm80-32a20,20,0,1,1-20-20A20,20,0,0,1,208,168Z"/></svg></button>
-          </div>
-          <div style="flex:1;"></div>
-          <div class="et-group">
-            <button title="Save draft" aria-label="Save draft"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,32H80A16,16,0,0,0,64,48V72H48A16,16,0,0,0,32,88V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V48ZM176,208H48V88h64v12.7L99.7,112.7a8,8,0,1,0,11.3,11.3L120,115v53a24,24,0,0,0,48,0v-8h8Zm32-40H192V112a8,8,0,0,0-8-8H136V48h72Z"/></svg></button>
-            <button title="Publish" aria-label="Publish" style="color:var(--accent);font-weight:500;"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor" style="margin-right:4px;"><path d="M229.7,109.7l-48,48a8.2,8.2,0,0,1-11.4,0,8.1,8.1,0,0,1,0-11.4L204.7,112H128a88,88,0,0,0-85.2,66,8,8,0,0,1-15.5-4A104,104,0,0,1,128,96h76.7L170.3,61.7a8.1,8.1,0,0,1,11.4-11.4l48,48A8.1,8.1,0,0,1,229.7,109.7Z"/></svg>PUBLISH</button>
-          </div>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">admin — /admin/posts/edit</span></div>
+  <div class="mockup-body" style="padding:0;">
+    <div class="editor-frame">
+      <div class="editor-toolbar">
+        <div class="et-group">
+          <button title="Bold"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M170.5,115.7A44,44,0,0,0,144,40H80a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8h80a48,48,0,0,0,10.5-94.3ZM104,56h40a28,28,0,0,1,0,56H104Zm64,136H104V128h64a32,32,0,0,1,0,64Z"/></svg></button>
+          <button title="Italic"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M200,56a8,8,0,0,1-8,8H157.8L115.1,192H144a8,8,0,0,1,0,16H64a8,8,0,0,1,0-16H98.2L140.9,64H112a8,8,0,0,1,0-16h80A8,8,0,0,1,200,56Z"/></svg></button>
+          <button title="Code"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M69.1,86.6,24.1,128l45,41.4a8,8,0,0,1-5.2,14.2,7.8,7.8,0,0,1-5.2-2l-48-44a8,8,0,0,1,0-11.2l48-44a8,8,0,0,1,10.4,10.4Zm170.8,32.6-48-44a8,8,0,0,0-10.4,10.4L226.9,128l-45,41.4a8,8,0,0,0,5.2,14.2,7.8,7.8,0,0,0,5.2-2l48-44A8,8,0,0,0,239.9,119.2ZM152,36a8,8,0,0,0-10,4.2l-56,152a8,8,0,1,0,14.8,5.4l56-152A8,8,0,0,0,152,36Z"/></svg></button>
+          <button title="Link"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M127.5,80.5a44,44,0,0,0-62.2,62.2L86,164a43.9,43.9,0,0,0,30.8,13.1,44,44,0,0,0,29.5-11.2,8,8,0,0,0-10.6-12c-9.1,8.1-23.1,7.5-31.5-1.4L83.5,131.8A28,28,0,0,1,123.1,92.3l4.2,2.8a8,8,0,1,0,9-13.2Zm69,29.5L176,88.3a44,44,0,0,0-60.5,1.6,8,8,0,0,0,10.6,12c9.2-8.4,23.4-7.8,32,1.6l20.2,20.7A28,28,0,0,1,139,163.7l-4.9-4.9a8,8,0,1,0-11.3,11.3l4.9,4.9a44,44,0,0,0,68.8-50.5Z"/></svg></button>
         </div>
-
-        <!-- SPLIT PANE -->
-        <div class="editor-body">
-          <!-- MARKDOWN SOURCE -->
-          <div class="eb-pane">
-            <div class="eb-pane-header">markdown · hello-world.md</div>
-            <textarea class="eb-textarea">---
+        <div class="et-group">
+          <button title="Heading"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,48v48a8,8,0,0,1-16,0V56H136V200h24a8,8,0,0,1,0,16H96a8,8,0,0,1,0-16h24V56H64v40a8,8,0,0,1-16,0V48a8,8,0,0,1,8-8H200A8,8,0,0,1,208,48Z"/></svg></button>
+          <button title="List"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></button>
+          <button title="Quote"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,100,56Zm0,80H40V72h60Zm116-80H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v16a8,8,0,0,1-16,0,8,8,0,0,0-16,0,24,24,0,0,0,48,0V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></svg></button>
+        </div>
+        <div class="et-group">
+          <button class="et-media" title="Image"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.8l-26.1-26.1a4,4,0,0,0-5.8,0L139.8,176l-28.9-28.9a3.9,3.9,0,0,0-5.6,0L77,175.5a15.9,15.9,0,0,1-3.7,5.1L40,145.5V56ZM40,172l35.5-37.5,26.2,26.2a4,4,0,0,0,5.8,0L152,116l40,40v44H40Zm56-36a12,12,0,1,1,12,12A12,12,0,0,1,96,136Z"/></svg></button>
+          <button class="et-media" title="Video"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M164.4,121.3l-48-32A8,8,0,0,0,104,96v64a8,8,0,0,0,12.4,6.7l48-32a8,8,0,0,0,0-13.4ZM120,145.1V110.9L145.7,128ZM216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200Z"/></svg></button>
+          <button class="et-media" title="Audio"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M212.9,25.4a8,8,0,0,0-7.1-1l-80,24A8,8,0,0,0,120,56V172.3A36,36,0,1,0,136,200V106.8l72-21.6v61.1A36,36,0,1,0,224,176V32A8,8,0,0,0,212.9,25.4ZM128,200a20,20,0,1,1-20-20A20,20,0,0,1,128,200Zm80-32a20,20,0,1,1-20-20A20,20,0,0,1,208,168Z"/></svg></button>
+        </div>
+        <div style="flex:1;"></div>
+        <div class="et-group">
+          <button title="Save draft"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor"><path d="M208,32H80A16,16,0,0,0,64,48V72H48A16,16,0,0,0,32,88V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V48ZM176,208H48V88h64v12.7L99.7,112.7a8,8,0,1,0,11.3,11.3L120,115v53a24,24,0,0,0,48,0v-8h8Zm32-40H192V112a8,8,0,0,0-8-8H136V48h72Z"/></svg></button>
+          <button title="Publish" style="color:var(--accent);font-weight:500;"><svg viewBox="0 0 256 256" width="15" height="15" fill="currentColor" style="margin-right:4px;"><path d="M229.7,109.7l-48,48a8.2,8.2,0,0,1-11.4,0,8.1,8.1,0,0,1,0-11.4L204.7,112H128a88,88,0,0,0-85.2,66,8,8,0,0,1-15.5-4A104,104,0,0,1,128,96h76.7L170.3,61.7a8.1,8.1,0,0,1,11.4-11.4l48,48A8.1,8.1,0,0,1,229.7,109.7Z"/></svg>PUBLISH</button>
+        </div>
+      </div>
+      <div class="editor-body">
+        <div class="eb-pane"><div class="eb-pane-header">markdown · hello-world.md</div>
+          <textarea class="eb-textarea">---
 title: "构建现代化个人博客"
 date: "2026-08-06"
 tags: [hugo, cloudflare, devops]
@@ -1338,400 +610,129 @@ cover:
     poster="/images/video-cover.jpg"
     caption="部署流程演示" &gt;}}
 
-核心思路是 **一份代码，两边构建**。
-
 {{&lt; audio src="/media/podcast-ep1.mp3"
-    caption="播客: 博客搭建心得 (12:34)" &gt;}}
-
-## 性能对比
-
-| 平台 | 构建时间 | CDN 节点 |
-|------|---------|----------|
-| GitHub Pages | 43ms | 全球 |
-| Cloudflare | 43ms | 全球 + 国内 |</textarea>
-          </div>
-
-          <!-- LIVE PREVIEW -->
-          <div class="eb-pane">
-            <div class="eb-pane-header">preview</div>
-            <div class="eb-preview">
-              <h3 style="font-size:18px;font-weight:500;margin-bottom:12px;color:var(--white);">构建现代化个人博客</h3>
-              <p style="color:var(--muted);margin-bottom:16px;">从零搭建一个现代化个人博客。</p>
-
-              <div class="media-placeholder">🖼 <strong>figure</strong> — /images/architecture.png<br><span style="font-size:10px;">部署架构图</span></div>
-
-              <h3 style="font-size:15px;font-weight:500;margin:20px 0 8px;color:var(--white);">双线部署</h3>
-
-              <div class="media-placeholder" style="border-color:var(--accent);">▶ <strong>video</strong> — /media/deploy-demo.mp4<br><span style="font-size:10px;">部署流程演示 &nbsp;|&nbsp; poster: video-cover.jpg</span></div>
-
-              <p style="color:var(--muted);margin:12px 0;">核心思路是 <strong style="color:var(--fg);">一份代码，两边构建</strong>。</p>
-
-              <div class="media-placeholder" style="border-color:var(--accent);">♫ <strong>audio</strong> — /media/podcast-ep1.mp3<br><span style="font-size:10px;">播客: 博客搭建心得 (12:34)</span></div>
-
-              <h3 style="font-size:15px;font-weight:500;margin:20px 0 8px;color:var(--white);">性能对比</h3>
-              <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;font-size:11px;margin:12px 0;">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 10px;background:var(--surface);font-family:'JetBrains Mono',monospace;color:var(--muted);">平台&nbsp;&nbsp;&nbsp;构建&nbsp;&nbsp;&nbsp;CDN</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:4px 10px;border-top:1px solid var(--border);">Pages&nbsp;&nbsp;43ms&nbsp;&nbsp;全球</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:4px 10px;border-top:1px solid var(--border);">CF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;43ms&nbsp;&nbsp;全球+国内</div>
-              </div>
-            </div>
-          </div>
+    caption="播客: 博客搭建心得 (12:34)" &gt;}}</textarea>
         </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MEDIA INSERT MODAL MOCKUP -->
-  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 媒体插入弹窗</h3>
-  <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">modal — insert media</span></div>
-    <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
-      <div class="auth-overlay" style="position:relative;background:transparent;">
-        <div class="media-modal">
-          <button class="am-close" aria-label="Close"><svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg></button>
-          <div class="mm-title">Insert Media</div>
-          <div class="mm-tabs">
-            <button class="active">image</button>
-            <button>video</button>
-            <button>audio</button>
-            <button>upload</button>
-          </div>
-          <div class="mm-field"><label>Source URL</label><input class="input" placeholder="https://... or /media/file.mp4" value="/media/deploy-demo.mp4"></div>
-          <div class="mm-field"><label>Caption</label><input class="input" placeholder="Optional caption text" value="部署流程演示"></div>
-          <div class="mm-field"><label>Poster (video only)</label><input class="input" placeholder="/images/poster.jpg"></div>
-          <div class="mm-preview">▶ Video preview — deploy-demo.mp4</div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
-            <button class="admin-btn">Cancel</button>
-            <button class="admin-btn" style="border-color:var(--accent);color:var(--accent);">Insert</button>
+        <div class="eb-pane"><div class="eb-pane-header">preview</div>
+          <div class="eb-preview">
+            <h3 style="font-size:18px;font-weight:500;margin-bottom:12px;color:var(--white);">构建现代化个人博客</h3>
+            <p style="color:var(--muted);margin-bottom:16px;">从零搭建一个现代化个人博客。</p>
+            <div class="media-placeholder">🖼 <strong>figure</strong> — /images/architecture.png<br><span style="font-size:10px;">部署架构图</span></div>
+            <h3 style="font-size:15px;font-weight:500;margin:20px 0 8px;color:var(--white);">双线部署</h3>
+            <div class="media-placeholder" style="border-color:var(--accent);">▶ <strong>video</strong> — /media/deploy-demo.mp4<br><span style="font-size:10px;">部署流程演示 &nbsp;|&nbsp; poster: video-cover.jpg</span></div>
+            <div class="media-placeholder" style="border-color:var(--accent);">♫ <strong>audio</strong> — /media/podcast-ep1.mp3<br><span style="font-size:10px;">播客: 博客搭建心得 (12:34)</span></div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ Hugo Shortcode 映射</h3>
-  <table class="table">
-    <thead><tr><th>媒体类型</th><th>Markdown 语法</th><th>Hugo Shortcode</th><th>渲染</th></tr></thead>
-    <tbody>
-      <tr><td><strong>图片</strong></td><td><span class="mono" style="font-size:10px;">![caption](url)</span></td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; figure src="url" caption="..." &gt;}}</span></td><td>响应式 &lt;figure&gt; + &lt;figcaption&gt;</td></tr>
-      <tr><td><strong>视频</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; video src="url" poster="..." &gt;}}</span></td><td>&lt;video controls&gt; + poster + 标题</td></tr>
-      <tr><td><strong>音频</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; audio src="url" caption="..." &gt;}}</span></td><td>&lt;audio controls&gt; + 标题栏</td></tr>
-      <tr><td><strong>上传</strong></td><td>—</td><td>Supabase Storage → 返回 URL → 插入 shortcode</td><td>CDN 分发 · 自动压缩</td></tr>
-      <tr><td><strong>iframe</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; rawhtml &gt;}}...iframe...{{&lt; /rawhtml &gt;}}</span></td><td>YouTube / Bilibili / CodePen</td></tr>
-    </tbody>
-  </table>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ editor-flow</span><br>
-    <strong>编辑流程</strong>: 左侧写 Markdown + shortcode → 右侧实时预览（Hugo partial render 或客户端 Marked.js 渲染）→ 点击 PUBLISH 提交 → GitHub API 写入仓库 → Cloudflare + GitHub Actions 自动构建部署。<br>
-    <strong>媒体存储</strong>: 本地图片/视频上传至 Supabase Storage → 返回 CDN URL → 自动插入 shortcode。外部链接直接粘贴 URL。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ 07 COMPONENTS TABLE ═══════════ -->
-<section>
-  <div class="label">06 · 组件</div>
-  <h2>UI 元素规格</h2>
-
-  <table class="table">
-    <thead><tr><th>组件</th><th>处理</th><th>动效</th><th>P</th></tr></thead>
-    <tbody>
-      <tr><td><strong>欢迎页</strong></td><td>100vh 终端循环动画 · 8行 stagger · 居中 · 纯黑底</td><td>term-line-in 10s loop + scroll-hint float</td><td>P0</td></tr>
-      <tr><td><strong>导航栏</strong></td><td>大写字母 · 间距 32px · 底部无下划线</td><td>hover → translateY(-1px)</td><td>P0</td></tr>
-      <tr><td><strong>文章卡片</strong></td><td>3:2 竖向 · 上半封面 object-fit:cover · 下半标题+摘要 · 8px 圆角</td><td>hover → translateY(-4px) + 苔绿边框过渡</td><td>P0</td></tr>
-      <tr><td><strong>文章详情</strong></td><td>正文 720px + TOC 200px · 代码块 2px 左 accent 线</td><td>TOC hover → translateX(2px)</td><td>P0</td></tr>
-      <tr><td><strong>按钮</strong></td><td>1px border · 4px 圆角 · 12px 字体</td><td>hover → scale(1.03) · press → scale(0.98)</td><td>P0</td></tr>
-      <tr><td><strong>表单输入</strong></td><td>黑底 1px 暗边 · 4px 圆角 · focus→亮 border</td><td>—</td><td>P0</td></tr>
-      <tr><td><strong>管理后台</strong></td><td>左侧导航 + 右侧内容 · Dashboard 统计卡 + 文章表 · 角色权限</td><td>侧栏 hover → translateX(2px) + accent 线</td><td>P0</td></tr>
-      <tr><td><strong>终端窗口</strong></td><td>#0A0A09 底 · 灰点标题栏 · JetBrains Mono</td><td>—</td><td>P1</td></tr>
-      <tr><td><strong>标签</strong></td><td>monospace 10px · color: var(--muted)</td><td>—</td><td>P1</td></tr>
-      <tr><td><strong>分割线</strong></td><td>1px solid #2C2C2A · 唯一分隔方式</td><td>—</td><td>P1</td></tr>
-      <tr><td><strong>面包屑</strong></td><td>monospace ~/posts/title · 1px 分隔</td><td>hover → color 变亮</td><td>P1</td></tr>
-      <tr><td><strong>标签云</strong></td><td>pill 99px 圆角 · monospace · 1px 边框</td><td>hover → scale(1.05) + accent 色</td><td>P1</td></tr>
-      <tr><td><strong>评论</strong></td><td>头像方块 4px · textarea · Markdown · 嵌套回复</td><td>hover 按钮变 accent</td><td>P0</td></tr>
-      <tr><td><strong>分页</strong></td><td>32px 方块 · monospace · active 苔绿实心</td><td>hover → scale(1.08)</td><td>P1</td></tr>
-      <tr><td><strong>搜索</strong></td><td>$ 前缀输入框 · Ctrl+K 全屏 overlay · 键盘导航</td><td>focus → 苔绿边框</td><td>P1</td></tr>
-      <tr><td><strong>页脚</strong></td><td>三栏: build-info / logo / links · 1px 顶线</td><td>hover → translateY(-1px)</td><td>P1</td></tr>
-      <tr><td><strong>主题切换</strong></td><td>36px 方块 · ◐ 图标 · 1px 边框</td><td>hover → rotate(15deg) + accent 框</td><td>P2</td></tr>
-      <tr><td><strong>下拉菜单</strong></td><td>nav avatar hover → 下拉 · 4px padding</td><td>opacity + translateY 过渡</td><td>P1</td></tr>
-      <tr><td><strong>Skeleton</strong></td><td>#2C2C2A 灰条 · 3px 圆角</td><td>opacity 呼吸 2s</td><td>P1</td></tr>
-      <tr><td><strong>Toast</strong></td><td>黑底 1px 边框 · monospace 标签</td><td>fade-up + fade-out</td><td>P2</td></tr>
-      <tr><td><strong>404 页</strong></td><td>"page not found" · 终端风格 · 回首页链接</td><td>—</td><td>P2</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<hr>
-
-<!-- ═══════════ ADMIN PAGE ═══════════ -->
-<section>
-  <div class="label">07 · 后台管理</div>
-  <h2>管理员控制台</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">极简管理面板 — 左侧导航 + 右侧仪表盘。统计概览 + 文章列表。仅超级管理员（GitHub 登录 levia808）可见。</p>
-
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /admin · dashboard</span></div>
-    <div class="mockup-body" style="padding:0;">
-      <div class="admin-page">
-        <!-- SIDEBAR -->
-        <div class="admin-sidebar">
-          <div class="as-logo">LEVIA808 <span style="font-size:10px;color:var(--muted);font-weight:400;">admin</span></div>
-          <div class="as-nav">
-            <a href="#" class="active">Dashboard</a>
-            <a href="#">Posts</a>
-            <a href="#">Comments</a>
-            <a href="#">Users</a>
-            <a href="#">Media</a>
-            <a href="#">Settings</a>
-          </div>
-          <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">levia808</div>
-            <div style="font-size:10px;color:var(--faint);">superadmin</div>
-          </div>
-        </div>
-        <!-- MAIN -->
-        <div class="admin-main">
-          <div class="am-header">
-            <div class="am-title">Dashboard</div>
-            <span class="btn" style="font-size:10px;padding:5px 16px;">+ New Post</span>
-          </div>
-          <!-- STATS -->
-          <div class="admin-stat-grid">
-            <div class="admin-stat"><div class="ast-label">posts</div><div class="ast-val">22</div><div class="ast-sub">+3 this week</div></div>
-            <div class="admin-stat"><div class="ast-label">comments</div><div class="ast-val">47</div><div class="ast-sub">+12 new</div></div>
-            <div class="admin-stat"><div class="ast-label">users</div><div class="ast-val">31</div><div class="ast-sub">+5 registered</div></div>
-            <div class="admin-stat"><div class="ast-label">views</div><div class="ast-val">1.2k</div><div class="ast-sub">this month</div></div>
-          </div>
-          <!-- POST TABLE -->
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;">recent posts</div>
-          <table class="admin-table">
-            <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Views</th><th></th></tr></thead>
-            <tbody>
-              <tr><td>构建现代化个人博客</td><td><span style="color:var(--accent);">published</span></td><td>2026-08-06</td><td>342</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
-              <tr><td>Rust 所有权模型</td><td><span style="color:var(--accent);">published</span></td><td>2025-06-15</td><td>218</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
-              <tr><td>编辑器配置 2025</td><td><span style="color:var(--accent);">published</span></td><td>2025-05-20</td><td>156</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
-              <tr><td>Container Queries</td><td><span style="color:var(--yellow);">draft</span></td><td>2025-04-10</td><td>—</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
-              <tr><td>TypeScript 高级类型</td><td><span style="color:var(--accent);">published</span></td><td>2025-03-01</td><td>89</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="box" style="margin-top:24px;">
-    <span class="mono" style="color:var(--accent);">▶ admin-spec</span><br>
-    <strong>认证</strong>：仅 <span class="mono">role = superadmin</span>（GitHub 登录 levia808）可见 /admin/ 路由。<br>
-    <strong>布局</strong>：220px 侧栏 + 自适应主区域。侧栏 sticky，主区域滚动。<br>
-    <strong>侧栏</strong>：6 个导航项 + 底部当前用户信息。当前页高亮 + translateX(3px) 动效。<br>
-    <strong>仪表盘</strong>：4 格统计卡片 + 文章列表表。hover 行背景加深。<br>
-    <strong>写文章</strong>：通过 Sveltia CMS（/admin-cms/）或 Supabase 直写。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ ICON SYSTEM ═══════════ -->
-<section id="icons">
-  <div class="label">06c · 图标系统</div>
-  <h2>Phosphor Icons · 统一图标语言</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全站使用 <a href="https://phosphoricons.com" target="_blank" class="link" style="color:var(--accent);">Phosphor Icons</a>（MIT 开源）。6 种粗细可选，项目统一使用 <strong>Regular</strong> 粗细——线条精准、几何感强，与 Space Grotesk / JetBrains Mono 的冷冽排版天然契合。不自行绘制 UI 图标。</p>
-
-  <div class="box" style="border-left-color:var(--accent);">
-    <span class="mono" style="color:var(--accent);">▶ cdn</span><br>
-    <span class="mono" style="font-size:11px;color:var(--muted);">&lt;script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"&gt;&lt;/script&gt;</span><br>
-    或按需导入: <span class="mono" style="font-size:11px;color:var(--muted);">npm i @phosphor-icons/web</span>
-  </div>
-
-  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 按场景分配图标</h3>
-  <table class="table">
-    <thead><tr><th>场景</th><th>图标名</th><th>Phosphor 名称</th><th>用法</th></tr></thead>
-    <tbody>
-      <tr><td><strong>导航</strong></td><td><span style="font-size:16px;">☰</span></td><td><span class="mono">ph-list</span></td><td>移动端汉堡菜单</td></tr>
-      <tr><td><strong>导航</strong></td><td><span style="font-size:16px;">✕</span></td><td><span class="mono">ph-x</span></td><td>关闭/取消操作</td></tr>
-      <tr><td><strong>搜索</strong></td><td><span style="font-size:16px;">⌕</span></td><td><span class="mono">ph-magnifying-glass</span></td><td>搜索图标/按钮</td></tr>
-      <tr><td><strong>主题</strong></td><td><span style="font-size:16px;">◐</span></td><td><span class="mono">ph-moon / ph-sun</span></td><td>暗色/亮色模式切换</td></tr>
-      <tr><td><strong>用户</strong></td><td><span style="font-size:16px;">👤</span></td><td><span class="mono">ph-user-circle</span></td><td>登录按钮/头像占位</td></tr>
-      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">↑</span></td><td><span class="mono">ph-arrow-up</span></td><td>向上/发送/提升</td></tr>
-      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">↗</span></td><td><span class="mono">ph-arrow-up-right</span></td><td>外链 · "在新窗口打开"</td></tr>
-      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">+</span></td><td><span class="mono">ph-plus</span></td><td>新建/添加</td></tr>
-      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">✓</span></td><td><span class="mono">ph-check</span></td><td>成功 · 已完成 · 确认</td></tr>
-      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">⚠</span></td><td><span class="mono">ph-warning</span></td><td>警告 · 需要注意</td></tr>
-      <tr><td><strong>状态</strong></td><td><span style="font-size:16px;">ⓘ</span></td><td><span class="mono">ph-info</span></td><td>提示/帮助信息</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;"><b>B</b></span></td><td><span class="mono">ph-text-bolder</span></td><td>粗体</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;"><i>I</i></span></td><td><span class="mono">ph-text-italic</span></td><td>斜体</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">&lt;/&gt;</span></td><td><span class="mono">ph-code</span></td><td>代码/等宽</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">🔗</span></td><td><span class="mono">ph-link</span></td><td>插入链接</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">H</span></td><td><span class="mono">ph-text-h</span></td><td>标题</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">≡</span></td><td><span class="mono">ph-list</span></td><td>无序列表</td></tr>
-      <tr><td><strong>编辑器</strong></td><td><span style="font-size:16px;">"</span></td><td><span class="mono">ph-quotes</span></td><td>引用</td></tr>
-      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">🖼</span></td><td><span class="mono">ph-image</span></td><td>插入图片</td></tr>
-      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">▶</span></td><td><span class="mono">ph-video</span></td><td>插入视频</td></tr>
-      <tr><td><strong>媒体</strong></td><td><span style="font-size:16px;">♫</span></td><td><span class="mono">ph-music-notes</span></td><td>插入音频</td></tr>
-      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">💾</span></td><td><span class="mono">ph-floppy-disk</span></td><td>保存草稿</td></tr>
-      <tr><td><strong>操作</strong></td><td><span style="font-size:16px;">→</span></td><td><span class="mono">ph-paper-plane-tilt</span></td><td>发布/发送</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">▦</span></td><td><span class="mono">ph-squares-four</span></td><td>Dashboard</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">📄</span></td><td><span class="mono">ph-files</span></td><td>文章管理</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">💬</span></td><td><span class="mono">ph-chats</span></td><td>评论管理</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">👥</span></td><td><span class="mono">ph-users</span></td><td>用户管理</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">🖼</span></td><td><span class="mono">ph-images</span></td><td>媒体库</td></tr>
-      <tr><td><strong>管理后台</strong></td><td><span style="font-size:16px;">⚙</span></td><td><span class="mono">ph-gear</span></td><td>设置</td></tr>
-    </tbody>
-  </table>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ icon-rules</span><br>
-    <strong>尺寸</strong>: 导航 20px · 工具栏 15px · 内联 1em<br>
-    <strong>颜色</strong>: 继承父级 <span class="mono">currentColor</span> · 默认 <span class="mono">var(--muted)</span> · 激活态 <span class="mono">var(--accent)</span><br>
-    <strong>粗细</strong>: 全局使用 Regular · 不使用 Fill/Duotone/Bold 变体<br>
-    <strong>禁止</strong>: 不使用 emoji 作 UI 图标 · 不自行绘制 SVG · 不混用多套图标库<br>
-    <strong>动画</strong>: hover → <span class="mono">transform: scale(1.1)</span> · 120ms ease-out
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ 08 COMPARISON ═══════════ -->
-<section>
-  <div class="label">07 · 对比</div>
-  <h2>方案演进</h2>
-
-  <div class="compare-row">
-    <div class="compare-cell"><div class="c-name">v1 编辑风</div><div class="c-val">暗色 · 琥珀金 · Inter · 12px 圆角 · 软</div></div>
-    <div class="compare-cell"><div class="c-name">v3 酸性粗野</div><div class="c-val">荧光绿 · 粉 · 青 · 扫描线 · 零圆角 · 闹</div></div>
-    <div class="compare-cell current"><div class="c-name">v6 自然科技</div><div class="c-val">单色 · 苔绿 · transform · 精密 · 冷</div></div>
-  </div>
-
-  <table class="table">
-    <thead><tr><th>维度</th><th>v3 酸性粗野主义</th><th>v6 自然科技 (当前)</th></tr></thead>
-    <tbody>
-      <tr><td>色彩数量</td><td>8+ 种酸性色</td><td>5 灰阶 + 1 accent</td></tr>
-      <tr><td>accent</td><td>#39FF14 荧光绿</td><td>#6B8B6B 暗苔绿</td></tr>
-      <tr><td>动效方式</td><td>blink / RGB shift / noise / glitch</td><td>scale / translate / rotate</td></tr>
-      <tr><td>圆角</td><td>0-8px 形状等级</td><td>4-6px 统一微圆角</td></tr>
-      <tr><td>氛围</td><td>黑客 · 朋克 · 反叛</td><td>建筑 · 矿物 · 沉静</td></tr>
-      <tr><td>装饰</td><td>scanline · ASCII · 终端窗口</td><td>仅 boot log · 极简终端</td></tr>
-      <tr><td>信息密度</td><td>中</td><td>极低 · 大量留白</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<hr>
-
-<!-- ═══════════ ICON SYSTEM ═══════════ -->
-<section id="icons">
-  <div class="label">08 · 图标系统</div>
-  <h2>Phosphor Icons</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全站使用 <a href="https://phosphoricons.com" class="link">Phosphor Icons</a>（MIT · ~1400 图标 · 6 种粗细）。选 <span class="mono">Regular</span> 为默认态、<span class="mono">Fill</span> 为 active/hover 态。不自行绘制图标。</p>
-
-  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 全局图标映射表</h3>
-  <table class="table">
-    <thead><tr><th>位置</th><th>Phosphor 图标名</th><th>样式</th><th>尺寸</th></tr></thead>
-    <tbody>
-      <tr><td>导航 · 文章</td><td><span class="mono" style="color:var(--accent);">article</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
-      <tr><td>导航 · 归档</td><td><span class="mono" style="color:var(--accent);">archive</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
-      <tr><td>导航 · 标签</td><td><span class="mono" style="color:var(--accent);">tag</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
-      <tr><td>导航 · 关于</td><td><span class="mono" style="color:var(--accent);">info</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
-      <tr><td>搜索按钮</td><td><span class="mono" style="color:var(--accent);">magnifying-glass</span></td><td>Regular</td><td>18px</td></tr>
-      <tr><td>主题切换</td><td><span class="mono" style="color:var(--accent);">sun / moon</span></td><td>Regular (toggle 切换)</td><td>18px</td></tr>
-      <tr><td>用户头像 (未登录)</td><td><span class="mono" style="color:var(--accent);">user-circle</span></td><td>Regular</td><td>20px</td></tr>
-      <tr><td>下拉菜单 · Profile</td><td><span class="mono" style="color:var(--accent);">user</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>下拉菜单 · Admin</td><td><span class="mono" style="color:var(--accent);">gear</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>下拉菜单 · Sign out</td><td><span class="mono" style="color:var(--accent);">sign-out</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>登录弹窗 · 关闭</td><td><span class="mono" style="color:var(--accent);">x</span></td><td>Regular</td><td>18px</td></tr>
-      <tr><td>登录弹窗 · GitHub</td><td><span class="mono" style="color:var(--accent);">github-logo</span></td><td>Regular</td><td>20px</td></tr>
-      <tr><td>面包屑分隔</td><td><span class="mono" style="color:var(--accent);">caret-right</span></td><td>Regular</td><td>12px</td></tr>
-      <tr><td>RSS 链接</td><td><span class="mono" style="color:var(--accent);">rss</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>页脚 · GitHub</td><td><span class="mono" style="color:var(--accent);">github-logo</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>页脚 · Sitemap</td><td><span class="mono" style="color:var(--accent);">sitemap</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>Hero · 箭头</td><td><span class="mono" style="color:var(--accent);">arrow-right</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>文章卡片 · 日期前</td><td><span class="mono" style="color:var(--accent);">calendar</span></td><td>Regular</td><td>12px</td></tr>
-      <tr><td>文章卡片 · 阅读时间</td><td><span class="mono" style="color:var(--accent);">clock</span></td><td>Regular</td><td>12px</td></tr>
-      <tr><td>分页 · 上一页</td><td><span class="mono" style="color:var(--accent);">caret-left</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>分页 · 下一页</td><td><span class="mono" style="color:var(--accent);">caret-right</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>评论 · 回复</td><td><span class="mono" style="color:var(--accent);">arrow-bend-up-left</span></td><td>Regular</td><td>12px</td></tr>
-      <tr><td>评论 · 点赞</td><td><span class="mono" style="color:var(--accent);">arrow-up · Fill 变体</span></td><td>Regular→Fill (active)</td><td>12px</td></tr>
-      <tr><td>状态 · 已发布</td><td><span class="mono" style="color:var(--accent);">check-circle</span></td><td>Fill (苔绿)</td><td>14px</td></tr>
-      <tr><td>状态 · 草稿</td><td><span class="mono" style="color:var(--accent);">pencil-simple-line</span></td><td>Regular (灰色)</td><td>14px</td></tr>
-      <tr><td>Admin 侧栏 · Dashboard</td><td><span class="mono" style="color:var(--accent);">squares-four</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin 侧栏 · Posts</td><td><span class="mono" style="color:var(--accent);">article</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin 侧栏 · Comments</td><td><span class="mono" style="color:var(--accent);">chat-centered-text</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin 侧栏 · Users</td><td><span class="mono" style="color:var(--accent);">users</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin 侧栏 · Media</td><td><span class="mono" style="color:var(--accent);">image</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin 侧栏 · Settings</td><td><span class="mono" style="color:var(--accent);">gear</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
-      <tr><td>Admin · New Post</td><td><span class="mono" style="color:var(--accent);">plus-circle</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>Admin · Edit</td><td><span class="mono" style="color:var(--accent);">pencil-simple</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>Admin · Trash</td><td><span class="mono" style="color:var(--accent);">trash</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>编辑器 · Bold</td><td><span class="mono" style="color:var(--accent);">text-b</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Italic</td><td><span class="mono" style="color:var(--accent);">text-italic</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Code</td><td><span class="mono" style="color:var(--accent);">code</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Link</td><td><span class="mono" style="color:var(--accent);">link</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Heading</td><td><span class="mono" style="color:var(--accent);">text-h</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · List</td><td><span class="mono" style="color:var(--accent);">list-bullets</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Quote</td><td><span class="mono" style="color:var(--accent);">quotes</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Table</td><td><span class="mono" style="color:var(--accent);">table</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Image</td><td><span class="mono" style="color:var(--accent);">image</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Video</td><td><span class="mono" style="color:var(--accent);">video</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Audio</td><td><span class="mono" style="color:var(--accent);">speaker-high</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Save</td><td><span class="mono" style="color:var(--accent);">floppy-disk</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>编辑器 · Publish</td><td><span class="mono" style="color:var(--accent);">paper-plane</span></td><td>Fill (苔绿)</td><td>16px</td></tr>
-      <tr><td>媒体弹窗 · Upload Tab</td><td><span class="mono" style="color:var(--accent);">upload</span></td><td>Regular</td><td>16px</td></tr>
-      <tr><td>Toast · Success</td><td><span class="mono" style="color:var(--accent);">check-circle</span></td><td>Fill (苔绿)</td><td>16px</td></tr>
-      <tr><td>Toast · Error</td><td><span class="mono" style="color:var(--accent);">x-circle</span></td><td>Fill (红 #C08080)</td><td>16px</td></tr>
-      <tr><td>Toast · Info</td><td><span class="mono" style="color:var(--accent);">info</span></td><td>Fill (灰色)</td><td>16px</td></tr>
-      <tr><td>欢迎页 · Scroll 提示</td><td><span class="mono" style="color:var(--accent);">arrow-down</span></td><td>Regular</td><td>14px</td></tr>
-      <tr><td>404 页</td><td><span class="mono" style="color:var(--accent);">warning-octagon</span></td><td>Regular</td><td>32px</td></tr>
-    </tbody>
-  </table>
-
+  </div></div>
   <table class="table" style="margin-top:24px;">
-    <thead><tr><th>使用方式</th><th>代码</th><th>说明</th></tr></thead>
+    <thead><tr><th>媒体</th><th>Hugo Shortcode</th><th>渲染</th></tr></thead>
     <tbody>
-      <tr><td><strong>CDN</strong></td><td><span class="mono" style="font-size:10px;">&lt;script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"&gt;&lt;/script&gt;</span></td><td>零构建配置，直接使用 <span class="mono">&lt;i class="ph ph-article"&gt;&lt;/i&gt;</span></td></tr>
-      <tr><td><strong>SVG Sprite</strong></td><td><span class="mono" style="font-size:10px;">&lt;svg&gt;&lt;use href="/icons/phosphor.svg#article"&gt;&lt;/svg&gt;</span></td><td>最优性能，单次请求，适合 Hugo 静态站点</td></tr>
-      <tr><td><strong>React</strong></td><td><span class="mono" style="font-size:10px;">npm i @phosphor-icons/react</span></td><td>Sveltia CMS 等 React 环境直接导入组件</td></tr>
+      <tr><td>图片</td><td><span class="mono" style="color:var(--accent);">{{&lt; figure src="url" caption="..." &gt;}}</span></td><td>&lt;figure&gt; + &lt;figcaption&gt;</td></tr>
+      <tr><td>视频</td><td><span class="mono" style="color:var(--accent);">{{&lt; video src="url" poster="..." &gt;}}</span></td><td>&lt;video controls&gt; + poster</td></tr>
+      <tr><td>音频</td><td><span class="mono" style="color:var(--accent);">{{&lt; audio src="url" caption="..." &gt;}}</span></td><td>&lt;audio controls&gt;</td></tr>
+      <tr><td>上传</td><td>Supabase Storage → CDN URL</td><td>自动压缩 · 全球 CDN</td></tr>
+      <tr><td>iframe</td><td><span class="mono" style="color:var(--accent);">{{&lt; rawhtml &gt;}}...{{&lt; /rawhtml &gt;}}</span></td><td>Bilibili / YouTube</td></tr>
     </tbody>
   </table>
-
-  <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ icon-rules</span><br>
-    <strong>粗细</strong>: Regular (1.5px 描边) 为默认 · Fill 用于 active/hover/selected 状态<br>
-    <strong>尺寸</strong>: 导航/按钮 18px · 侧栏 16px · 文字内嵌 14px · 小标注 12px<br>
-    <strong>颜色</strong>: 默认 <span class="mono">var(--muted)</span> · hover <span class="mono">var(--fg)</span> · active <span class="mono">var(--accent)</span><br>
-    <strong>禁止</strong>: 不使用 emoji 作 UI 图标 · 不自行绘制 · 不混用其他图标包
-  </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ 09 IMPLEMENTATION ═══════════ -->
+<!-- ═══════════ 09 管理后台 ═══════════ -->
+<section id="admin">
+  <div class="label">09 · 管理后台</div>
+  <h2>管理员面板</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">admin — /admin · dashboard</span></div>
+  <div class="mockup-body" style="padding:0;">
+    <div class="admin-page">
+      <div class="admin-sidebar"><div class="as-logo">LEVIA808<br><span style="font-size:10px;color:var(--muted);font-weight:400;">superadmin</span></div><div class="as-nav"><a href="#" class="active">/dashboard</a><a href="#">/posts</a><a href="#">/comments</a><a href="#">/users</a><a href="#">/media</a><a href="#">/settings</a></div></div>
+      <div class="admin-main">
+        <div class="am-header"><div class="am-title">Dashboard</div><div style="display:flex;gap:8px;"><button class="admin-btn">+ New Post</button></div></div>
+        <div class="admin-stat-grid">
+          <div class="admin-stat"><div class="asc-label">Posts</div><div class="asc-value">22</div></div>
+          <div class="admin-stat"><div class="asc-label">Comments</div><div class="asc-value">47</div></div>
+          <div class="admin-stat"><div class="asc-label">Users</div><div class="asc-value">12</div></div>
+          <div class="admin-stat"><div class="asc-label">Views</div><div class="asc-value">3.2K</div></div>
+        </div>
+        <div style="font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">Recent Posts</div>
+        <table class="admin-table">
+          <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Views</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td>构建现代化个人博客</td><td><span class="status-dot status-published"></span>published</td><td style="color:var(--muted);">2026-08-06</td><td>1.2K</td><td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td></tr>
+            <tr><td>Rust 所有权模型</td><td><span class="status-dot status-published"></span>published</td><td style="color:var(--muted);">2025-06-15</td><td>847</td><td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td></tr>
+            <tr><td>Container Queries 指南</td><td><span class="status-dot status-draft"></span>draft</td><td style="color:var(--muted);">2025-04-10</td><td>—</td><td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td></tr>
+            <tr><td>编辑器配置 2025</td><td><span class="status-dot status-draft"></span>draft</td><td style="color:var(--muted);">2025-05-20</td><td>—</td><td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:11px;color:var(--faint);font-family:'JetBrains Mono',monospace;">showing 4 of 22 · page 1/6</div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 10 图标系统 ═══════════ -->
+<section id="icons">
+  <div class="label">10 · 图标系统</div>
+  <h2>Phosphor Icons · 统一图标语言</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全站使用 <a href="https://phosphoricons.com" target="_blank" class="link" style="color:var(--accent);">Phosphor Icons</a>（MIT）· <strong>Regular</strong> 粗细。不自行绘制 SVG UI 图标。</p>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ cdn</span><br><span class="mono" style="font-size:11px;color:var(--muted);">&lt;script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"&gt;&lt;/script&gt;</span></div>
+  <table class="table">
+    <thead><tr><th>场景</th><th>图标名</th><th>Phosphor 名称</th></tr></thead>
+    <tbody>
+      <tr><td>搜索</td><td>⌕</td><td><span class="mono">ph-magnifying-glass</span></td></tr>
+      <tr><td>主题切换</td><td>◐</td><td><span class="mono">ph-moon / ph-sun</span></td></tr>
+      <tr><td>关闭</td><td>✕</td><td><span class="mono">ph-x</span></td></tr>
+      <tr><td>汉堡菜单</td><td>☰</td><td><span class="mono">ph-list</span></td></tr>
+      <tr><td>用户</td><td>👤</td><td><span class="mono">ph-user-circle</span></td></tr>
+      <tr><td>粗体</td><td><b>B</b></td><td><span class="mono">ph-text-bolder</span></td></tr>
+      <tr><td>斜体</td><td><i>I</i></td><td><span class="mono">ph-text-italic</span></td></tr>
+      <tr><td>代码</td><td>&lt;/&gt;</td><td><span class="mono">ph-code</span></td></tr>
+      <tr><td>链接</td><td>🔗</td><td><span class="mono">ph-link</span></td></tr>
+      <tr><td>标题</td><td>H</td><td><span class="mono">ph-text-h</span></td></tr>
+      <tr><td>引用</td><td>❝</td><td><span class="mono">ph-quotes</span></td></tr>
+      <tr><td>图片</td><td>🖼</td><td><span class="mono">ph-image</span></td></tr>
+      <tr><td>视频</td><td>▶</td><td><span class="mono">ph-video</span></td></tr>
+      <tr><td>音频</td><td>♫</td><td><span class="mono">ph-music-notes</span></td></tr>
+      <tr><td>保存</td><td>💾</td><td><span class="mono">ph-floppy-disk</span></td></tr>
+      <tr><td>发布</td><td>→</td><td><span class="mono">ph-paper-plane-tilt</span></td></tr>
+      <tr><td>Dashboard</td><td>▦</td><td><span class="mono">ph-squares-four</span></td></tr>
+      <tr><td>文章管理</td><td>📄</td><td><span class="mono">ph-files</span></td></tr>
+      <tr><td>评论</td><td>💬</td><td><span class="mono">ph-chats</span></td></tr>
+      <tr><td>用户管理</td><td>👥</td><td><span class="mono">ph-users</span></td></tr>
+      <tr><td>设置</td><td>⚙</td><td><span class="mono">ph-gear</span></td></tr>
+    </tbody>
+  </table>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ rules</span><br>尺寸: 导航 20px · 工具栏 15px · 内联 1em · 颜色: <span class="mono">currentColor</span> 继承 · 激活 → <span class="mono">var(--accent)</span> · hover → <span class="mono">scale(1.1)</span></div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 11 实施 ═══════════ -->
 <section>
-  <div class="label">08 · 实施</div>
+  <div class="label">11 · 实施</div>
   <h2>文件映射</h2>
   <table class="table">
     <thead><tr><th>步骤</th><th>文件</th><th>变更</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td><span class="mono">assets/css/extended/design-system.css</span></td><td>CSS 变量 · 矿物色板 · <span class="mono">transform</span> 动效规则 · 图标大小/颜色</td></tr>
+      <tr><td>1</td><td><span class="mono">assets/css/extended/design-system.css</span></td><td>CSS 变量 · 矿物色板 · transform 动效规则</td></tr>
       <tr><td>2</td><td><span class="mono">hugo.yaml</span></td><td>Google Fonts (Inter + JetBrains Mono + Noto Sans SC)</td></tr>
-      <tr><td>3</td><td><span class="mono">layouts/partials/head.html</span></td><td>Phosphor Icons CDN (<span class="mono">unpkg.com/@phosphor-icons/web</span>)</td></tr>
-      <tr><td>4</td><td><span class="mono">layouts/index.html</span></td><td>欢迎页 100vh 终端循环动画 + 文章卡片列表</td></tr>
-      <tr><td>4</td><td><span class="mono">layouts/partials/header.html</span></td><td>导航 · 大写 · 32px 间距 · Phosphor 图标 (article/archive/tag/info)</td></tr>
+      <tr><td>3</td><td><span class="mono">layouts/index.html</span></td><td>100vh 终端循环动画欢迎页</td></tr>
+      <tr><td>4</td><td><span class="mono">layouts/partials/header.html</span></td><td>sticky 导航 · scroll hide/show · 用户下拉</td></tr>
       <tr><td>5</td><td><span class="mono">layouts/_default/single.html</span></td><td>文章页 TOC 侧栏 · 代码块 accent 左线</td></tr>
-      <tr><td>6</td><td><span class="mono">layouts/partials/footer.html</span></td><td>最小页脚 · 3 行信息 · Phosphor 图标 (github-logo/rss/sitemap)</td></tr>
-      <tr><td>7</td><td><span class="mono">static/js/admin.js</span></td><td>管理后台 · Dashboard · Editor · 媒体上传</td></tr>
-      <tr><td>8</td><td><span class="mono">assets/css/extended/--cleanup</span></td><td>删除旧酸性 · scanline · glitch · 替换 emoji 为 Phosphor</td></tr>
+      <tr><td>6</td><td><span class="mono">static/js/admin.js</span></td><td>管理后台 Dashboard 统计 + 文章表</td></tr>
+      <tr><td>7</td><td><span class="mono">assets/css/</span></td><td>删除旧酸性 · scanline · glitch · RGB shift</td></tr>
     </tbody>
   </table>
 </section>
 
-<footer>
-  v6 · natur + technik · 2026-08-07 · LEVIA808
+<footer style="border-top:1px solid var(--border);padding:32px 0;text-align:center;font-size:11px;color:var(--faint);font-family:'JetBrains Mono',monospace;">
+  v7 · natur + technik · 2026-08-07 · LEVIA808
 </footer>
 
 </div>
-
 </body>
 </html>
