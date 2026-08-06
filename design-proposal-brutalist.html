@@ -257,6 +257,65 @@
   .admin-btn.danger{color:var(--muted)}
   .admin-btn.danger:hover{border-color:#8B4B4B;color:#C08080}
 
+  /* ── EDITOR ── */
+  .editor-frame{display:flex;flex-direction:column;min-height:520px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
+  .editor-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .editor-toolbar .et-group{display:flex;align-items:center;gap:2px;padding:0 8px;border-right:1px solid var(--border)}
+  .editor-toolbar .et-group:last-child{border-right:none}
+  .editor-toolbar button{
+    width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid transparent;border-radius:4px;
+    color:var(--muted);font-size:14px;cursor:pointer;
+    transition:border-color .2s,color .2s,transform .15s;
+  }
+  .editor-toolbar button:hover{border-color:var(--border);color:var(--fg);transform:scale(1.05)}
+  .editor-toolbar button.et-media{border-color:var(--border);color:var(--accent)}
+
+  .editor-body{display:grid;grid-template-columns:1fr 1fr;flex:1}
+  @media(max-width:768px){.editor-body{grid-template-columns:1fr}}
+  .editor-body .eb-pane{display:flex;flex-direction:column}
+  .editor-body .eb-pane+.eb-pane{border-left:1px solid var(--border)}
+  .editor-body .eb-pane-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:1.5px;
+  }
+  .editor-body .eb-textarea{
+    flex:1;padding:20px 24px;
+    background:var(--bg);color:var(--fg);
+    font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.8;
+    border:none;outline:none;resize:none;
+  }
+  .editor-body .eb-preview{
+    flex:1;padding:20px 24px;overflow-y:auto;
+    font-size:13px;line-height:1.85;color:var(--fg);
+  }
+  .editor-body .eb-preview img,.editor-body .eb-preview video{max-width:100%;border-radius:4px;margin:12px 0}
+  .editor-body .eb-preview audio{width:100%;margin:12px 0}
+  .editor-body .eb-preview .media-placeholder{
+    background:var(--surface);border:1px dashed var(--border);border-radius:6px;
+    padding:28px 20px;text-align:center;margin:12px 0;color:var(--muted);
+    font-family:"JetBrains Mono",monospace;font-size:11px;
+  }
+
+  /* ── MEDIA INSERT MODAL ── */
+  .media-modal{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    width:420px;max-width:90vw;padding:28px;
+  }
+  .media-modal .mm-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:20px}
+  .media-modal .mm-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+  .media-modal .mm-tabs button{
+    padding:8px 18px;font-size:12px;background:transparent;border:none;border-bottom:2px solid transparent;
+    color:var(--muted);cursor:pointer;font-family:"JetBrains Mono",monospace;
+    transition:color .2s,border-color .2s;
+  }
+  .media-modal .mm-tabs button.active,.media-modal .mm-tabs button:hover{color:var(--fg);border-bottom-color:var(--accent)}
+  .media-modal .mm-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .media-modal .mm-field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:"JetBrains Mono",monospace}
+  .media-modal .mm-preview{border:1px solid var(--border);border-radius:4px;padding:8px;text-align:center;margin-top:8px;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--faint)}
+
   .admin-stat-card{
     background:var(--surface);border:1px solid var(--border);border-radius:6px;
     padding:20px 22px;
@@ -1209,6 +1268,156 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ MARKDOWN EDITOR ═══════════ -->
+<section id="editor">
+  <div class="label">06b · 文章编辑器</div>
+  <h2>Markdown 编辑 · 媒体嵌入</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">管理后台的文章编辑页。左右分屏（Markdown 源码 + 实时预览），工具栏支持文本格式化与图片/视频/音频嵌入。Hugo shortcode 自动生成。</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">admin — /admin/posts/edit?id=hello-world</span></div>
+    <div class="mockup-body" style="padding:0;">
+
+      <div class="editor-frame">
+        <!-- TOOLBAR -->
+        <div class="editor-toolbar">
+          <div class="et-group">
+            <button title="Bold">B</button><button title="Italic"><i>I</i></button><button title="Code">&lt;/&gt;</button><button title="Link">🔗</button>
+          </div>
+          <div class="et-group">
+            <button title="Heading">H</button><button title="List">≡</button><button title="Quote">❝</button><button title="Table">⊞</button>
+          </div>
+          <div class="et-group">
+            <button class="et-media" title="Insert Image">🖼</button>
+            <button class="et-media" title="Insert Video">▶</button>
+            <button class="et-media" title="Insert Audio">♫</button>
+          </div>
+          <div style="flex:1;"></div>
+          <div class="et-group">
+            <button title="Save draft" style="color:var(--muted);">💾</button>
+            <button title="Publish" style="color:var(--accent);font-weight:500;">PUBLISH</button>
+          </div>
+        </div>
+
+        <!-- SPLIT PANE -->
+        <div class="editor-body">
+          <!-- MARKDOWN SOURCE -->
+          <div class="eb-pane">
+            <div class="eb-pane-header">markdown · hello-world.md</div>
+            <textarea class="eb-textarea">---
+title: "构建现代化个人博客"
+date: "2026-08-06"
+tags: [hugo, cloudflare, devops]
+cover:
+  image: /images/blog-cover.jpg
+---
+
+## 概述
+
+从零搭建一个现代化个人博客。
+
+{{&lt; figure src="/images/architecture.png"
+    caption="部署架构图" &gt;}}
+
+## 双线部署
+
+{{&lt; video src="/media/deploy-demo.mp4"
+    poster="/images/video-cover.jpg"
+    caption="部署流程演示" &gt;}}
+
+核心思路是 **一份代码，两边构建**。
+
+{{&lt; audio src="/media/podcast-ep1.mp3"
+    caption="播客: 博客搭建心得 (12:34)" &gt;}}
+
+## 性能对比
+
+| 平台 | 构建时间 | CDN 节点 |
+|------|---------|----------|
+| GitHub Pages | 43ms | 全球 |
+| Cloudflare | 43ms | 全球 + 国内 |</textarea>
+          </div>
+
+          <!-- LIVE PREVIEW -->
+          <div class="eb-pane">
+            <div class="eb-pane-header">preview</div>
+            <div class="eb-preview">
+              <h3 style="font-size:18px;font-weight:500;margin-bottom:12px;color:var(--white);">构建现代化个人博客</h3>
+              <p style="color:var(--muted);margin-bottom:16px;">从零搭建一个现代化个人博客。</p>
+
+              <div class="media-placeholder">🖼 <strong>figure</strong> — /images/architecture.png<br><span style="font-size:10px;">部署架构图</span></div>
+
+              <h3 style="font-size:15px;font-weight:500;margin:20px 0 8px;color:var(--white);">双线部署</h3>
+
+              <div class="media-placeholder" style="border-color:var(--accent);">▶ <strong>video</strong> — /media/deploy-demo.mp4<br><span style="font-size:10px;">部署流程演示 &nbsp;|&nbsp; poster: video-cover.jpg</span></div>
+
+              <p style="color:var(--muted);margin:12px 0;">核心思路是 <strong style="color:var(--fg);">一份代码，两边构建</strong>。</p>
+
+              <div class="media-placeholder" style="border-color:var(--accent);">♫ <strong>audio</strong> — /media/podcast-ep1.mp3<br><span style="font-size:10px;">播客: 博客搭建心得 (12:34)</span></div>
+
+              <h3 style="font-size:15px;font-weight:500;margin:20px 0 8px;color:var(--white);">性能对比</h3>
+              <div style="border:1px solid var(--border);border-radius:4px;overflow:hidden;font-size:11px;margin:12px 0;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 10px;background:var(--surface);font-family:'JetBrains Mono',monospace;color:var(--muted);">平台&nbsp;&nbsp;&nbsp;构建&nbsp;&nbsp;&nbsp;CDN</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:4px 10px;border-top:1px solid var(--border);">Pages&nbsp;&nbsp;43ms&nbsp;&nbsp;全球</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:4px 10px;border-top:1px solid var(--border);">CF&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;43ms&nbsp;&nbsp;全球+国内</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MEDIA INSERT MODAL MOCKUP -->
+  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 媒体插入弹窗</h3>
+  <div class="mockup" style="margin-top:12px;">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">modal — insert media</span></div>
+    <div class="mockup-body" style="display:flex;align-items:center;justify-content:center;">
+      <div class="auth-overlay" style="position:relative;background:transparent;">
+        <div class="media-modal">
+          <button class="am-close">✕</button>
+          <div class="mm-title">Insert Media</div>
+          <div class="mm-tabs">
+            <button class="active">image</button>
+            <button>video</button>
+            <button>audio</button>
+            <button>upload</button>
+          </div>
+          <div class="mm-field"><label>Source URL</label><input class="input" placeholder="https://... or /media/file.mp4" value="/media/deploy-demo.mp4"></div>
+          <div class="mm-field"><label>Caption</label><input class="input" placeholder="Optional caption text" value="部署流程演示"></div>
+          <div class="mm-field"><label>Poster (video only)</label><input class="input" placeholder="/images/poster.jpg"></div>
+          <div class="mm-preview">▶ Video preview — deploy-demo.mp4</div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+            <button class="admin-btn">Cancel</button>
+            <button class="admin-btn" style="border-color:var(--accent);color:var(--accent);">Insert</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ Hugo Shortcode 映射</h3>
+  <table class="table">
+    <thead><tr><th>媒体类型</th><th>Markdown 语法</th><th>Hugo Shortcode</th><th>渲染</th></tr></thead>
+    <tbody>
+      <tr><td><strong>图片</strong></td><td><span class="mono" style="font-size:10px;">![caption](url)</span></td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; figure src="url" caption="..." &gt;}}</span></td><td>响应式 &lt;figure&gt; + &lt;figcaption&gt;</td></tr>
+      <tr><td><strong>视频</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; video src="url" poster="..." &gt;}}</span></td><td>&lt;video controls&gt; + poster + 标题</td></tr>
+      <tr><td><strong>音频</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; audio src="url" caption="..." &gt;}}</span></td><td>&lt;audio controls&gt; + 标题栏</td></tr>
+      <tr><td><strong>上传</strong></td><td>—</td><td>Supabase Storage → 返回 URL → 插入 shortcode</td><td>CDN 分发 · 自动压缩</td></tr>
+      <tr><td><strong>iframe</strong></td><td>—</td><td><span class="mono" style="font-size:10px;color:var(--accent);">{{&lt; rawhtml &gt;}}...iframe...{{&lt; /rawhtml &gt;}}</span></td><td>YouTube / Bilibili / CodePen</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ editor-flow</span><br>
+    <strong>编辑流程</strong>: 左侧写 Markdown + shortcode → 右侧实时预览（Hugo partial render 或客户端 Marked.js 渲染）→ 点击 PUBLISH 提交 → GitHub API 写入仓库 → Cloudflare + GitHub Actions 自动构建部署。<br>
+    <strong>媒体存储</strong>: 本地图片/视频上传至 Supabase Storage → 返回 CDN URL → 自动插入 shortcode。外部链接直接粘贴 URL。
   </div>
 </section>
 
