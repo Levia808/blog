@@ -34,7 +34,7 @@
     display:inline-flex;align-items:center;gap:8px;
     padding:10px 24px;font-family:"Space Grotesk","JetBrains Mono",sans-serif;
     font-size:13px;font-weight:800;text-decoration:none;
-    border:var(--bw) solid var(--acid);border-radius:2px;
+    border:var(--bw) solid var(--acid);border-radius:6px;
     background:transparent;color:var(--acid);
     text-transform:uppercase;letter-spacing:1px;
     transition:background .1s,color .1s;cursor:pointer;
@@ -89,11 +89,12 @@
   .principle-card:nth-child(4){border-left-color:var(--acid2)}
   .principle-card:nth-child(5){border-left-color:var(--yellow)}
   .principle-card:nth-child(6){border-left-color:var(--pink)}
+  .principle-card:nth-child(7){border-left-color:var(--purple)}
   .principle-card .idx{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--muted);margin-bottom:10px}
   .principle-card .title{font-size:15px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
 
   .swatch-row{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
-  .swatch{width:80px;height:80px;border:1px solid #333;border-radius:0;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700}
+  .swatch{width:80px;height:80px;border:1px solid #333;border-radius:8px;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700}
   .typo-card{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:24px}
 
   .table{width:100%;border-collapse:collapse;font-size:13px;margin:24px 0}
@@ -115,14 +116,14 @@
   .blog-nav .links a{font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:1px}
   .blog-nav .links a:hover{color:var(--acid)}
 
-  .blog-hero{border:1px solid var(--acid);padding:56px 48px;margin-bottom:48px;position:relative;overflow:hidden;background:#0D0D0D}
+  .blog-hero{border:1px solid var(--acid);padding:56px 48px;margin-bottom:48px;position:relative;overflow:hidden;background:#0D0D0D;border-radius:8px}
   .blog-hero::before{content:"★ FEATURED";position:absolute;top:16px;right:24px;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--acid);letter-spacing:2px;font-weight:700}
   .blog-hero .hero-tag{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--pink);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;display:block}
   .blog-hero .hero-title{font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;max-width:480px}
   .blog-hero .hero-excerpt{font-size:14px;color:var(--muted);max-width:440px;margin-bottom:18px;line-height:1.6}
   .blog-hero .hero-meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:#555}
 
-  .post-card{background:var(--surface);border:1px solid var(--border);padding:24px;border-radius:0;transition:border-color .15s}
+  .post-card{background:var(--surface);border:1px solid var(--border);padding:24px;border-radius:8px;transition:border-color .15s}
   .post-card:hover{border-color:var(--acid)}
   .post-card .pc-tag{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;display:block}
   .post-card .pc-title{font-size:16px;font-weight:800;line-height:1.35;margin-bottom:6px}
@@ -161,7 +162,7 @@
   .input{
     background:var(--bg);border:1px solid var(--border);
     color:var(--fg);padding:10px 14px;font-family:"IBM Plex Sans",sans-serif;
-    font-size:14px;border-radius:0;outline:none;width:100%;
+    font-size:14px;border-radius:6px;outline:none;width:100%;
     transition:border-color .1s;
   }
   .input:focus{border-color:var(--acid)}
@@ -169,7 +170,7 @@
   .select{
     background:var(--bg);border:1px solid var(--border);
     color:var(--fg);padding:10px 14px;font-family:"IBM Plex Sans",sans-serif;
-    font-size:14px;border-radius:0;outline:none;
+    font-size:14px;border-radius:6px;outline:none;
     appearance:none;cursor:pointer;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23777' stroke-width='2'/%3E%3C/svg%3E");
     background-repeat:no-repeat;background-position:right 12px center;
@@ -177,7 +178,7 @@
   .checkbox-row{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}
   .checkbox-row input[type=checkbox]{
     appearance:none;width:16px;height:16px;
-    border:2px solid var(--border);background:var(--bg);border-radius:0;
+    border:2px solid var(--border);background:var(--bg);border-radius:3px;
     display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
   }
   .checkbox-row input[type=checkbox]:checked{
@@ -190,7 +191,7 @@
   .toast{
     display:inline-flex;align-items:center;gap:8px;
     padding:10px 18px;font-size:12px;font-weight:700;
-    border:1px solid var(--border);background:var(--surface);
+    border:1px solid var(--border);background:var(--surface);border-radius:8px;
     font-family:"JetBrains Mono",monospace;
   }
   .toast-success{border-color:var(--acid);color:var(--acid)}
@@ -283,6 +284,7 @@
     <div class="principle-card"><div class="idx">[04]</div><div class="title">酸性点缀</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">#39FF14 · #FF2D55 · #CCFF00 · #00FFFF</p></div>
     <div class="principle-card"><div class="idx">[05]</div><div class="title">粗野结构</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">2px实线 · 非对称 · 暴露网格</p></div>
     <div class="principle-card"><div class="idx">[06]</div><div class="title">终端审美</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">JetBrains Mono · ▶提示符 · ASCII</p></div>
+    <div class="principle-card"><div class="idx">[07]</div><div class="title">形状等级</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">结构=锐利 · 交互=圆角 · 圆角=可点性</p></div>
   </div>
 </section>
 
@@ -357,6 +359,49 @@
   <div class="box" style="border-left-color:var(--cyan);">
     <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);">▶ rule.txt</span><br>
     粗野主义鼓励<strong>打破对称</strong>。不要所有列等宽。Hero 用 3:2，文章页用主内容+窄侧栏。卡片网格可以考虑<strong>错位排列</strong>（某些卡片跨多列），打破完全均匀的栅格感。
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ SHAPE/RADIUS SYSTEM ═══════════ -->
+<section id="radius">
+  <div class="label">.04b/shape-radius</div>
+  <h2>形状等级：圆角 vs 锐利</h2>
+  <p style="color:var(--muted);margin-bottom:24px;">粗野主义不意味全直角——用<strong>形状差异</strong>暗示<strong>交互层级</strong>。结构元素保持锐利，可交互元素用微圆角。</p>
+
+  <table class="table" style="margin-bottom:24px;">
+    <thead><tr><th>类型</th><th>border-radius</th><th>示例元素</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td><strong>锐利 (Sharp)</strong></td><td><span class="mono" style="color:var(--acid);">0</span></td><td>section 边界 · 图块表 · 分割线 · 页脚 · 终端窗口</td><td>结构框架 · 无需亲和力</td></tr>
+      <tr><td><strong>微圆角 (Subtle)</strong></td><td><span class="mono" style="color:var(--cyan);">4-6px</span></td><td>按钮 · 输入框 · Checkbox · 搜索框</td><td>控件亲和 · 暗示可操作</td></tr>
+      <tr><td><strong>圆角 (Rounded)</strong></td><td><span class="mono" style="color:var(--pink);">8-12px</span></td><td>文章卡片 · Hero 卡片 · Toast · 色板 · 模态</td><td>内容容器 · 可点击区域</td></tr>
+      <tr><td><strong>胶囊 (Pill)</strong></td><td><span class="mono" style="color:var(--purple);">99px</span></td><td>标签徽章 · 筛选 chip</td><td>小型信息标签 · 高亲和</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid-2" style="margin:24px 0;">
+    <div class="card card-acid" style="border-radius:0;">
+      <div class="mono" style="font-size:10px;color:var(--acid);margin-bottom:8px;">[SHARP 0px] — 结构卡片</div>
+      <div style="font-weight:800;font-size:14px;">Section · 页脚 · 表格</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">纯直角，传达"这是框架，不是可点击目标"。</div>
+    </div>
+    <div class="card card-pink" style="border-radius:8px;">
+      <div class="mono" style="font-size:10px;color:var(--pink);margin-bottom:8px;">[ROUNDED 8px] — 内容卡片</div>
+      <div style="font-weight:800;font-size:14px;">文章卡 · Hero · Toast</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">微圆角，传达"这是内容区块，可以交互"。</div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0;">
+    <button class="btn" style="border-radius:6px;">> 圆角按钮 6px</button>
+    <input class="input" value="输入框 6px" style="width:auto;border-radius:6px;">
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border:1px solid var(--acid);border-radius:99px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--acid);text-transform:uppercase;letter-spacing:1px;">.CAPSULE 99px</div>
+  </div>
+
+  <div class="box" style="border-left-color:var(--purple);">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);">▶ shape-philosophy.txt</span><br>
+    圆角不是装饰，是<strong>功能信号</strong>。用户扫视页面时，<strong>看到的圆角 = 这是我能点/能输入的东西</strong>。锐利的元素 = 这是框架/结构/只读内容。这个等级系统让粗野主义既保留态度，又有现代 UI 的可读性。
   </div>
 </section>
 
