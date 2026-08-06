@@ -1,7 +1,7 @@
 baseURL: https://blog-go3.pages.dev/
 locale: zh-cn
 title: 我的博客
-theme: PaperMod
+theme: brutalism
 
 enableRobotsTXT: true
 hasCJKLanguage: true
@@ -20,23 +20,18 @@ outputs:
 params:
   env: production
   author: Levia808
+  navLogo: LEVIA808
   description: 个人技术博客 — 记录学习、思考与技术分享。
-  defaultTheme: light
-  ShowReadingTime: true
-  ShowShareButtons: false
-  ShowPostNavLinks: true
-  ShowBreadCrumbs: true
-  ShowCodeCopyButtons: true
-  ShowToc: true
-  ShowWordCount: true
-  ShowRssButtonInSectionTermList: true
-  comments: true
-
   keywords: [博客, 技术, 编程, 学习]
 
-  homeInfoParams:
-    Title: 欢迎来到我的博客
-    Content: 这里记录我的学习与思考。
+  # 功能开关
+  auth: true              # Supabase 登录 / 个人中心 / 管理后台
+  comments: true          # Supabase 评论区
+  ShowToc: true
+  ShowReadingTime: true
+  ShowWordCount: true
+  ShowBreadCrumbs: true
+  ShowPostNavLinks: true
 
   socialIcons:
     - name: github
@@ -54,7 +49,6 @@ params:
       - content
       - summary
       - tags
-
 
 menu:
   main:

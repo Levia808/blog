@@ -5,7 +5,7 @@
 | 项 | 值 |
 |---|----|
 | 站点 | `https://blog-go3.pages.dev/`（Cloudflare Pages）+ `https://levia808.github.io/blog/`（GitHub Pages） |
-| 框架 | Hugo v0.164.0 extended + PaperMod 主题 |
+| 框架 | Hugo v0.164.0 extended + 自制 brutalism 主题（themes/brutalism，独立主题，无 submodule） |
 | 本地路径 | `/home/levia/blog` |
 | 仓库 | `https://github.com/Levia808/blog`（main 分支） |
 
@@ -37,7 +37,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `hugo.yaml` | Hugo 主配置：站点信息、PaperMod 参数、Giscus 评论区、Fuse.js 搜索、菜单 |
+| `hugo.yaml` | Hugo 主配置：站点信息、brutalism 主题参数、Supabase 评论区、Fuse.js 搜索、菜单 |
 | `archetypes/default.md` | 新文章模板（tags/categories/series/description/ShowToc） |
 | `.github/workflows/deploy.yml` | GitHub Actions 部署到 GitHub Pages |
 
@@ -51,17 +51,17 @@
 | `content/profile.md` | 个人主页 — Supabase 驱动 |
 | `content/admin.md` | 管理后台 — Supabase 驱动 |
 
-### 3.3 模板覆盖（layouts/）
+### 3.3 主题模板（themes/brutalism/layouts/）
 
 | 文件 | 说明 |
 |------|------|
-| `layouts/partials/header.html` | **导航栏** — Liquid Group 液体滑动菜单 + 主题切换 + 用户头像 |
-| `layouts/partials/comments.html` | **评论区** — Giscus 嵌入脚本 |
-| `layouts/partials/auth-modal.html` | **认证弹窗** — 登录 / 注册 / 重置密码 |
-| `layouts/partials/extend_head.html` | **头部注入** — View Transitions meta + favicon + app.js |
-| `layouts/partials/extend_footer.html` | **尾部注入** — Supabase SDK + auth-modal + supabase.js + auth-ui.js |
-| `layouts/_default/profile.html` | 个人主页布局模板 |
-| `layouts/_default/admin.html` | 管理后台布局模板 |
+| `themes/brutalism/layouts/partials/header.html` | **导航栏** — v7 样式 · 下滑隐藏/上滑显示 + 主题切换 + 用户下拉 |
+| `themes/brutalism/layouts/partials/comments.html` | **评论区** — Supabase 评论 |
+| `themes/brutalism/layouts/partials/auth-modal.html` | **认证弹窗** — 登录 / 注册 / 重置密码 |
+| `themes/brutalism/layouts/partials/head.html` | **头部注入** — Google Fonts + CSS bundle + theme.js |
+| `themes/brutalism/layouts/partials/scripts.html` | **尾部注入** — Supabase SDK + auth-modal + supabase.js + auth-ui.js |
+| `themes/brutalism/layouts/_default/profile.html` | 个人主页布局模板 |
+| `themes/brutalism/layouts/_default/admin.html` | 管理后台布局模板 |
 
 ### 3.4 样式（assets/css/extended/）
 
@@ -77,7 +77,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `app.js` | **核心交互** — scroll-reveal (IntersectionObserver)、阅读进度条、导航栏毛玻璃、主题监听、图片懒加载 |
+| `themes/brutalism/static/js/theme.js` | **主题交互** — 导航显隐、移动端菜单、主题切换、scroll-reveal、TOC 高亮、Fuse.js 搜索 (Ctrl+K) |
 | `supabase.js` | **Supabase 客户端** — 初始化、Auth/Profile/Admin API 封装 |
 | `auth-ui.js` | **认证交互** — 弹窗开关、登录/注册/重置表单提交、用户菜单、GitHub 登录 |
 | `profile.js` | **个人主页** — 资料编辑、头像上传、GitHub 头像同步 |
@@ -165,8 +165,8 @@ hugo server -D
 hugo --minify
 # → public/
 
-# 更新 PaperMod 主题
-git submodule update --remote themes/PaperMod
+# 修改主题
+cd themes/brutalism && 修改 layouts/ 与 assets/css/
 
 # 提交推送
 git add -A
@@ -250,7 +250,7 @@ git push
 
 ### 修改主题色
 
-PaperMod 使用 CSS 变量，在 `assets/css/extended/` 下新增 `.css` 文件覆盖：
+主题使用 CSS 变量，修改 `themes/brutalism/assets/css/main.css` 的 `:root` 区块：
 ```css
 :root { --primary: rgb(50, 50, 50); }
 [data-theme="dark"] { --primary: rgb(230, 230, 230); }
@@ -267,9 +267,8 @@ hugo new content 页面名.md
 ### 主题定制方式
 
 1. `hugo.yaml` → `params.*` 配置覆盖
-2. `layouts/` → 与主题同路径文件覆盖模板
-3. `assets/css/extended/*.css` → 自动加载的样式
-4. `static/` → 覆盖主题同名文件
+2. 主题文件全部位于 `themes/brutalism/`（layouts / assets / static 三处）
+3. 设计令牌：`themes/brutalism/assets/css/main.css` 的 `:root` 变量
 
 ---
 

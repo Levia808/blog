@@ -1,0 +1,13 @@
+{{- define "main" }}
+<article class="container article-page article-page--plain">
+  <div class="article-main article-main--plain" data-reveal>
+    <header class="article-header">
+      <div class="mono article-meta"><span>ADMIN</span></div>
+      <h1 class="article-title">{{ .Title }}</h1>
+    </header>
+    <div class="article-body">
+      {{ .Content }}
+    </div>
+  </div>
+</article>
+{{- end }}

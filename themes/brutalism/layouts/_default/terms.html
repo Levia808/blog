@@ -1,0 +1,17 @@
+{{- define "main" }}
+<section class="container terms-page">
+  <header class="list-header" data-reveal>
+    <div class="label">{{ .Kind | title }}</div>
+    <h1 class="list-title">{{ .Title }}</h1>
+    <p class="mono list-count">{{ len .Pages }} items</p>
+  </header>
+  <div class="grid-auto tags-cloud" data-reveal>
+    {{- range .Pages }}
+    <a class="tag-pill tag-pill--count" href="{{ .RelPermalink }}">
+      <span>{{ .Title }}</span>
+      <span class="tag-count">{{ len .Pages }}</span>
+    </a>
+    {{- end }}
+  </div>
+</section>
+{{- end }}

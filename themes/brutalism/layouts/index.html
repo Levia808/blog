@@ -1,0 +1,68 @@
+{{- define "title" }}{{ site.Title }}{{ end }}
+{{- define "main" }}
+{{- $posts := where site.RegularPages "Section" "posts" }}
+{{- $latest := first 6 $posts }}
+{{- $featured := index $posts 0 }}
+
+<section class="welcome-full" aria-label="欢迎">
+  <div class="term-box" role="presentation">
+    <div class="tl">$ ssh blog.leivia808.dev</div>
+    <div class="tl">$ loading kernel modules...</div>
+    <div class="tl">$ hugo v{{ hugo.Version }} — {{ len site.RegularPages }} pages mounted</div>
+    <div class="tl">$ theme brutalism — initialized</div>
+    <div class="tl">$ blog.service — <span class="tl-ok">active (running)</span></div>
+    <div class="tl">$ deploy: Cloudflare Pages ✓</div>
+    <div class="tl">$ auth: Supabase GitHub OAuth ✓</div>
+    <div class="tl"><span class="blink-cursor"></span></div>
+  </div>
+  <div class="scroll-hint"><div>scroll</div><div class="sh-arrow"></div></div>
+</section>
+
+<section class="container blog-home">
+  {{- if $featured }}
+  <a class="blog-hero" href="{{ $featured.RelPermalink }}" data-reveal>
+    <div class="hero-date">{{ $featured.Date.Format "2006 · 01 · 02" }}</div>
+    <div class="hero-title">{{ $featured.Title }}</div>
+    <div class="hero-excerpt">{{ $featured.Summary | plainify | truncate 140 }}</div>
+    {{- with $featured.Params.tags }}
+    <div class="mono hero-meta">{{ delimit . " · " }}</div>
+    {{- end }}
+  </a>
+  {{- end }}
+
+  <section class="blog-section" aria-labelledby="latest-posts">
+    <div class="blog-section__head" data-reveal>
+      <div class="label">LATEST</div>
+      <h2 id="latest-posts">最新文章</h2>
+      <a class="section-more" href="{{ "archives/" | relLangURL }}">全部 →</a>
+    </div>
+
+    <div class="grid-3">
+      {{- range $latest }}
+      {{ partial "post-card.html" . }}
+      {{- else }}
+      <div class="blog-empty" data-reveal>
+        <span class="mono">[ EMPTY ]</span>
+        <p>还没有发布文章，期待第一篇内容。</p>
+      </div>
+      {{- end }}
+    </div>
+  </section>
+
+  <section class="blog-section" aria-labelledby="about-blurb">
+    <div class="blog-section__head" data-reveal>
+      <div class="label">ABOUT</div>
+      <h2 id="about-blurb">关于</h2>
+      <a class="section-more" href="{{ "about/" | relLangURL }}">更多 →</a>
+    </div>
+    <div class="about-strip" data-reveal>
+      <p>{{ site.Params.description }}</p>
+      <div class="mono about-tags">
+        {{- range site.Params.keywords }}
+        <span class="pc-tag">{{ . }}</span>
+        {{- end }}
+      </div>
+    </div>
+  </section>
+</section>
+{{- end }}

@@ -1,0 +1,11 @@
+<footer class="site-footer">
+  <div class="sf-left">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
+  <div class="sf-center">{{ site.Params.author | default site.Title }}</div>
+  <div class="sf-right">
+    {{- range site.Params.socialIcons }}
+    <a href="{{ .url }}" target="_blank" rel="noopener noreferrer">{{ .name }}</a>
+    {{- end }}
+    <a href="{{ "index.xml" | relURL }}">rss</a>
+    <a href="{{ "sitemap.xml" | relURL }}">sitemap</a>
+  </div>
+</footer>

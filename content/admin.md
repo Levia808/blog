@@ -1,4 +1,4 @@
-﻿---
+---
 title: 管理后台
 layout: admin
 url: /admin/
@@ -8,7 +8,7 @@ sitemap:
 
 <div class="admin-page" id="adminPage">
   <div id="adminLoading" class="page-state"><p>加载中…</p></div>
-  <div id="adminUnauthorized" class="page-state" hidden><h2>无访问权限</h2><p>此页面仅管理员可访问。</p><a href="/" class="auth-btn auth-btn-primary">返回首页</a></div>
+  <div id="adminUnauthorized" class="page-state" hidden><h2>无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="auth-btn auth-btn-primary">返回首页</a></div>
   <div id="adminContent" hidden>
     <div class="dashboard-heading">
       <div><p class="eyebrow">ADMIN / CONTROL</p><h2>管理后台</h2><p class="admin-subtitle" id="adminIdentity"></p></div>

@@ -22,7 +22,7 @@
 | 层 | 技术 | 说明 |
 |----|------|------|
 | 静态站点 | Hugo v0.164.0 extended | Go 静态站点生成器 |
-| 主题 | PaperMod (adityatelange/hugo-PaperMod) | Git Submodule |
+| 主题 | **brutalism**（自制独立主题，`themes/brutalism`） | 矿物单色 · 单点苔绿 · 变换驱动动效 (v7) |
 | 语言 | zh-cn | 简体中文 |
 | 后端 | Supabase | `https://iyquixzprfwkglaqptxj.supabase.co` |
 | 认证 | Supabase Auth | 邮箱 + GitHub OAuth |
@@ -407,7 +407,7 @@ blog/
 │       ├── home.js         # 首页
 │       └── app.js          # 主题 JS
 │
-├── themes/PaperMod/              # Git Submodule
+├── themes/brutalism/             # 自制独立主题 (layouts + assets + static)
 │
 └── .github/workflows/
     └── deploy.yml
@@ -751,7 +751,7 @@ git add -A && git commit -m "描述" && git push
 2. `hugo.yaml` 已配 `unsafe: true`，支持 Markdown 内嵌 HTML
 3. 自定义布局: `layouts/_default/<name>.html` 对应 `layout: <name>`
 4. CSS 注入: `assets/css/extended/*.css`，PaperMod 自动加载
-5. **不要改 PaperMod 源码**（Git Submodule，更新会丢失）
+5. **主题全部在 `themes/brutalism/`**，改布局/样式直接改主题内文件（已脱离 PaperMod）
 6. **Client Secret 永不在代码中**，仅 Supabase 控制台
 7. Markdown 正文中的 `{{ }}` 不会被 Hugo 处理，需在布局文件中使用
 
@@ -763,16 +763,16 @@ git add -A && git commit -m "描述" && git push
 |----------|------|
 | 站点配置 | `hugo.yaml` |
 | 新文章 | `hugo new content posts/xxx.md` |
-| 首页样式 / CSS 变量 | `assets/css/extended/design-system.css` |
-| 动效 / @keyframes | `assets/css/extended/animations.css` |
-| 导航栏 | `layouts/partials/header.html` + `assets/css/extended/nav.css` |
+| 设计系统 / CSS 变量 | `themes/brutalism/assets/css/main.css` |
+| 动效 / @keyframes | `themes/brutalism/assets/css/main.css` |
+| 导航栏 | `themes/brutalism/layouts/partials/header.html` |
 | 登录弹窗 | `layouts/partials/auth-modal.html` |
 | 认证逻辑 | `static/js/supabase.js` + `static/js/auth-ui.js` |
 | 个人中心 | `static/js/profile.js` + `content/profile.md` |
 | 评论区 | `static/js/comments.js` + `layouts/partials/comments.html` + `assets/css/extended/comments.css` |
 | 管理后台 | `static/js/admin.js` + `static/admin-cms/config.yml` |
-| 文章详情页 | `layouts/_default/single.html`（覆盖主题） |
-| 页脚 / ASCII | `layouts/partials/footer.html` |
+| 文章详情页 | `themes/brutalism/layouts/_default/single.html` |
+| 页脚 | `themes/brutalism/layouts/partials/footer.html` |
 | Supabase SQL | `supabase-setup.sql` |
 | CI/CD | `.github/workflows/deploy.yml` |
 | 设计稿 (深色编辑风) | `design-proposal.html` |

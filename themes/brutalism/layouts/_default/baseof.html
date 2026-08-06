@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.Locale | default "zh-cn" }}" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Hugo {{ hugo.Version }}">
+  <title>{{ block "title" . }}{{ if not .IsHome }}{{ .Title }} · {{ end }}{{ site.Title }}{{ end }}</title>
+  {{ partial "head.html" . }}
+</head>
+<body class="{{ block "body-class" . }}{{ end }}">
+  {{ partial "header.html" . }}
+  <main id="main" class="site-main">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{ partial "footer.html" . }}
+  {{ if site.Params.auth }}
+  {{ partial "auth-modal.html" . }}
+  {{ end }}
+  {{ partial "scripts.html" . }}
+</body>
+</html>

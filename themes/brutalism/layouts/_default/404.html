@@ -1,0 +1,11 @@
+{{- define "title" }}404 · {{ site.Title }}{{ end }}
+{{- define "main" }}
+<section class="container notfound">
+  <div class="notfound-box" data-reveal>
+    <span class="mono notfound-code">[ 404 ]</span>
+    <h1>页面不存在</h1>
+    <p>请求的资源可能已被移动或删除。</p>
+    <a class="btn" href="{{ "" | relLangURL }}">&gt; 返回首页</a>
+  </div>
+</section>
+{{- end }}

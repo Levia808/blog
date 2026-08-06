@@ -1,0 +1,14 @@
+<div class="search-overlay" id="searchOverlay" hidden role="dialog" aria-modal="true" aria-label="搜索">
+  <div class="search-box">
+    <div class="sb-input-wrap">
+      <span class="sb-prefix">$</span>
+      <input id="searchInput" type="text" placeholder="search posts…" autocomplete="off" aria-label="搜索内容" data-index="{{ "index.json" | relURL }}">
+      <button type="button" class="sb-close" id="searchClose" aria-label="关闭搜索">
+        <svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
+      </button>
+    </div>
+    <div class="sb-hint">⌘K / Ctrl+K 打开 · esc 关闭 · ↑↓ 选择 · enter 跳转</div>
+    <div class="sb-results" id="searchResults"></div>
+    <div class="sb-status" id="searchStatus" hidden></div>
+  </div>
+</div>

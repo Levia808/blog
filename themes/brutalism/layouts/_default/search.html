@@ -1,0 +1,17 @@
+{{- define "main" }}
+<section class="container search-page">
+  <header class="list-header" data-reveal>
+    <div class="label">SEARCH</div>
+    <h1 class="list-title">搜索</h1>
+  </header>
+  <div class="search-box search-box--page" data-reveal>
+    <div class="sb-input-wrap">
+      <span class="sb-prefix">$</span>
+      <input id="searchInputPage" type="text" placeholder="search posts…" autocomplete="off" aria-label="搜索内容" data-index="{{ "index.json" | relURL }}">
+    </div>
+    <div class="sb-hint">Ctrl+K 可随时唤起全局搜索</div>
+    <div class="sb-results" id="searchResultsPage"></div>
+    <div class="sb-status" id="searchStatusPage" hidden></div>
+  </div>
+</section>
+{{- end }}

@@ -1,4 +1,4 @@
-﻿---
+---
 title: 个人主页
 layout: profile
 url: /profile/
@@ -24,4 +24,4 @@ sitemap:
     <p class="auth-success" id="profileSuccess" hidden>已保存。</p><p class="auth-error" id="profileError" hidden></p>
   </div>
 </div>
-<script src="/js/profile.js"></script>
+<script src="{{ "js/profile.js" | relURL }}"></script>

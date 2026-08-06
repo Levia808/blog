@@ -1,0 +1,63 @@
+{{- $currentPage := . -}}
+{{- $logo := site.Params.navLogo | default (site.Params.author | default site.Title) -}}
+
+<nav class="nav-full" id="siteHeader" aria-label="主导航">
+  <a class="nf-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
+  <div class="nf-links">
+    {{- range site.Menus.main }}
+    {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
+    {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
+    {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
+    <a class="nf-link{{ if $isActive }} active{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{- end }}
+  </div>
+  <div class="nf-actions">
+    <button class="theme-toggle" id="themeToggle" accesskey="t" title="切换主题 (Alt + T)" aria-label="切换主题">
+      <svg class="icon-sun" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.1,64.1,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48,48,0,0,0,176,128ZM58.3,69.7a8,8,0,0,0,11.4-11.4L58.3,46.9A8,8,0,0,0,46.9,58.3Zm0,116.6-11.4,11.4a8,8,0,0,0,11.4,11.4l11.4-11.4a8,8,0,0,0-11.4-11.4ZM192,72a8,8,0,0,0,5.7-2.3l11.4-11.4a8,8,0,0,0-11.4-11.4L186.3,58.3A8,8,0,0,0,192,72Zm5.7,114.3a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4ZM64,128a8,8,0,0,0-8-8H40a8,8,0,0,0,0,16H56A8,8,0,0,0,64,128Zm176-8H224a8,8,0,0,0,0,16h16a8,8,0,0,0,0-16ZM114.3,197.7a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4Z"/></svg>
+      <svg class="icon-moon" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M233.5,114.1A8,8,0,0,0,224,112a72.1,72.1,0,0,1-80.7-80.7,8,8,0,0,0-9.5-9.5A96,96,0,1,0,234.2,138.4a8,8,0,0,0-.7-24.3ZM128,208a80,80,0,0,1-80-80c0-30.4,16.9-56.6,41.9-70.5a112.3,112.3,0,0,0,86.6,86.6C162.6,191.1,136.4,208,128,208Z"/></svg>
+    </button>
+    <button type="button" class="nf-icon-btn" id="searchTrigger" title="搜索 (Ctrl+K)" aria-label="搜索">
+      <svg viewBox="0 0 256 256" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M229.7,218.3l-43.2-43.2a92.4,92.4,0,1,0-11.3,11.3l43.2,43.2A8,8,0,0,0,229.7,218.3ZM40,124a84,84,0,1,1,84,84A84.1,84.1,0,0,1,40,124Z"/></svg>
+    </button>
+    {{- if site.Params.auth }}
+    <button type="button" class="nav-login-btn" id="navLoginBtn">登录</button>
+    <div class="dropdown" id="userMenuContainer" hidden>
+      <button type="button" class="nf-avatar" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
+        <img class="nf-avatar-img" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
+      </button>
+      <div class="dropdown-menu" id="userDropdown" hidden>
+        <div class="dm-head">
+          <img class="dm-avatar" id="userMenuAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
+          <div>
+            <strong id="userMenuName">博客读者</strong>
+            <span class="dm-email" id="userMenuEmail"></span>
+          </div>
+        </div>
+        <a href="{{ "profile/" | relLangURL }}">个人主页</a>
+        <a href="{{ "admin/" | relLangURL }}" id="adminLink" hidden>管理后台</a>
+        <div class="dm-divider"></div>
+        <button type="button" id="logoutBtn">注销</button>
+      </div>
+    </div>
+    {{- end }}
+  </div>
+</nav>
+
+<div class="nav-mobile" id="siteHeaderMobile" aria-label="主导航">
+  <a class="nm-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
+  <button type="button" class="nm-toggle" id="mobileMenuToggle" aria-label="打开菜单" aria-expanded="false">
+    <svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
+  </button>
+</div>
+<div class="nav-mobile-menu" id="mobileMenu" hidden>
+  {{- range site.Menus.main }}
+  {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
+  {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
+  {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
+  <a href="{{ .URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>{{ .Name }}</a>
+  {{- end }}
+  {{- if site.Params.auth }}
+  <a href="{{ "profile/" | relLangURL }}">个人主页</a>
+  <button type="button" class="nm-action" id="mobileLoginBtn">登录</button>
+  {{- end }}
+</div>

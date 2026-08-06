@@ -1,0 +1,55 @@
+{{- define "main" }}
+{{- $showToc := and (default site.Params.ShowToc .Params.ShowToc) .TableOfContents }}
+{{- $tocHTML := .TableOfContents }}
+<article class="container article-page">
+  <div class="article-layout">
+    <div class="article-main" data-reveal>
+      {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
+      <header class="article-header">
+        <div class="mono article-meta">
+          {{- if site.Params.ShowReadingTime }}<span>{{ .ReadingTime }} min read</span>{{ end }}
+          {{- if site.Params.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}
+          {{- if .Date }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
+        </div>
+        <h1 class="article-title">{{ .Title }}</h1>
+        {{- with .Description }}
+        <p class="article-description">{{ . }}</p>
+        {{- end }}
+      </header>
+      {{- if .Params.cover.image }}
+      <figure class="article-cover">
+        <img src="{{ .Params.cover.image | relURL }}" alt="{{ .Title }} 封面">
+      </figure>
+      {{- end }}
+      <div class="article-body">
+        {{ .Content }}
+      </div>
+      {{- with .Params.tags }}
+      <footer class="article-tags">
+        {{- range . }}
+        <a class="tag-pill" href="{{ "tags/" | relLangURL }}{{ . | urlize }}/">{{ . }}</a>
+        {{- end }}
+      </footer>
+      {{- end }}
+    </div>
+
+    {{- if $showToc }}
+    <aside class="article-toc" aria-label="目录">
+      <div class="toc-t">ON THIS PAGE</div>
+      {{ $tocHTML }}
+    </aside>
+    {{- end }}
+  </div>
+
+  {{- if site.Params.ShowPostNavLinks }}
+  {{- with .PrevInSection }}
+  <nav class="post-nav prev"><span class="mono post-nav-label">PREV</span><a href="{{ .RelPermalink }}">{{ .Title }}</a></nav>
+  {{- end }}
+  {{- with .NextInSection }}
+  <nav class="post-nav next"><span class="mono post-nav-label">NEXT</span><a href="{{ .RelPermalink }}">{{ .Title }}</a></nav>
+  {{- end }}
+  {{- end }}
+
+  {{ partial "comments.html" . }}
+</article>
+{{- end }}

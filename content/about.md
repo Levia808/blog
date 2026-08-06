@@ -2,7 +2,7 @@
 date: '2026-08-06T15:27:00+08:00'
 draft: false
 title: '关于'
-layout: page
+layout: plain
 ---
 
 ## 关于我
@@ -11,4 +11,4 @@ layout: page
 
 ## 关于这个博客
 
-本博客使用 Hugo + PaperMod 主题搭建，托管在 GitHub Pages 上。
+本博客使用 Hugo + brutalism 主题搭建，部署于 Cloudflare Pages 与 GitHub Pages 双线。

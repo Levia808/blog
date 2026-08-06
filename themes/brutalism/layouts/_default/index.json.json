@@ -1,0 +1,14 @@
+[
+{{- $pages := where site.RegularPages "File.Path" "not in" (slice "profile.md" "admin.md") -}}
+{{- range $index, $page := $pages -}}
+{{- if $index }},{{ end }}
+{
+  "title": {{ $page.Title | jsonify }},
+  "content": {{ $page.Plain | jsonify }},
+  "summary": {{ $page.Summary | plainify | jsonify }},
+  "tags": [{{ range $i, $t := $page.Params.tags }}{{ if $i }},{{ end }}{{ $t | jsonify }}{{ end }}],
+  "date": {{ $page.Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},
+  "permalink": {{ $page.Permalink | jsonify }},
+  "section": {{ $page.Section | jsonify }}
+}
+{{- end }}]

@@ -1,0 +1,18 @@
+{{- $css := slice (resources.Get "css/main.css") (resources.Get "css/features.css") | resources.Concat "css/bundle.css" -}}
+{{- if hugo.IsProduction }}{{ $css = $css | minify | fingerprint }}{{ end }}
+<meta name="description" content="{{ with site.Params.description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify }}{{ end }}{{ end }}">
+<meta name="keywords" content="{{ with site.Params.keywords }}{{ delimit . ", " }}{{ end }}">
+<meta name="theme-color" content="#0C0C0B">
+<meta name="color-scheme" content="dark light">
+{{- with site.Params.author }}
+<meta name="author" content="{{ . }}">
+{{- end }}
+{{- range .AlternativeOutputFormats -}}
+<link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink }}" title="{{ site.Title }}">
+{{- end }}
+<link rel="icon" type="image/svg+xml" href="{{ "favicon.svg" | relURL }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="{{ $css.RelPermalink }}"{{ if hugo.IsProduction }} integrity="{{ $css.Data.Integrity }}"{{ end }}>
+<script defer src="{{ "js/theme.js" | relURL }}"></script>

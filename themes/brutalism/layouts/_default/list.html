@@ -1,0 +1,15 @@
+{{- define "main" }}
+<section class="container list-page">
+  <header class="list-header" data-reveal>
+    <div class="label">{{ if .Data.Singular }}{{ .Data.Singular }}{{ else }}{{ .Section | upper }}{{ end }}</div>
+    <h1 class="list-title">{{ .Title }}</h1>
+    <p class="mono list-count">{{ len .Pages }} items</p>
+  </header>
+  <div class="grid-3">
+    {{- range .Pages }}
+    {{ partial "post-card.html" . }}
+    {{- end }}
+  </div>
+  {{ partial "pagination.html" . }}
+</section>
+{{- end }}
