@@ -173,10 +173,23 @@
   if (githubLoginBtn) {
     githubLoginBtn.addEventListener('click', function () {
       githubLoginBtn.disabled = true;
-      githubLoginBtn.textContent = '登录中...';
-      Auth.signInWithGitHub().catch(function(err) {
+      githubLoginBtn.textContent = '跳转中...';
+      var fallbackTimer = setTimeout(function() {
+        // 如果 Supabase 没反应，直接打开发 GitHub OAuth
+        var params = new URLSearchParams({
+          client_id: 'Ov23lixCL7W5rvZ3DKFB',
+          redirect_uri: 'https://iyquixzprfwkglaqptxj.supabase.co/auth/v1/callback',
+          scope: 'read:user user:email'
+        });
+        window.location.href = 'https://github.com/login/oauth/authorize?' + params.toString();
+      }, 3000);
+      Auth.signInWithGitHub().then(function() {
+        clearTimeout(fallbackTimer);
+      }).catch(function(err) {
+        clearTimeout(fallbackTimer);
         githubLoginBtn.disabled = false;
         githubLoginBtn.textContent = 'GitHub 登录';
+        alert('登录失败: ' + (err.message || err));
         console.error('GitHub 登录失败:', err);
         handleError('loginError', err);
       });
