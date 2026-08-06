@@ -30,7 +30,7 @@ jobs:
           extended: true
 
       - name: Build
-        run: hugo --minify
+        run: hugo --minify --baseURL https://levia808.github.io/blog/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
