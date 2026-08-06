@@ -1,4 +1,4 @@
-baseURL: https://levia.github.io/blog/
+baseURL: https://Levia808.github.io/blog/
 locale: zh-cn
 title: 我的博客
 theme: PaperMod
@@ -8,7 +8,7 @@ hasCJKLanguage: true
 
 params:
   env: production
-  author: 博主
+  author: Levia808
   description: 个人技术博客
   defaultTheme: auto
   ShowReadingTime: true
@@ -25,7 +25,7 @@ params:
 
   socialIcons:
     - name: github
-      url: https://github.com/levia
+      url: https://github.com/Levia808
 
 menu:
   main:
