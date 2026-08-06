@@ -1,0 +1,113 @@
+backend:
+  name: github
+  repo: Levia808/blog
+  branch: main
+
+media_folder: static/images
+public_folder: /images
+
+locale: zh-cn
+site_url: https://blog-go3.pages.dev/
+display_url: https://blog-go3.pages.dev/
+logo_url: https://blog-go3.pages.dev/favicon.svg
+
+collections:
+  - name: posts
+    label: 文章
+    label_singular: 文章
+    folder: content/posts
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    editor:
+      preview: false
+    fields:
+      - label: 标题
+        name: title
+        widget: string
+        hint: 文章标题
+      - label: 发布日期
+        name: date
+        widget: datetime
+        hint: 留空则使用当前时间
+        required: false
+      - label: 草稿
+        name: draft
+        widget: boolean
+        default: true
+        hint: 勾选则不对外发布
+      - label: 标签
+        name: tags
+        widget: list
+        hint: 按回车添加标签
+        required: false
+      - label: 分类
+        name: categories
+        widget: list
+        required: false
+        hint: 按回车添加分类
+      - label: 系列
+        name: series
+        widget: list
+        required: false
+        hint: 属于某个文章系列
+      - label: 摘要
+        name: description
+        widget: string
+        required: false
+        hint: 文章简短描述，不填则自动摘取
+      - label: 封面图
+        name: cover
+        widget: object
+        required: false
+        hint: 文章封面图片（可选）
+        fields:
+          - label: 图片路径
+            name: image
+            widget: image
+            required: false
+          - label: 替代文本
+            name: alt
+            widget: string
+            required: false
+      - label: 显示目录
+        name: ShowToc
+        widget: boolean
+        default: true
+        required: false
+      - label: 正文
+        name: body
+        widget: markdown
+
+  - name: pages
+    label: 页面
+    label_singular: 页面
+    folder: content
+    create: true
+    filter:
+      field: layout
+      value: page
+    editor:
+      preview: false
+    fields:
+      - label: 标题
+        name: title
+        widget: string
+      - label: 发布日期
+        name: date
+        widget: datetime
+        required: false
+      - label: 草稿
+        name: draft
+        widget: boolean
+        default: true
+      - label: 布局
+        name: layout
+        widget: hidden
+        default: page
+      - label: 摘要
+        name: description
+        widget: string
+        required: false
+      - label: 正文
+        name: body
+        widget: markdown

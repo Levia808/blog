@@ -6,10 +6,16 @@ theme: PaperMod
 enableRobotsTXT: true
 hasCJKLanguage: true
 
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
 params:
   env: production
   author: Levia808
-  description: 个人技术博客
+  description: 个人技术博客 — 记录学习、思考与技术分享。
   defaultTheme: auto
   ShowReadingTime: true
   ShowShareButtons: false
@@ -17,7 +23,11 @@ params:
   ShowBreadCrumbs: true
   ShowCodeCopyButtons: true
   ShowToc: true
-  comments: false
+  ShowWordCount: true
+  ShowRssButtonInSectionTermList: true
+  comments: true
+
+  keywords: [博客, 技术, 编程, 学习]
 
   homeInfoParams:
     Title: 欢迎来到我的博客
@@ -27,11 +37,41 @@ params:
     - name: github
       url: https://github.com/Levia808
 
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys:
+      - title
+      - content
+      - summary
+      - tags
+
+  giscus:
+    enable: true
+    repo: Levia808/blog
+    repoId: R_kgDOTvhUqg
+    category: General
+    categoryId: DIC_kwDOTvhUqs4DCyZB
+    mapping: pathname
+    reactionsEnabled: "1"
+    emitMetadata: "0"
+    inputPosition: top
+    theme: preferred_color_scheme
+    lang: zh-CN
+    loading: lazy
+
 menu:
   main:
     - name: 归档
       url: archives/
       weight: 10
+    - name: 搜索
+      url: search/
+      weight: 15
     - name: 标签
       url: tags/
       weight: 20
