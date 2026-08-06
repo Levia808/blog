@@ -96,7 +96,7 @@
 | 服务 | 用途 | 配置位置 |
 |------|------|---------|
 | **GitHub Discussions** | Giscus 评论区数据存储 | 仓库 Settings → Discussions 开启 |
-| **GitHub OAuth App** | Sveltia CMS 管理后台认证 | Client ID: `Ov23lixCL7W5rvZ3DKFB` |
+| **GitHub OAuth App** | Sveltia CMS 管理后台认证 | Client ID: `Ov23lij9x9gnpRXSOY8w` |
 | **Supabase** | 用户认证 + 数据库 + 头像存储 | `supabase.js` 第 1-2 行 |
 
 ---

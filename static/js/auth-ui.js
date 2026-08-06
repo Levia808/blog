@@ -177,7 +177,7 @@
       var fallbackTimer = setTimeout(function() {
         // 如果 Supabase 没反应，直接打开发 GitHub OAuth
         var params = new URLSearchParams({
-          client_id: 'Ov23lixCL7W5rvZ3DKFB',
+          client_id: 'Ov23lij9x9gnpRXSOY8w',
           redirect_uri: 'https://iyquixzprfwkglaqptxj.supabase.co/auth/v1/callback',
           scope: 'read:user user:email'
         });
