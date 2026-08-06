@@ -238,6 +238,33 @@
   .div-dash{border:none;border-top:1px dashed var(--border);margin:0}
   .div-acid{border:none;border-top:2px solid var(--acid);margin:0}
   .div-thick{border:none;border-top:2px solid var(--border);margin:0}
+
+  /* ── WELCOME PAGE ── */
+  .welcome-frame{border:1px solid var(--border);background:var(--bg);min-height:480px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:0}
+  .welcome-frame::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;z-index:1}
+  @keyframes boot-cursor{0%,100%{opacity:1}50%{opacity:0}}
+  @keyframes boot-fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes boot-line{0%{opacity:0}40%{opacity:1}100%{opacity:1}}
+  .boot-line{font-family:"JetBrains Mono",monospace;font-size:12px;line-height:2;opacity:1}
+  .boot-line .dim{color:#444}.boot-line .info{color:var(--cyan)}.boot-line .ok{color:var(--acid)}.boot-line .warn{color:var(--yellow)}
+  .boot-cursor{display:inline-block;width:8px;height:14px;background:var(--acid);animation:boot-cursor 1s step-end infinite;vertical-align:middle;margin-left:2px}
+  .welcome-hero{position:relative;z-index:2;text-align:center;padding:0 24px;animation:boot-fade-in .6s .5s both}
+  .welcome-ascii{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--acid);line-height:1.3;white-space:pre;margin-bottom:32px;opacity:.7}
+  .welcome-title{font-size:clamp(28px,5vw,48px);font-weight:900;letter-spacing:-1.5px;margin-bottom:12px}
+  .welcome-sub{font-size:14px;color:var(--muted);max-width:400px;margin:0 auto 28px;line-height:1.6}
+  .welcome-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .welcome-footer{font-family:"JetBrains Mono",monospace;font-size:10px;color:#444;margin-top:40px}
+
+  /* ── MINIMALISM DEMO ── */
+  .minimal-compare{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .minimal-block{padding:48px 40px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+  .minimal-block.sparse{padding:64px 56px;border:none;background:transparent}
+  .minimal-block .mini-title{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--acid);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
+  @media(max-width:768px){.minimal-compare{grid-template-columns:1fr}}
+
+  /* ── TERMINAL DECORATION ── */
+  .hacker-banner{background:#010;border:1px solid #0a0;padding:16px 20px;margin:20px 0;font-family:"JetBrains Mono",monospace;font-size:11px;position:relative;overflow:hidden}
+  .hacker-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,transparent 0%,rgba(0,255,0,.03) 50%,transparent 100%);pointer-events:none;animation:scanline-scroll .1s linear infinite}
 </style>
 </head>
 <body>
@@ -283,8 +310,9 @@
     <div class="principle-card"><div class="idx">[03]</div><div class="title">深黑底色</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">#0A0A0A · #141414 · 极暗灰阶</p></div>
     <div class="principle-card"><div class="idx">[04]</div><div class="title">酸性点缀</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">#39FF14 · #FF2D55 · #CCFF00 · #00FFFF</p></div>
     <div class="principle-card"><div class="idx">[05]</div><div class="title">粗野结构</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">2px实线 · 非对称 · 暴露网格</p></div>
-    <div class="principle-card"><div class="idx">[06]</div><div class="title">终端审美</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">JetBrains Mono · ▶提示符 · ASCII</p></div>
+    <div class="principle-card"><div class="idx">[06]</div><div class="title">终端黑客</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">CLI提示符 · 绿黑磷光 · glitch · system boot</p></div>
     <div class="principle-card"><div class="idx">[07]</div><div class="title">形状等级</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">结构=锐利 · 交互=圆角 · 圆角=可点性</p></div>
+    <div class="principle-card"><div class="idx">[08]</div><div class="title">极简克制</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">少色 · 少装饰 · 大空白 · 言简意赅</p></div>
   </div>
 </section>
 
@@ -316,6 +344,190 @@
     <div class="typo-card" style="border-left:4px solid var(--pink);"><div style="font-family:'IBM Plex Sans','Noto Sans SC',sans-serif;font-size:28px;font-weight:600;">IBM Plex Sans</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">正文 · 中文降级 Noto Sans SC</div></div>
     <div class="typo-card" style="border-left:4px solid var(--cyan);"><div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;">JetBrains Mono</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">代码 · 标签 · 终端 · 导航</div></div>
     <div class="typo-card" style="border-left:4px solid var(--acid2);"><div style="font-family:'Noto Sans SC',sans-serif;font-size:26px;font-weight:600;">Noto Sans SC</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">中文正文 · 备选</div></div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ TERMINAL AESTHETICS ═══════════ -->
+<section id="terminal">
+  <div class="label">.03b/terminal-hacker</div>
+  <h2>终端美学 · 黑客浪漫</h2>
+  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">不是廉价的"绿色代码雨"——而是<strong>系统引导序列</strong>、<strong>CLI 提示符</strong>、<strong>磷光屏幕</strong>与<strong>极简终端哲学</strong>的融合。黑客美学=看穿系统的眼睛。</p>
+
+  <div class="grid-2" style="margin:24px 0;">
+    <div class="card card-acid" style="border:1px solid #0a0;background:#010;">
+      <div class="mono" style="font-size:10px;color:#0a0;margin-bottom:12px;">[TERMINAL ELEMENTS]</div>
+      <ul style="font-size:12px;line-height:2.4;list-style:none;padding:0;color:#0c0;font-family:'JetBrains Mono',monospace;">
+        <li>▶ $ prompt 命令行提示</li>
+        <li>▶ [OK] / [FAIL] 状态标签</li>
+        <li>▶ ---- 水平分隔线</li>
+        <li>▶ boot sequence 启动序列</li>
+        <li>▶ system info (uname -a)</li>
+        <li>▶ ASCII art logo/banner</li>
+        <li>▶ path 路径面包屑</li>
+        <li>▶ █ 块状光标闪烁</li>
+      </ul>
+    </div>
+    <div class="card card-cyan" style="border:1px solid #0a0;background:#010;">
+      <div class="mono" style="font-size:10px;color:#0a0;margin-bottom:12px;">[HACKER ROMANTIC]</div>
+      <ul style="font-size:12px;line-height:2.4;list-style:none;padding:0;color:#0c0;font-family:'JetBrains Mono',monospace;">
+        <li>▶ "glitch as punctuation"</li>
+        <li>▶ 数据比装饰更美</li>
+        <li>▶ cron job 般精准排版</li>
+        <li>▶ 暴露系统信息 (build time, commit hash)</li>
+        <li>▶ 用终端作导航隐喻</li>
+        <li>▶ 错误页 → kernel panic</li>
+        <li>▶ 加载 → compiling...</li>
+        <li>▶ RSS → /dev/feed</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- hacker banner demo -->
+  <div class="hacker-banner">
+    <span style="color:#0c0;">┌─[root@blog]─[~/posts]──────────────────────────────────────────────┐</span><br>
+    <span style="color:#0a0;">│  $ cat latest.md</span><br>
+    <span style="color:#0c0;">│  title: "构建现代化博客"  │  date: 2026-08-06  │  tags: [hugo,cloudflare]  │</span><br>
+    <span style="color:#0a0;">│  $ █</span><br>
+    <span style="color:#0c0;">└──────────────────────────────────────────────────────────────────────┘</span>
+  </div>
+
+  <div class="box" style="border-left-color:#0a0;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#0a0;">▶ terminal-philosophy.txt</span><br>
+    终端美学的核心不是炫技——是<strong>用系统语言讲故事</strong>。导航栏=文件路径。加载态=编译输出。404=kernel panic。RSS=/dev/feed。将整个博客体验包装成一个<strong>优雅运行的系统</strong>，而不是一个网页。
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ MINIMALISM ═══════════ -->
+<section id="minimalism">
+  <div class="label">.03c/minimalism</div>
+  <h2>极简克制 · 少即是多</h2>
+  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">暗色酸性风格容易"元素过载"——荧光绿处处都是反而失去冲击力。极简主义在这里的角色是<strong>约束酸性</strong>：80% 的极简黑底 + 15% 的结构线 + 5% 的酸性点缀。</p>
+
+  <div class="minimal-compare" style="margin:24px 0;">
+    <div class="minimal-block">
+      <div class="mini-title">[OVERLOADED — 拒绝]</div>
+      <div style="font-size:13px;line-height:2;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+        <span style="color:var(--pink);">✘</span> 每个卡片都有绿色边框<br>
+        <span style="color:var(--pink);">✘</span> 到处是 ASCII 装饰<br>
+        <span style="color:var(--pink);">✘</span> 所有文字都是荧光绿<br>
+        <span style="color:var(--pink);">✘</span> 5+ 种酸性色同时出现<br>
+        <span style="color:var(--pink);">✘</span> 按钮/标签/文字抢注意力
+      </div>
+    </div>
+    <div class="minimal-block sparse">
+      <div class="mini-title">[RESTRAINED — 目标]</div>
+      <div style="font-size:13px;line-height:2;color:var(--muted);font-family:'JetBrains Mono',monospace;">
+        <span style="color:var(--acid);">✔</span> 仅 Hero 用绿色边框<br>
+        <span style="color:var(--acid);">✔</span> ASCII 装饰仅页首/页尾<br>
+        <span style="color:var(--acid);">✔</span> 正文用 #EBEBEB 白色<br>
+        <span style="color:var(--acid);">✔</span> 每屏 ≤ 2 种酸性色<br>
+        <span style="color:var(--acid);">✔</span> 大量留白做视觉呼吸
+      </div>
+    </div>
+  </div>
+
+  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 80/15/5 配色分配法则</h3>
+  <div style="background:var(--surface);border:1px solid var(--border);padding:28px 32px;display:flex;gap:0;height:28px;border-radius:0;margin-bottom:24px;">
+    <div style="width:80%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">80% 黑底 · 留白</div>
+    <div style="width:15%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">15% 结构</div>
+    <div style="width:5%;background:var(--acid);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bg);">5% 酸性</div>
+  </div>
+
+  <div class="box" style="border-left-color:var(--acid);">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ minimalism-rule.txt</span><br>
+    <strong>酸性点缀像辣椒</strong>——一撮提味，半碗毁菜。一个页面上，酸性绿只应出现在 <strong>1-2 个元素</strong>上：当前导航项 + Hero 边框 + 或许一个 CTA 按钮。其他元素用暗色灰阶 + 白色文字，让那一点绿真正"亮"起来。
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ WELCOME PAGE ═══════════ -->
+<section id="welcome">
+  <div class="label">.04/welcome-page</div>
+  <h2>欢迎页 · 系统引导</h2>
+  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">首页不是文章列表——它是一个<strong>系统引导序列</strong>。访客进入博客时，看到的是一段优雅的终端启动过程，最后以极简的导航入口收尾。不堆砌信息，只给路径。</p>
+
+  <div class="mockup" style="margin-top:24px;">
+    <div class="mockup-bar">
+      <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+      <span style="font-size:10px;color:var(--muted);margin-left:8px;font-family:'JetBrains Mono',monospace;">blog-go3.pages.dev — Welcome</span>
+    </div>
+    <div class="mockup-body" style="padding:0;">
+      <div class="welcome-frame">
+        <!-- BOOT SEQUENCE OVERLAY -->
+        <div style="position:absolute;top:20px;left:28px;z-index:2;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;">
+          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">kernel: blog-hugo v0.164.0 loaded</span></div>
+          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">theme: PaperMod (submodule)</span></div>
+          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">deploy: Cloudflare Pages + GitHub Pages</span></div>
+          <div class="boot-line"><span class="dim">[</span><span class="info">..</span><span class="dim">]</span> <span class="dim">SSH: git@github.com:Levia808/blog.git</span></div>
+          <div class="boot-line"><span class="dim">[</span><span class="info">..</span><span class="dim">]</span> <span class="dim">auth: Supabase GitHub OAuth — ready</span></div>
+          <div class="boot-line" style="margin-top:4px;"><span class="dim">$ systemctl start blog.service</span><span class="boot-cursor"></span></div>
+        </div>
+
+        <!-- CENTERED WELCOME CONTENT -->
+        <div class="welcome-hero">
+          <div class="welcome-ascii">
+  ██╗     ███████╗██╗   ██╗██╗ █████╗ ██╗  ██╗ ██████╗ ██╗
+  ██║     ██╔════╝██║   ██║██║██╔══██╗╚██╗██╔╝██╔═████╗██║
+  ██║     █████╗  ██║   ██║██║███████║ ╚███╔╝ ██║██╔██║██║
+  ██║     ██╔══╝  ╚██╗ ██╔╝██║██╔══██║ ██╔██╗ ████╔╝██║╚═╝
+  ███████╗███████╗ ╚████╔╝ ██║██║  ██║██╔╝ ██╗╚██████╔╝██╗
+  ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
+          </div>
+          <div class="welcome-title"><span class="acid">$</span> 个人技术博客</div>
+          <div class="welcome-sub">
+            记录学习、思考与构建。用代码写文章，用终端做设计。<br>
+            <span style="color:var(--muted);font-size:12px;">boot completed in 43ms · 22 pages · build passing</span>
+          </div>
+          <div class="welcome-actions">
+            <a href="#" class="btn btn-filled">> cd /posts</a>
+            <a href="#" class="btn">> cat about.md</a>
+          </div>
+          <div class="welcome-footer">
+            ▶ press [P] for posts  ·  [A] for about  ·  [S] for search  ·  [ESC] to exit
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 欢迎页结构分解</h3>
+  <table class="table">
+    <thead><tr><th>层级</th><th>元素</th><th>作用</th><th>设计</th></tr></thead>
+    <tbody>
+      <tr><td><strong>L1 背景</strong></td><td>纯黑底 + radial 暗角</td><td>营造屏幕/空间感</td><td>#0A0A0A + vignette</td></tr>
+      <tr><td><strong>L2 左上</strong></td><td>Boot 启动序列</td><td>终端美学 · 系统感</td><td>[OK] 绿色 · 等宽 · 11px</td></tr>
+      <tr><td><strong>L3 居中</strong></td><td>ASCII logo + 标题 + 简介</td><td>品牌 · 一句话定位</td><td>延迟淡入 · 高空隙</td></tr>
+      <tr><td><strong>L4 按钮</strong></td><td>2 个入口 CTA</td><td>引导进入内容</td><td>CLI 风格标签 · 酸性绿边框</td></tr>
+      <tr><td><strong>L5 底部</strong></td><td>键盘快捷键提示</td><td>黑客体验 · 效率感</td><td>monospace · #444 暗色</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 简化版方案 (手机端)</h3>
+  <div class="welcome-frame" style="max-width:375px;min-height:360px;margin:0 auto;">
+    <div class="welcome-hero">
+      <div class="welcome-ascii" style="font-size:7px;margin-bottom:16px;">
+  ██╗     ███████╗██╗   ██╗██╗ █████╗
+  ██║     ██╔════╝██║   ██║██║██╔══██╗
+  ██║     █████╗  ██║   ██║██║███████║
+  ███████╗███████╗ ╚████╔╝ ██║██║  ██║
+  ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═╝
+      </div>
+      <div class="welcome-title" style="font-size:24px;"><span class="acid">$</span> 个人技术博客</div>
+      <div class="welcome-sub" style="font-size:12px;">记录学习、思考与构建。<br><span style="font-size:10px;color:var(--muted);">22 pages · build passing</span></div>
+      <div class="welcome-actions">
+        <a href="#" class="btn btn-filled" style="font-size:11px;padding:8px 18px;">> cd /posts</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" style="border-left-color:var(--cyan);margin-top:24px;">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);">▶ welcome-ux.txt</span><br>
+    欢迎页的核心哲学：<strong>不堆砌内容，只给方向</strong>。访客 3 秒内看到"个人技术博客"和两个入口。左上角 boot log 是气氛装饰（非必须阅读）。底部快捷键提示是彩蛋。整个页面的信息密度约等于一个终端窗口——极致克制。
   </div>
 </section>
 
