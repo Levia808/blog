@@ -55,11 +55,16 @@ var Auth = window.Auth = {
   },
 
   async signInWithGitHub() {
+    var profileUrl = window.location.origin + '/profile/';
+    // GitHub Pages 需要 /blog/ 前缀
+    if (window.location.hostname === 'levia808.github.io') {
+      profileUrl = window.location.origin + '/blog/profile/';
+    }
     const { data, error } = await blogSupabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
         scopes: 'read:user user:email',
-        redirectTo: window.location.origin + '/profile/'
+        redirectTo: profileUrl
       }
     });
     if (error) throw error;
@@ -71,8 +76,12 @@ var Auth = window.Auth = {
   },
 
   async resetPassword(email) {
+    var profileUrl = window.location.origin + '/profile/';
+    if (window.location.hostname === 'levia808.github.io') {
+      profileUrl = window.location.origin + '/blog/profile/';
+    }
     const { error } = await blogSupabase.auth.sendPasswordResetEmail(email, {
-      redirectTo: window.location.origin + '/profile/'
+      redirectTo: profileUrl
     });
     if (error) throw error;
   },
