@@ -172,7 +172,14 @@
   // GitHub Login
   if (githubLoginBtn) {
     githubLoginBtn.addEventListener('click', function () {
-      Auth.signInWithGitHub();
+      githubLoginBtn.disabled = true;
+      githubLoginBtn.textContent = '登录中...';
+      Auth.signInWithGitHub().catch(function(err) {
+        githubLoginBtn.disabled = false;
+        githubLoginBtn.textContent = 'GitHub 登录';
+        console.error('GitHub 登录失败:', err);
+        handleError('loginError', err);
+      });
     });
   }
 
