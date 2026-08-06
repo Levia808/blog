@@ -165,6 +165,108 @@
   /* ── BLOG CONTENT (below welcome) ── */
   .blog-section{min-height:100vh;padding:80px 0}
 
+  /* ── ARTICLE CARD WITH COVER ── */
+  .post-card-cover{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    transition:transform .25s ease-out,border-color .35s;
+  }
+  .post-card-cover:hover{transform:translateY(-4px);border-color:var(--accent)}
+  .post-card-cover .pc-img{
+    width:100%;aspect-ratio:3/2;
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+    overflow:hidden;
+    position:relative;
+  }
+  .post-card-cover .pc-img .pc-img-placeholder{
+    width:100%;height:100%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:40px;color:var(--faint);
+    background:linear-gradient(135deg,var(--surface),var(--bg));
+  }
+  .post-card-cover .pc-img img{
+    width:100%;height:100%;object-fit:cover;
+  }
+  .post-card-cover .pc-body{
+    padding:20px 22px 22px;
+    flex:1;display:flex;flex-direction:column;
+  }
+  .post-card-cover .pc-body .pc-date{
+    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);
+    margin-bottom:8px;letter-spacing:.5px;
+  }
+  .post-card-cover .pc-body .pc-title{
+    font-size:15px;font-weight:500;line-height:1.35;margin-bottom:6px;color:var(--white);
+  }
+  .post-card-cover .pc-body .pc-excerpt{
+    font-size:11px;color:var(--muted);line-height:1.55;
+  }
+
+  /* ── ADMIN PANEL ── */
+  .admin-frame{
+    display:grid;grid-template-columns:200px 1fr;min-height:520px;
+    border:1px solid var(--border);border-radius:6px;overflow:hidden;
+    background:var(--bg);
+  }
+  @media(max-width:768px){.admin-frame{grid-template-columns:1fr}}
+  .admin-sidebar{
+    background:var(--surface);border-right:1px solid var(--border);
+    padding:24px 0;
+    display:flex;flex-direction:column;
+  }
+  .admin-sidebar .as-logo{
+    padding:0 20px 20px;font-size:14px;font-weight:550;letter-spacing:1px;
+    color:var(--white);border-bottom:1px solid var(--border);margin-bottom:12px;
+  }
+  .admin-sidebar .as-nav{
+    display:flex;flex-direction:column;
+  }
+  .admin-sidebar .as-nav a{
+    padding:8px 20px;font-size:12px;color:var(--muted);text-decoration:none;
+    border-left:2px solid transparent;
+    transition:color .3s,border-color .3s,transform .15s;
+    font-family:"JetBrains Mono",monospace;letter-spacing:.3px;
+  }
+  .admin-sidebar .as-nav a:hover,
+  .admin-sidebar .as-nav a.active{
+    color:var(--fg);border-left-color:var(--accent);
+    transform:translateX(2px);
+  }
+  .admin-main{padding:28px 32px;display:flex;flex-direction:column;gap:20px}
+  .admin-main .am-header{display:flex;justify-content:space-between;align-items:center}
+  .admin-main .am-title{font-size:16px;font-weight:500;color:var(--white)}
+  .admin-main .am-actions{display:flex;gap:8px}
+
+  .admin-table{width:100%;border-collapse:collapse;font-size:11px}
+  .admin-table th,.admin-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .admin-table th{color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:"JetBrains Mono",monospace}
+  .admin-table td{color:var(--fg)}
+  .admin-table .status-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:6px}
+  .status-published{background:var(--accent)}
+  .status-draft{background:var(--faint)}
+
+  .admin-btn{
+    padding:6px 14px;font-size:11px;font-weight:500;border:1px solid var(--border);
+    border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;
+    font-family:"JetBrains Mono",monospace;
+    transition:transform .15s,border-color .3s;
+  }
+  .admin-btn:hover{transform:scale(1.04);border-color:var(--accent)}
+  .admin-btn.danger{color:var(--muted)}
+  .admin-btn.danger:hover{border-color:#8B4B4B;color:#C08080}
+
+  .admin-stat-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:6px;
+    padding:20px 22px;
+    display:flex;flex-direction:column;gap:6px;
+    transition:transform .2s,border-color .3s;
+  }
+  .admin-stat-card:hover{transform:translateY(-2px);border-color:var(--muted)}
+  .admin-stat-card .asc-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+  .admin-stat-card .asc-value{font-size:24px;font-weight:400;color:var(--white)}
+
   /* ── BLOG MOCKUP ── */
   .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}
   .blog-nav .logo{font-size:17px;font-weight:550;letter-spacing:1px;color:var(--white)}
@@ -400,6 +502,150 @@
 
 <hr>
 
+<!-- ═══════════ BLOG CARDS ═══════════ -->
+<section id="cards">
+  <div class="label">05 · 文章卡片</div>
+  <h2>3:2 封面 · 悬停上浮</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">竖向比例 <span class="mono">aspect-ratio: 3/2</span>。上半封面图（<span class="mono">object-fit: cover</span>），下半标题+日期+摘要。hover 平滑上浮 <span class="mono">translateY(-4px)</span> + 苔绿边框过渡。</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts · 3-column grid · cover cards</span></div>
+    <div class="mockup-body">
+      <div class="blog-nav">
+        <div class="logo">LEVIA808</div>
+        <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
+      </div>
+      <div class="grid-3">
+        <div class="post-card-cover">
+          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1a18,#22221e);font-size:52px;">▦</div></div>
+          <div class="pc-body"><div class="pc-date">2026 · 08 · 06</div><div class="pc-title">构建现代化个人博客</div><div class="pc-excerpt">从 Hugo 到双线部署的完整实践。一份代码，两边构建。</div></div>
+        </div>
+        <div class="post-card-cover">
+          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1e1a,#1e221e);font-size:52px;">{ }</div></div>
+          <div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">深入理解 ownership 与 borrowing 的核心机制。</div></div>
+        </div>
+        <div class="post-card-cover">
+          <div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1e1a1a,#221e1e);font-size:52px;">#</div></div>
+          <div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries 指南</div><div class="pc-excerpt">用组件级响应式设计告别 Media Queries。</div></div>
+        </div>
+      </div>
+      <div class="box" style="margin-top:24px;">
+        <span class="mono" style="color:var(--accent);">▶ card-spec</span><br>
+        <strong>比例</strong>: <span class="mono">3/2</span> 竖矩形 · <strong>封面</strong>: 上半 <span class="mono">object-fit: cover</span> · <strong>hover</strong>: <span class="mono">translateY(-4px)</span> 250ms + <span class="mono">border-color → --accent</span> 350ms · <strong>Hugo</strong>: Front Matter 设置 <span class="mono">cover.image</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ ADMIN PANEL ═══════════ -->
+<section id="admin">
+  <div class="label">06 · 管理后台</div>
+  <h2>管理员面板</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">仅超级管理员 (<span class="mono">role: superadmin</span>) 可访问。裂成左侧导航 + 右侧内容区。风格与博客完全一致——冷冽单色、精密排版、transform 动效。</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /admin · dashboard</span></div>
+    <div class="mockup-body" style="padding:0;">
+      <div class="admin-frame">
+        <!-- SIDEBAR -->
+        <div class="admin-sidebar">
+          <div class="as-logo">LEVIA808<br><span style="font-size:10px;color:var(--muted);font-weight:400;">superadmin</span></div>
+          <div class="as-nav">
+            <a href="#" class="active">/dashboard</a>
+            <a href="#">/posts</a>
+            <a href="#">/comments</a>
+            <a href="#">/users</a>
+            <a href="#">/media</a>
+            <a href="#">/settings</a>
+          </div>
+        </div>
+        <!-- MAIN -->
+        <div class="admin-main">
+          <div class="am-header">
+            <div class="am-title">Dashboard</div>
+            <div class="am-actions">
+              <button class="admin-btn">+ New Post</button>
+            </div>
+          </div>
+
+          <!-- Stat cards -->
+          <div class="grid-3">
+            <div class="admin-stat-card">
+              <div class="asc-label">Total Posts</div>
+              <div class="asc-value">22</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="asc-label">Comments</div>
+              <div class="asc-value">47</div>
+            </div>
+            <div class="admin-stat-card">
+              <div class="asc-label">Users</div>
+              <div class="asc-value">12</div>
+            </div>
+          </div>
+
+          <!-- Posts table -->
+          <div style="font-size:13px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">Recent Posts</div>
+          <table class="admin-table">
+            <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>构建现代化个人博客</td>
+                <td><span class="status-dot status-published"></span>published</td>
+                <td style="color:var(--muted);">2026-08-06</td>
+                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
+              </tr>
+              <tr>
+                <td>Rust 所有权模型 — 深入理解 ownership</td>
+                <td><span class="status-dot status-published"></span>published</td>
+                <td style="color:var(--muted);">2025-06-15</td>
+                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
+              </tr>
+              <tr>
+                <td>Container Queries 完全指南</td>
+                <td><span class="status-dot status-draft"></span>draft</td>
+                <td style="color:var(--muted);">2025-04-10</td>
+                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted);">编辑器配置 · 高效的 VS Code 工作流</td>
+                <td><span class="status-dot status-draft"></span>draft</td>
+                <td style="color:var(--muted);">2025-05-20</td>
+                <td><button class="admin-btn">edit</button> <button class="admin-btn danger">trash</button></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="font-size:11px;color:var(--faint);font-family:'JetBrains Mono',monospace;margin-top:8px;">
+            showing 4 of 22 · page 1/6
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table" style="margin-top:24px;">
+    <thead><tr><th>页面</th><th>路由</th><th>权限</th><th>功能</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dashboard</strong></td><td><span class="mono">/admin/</span></td><td>admin+</td><td>统计卡片 · 最近文章 · 快速操作</td></tr>
+      <tr><td><strong>Posts</strong></td><td><span class="mono">/admin/posts</span></td><td>author+</td><td>文章 CRUD · 批量操作 · 状态筛选</td></tr>
+      <tr><td><strong>Comments</strong></td><td><span class="mono">/admin/comments</span></td><td>admin+</td><td>审核/删除评论 · 垃圾过滤</td></tr>
+      <tr><td><strong>Users</strong></td><td><span class="mono">/admin/users</span></td><td>superadmin</td><td>用户列表 · 角色管理 · 禁用</td></tr>
+      <tr><td><strong>Media</strong></td><td><span class="mono">/admin/media</span></td><td>author+</td><td>Supabase Storage · 上传/删除</td></tr>
+      <tr><td><strong>Settings</strong></td><td><span class="mono">/admin/settings</span></td><td>superadmin</td><td>站点配置 · Hugo 参数热更新</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ admin-tech</span><br>
+    后端复用 Supabase (<span class="mono">iyquixzprfwkglaqptxj.supabase.co</span>)。认证通过 <span class="mono">Auth.user()</span> 获取当前用户 → 查 <span class="mono">profiles.role</span> → <span class="mono">superadmin</span> 或 <span class="mono">admin</span> 可进入。前端用 Sveltia CMS (<span class="mono">/admin-cms/</span>) 做内容编辑，统计面板用纯 JS + Supabase 查询构建。
+  </div>
+</section>
+
+<hr>
+
 <!-- ═══════════ 03 MOTION ═══════════ -->
 <section id="motion">
   <div class="label">03 · 动效</div>
@@ -525,18 +771,9 @@
           </div>
         </div>
         <div class="grid-3">
-          <div class="post-card">
-            <div class="pc-cover" style="background:linear-gradient(135deg,#1a1818,#1f1e1a);"><span class="pc-cover-placeholder">cover · rust</span></div>
-            <div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
-          </div>
-          <div class="post-card">
-            <div class="pc-cover" style="background:linear-gradient(135deg,#181a1a,#1a1f1e);"><span class="pc-cover-placeholder">cover · tools</span></div>
-            <div class="pc-body"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
-          </div>
-          <div class="post-card">
-            <div class="pc-cover" style="background:linear-gradient(135deg,#1a1a18,#1c1e1a);"><span class="pc-cover-placeholder">cover · css</span></div>
-            <div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
-          </div>
+          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1a18,#22221e);">▦</div></div><div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">深入理解 ownership 与 borrowing。</div></div></div>
+          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1a1e1a,#1e221e);">{ }</div></div><div class="pc-body"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div></div>
+          <div class="post-card-cover"><div class="pc-img"><div class="pc-img-placeholder" style="background:linear-gradient(135deg,#1e1a1a,#221e1e);">#</div></div><div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div></div>
         </div>
       </div>
     </div>
@@ -610,13 +847,13 @@
   <table class="table">
     <thead><tr><th>组件</th><th>处理</th><th>动效</th><th>P</th></tr></thead>
     <tbody>
-      <tr><td><strong>欢迎页</strong></td><td>boot log + 居中品牌 + 三路径 · 纯文字无装饰</td><td>fade-up 入口</td><td>P0</td></tr>
+      <tr><td><strong>欢迎页</strong></td><td>100vh 终端循环动画 · 8行 stagger · 居中 · 纯黑底</td><td>term-line-in 10s loop + scroll-hint float</td><td>P0</td></tr>
       <tr><td><strong>导航栏</strong></td><td>大写字母 · 间距 32px · 底部无下划线</td><td>hover → translateY(-1px)</td><td>P0</td></tr>
-      <tr><td><strong>文章卡片</strong></td><td>封面图 2:3 竖向 · #161615 底 · 6px 圆角 · 封面在上</td><td>hover → translateY(-2px) + 边框变亮</td><td>P0</td></tr>
-      <tr><td><strong>Hero 卡片</strong></td><td>左右分栏: 左 2:3 封面 + 右正文 · 6px 圆角</td><td>hover → scale(1.005)</td><td>P0</td></tr>
+      <tr><td><strong>文章卡片</strong></td><td>3:2 竖向 · 上半封面 object-fit:cover · 下半标题+摘要 · 8px 圆角</td><td>hover → translateY(-4px) + 苔绿边框过渡</td><td>P0</td></tr>
       <tr><td><strong>文章详情</strong></td><td>正文 720px + TOC 200px · 代码块 2px 左 accent 线</td><td>TOC hover → translateX(2px)</td><td>P0</td></tr>
       <tr><td><strong>按钮</strong></td><td>1px border · 4px 圆角 · 12px 字体</td><td>hover → scale(1.03) · press → scale(0.98)</td><td>P0</td></tr>
       <tr><td><strong>表单输入</strong></td><td>黑底 1px 暗边 · 4px 圆角 · focus→亮 border</td><td>—</td><td>P0</td></tr>
+      <tr><td><strong>管理后台</strong></td><td>左侧导航 + 右侧内容 · Dashboard 统计卡 + 文章表 · 角色权限</td><td>侧栏 hover → translateX(2px) + accent 线</td><td>P0</td></tr>
       <tr><td><strong>终端窗口</strong></td><td>#0A0A09 底 · 灰点标题栏 · JetBrains Mono</td><td>—</td><td>P1</td></tr>
       <tr><td><strong>标签</strong></td><td>monospace 10px · color: var(--muted)</td><td>—</td><td>P1</td></tr>
       <tr><td><strong>分割线</strong></td><td>1px solid #2C2C2A · 唯一分隔方式</td><td>—</td><td>P1</td></tr>
