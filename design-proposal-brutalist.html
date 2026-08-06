@@ -108,17 +108,62 @@
   .mockup-dot:nth-child(1){background:#555}.mockup-dot:nth-child(2){background:#555}.mockup-dot:nth-child(3){background:#555}
   .mockup-body{padding:48px 36px}
 
-  /* ── WELCOME ── */
-  .welcome-page{background:var(--bg);min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:48px 24px}
-  .welcome-page .boot-log{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);line-height:2;margin-bottom:48px;opacity:.6}
-  .welcome-page .boot-log span{color:var(--muted)}
-  @keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .welcome-main{animation:fade-up .6s .3s both}
-  .welcome-main .w-title{font-size:clamp(28px,4.5vw,44px);font-weight:400;letter-spacing:-1px;margin-bottom:12px}
-  .welcome-main .w-sub{font-size:14px;color:var(--muted);max-width:380px;margin:0 auto 32px;line-height:1.7}
-  .welcome-main .w-links{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:13px}
-  .welcome-main .w-links a{color:var(--fg);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;transition:transform .15s,border-color .3s}
-  .welcome-main .w-links a:hover{transform:translateY(-2px);border-bottom-color:var(--accent)}
+  /* ── WELCOME FULLSCREEN ── */
+  @keyframes term-line-in{0%,7%{opacity:0}10%,92%{opacity:1}100%{opacity:0}}
+  @keyframes term-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  @keyframes term-cursor-flash{0%,49%{opacity:1}50%,100%{opacity:0}}
+  @keyframes scroll-hint{0%,100%{opacity:0;transform:translateX(-50%) translateY(0)}40%,60%{opacity:1;transform:translateX(-50%) translateY(6px)}}
+
+  .welcome-full{
+    height:100vh;min-height:600px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;position:relative;overflow:hidden;
+    background:var(--bg);
+  }
+  .welcome-full .term-box{
+    font-family:"JetBrains Mono",monospace;font-size:clamp(11px,1.8vw,14px);
+    color:var(--muted);text-align:left;
+    width:clamp(280px,50vw,420px);
+    line-height:2.4;
+  }
+  .welcome-full .term-box .tl{
+    white-space:nowrap;overflow:hidden;opacity:0;
+  }
+  .welcome-full .term-box .tl .blink-cursor{
+    display:inline-block;width:8px;height:14px;background:var(--accent);
+    vertical-align:middle;margin-left:2px;
+    animation:term-cursor-flash 1s step-end infinite;
+  }
+  /* 8-line animation loop ~10s */
+  .welcome-full .term-box .tl:nth-child(1){animation:term-line-in 10s infinite;color:var(--faint)}
+  .welcome-full .term-box .tl:nth-child(2){animation:term-line-in 10s .7s infinite;color:var(--muted)}
+  .welcome-full .term-box .tl:nth-child(3){animation:term-line-in 10s 1.4s infinite;color:var(--muted)}
+  .welcome-full .term-box .tl:nth-child(4){animation:term-line-in 10s 2.1s infinite;color:var(--muted)}
+  .welcome-full .term-box .tl:nth-child(5){animation:term-line-in 10s 2.8s infinite;color:var(--accent)}
+  .welcome-full .term-box .tl:nth-child(6){animation:term-line-in 10s 3.5s infinite;color:var(--muted)}
+  .welcome-full .term-box .tl:nth-child(7){animation:term-line-in 10s 4.2s infinite;color:var(--muted)}
+  .welcome-full .term-box .tl:nth-child(8){animation:term-line-in 10s 4.9s infinite}
+  .welcome-full .term-box .tl:nth-child(8) .blink-cursor{display:inline-block}
+
+  .welcome-full .scroll-hint{
+    position:absolute;bottom:36px;left:50%;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    animation:scroll-hint 2s ease-in-out infinite;
+    font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);
+    letter-spacing:2px;
+  }
+  .welcome-full .scroll-hint .sh-arrow{
+    width:1px;height:28px;background:linear-gradient(to bottom,var(--faint),transparent);
+  }
+  .welcome-full .scroll-hint .sh-arrow::after{
+    content:"";position:absolute;bottom:0;left:-3px;
+    width:7px;height:7px;
+    border-right:1px solid var(--faint);border-bottom:1px solid var(--faint);
+    transform:rotate(45deg);
+  }
+
+  /* ── BLOG CONTENT (below welcome) ── */
+  .blog-section{min-height:100vh;padding:80px 0}
 
   /* ── BLOG MOCKUP ── */
   .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}
@@ -404,51 +449,35 @@
 <!-- ═══════════ 04 WELCOME PAGE ═══════════ -->
 <section id="welcome">
   <div class="label">04 · 欢迎页</div>
-  <h2>全屏终端动画 · 下滑进入</h2>
-  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">欢迎页 = 100vh 终端引导动画（循环播放）。访客看到一段"系统启动"序列，动画结束后品牌标识淡入，底部出现下滑提示。下滑进入博客内容区。</p>
+  <h2>100vh 终端动画 · 全屏循环</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">首屏 = 完整视口的居中终端动画。循环播放系统引导序列，无按钮、无标题、无干扰——仅 8 行文字 + 闪烁光标。下滑后进入博客内容。</p>
 
   <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — 欢迎页 · 100vh · 循环终端动画</span></div>
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">welcome — 100vh — terminal loop</span></div>
     <div class="mockup-body" style="padding:0;">
 
-      <!-- ═══ FULL-VIEWPORT TERMINAL ANIMATION ═══ -->
-      <div class="welcome-full" style="min-height:540px;">
-        <!-- TERMINAL BOOT SEQUENCE -->
-        <div class="term-stage">
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">kernel: hugo v0.164.0 — loading</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">filesystem: 22 pages mounted from /content</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">theme: PaperMod (adityatelange) — initialized</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">deploy: Cloudflare Pages + GitHub Pages — dual stack</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">auth: Supabase GitHub OAuth — configured</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">search: Fuse.js index — 22 entries</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">comment: Supabase realtime — connected</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">rss: /index.xml — active</span></div>
-          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">sitemap: /sitemap.xml — generated</span></div>
-          <div class="line" style="margin-top:6px;"><span class="dim">$ systemctl start blog.service</span><span class="cursor"></span></div>
-          <div class="line" style="margin-top:6px;color:var(--accent);">blog.service — active (running) · build 43ms</div>
+      <!-- FULLSCREEN WELCOME -->
+      <div class="welcome-full" style="min-height:560px;">
+        <!-- Terminal Animation -->
+        <div class="term-box">
+          <div class="tl">$ ssh blog.levia808.dev</div>
+          <div class="tl">$ loading kernel modules...</div>
+          <div class="tl">$ hugo v0.164.0 — 22 pages mounted</div>
+          <div class="tl">$ theme PaperMod — initialized</div>
+          <div class="tl">$ blog.service — <span style="color:var(--accent);">active (running)</span></div>
+          <div class="tl">$ deploy: Cloudflare Pages ✓</div>
+          <div class="tl">$ auth: Supabase GitHub OAuth ✓</div>
+          <div class="tl">$ <span class="blink-cursor"></span></div>
         </div>
-
-        <!-- LOGO FADE-IN -->
-        <div class="welcome-logo-wrap">
-          <div class="wl-name">LEVIA808</div>
-          <div class="wl-desc">个人技术博客。记录构建、阅读与思考。用代码写文章，用终端做设计。</div>
-          <div class="wl-nav">
-            <a href="#">/posts</a>
-            <a href="#">/about</a>
-            <a href="#">/archive</a>
-          </div>
-        </div>
-
-        <!-- SCROLL HINT -->
+        <!-- Scroll Hint -->
         <div class="scroll-hint">
-          <div class="sh-text">scroll</div>
-          <div class="sh-arrow">↓</div>
+          <div>scroll</div>
+          <div class="sh-arrow"></div>
         </div>
       </div>
 
-      <!-- ═══ BELOW: BLOG CONTENT ═══ -->
-      <div class="blog-below" style="padding:48px 36px;">
-        <div class="bb-label">▸ blog posts</div>
+      <!-- BELOW: BLOG CONTENT -->
+      <div style="padding:48px 36px;">
         <div class="blog-nav">
           <div class="logo">LEVIA808</div>
           <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
@@ -465,31 +494,23 @@
           <div class="post-card"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <h3 style="color:var(--muted);margin:28px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:13px;">▸ 动画循环时间线</h3>
-  <table class="table">
-    <thead><tr><th>时间</th><th>事件</th><th>视觉</th></tr></thead>
+  <table class="table" style="margin-top:24px;">
+    <thead><tr><th>时间</th><th>行为</th><th>CSS</th></tr></thead>
     <tbody>
-      <tr><td><span class="mono">0.0s</span></td><td>第一条 [OK] 出现</td><td>kernel loading — 暗色文字逐行淡入</td></tr>
-      <tr><td><span class="mono">0.3-3.9s</span></td><td>9 条系统状态逐行打印</td><td>每 0.3s 一行 · [OK] 标签 0.8s 内由灰变苔绿</td></tr>
-      <tr><td><span class="mono">4.2s</span></td><td>blog.service 启动 + 光标闪烁</td><td>systemctl 命令 + █ 闪烁光标 (step-end 1s)</td></tr>
-      <tr><td><span class="mono">4.5s</span></td><td>品牌标识淡入</td><td>LEVIA808 + 简介 + 三路径 · translateY(12→0)</td></tr>
-      <tr><td><span class="mono">5.0s</span></td><td>scroll 提示淡入</td><td>底部 "scroll ↓" · translateY 循环漂浮</td></tr>
-      <tr><td><span class="mono">~8s</span></td><td>循环重播</td><td>所有动画同步回到起点 · 重新播放启动序列</td></tr>
+      <tr><td><span class="mono">0.0s</span></td><td>第 1 行淡入</td><td><span class="mono">term-line-in 10s infinite</span></td></tr>
+      <tr><td><span class="mono">~0.7s</span></td><td>每行递增 0.7s 延迟出现</td><td><span class="mono">animation-delay: .7s, 1.4s, 2.1s...</span></td></tr>
+      <tr><td><span class="mono">~5.6s</span></td><td>8 行全部显示 · 光标闪烁</td><td><span class="mono">term-cursor-flash 1s step-end</span></td></tr>
+      <tr><td><span class="mono">~7-10s</span></td><td>所有行渐隐 → 重播</td><td><span class="mono">opacity 1→0 · infinite</span></td></tr>
     </tbody>
   </table>
 
   <div class="box">
-    <span class="mono" style="color:var(--accent);">▶ loop-strategy</span><br>
-    动画使用 <strong>CSS animation</strong> 实现，无需 JS。循环通过将所有 animation 的延迟和时长打包为一个总周期（~8s），整体重置后重播。实现方式：可设置 <span class="mono">animation-iteration-count: infinite</span> 或在 JS 中用 <span class="mono">setInterval</span> 在总周期结束后移除/重加 animation class。推荐纯 CSS 方案（所有 animation-delay 以总周期为基准，配合 infinite）。
-  </div>
-
-  <div class="box" style="border-left-color:var(--faint);margin-top:16px;">
-    <span class="mono" style="color:var(--muted);">▶ responsive</span><br>
-    移动端终端字号缩小为 9px，行数减少为 5 行关键信息。品牌标识字号降低，导航改为竖排。scroll 提示保留但位置调整。
+    <span class="mono" style="color:var(--accent);">▶ pure-css-loop</span><br>
+    纯 CSS 实现，无需 JS。<span class="mono">term-line-in</span> 关键帧控制每行的 opacity 进出，<span class="mono">animation-delay</span> 做行间 stagger，<span class="mono">infinite</span> 自动循环。总周期 10s。<br>
+    下滑提示用 <span class="mono">scroll-hint</span> 浮动动画，箭头用 <span class="mono">::after</span> 伪元素画 45° 线条。
   </div>
 </section>
 
