@@ -364,7 +364,14 @@
   .compare-cell{border:1px solid var(--border);padding:20px;border-radius:4px;text-align:center;font-size:12px}
 
   /* ── NAVIGATION DETAIL ── */
-  .nav-full{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--bg)}
+  .nav-full{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;border-bottom:1px solid var(--border);
+    background:var(--bg);
+    position:sticky;top:0;z-index:50;
+    transition:transform .25s ease-out;
+  }
+  .nav-full.nav-hidden{transform:translateY(-100%)}
   .nav-full .nf-logo{font-size:16px;font-weight:550;letter-spacing:1.5px;color:var(--white)}
   .nav-full .nf-links{display:flex;align-items:center;gap:28px}
   .nav-full .nf-links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:color .3s,transform .15s;position:relative}
@@ -377,7 +384,13 @@
   .nav-full .nf-actions .nf-icon:hover{color:var(--fg);transform:scale(1.1)}
 
   /* ── MOBILE NAV ── */
-  .nav-mobile{display:none;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg)}
+  .nav-mobile{
+    display:none;align-items:center;justify-content:space-between;
+    padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg);
+    position:sticky;top:0;z-index:50;
+    transition:transform .25s ease-out;
+  }
+  .nav-mobile.nav-hidden{transform:translateY(-100%)}
   .nav-mobile .nm-logo{font-size:15px;font-weight:550;color:var(--white)}
   .nav-mobile .nm-toggle{font-size:18px;color:var(--muted);cursor:pointer;background:none;border:none;padding:6px;transition:transform .15s}
   .nav-mobile .nm-toggle:hover{transform:scale(1.1);color:var(--fg)}
@@ -964,9 +977,11 @@
   <!-- ── NAVIGATION ── -->
   <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Desktop)</h3>
   <div class="mockup" style="margin-top:12px;">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — navigation · desktop</span></div>
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — navigation · sticky-top · scroll-aware</span></div>
     <div class="mockup-body" style="padding:0;">
-      <div class="nav-full">
+      <!-- sticky indicator -->
+      <div style="font-size:9px;color:var(--faint);text-align:center;padding:6px;font-family:'JetBrains Mono',monospace;border-bottom:1px dashed var(--faint);letter-spacing:1px;">▲ scroll up → nav shows &nbsp;|&nbsp; ▼ scroll down → nav hides &nbsp;|&nbsp; ● at top → always visible</div>
+      <div class="nav-full" style="position:relative;"> <!-- relative for mockup only -->
         <div class="nf-logo">LEVIA808</div>
         <div class="nf-links">
           <a href="#" class="active">Posts</a>
@@ -991,8 +1006,62 @@
     </div>
   </div>
 
-  <!-- ── MOBILE NAV ── -->
-  <h3 style="color:var(--muted);margin:28px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Mobile ≤ 768px)</h3>
+  <!-- SCROLL BEHAVIOR SPEC -->
+  <div class="box" style="margin-top:20px;border-left-color:var(--accent);">
+    <span class="mono" style="color:var(--accent);">▶ scroll-aware-nav.js</span><br>
+    <strong>trigger</strong>: scroll delta &gt; 60px<br>
+    <strong>↓ 下滑</strong>: nav → <span class="mono">translateY(-100%)</span> · 250ms ease-out · 隐藏为内容腾空间<br>
+    <strong>↑ 上滑</strong>: nav → <span class="mono">translateY(0)</span> · 250ms ease-out · 立即浮现<br>
+    <strong>顶部</strong>: 始终显示 (scrollY &lt; 60px 时强制 visible)<br>
+    <strong>实现</strong>: <span class="mono">position: sticky; top: 0</span> + JS 监听 scroll 切换 <span class="mono">.nav-hidden</span> class
+  </div>
+
+  <!-- SCROLL ANIMATION TIMELINE -->
+  <table class="table" style="margin-top:16px;">
+    <thead><tr><th>滚动方向</th><th>scrollY 条件</th><th>CSS class</th><th>视觉</th><th>时长</th></tr></thead>
+    <tbody>
+      <tr><td>↓ 下滑</td><td><span class="mono" style="color:var(--muted);">&gt; 60px delta</span></td><td><span class="mono" style="color:var(--muted);">.nav-hidden</span></td><td><span class="mono" style="color:var(--muted);">translateY(-100%)</span> · 导航上滑消失</td><td>250ms</td></tr>
+      <tr><td>↑ 上滑</td><td><span class="mono" style="color:var(--accent);">&gt; 60px delta</span></td><td><span class="mono" style="color:var(--accent);">:not(.nav-hidden)</span></td><td><span class="mono" style="color:var(--accent);">translateY(0)</span> · 导航滑入浮现</td><td>250ms</td></tr>
+      <tr><td>↕ 顶部</td><td><span class="mono" style="color:var(--faint);">&lt; 60px</span></td><td><span class="mono" style="color:var(--faint);">force visible</span></td><td>始终可见 · 不参与隐藏逻辑</td><td>—</td></tr>
+      <tr><td>— 静止</td><td>delta &lt; 60px</td><td>保持当前状态</td><td>无变化 · 避免微小滚动抖动</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <!-- JS IMPLEMENTATION -->
+  <div class="terminal" style="margin-top:16px;">
+    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">scroll-nav.js</span></div>
+    <div class="term-body">
+      <span class="prompt">$</span> <span class="output">cat scroll-nav.js</span><br>
+      <span style="color:var(--faint);">const nav = document.querySelector('.nav-full');</span><br>
+      <span style="color:var(--faint);">let lastY = 0, ticking = false;</span><br>
+      <span style="color:var(--faint);">const DELTA = 60;</span><br>
+      <br>
+      <span style="color:var(--muted);">document.addEventListener('scroll', () =&gt; {</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;if (!ticking) {</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;requestAnimationFrame(() =&gt; {</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const y = window.scrollY;</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;const delta = y - lastY;</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Math.abs(delta) &gt; DELTA) {</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nav.classList.toggle('nav-hidden', delta &gt; 0 &amp;&amp; y &gt; 60);</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lastY = y;</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ticking = false;</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;});</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;&nbsp;&nbsp;ticking = true;</span><br>
+      <span style="color:var(--muted);">&nbsp;&nbsp;}</span><br>
+      <span style="color:var(--muted);">});</span><br>
+      <br>
+      <span class="prompt">$</span> <span style="color:var(--accent);">█</span>
+    </div>
+  </div>
+
+  <div class="box" style="border-left-color:var(--faint);margin-top:16px;">
+    <span class="mono" style="color:var(--muted);">▶ performance-note</span><br>
+    使用 <span class="mono">requestAnimationFrame</span> 做节流，避免 scroll 事件阻塞主线程。<span class="mono">position: sticky</span> 确保导航在隐藏时仍占据布局空间（不引起 CLS）。仅在 delta 超过 60px 阈值时切换 class，消除手指微颤导致的闪烁。
+  </div>
+
+  <!-- MOBILE NAV -->
+  <h3 style="color:var(--muted);margin:36px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Mobile ≤ 768px)</h3>
   <div class="mockup" style="margin-top:12px;max-width:400px;">
     <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">component — navigation · mobile</span></div>
     <div class="mockup-body" style="padding:0;">
