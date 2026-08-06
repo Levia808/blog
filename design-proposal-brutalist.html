@@ -404,73 +404,100 @@
 <!-- ═══════════ 04 WELCOME PAGE ═══════════ -->
 <section id="welcome">
   <div class="label">04 · 欢迎页</div>
-  <h2>矿物表面 · 冷冽入口</h2>
+  <h2>全屏终端动画 · 下滑进入</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">欢迎页 = 100vh 终端引导动画（循环播放）。访客看到一段"系统启动"序列，动画结束后品牌标识淡入，底部出现下滑提示。下滑进入博客内容区。</p>
 
   <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — welcome</span></div>
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — 欢迎页 · 100vh · 循环终端动画</span></div>
     <div class="mockup-body" style="padding:0;">
-      <div class="welcome-page">
-        <div class="boot-log">
-          <span>init</span> · kernel loaded<br>
-          <span>mount</span> · content volume ready<br>
-          <span>start</span> · blog.service — running
+
+      <!-- ═══ FULL-VIEWPORT TERMINAL ANIMATION ═══ -->
+      <div class="welcome-full" style="min-height:540px;">
+        <!-- TERMINAL BOOT SEQUENCE -->
+        <div class="term-stage">
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">kernel: hugo v0.164.0 — loading</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">filesystem: 22 pages mounted from /content</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">theme: PaperMod (adityatelange) — initialized</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">deploy: Cloudflare Pages + GitHub Pages — dual stack</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">auth: Supabase GitHub OAuth — configured</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">search: Fuse.js index — 22 entries</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">comment: Supabase realtime — connected</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">rss: /index.xml — active</span></div>
+          <div class="line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">sitemap: /sitemap.xml — generated</span></div>
+          <div class="line" style="margin-top:6px;"><span class="dim">$ systemctl start blog.service</span><span class="cursor"></span></div>
+          <div class="line" style="margin-top:6px;color:var(--accent);">blog.service — active (running) · build 43ms</div>
         </div>
-        <div class="welcome-main">
-          <div class="w-title">LEVIA808</div>
-          <div class="w-sub">
-            个人技术博客。记录构建、阅读与思考。<br>
-            <span style="font-size:11px;color:var(--faint);">build 2026 · 22 pages · hugo v0.164.0</span>
-          </div>
-          <div class="w-links">
+
+        <!-- LOGO FADE-IN -->
+        <div class="welcome-logo-wrap">
+          <div class="wl-name">LEVIA808</div>
+          <div class="wl-desc">个人技术博客。记录构建、阅读与思考。用代码写文章，用终端做设计。</div>
+          <div class="wl-nav">
             <a href="#">/posts</a>
             <a href="#">/about</a>
             <a href="#">/archive</a>
           </div>
         </div>
+
+        <!-- SCROLL HINT -->
+        <div class="scroll-hint">
+          <div class="sh-text">scroll</div>
+          <div class="sh-arrow">↓</div>
+        </div>
       </div>
+
+      <!-- ═══ BELOW: BLOG CONTENT ═══ -->
+      <div class="blog-below" style="padding:48px 36px;">
+        <div class="bb-label">▸ blog posts</div>
+        <div class="blog-nav">
+          <div class="logo">LEVIA808</div>
+          <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
+        </div>
+        <div class="blog-hero">
+          <div class="hero-date">2026 · 08 · 06</div>
+          <div class="hero-title">构建现代化个人博客</div>
+          <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
+          <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
+        </div>
+        <div class="grid-3">
+          <div class="post-card"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
+          <div class="post-card"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
+          <div class="post-card"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <div class="box" style="margin-top:24px;">
-    <span class="mono" style="color:var(--accent);">▶ structure</span><br>
-    <strong>L1</strong> 左上 boot log — 系统启动氛围 · <strong>L2</strong> 居中品牌 — 纯文字无装饰 · <strong>L3</strong> 三个路径 — 简洁导航。全页仅 ~60 个词，留白率 &gt; 80%。进入动画：boot log 立即呈现 → 中心内容 300ms fade-up。
+  <h3 style="color:var(--muted);margin:28px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:13px;">▸ 动画循环时间线</h3>
+  <table class="table">
+    <thead><tr><th>时间</th><th>事件</th><th>视觉</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">0.0s</span></td><td>第一条 [OK] 出现</td><td>kernel loading — 暗色文字逐行淡入</td></tr>
+      <tr><td><span class="mono">0.3-3.9s</span></td><td>9 条系统状态逐行打印</td><td>每 0.3s 一行 · [OK] 标签 0.8s 内由灰变苔绿</td></tr>
+      <tr><td><span class="mono">4.2s</span></td><td>blog.service 启动 + 光标闪烁</td><td>systemctl 命令 + █ 闪烁光标 (step-end 1s)</td></tr>
+      <tr><td><span class="mono">4.5s</span></td><td>品牌标识淡入</td><td>LEVIA808 + 简介 + 三路径 · translateY(12→0)</td></tr>
+      <tr><td><span class="mono">5.0s</span></td><td>scroll 提示淡入</td><td>底部 "scroll ↓" · translateY 循环漂浮</td></tr>
+      <tr><td><span class="mono">~8s</span></td><td>循环重播</td><td>所有动画同步回到起点 · 重新播放启动序列</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ loop-strategy</span><br>
+    动画使用 <strong>CSS animation</strong> 实现，无需 JS。循环通过将所有 animation 的延迟和时长打包为一个总周期（~8s），整体重置后重播。实现方式：可设置 <span class="mono">animation-iteration-count: infinite</span> 或在 JS 中用 <span class="mono">setInterval</span> 在总周期结束后移除/重加 animation class。推荐纯 CSS 方案（所有 animation-delay 以总周期为基准，配合 infinite）。
+  </div>
+
+  <div class="box" style="border-left-color:var(--faint);margin-top:16px;">
+    <span class="mono" style="color:var(--muted);">▶ responsive</span><br>
+    移动端终端字号缩小为 9px，行数减少为 5 行关键信息。品牌标识字号降低，导航改为竖排。scroll 提示保留但位置调整。
   </div>
 </section>
 
-<hr>
 
-<!-- ═══════════ 05 BLOG MOCKUP ═══════════ -->
-<section id="mockup">
-  <div class="label">05 · 首页</div>
-  <h2>文章列表</h2>
 
-  <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts</span></div>
-    <div class="mockup-body">
-      <div class="blog-nav">
-        <div class="logo">LEVIA808</div>
-        <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
-      </div>
-      <div class="blog-hero">
-        <div class="hero-date">2026 · 08 · 06</div>
-        <div class="hero-title">构建现代化个人博客</div>
-        <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
-        <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
-      </div>
-      <div class="grid-3">
-        <div class="post-card"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
-        <div class="post-card"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
-        <div class="post-card"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ 06 ARTICLE ═══════════ -->
+<!-- ═══════════ 05 ARTICLE ═══════════ -->
 <section>
-  <div class="label">06 · 文章页</div>
+  <div class="label">05 · 文章页</div>
   <h2>阅读布局</h2>
 
   <div class="mockup">
@@ -511,7 +538,7 @@
 
 <!-- ═══════════ 07 COMPONENTS ═══════════ -->
 <section>
-  <div class="label">07 · 组件</div>
+  <div class="label">06 · 组件</div>
   <h2>UI 元素规格</h2>
 
   <table class="table">
@@ -537,7 +564,7 @@
 
 <!-- ═══════════ 08 COMPARISON ═══════════ -->
 <section>
-  <div class="label">08 · 对比</div>
+  <div class="label">07 · 对比</div>
   <h2>方案演进</h2>
 
   <div class="compare-row">
@@ -564,7 +591,7 @@
 
 <!-- ═══════════ 09 IMPLEMENTATION ═══════════ -->
 <section>
-  <div class="label">09 · 实施</div>
+  <div class="label">08 · 实施</div>
   <h2>文件映射</h2>
   <table class="table">
     <thead><tr><th>步骤</th><th>文件</th><th>变更</th></tr></thead>
