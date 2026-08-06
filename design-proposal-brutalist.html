@@ -172,17 +172,24 @@
   .blog-nav .links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:transform .15s}
   .blog-nav .links a:hover{transform:translateY(-1px);color:var(--fg)}
 
-  .blog-hero{border:1px solid var(--border);padding:52px 48px;margin-bottom:40px;border-radius:6px;background:var(--surface);transition:transform .3s}
+  .blog-hero{border:1px solid var(--border);margin-bottom:40px;border-radius:6px;background:var(--surface);transition:transform .3s;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden}
   .blog-hero:hover{transform:scale(1.005)}
+  .blog-hero .hero-cover{aspect-ratio:2/3;background:var(--bg);border-right:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .blog-hero .hero-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,var(--surface),transparent 40%)}
+  .blog-hero .hero-body{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
   .blog-hero .hero-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px}
-  .blog-hero .hero-title{font-size:30px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
-  .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);max-width:420px;line-height:1.7;margin-bottom:16px}
+  .blog-hero .hero-title{font-size:26px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+  @media(max-width:768px){.blog-hero{grid-template-columns:1fr}.blog-hero .hero-cover{aspect-ratio:3/2}}}
 
-  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;transition:transform .2s ease-out,border-color .3s}
+  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:transform .2s ease-out,border-color .3s;display:flex;flex-direction:column}
   .post-card:hover{transform:translateY(-2px);border-color:var(--muted)}
-  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px}
-  .post-card .pc-title{font-size:15px;font-weight:500;line-height:1.4;margin-bottom:6px}
-  .post-card .pc-excerpt{font-size:12px;color:var(--muted);line-height:1.6}
+  .post-card .pc-cover{aspect-ratio:2/3;background:var(--bg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+  .post-card .pc-cover .pc-cover-placeholder{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
+  .post-card .pc-body{padding:20px 22px;flex:1;display:flex;flex-direction:column}
+  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:.5px}
+  .post-card .pc-title{font-size:14px;font-weight:500;line-height:1.4;margin-bottom:6px}
+  .post-card .pc-excerpt{font-size:11px;color:var(--muted);line-height:1.6;flex:1}
 
   /* ── TRANSFORM MOTION DEMOS ── */
   .motion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:24px 0}
@@ -483,15 +490,29 @@
           <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
         </div>
         <div class="blog-hero">
-          <div class="hero-date">2026 · 08 · 06</div>
-          <div class="hero-title">构建现代化个人博客</div>
-          <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
-          <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
+          <div class="hero-cover" style="background:linear-gradient(135deg,#1a1a18 0%,#1f1f1c 50%,#1a1f19 100%);">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:2px;position:relative;z-index:1;">cover image<br>2026 · 08</span>
+          </div>
+          <div class="hero-body">
+            <div class="hero-date">2026 · 08 · 06</div>
+            <div class="hero-title">构建现代化个人博客</div>
+            <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
+            <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
+          </div>
         </div>
         <div class="grid-3">
-          <div class="post-card"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
-          <div class="post-card"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
-          <div class="post-card"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
+          <div class="post-card">
+            <div class="pc-cover" style="background:linear-gradient(135deg,#1a1818,#1f1e1a);"><span class="pc-cover-placeholder">cover · rust</span></div>
+            <div class="pc-body"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
+          </div>
+          <div class="post-card">
+            <div class="pc-cover" style="background:linear-gradient(135deg,#181a1a,#1a1f1e);"><span class="pc-cover-placeholder">cover · tools</span></div>
+            <div class="pc-body"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
+          </div>
+          <div class="post-card">
+            <div class="pc-cover" style="background:linear-gradient(135deg,#1a1a18,#1c1e1a);"><span class="pc-cover-placeholder">cover · css</span></div>
+            <div class="pc-body"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -567,7 +588,8 @@
     <tbody>
       <tr><td><strong>欢迎页</strong></td><td>boot log + 居中品牌 + 三路径 · 纯文字无装饰</td><td>fade-up 入口</td><td>P0</td></tr>
       <tr><td><strong>导航栏</strong></td><td>大写字母 · 间距 32px · 底部无下划线</td><td>hover → translateY(-1px)</td><td>P0</td></tr>
-      <tr><td><strong>文章卡片</strong></td><td>#161615 底 · 1px 边框 · 6px 圆角</td><td>hover → translateY(-2px) + 边框变亮</td><td>P0</td></tr>
+      <tr><td><strong>文章卡片</strong></td><td>封面图 2:3 竖向 · #161615 底 · 6px 圆角 · 封面在上</td><td>hover → translateY(-2px) + 边框变亮</td><td>P0</td></tr>
+      <tr><td><strong>Hero 卡片</strong></td><td>左右分栏: 左 2:3 封面 + 右正文 · 6px 圆角</td><td>hover → scale(1.005)</td><td>P0</td></tr>
       <tr><td><strong>文章详情</strong></td><td>正文 720px + TOC 200px · 代码块 2px 左 accent 线</td><td>TOC hover → translateX(2px)</td><td>P0</td></tr>
       <tr><td><strong>按钮</strong></td><td>1px border · 4px 圆角 · 12px 字体</td><td>hover → scale(1.03) · press → scale(0.98)</td><td>P0</td></tr>
       <tr><td><strong>表单输入</strong></td><td>黑底 1px 暗边 · 4px 圆角 · focus→亮 border</td><td>—</td><td>P0</td></tr>
