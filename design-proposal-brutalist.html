@@ -182,14 +182,38 @@
   .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px}
   @media(max-width:768px){.blog-hero{grid-template-columns:1fr}.blog-hero .hero-cover{aspect-ratio:3/2}}}
 
-  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:transform .2s ease-out,border-color .3s;display:flex;flex-direction:column}
-  .post-card:hover{transform:translateY(-2px);border-color:var(--muted)}
-  .post-card .pc-cover{aspect-ratio:2/3;background:var(--bg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
-  .post-card .pc-cover .pc-cover-placeholder{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
-  .post-card .pc-body{padding:20px 22px;flex:1;display:flex;flex-direction:column}
-  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:.5px}
-  .post-card .pc-title{font-size:14px;font-weight:500;line-height:1.4;margin-bottom:6px}
-  .post-card .pc-excerpt{font-size:11px;color:var(--muted);line-height:1.6;flex:1}
+  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:transform .25s ease-out,border-color .3s,box-shadow .3s;display:flex;flex-direction:column;aspect-ratio:3/2}
+  .post-card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .post-card .pc-cover{flex:0 0 52%;background:var(--bg);position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+  .post-card .pc-cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .post-card .pc-cover .pc-cover-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--faint);opacity:.5}
+  .post-card .pc-body{padding:16px 20px;flex:1;display:flex;flex-direction:column;justify-content:center}
+  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--muted);margin-bottom:6px;letter-spacing:.5px}
+  .post-card .pc-title{font-size:14px;font-weight:500;line-height:1.35;margin-bottom:4px;color:var(--fg)}
+  .post-card .pc-excerpt{font-size:11px;color:var(--muted);line-height:1.5}
+
+  /* ── ADMIN PANEL ── */
+  .admin-page{display:grid;grid-template-columns:220px 1fr;min-height:600px;border:1px solid var(--border);border-radius:0;overflow:hidden}
+  @media(max-width:768px){.admin-page{grid-template-columns:1fr}}
+  .admin-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column}
+  .admin-sidebar .as-logo{font-size:14px;font-weight:500;padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;letter-spacing:1px;color:var(--white)}
+  .admin-sidebar .as-nav{display:flex;flex-direction:column;padding:0 12px}
+  .admin-sidebar .as-nav a{font-size:12px;color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:4px;transition:background .2s,transform .15s;font-family:"JetBrains Mono",monospace;letter-spacing:.5px}
+  .admin-sidebar .as-nav a:hover,.admin-sidebar .as-nav a.active{background:var(--bg);color:var(--fg);transform:translateX(3px)}
+  .admin-main{background:var(--bg);padding:32px 36px;overflow-y:auto}
+  .admin-main .am-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+  .admin-main .am-title{font-size:18px;font-weight:500;color:var(--white)}
+  .admin-table{width:100%;border-collapse:collapse;font-size:12px}
+  .admin-table th,.admin-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  .admin-table th{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:450}
+  .admin-table td{color:var(--fg)}
+  .admin-table tr:hover td{background:var(--surface)}
+  .admin-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+  @media(max-width:768px){.admin-stat-grid{grid-template-columns:repeat(2,1fr)}}
+  .admin-stat{border:1px solid var(--border);border-radius:6px;padding:20px 22px;background:var(--surface)}
+  .admin-stat .ast-label{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+  .admin-stat .ast-val{font-size:28px;font-weight:400;color:var(--white)}
+  .admin-stat .ast-sub{font-size:11px;color:var(--muted);margin-top:4px}
 
   /* ── TRANSFORM MOTION DEMOS ── */
   .motion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:24px 0}
@@ -601,6 +625,74 @@
       <tr><td><strong>404 页</strong></td><td>"page not found" · 终端风格 · 回首页链接</td><td>—</td><td>P2</td></tr>
     </tbody>
   </table>
+</section>
+
+<hr>
+
+<!-- ═══════════ ADMIN PAGE ═══════════ -->
+<section>
+  <div class="label">07 · 后台管理</div>
+  <h2>管理员控制台</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">极简管理面板 — 左侧导航 + 右侧仪表盘。统计概览 + 文章列表。仅超级管理员（GitHub 登录 levia808）可见。</p>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /admin · dashboard</span></div>
+    <div class="mockup-body" style="padding:0;">
+      <div class="admin-page">
+        <!-- SIDEBAR -->
+        <div class="admin-sidebar">
+          <div class="as-logo">LEVIA808 <span style="font-size:10px;color:var(--muted);font-weight:400;">admin</span></div>
+          <div class="as-nav">
+            <a href="#" class="active">Dashboard</a>
+            <a href="#">Posts</a>
+            <a href="#">Comments</a>
+            <a href="#">Users</a>
+            <a href="#">Media</a>
+            <a href="#">Settings</a>
+          </div>
+          <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">levia808</div>
+            <div style="font-size:10px;color:var(--faint);">superadmin</div>
+          </div>
+        </div>
+        <!-- MAIN -->
+        <div class="admin-main">
+          <div class="am-header">
+            <div class="am-title">Dashboard</div>
+            <span class="btn" style="font-size:10px;padding:5px 16px;">+ New Post</span>
+          </div>
+          <!-- STATS -->
+          <div class="admin-stat-grid">
+            <div class="admin-stat"><div class="ast-label">posts</div><div class="ast-val">22</div><div class="ast-sub">+3 this week</div></div>
+            <div class="admin-stat"><div class="ast-label">comments</div><div class="ast-val">47</div><div class="ast-sub">+12 new</div></div>
+            <div class="admin-stat"><div class="ast-label">users</div><div class="ast-val">31</div><div class="ast-sub">+5 registered</div></div>
+            <div class="admin-stat"><div class="ast-label">views</div><div class="ast-val">1.2k</div><div class="ast-sub">this month</div></div>
+          </div>
+          <!-- POST TABLE -->
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;">recent posts</div>
+          <table class="admin-table">
+            <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Views</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>构建现代化个人博客</td><td><span style="color:var(--accent);">published</span></td><td>2026-08-06</td><td>342</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
+              <tr><td>Rust 所有权模型</td><td><span style="color:var(--accent);">published</span></td><td>2025-06-15</td><td>218</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
+              <tr><td>编辑器配置 2025</td><td><span style="color:var(--accent);">published</span></td><td>2025-05-20</td><td>156</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
+              <tr><td>Container Queries</td><td><span style="color:var(--yellow);">draft</span></td><td>2025-04-10</td><td>—</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
+              <tr><td>TypeScript 高级类型</td><td><span style="color:var(--accent);">published</span></td><td>2025-03-01</td><td>89</td><td><span style="color:var(--muted);cursor:pointer;">edit</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" style="margin-top:24px;">
+    <span class="mono" style="color:var(--accent);">▶ admin-spec</span><br>
+    <strong>认证</strong>：仅 <span class="mono">role = superadmin</span>（GitHub 登录 levia808）可见 /admin/ 路由。<br>
+    <strong>布局</strong>：220px 侧栏 + 自适应主区域。侧栏 sticky，主区域滚动。<br>
+    <strong>侧栏</strong>：6 个导航项 + 底部当前用户信息。当前页高亮 + translateX(3px) 动效。<br>
+    <strong>仪表盘</strong>：4 格统计卡片 + 文章列表表。hover 行背景加深。<br>
+    <strong>写文章</strong>：通过 Sveltia CMS（/admin-cms/）或 Supabase 直写。
+  </div>
 </section>
 
 <hr>
