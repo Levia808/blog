@@ -257,6 +257,11 @@
   .admin-btn.danger{color:var(--muted)}
   .admin-btn.danger:hover{border-color:#8B4B4B;color:#C08080}
 
+  /* ── ICON ── */
+  .ph-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ph-icon.sm{font-size:14px;width:16px;height:16px}
+  .ph-icon.md{font-size:18px;width:20px;height:20px}
+
   /* ── EDITOR ── */
   .editor-frame{display:flex;flex-direction:column;min-height:520px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
   .editor-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -741,6 +746,7 @@
         <div class="admin-sidebar">
           <div class="as-logo">LEVIA808<br><span style="font-size:10px;color:var(--muted);font-weight:400;">superadmin</span></div>
           <div class="as-nav">
+            <!-- icons: squares-four, article, chat-centered-text, users, image, gear -->
             <a href="#" class="active">/dashboard</a>
             <a href="#">/posts</a>
             <a href="#">/comments</a>
@@ -1285,22 +1291,23 @@
 
       <div class="editor-frame">
         <!-- TOOLBAR -->
+        <!-- icons: text-b, text-italic, code, link, text-h, list-bullets, quotes, table, image, video, speaker-high, floppy-disk, paper-plane -->
         <div class="editor-toolbar">
           <div class="et-group">
-            <button title="Bold">B</button><button title="Italic"><i>I</i></button><button title="Code">&lt;/&gt;</button><button title="Link">🔗</button>
+            <button title="Bold" aria-label="Bold">B</button><button title="Italic" aria-label="Italic"><i>I</i></button><button title="Code" aria-label="Code">&lt;/&gt;</button><button title="Link" aria-label="Insert Link">🔗</button>
           </div>
           <div class="et-group">
-            <button title="Heading">H</button><button title="List">≡</button><button title="Quote">❝</button><button title="Table">⊞</button>
+            <button title="Heading" aria-label="Heading">H</button><button title="List" aria-label="List">≡</button><button title="Quote" aria-label="Quote">❝</button><button title="Table" aria-label="Table">⊞</button>
           </div>
           <div class="et-group">
-            <button class="et-media" title="Insert Image">🖼</button>
-            <button class="et-media" title="Insert Video">▶</button>
-            <button class="et-media" title="Insert Audio">♫</button>
+            <button class="et-media" title="Insert Image" aria-label="Insert Image">🖼</button>
+            <button class="et-media" title="Insert Video" aria-label="Insert Video">▶</button>
+            <button class="et-media" title="Insert Audio" aria-label="Insert Audio">♫</button>
           </div>
           <div style="flex:1;"></div>
           <div class="et-group">
-            <button title="Save draft" style="color:var(--muted);">💾</button>
-            <button title="Publish" style="color:var(--accent);font-weight:500;">PUBLISH</button>
+            <button title="Save draft" aria-label="Save draft" style="color:var(--muted);">💾</button>
+            <button title="Publish" aria-label="Publish" style="color:var(--accent);font-weight:500;">PUBLISH</button>
           </div>
         </div>
 
@@ -1553,6 +1560,92 @@ cover:
 
 <hr>
 
+<!-- ═══════════ ICON SYSTEM ═══════════ -->
+<section id="icons">
+  <div class="label">08 · 图标系统</div>
+  <h2>Phosphor Icons</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">全站使用 <a href="https://phosphoricons.com" class="link">Phosphor Icons</a>（MIT · ~1400 图标 · 6 种粗细）。选 <span class="mono">Regular</span> 为默认态、<span class="mono">Fill</span> 为 active/hover 态。不自行绘制图标。</p>
+
+  <h3 style="color:var(--muted);margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 全局图标映射表</h3>
+  <table class="table">
+    <thead><tr><th>位置</th><th>Phosphor 图标名</th><th>样式</th><th>尺寸</th></tr></thead>
+    <tbody>
+      <tr><td>导航 · 文章</td><td><span class="mono" style="color:var(--accent);">article</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
+      <tr><td>导航 · 归档</td><td><span class="mono" style="color:var(--accent);">archive</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
+      <tr><td>导航 · 标签</td><td><span class="mono" style="color:var(--accent);">tag</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
+      <tr><td>导航 · 关于</td><td><span class="mono" style="color:var(--accent);">info</span></td><td>Regular · hover→Fill</td><td>18px</td></tr>
+      <tr><td>搜索按钮</td><td><span class="mono" style="color:var(--accent);">magnifying-glass</span></td><td>Regular</td><td>18px</td></tr>
+      <tr><td>主题切换</td><td><span class="mono" style="color:var(--accent);">sun / moon</span></td><td>Regular (toggle 切换)</td><td>18px</td></tr>
+      <tr><td>用户头像 (未登录)</td><td><span class="mono" style="color:var(--accent);">user-circle</span></td><td>Regular</td><td>20px</td></tr>
+      <tr><td>下拉菜单 · Profile</td><td><span class="mono" style="color:var(--accent);">user</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>下拉菜单 · Admin</td><td><span class="mono" style="color:var(--accent);">gear</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>下拉菜单 · Sign out</td><td><span class="mono" style="color:var(--accent);">sign-out</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>登录弹窗 · 关闭</td><td><span class="mono" style="color:var(--accent);">x</span></td><td>Regular</td><td>18px</td></tr>
+      <tr><td>登录弹窗 · GitHub</td><td><span class="mono" style="color:var(--accent);">github-logo</span></td><td>Regular</td><td>20px</td></tr>
+      <tr><td>面包屑分隔</td><td><span class="mono" style="color:var(--accent);">caret-right</span></td><td>Regular</td><td>12px</td></tr>
+      <tr><td>RSS 链接</td><td><span class="mono" style="color:var(--accent);">rss</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>页脚 · GitHub</td><td><span class="mono" style="color:var(--accent);">github-logo</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>页脚 · Sitemap</td><td><span class="mono" style="color:var(--accent);">sitemap</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>Hero · 箭头</td><td><span class="mono" style="color:var(--accent);">arrow-right</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>文章卡片 · 日期前</td><td><span class="mono" style="color:var(--accent);">calendar</span></td><td>Regular</td><td>12px</td></tr>
+      <tr><td>文章卡片 · 阅读时间</td><td><span class="mono" style="color:var(--accent);">clock</span></td><td>Regular</td><td>12px</td></tr>
+      <tr><td>分页 · 上一页</td><td><span class="mono" style="color:var(--accent);">caret-left</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>分页 · 下一页</td><td><span class="mono" style="color:var(--accent);">caret-right</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>评论 · 回复</td><td><span class="mono" style="color:var(--accent);">arrow-bend-up-left</span></td><td>Regular</td><td>12px</td></tr>
+      <tr><td>评论 · 点赞</td><td><span class="mono" style="color:var(--accent);">arrow-up · Fill 变体</span></td><td>Regular→Fill (active)</td><td>12px</td></tr>
+      <tr><td>状态 · 已发布</td><td><span class="mono" style="color:var(--accent);">check-circle</span></td><td>Fill (苔绿)</td><td>14px</td></tr>
+      <tr><td>状态 · 草稿</td><td><span class="mono" style="color:var(--accent);">pencil-simple-line</span></td><td>Regular (灰色)</td><td>14px</td></tr>
+      <tr><td>Admin 侧栏 · Dashboard</td><td><span class="mono" style="color:var(--accent);">squares-four</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin 侧栏 · Posts</td><td><span class="mono" style="color:var(--accent);">article</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin 侧栏 · Comments</td><td><span class="mono" style="color:var(--accent);">chat-centered-text</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin 侧栏 · Users</td><td><span class="mono" style="color:var(--accent);">users</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin 侧栏 · Media</td><td><span class="mono" style="color:var(--accent);">image</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin 侧栏 · Settings</td><td><span class="mono" style="color:var(--accent);">gear</span></td><td>Regular · active→Fill</td><td>16px</td></tr>
+      <tr><td>Admin · New Post</td><td><span class="mono" style="color:var(--accent);">plus-circle</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>Admin · Edit</td><td><span class="mono" style="color:var(--accent);">pencil-simple</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>Admin · Trash</td><td><span class="mono" style="color:var(--accent);">trash</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>编辑器 · Bold</td><td><span class="mono" style="color:var(--accent);">text-b</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Italic</td><td><span class="mono" style="color:var(--accent);">text-italic</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Code</td><td><span class="mono" style="color:var(--accent);">code</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Link</td><td><span class="mono" style="color:var(--accent);">link</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Heading</td><td><span class="mono" style="color:var(--accent);">text-h</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · List</td><td><span class="mono" style="color:var(--accent);">list-bullets</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Quote</td><td><span class="mono" style="color:var(--accent);">quotes</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Table</td><td><span class="mono" style="color:var(--accent);">table</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Image</td><td><span class="mono" style="color:var(--accent);">image</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Video</td><td><span class="mono" style="color:var(--accent);">video</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Audio</td><td><span class="mono" style="color:var(--accent);">speaker-high</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Save</td><td><span class="mono" style="color:var(--accent);">floppy-disk</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>编辑器 · Publish</td><td><span class="mono" style="color:var(--accent);">paper-plane</span></td><td>Fill (苔绿)</td><td>16px</td></tr>
+      <tr><td>媒体弹窗 · Upload Tab</td><td><span class="mono" style="color:var(--accent);">upload</span></td><td>Regular</td><td>16px</td></tr>
+      <tr><td>Toast · Success</td><td><span class="mono" style="color:var(--accent);">check-circle</span></td><td>Fill (苔绿)</td><td>16px</td></tr>
+      <tr><td>Toast · Error</td><td><span class="mono" style="color:var(--accent);">x-circle</span></td><td>Fill (红 #C08080)</td><td>16px</td></tr>
+      <tr><td>Toast · Info</td><td><span class="mono" style="color:var(--accent);">info</span></td><td>Fill (灰色)</td><td>16px</td></tr>
+      <tr><td>欢迎页 · Scroll 提示</td><td><span class="mono" style="color:var(--accent);">arrow-down</span></td><td>Regular</td><td>14px</td></tr>
+      <tr><td>404 页</td><td><span class="mono" style="color:var(--accent);">warning-octagon</span></td><td>Regular</td><td>32px</td></tr>
+    </tbody>
+  </table>
+
+  <table class="table" style="margin-top:24px;">
+    <thead><tr><th>使用方式</th><th>代码</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CDN</strong></td><td><span class="mono" style="font-size:10px;">&lt;script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"&gt;&lt;/script&gt;</span></td><td>零构建配置，直接使用 <span class="mono">&lt;i class="ph ph-article"&gt;&lt;/i&gt;</span></td></tr>
+      <tr><td><strong>SVG Sprite</strong></td><td><span class="mono" style="font-size:10px;">&lt;svg&gt;&lt;use href="/icons/phosphor.svg#article"&gt;&lt;/svg&gt;</span></td><td>最优性能，单次请求，适合 Hugo 静态站点</td></tr>
+      <tr><td><strong>React</strong></td><td><span class="mono" style="font-size:10px;">npm i @phosphor-icons/react</span></td><td>Sveltia CMS 等 React 环境直接导入组件</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ icon-rules</span><br>
+    <strong>粗细</strong>: Regular (1.5px 描边) 为默认 · Fill 用于 active/hover/selected 状态<br>
+    <strong>尺寸</strong>: 导航/按钮 18px · 侧栏 16px · 文字内嵌 14px · 小标注 12px<br>
+    <strong>颜色</strong>: 默认 <span class="mono">var(--muted)</span> · hover <span class="mono">var(--fg)</span> · active <span class="mono">var(--accent)</span><br>
+    <strong>禁止</strong>: 不使用 emoji 作 UI 图标 · 不自行绘制 · 不混用其他图标包
+  </div>
+</section>
+
+<hr>
+
 <!-- ═══════════ 09 IMPLEMENTATION ═══════════ -->
 <section>
   <div class="label">08 · 实施</div>
@@ -1560,13 +1653,15 @@ cover:
   <table class="table">
     <thead><tr><th>步骤</th><th>文件</th><th>变更</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td><span class="mono">assets/css/extended/design-system.css</span></td><td>CSS 变量 · 矿物色板 · <span class="mono">transform</span> 动效规则</td></tr>
+      <tr><td>1</td><td><span class="mono">assets/css/extended/design-system.css</span></td><td>CSS 变量 · 矿物色板 · <span class="mono">transform</span> 动效规则 · 图标大小/颜色</td></tr>
       <tr><td>2</td><td><span class="mono">hugo.yaml</span></td><td>Google Fonts (Inter + JetBrains Mono + Noto Sans SC)</td></tr>
-      <tr><td>3</td><td><span class="mono">layouts/index.html</span></td><td>欢迎页 boot log + 三路径入口</td></tr>
-      <tr><td>4</td><td><span class="mono">layouts/partials/header.html</span></td><td>导航 · 大写 · 32px 间距</td></tr>
+      <tr><td>3</td><td><span class="mono">layouts/partials/head.html</span></td><td>Phosphor Icons CDN (<span class="mono">unpkg.com/@phosphor-icons/web</span>)</td></tr>
+      <tr><td>4</td><td><span class="mono">layouts/index.html</span></td><td>欢迎页 100vh 终端循环动画 + 文章卡片列表</td></tr>
+      <tr><td>4</td><td><span class="mono">layouts/partials/header.html</span></td><td>导航 · 大写 · 32px 间距 · Phosphor 图标 (article/archive/tag/info)</td></tr>
       <tr><td>5</td><td><span class="mono">layouts/_default/single.html</span></td><td>文章页 TOC 侧栏 · 代码块 accent 左线</td></tr>
-      <tr><td>6</td><td><span class="mono">layouts/partials/footer.html</span></td><td>最小页脚 · 3 行信息</td></tr>
-      <tr><td>7</td><td><span class="mono">assets/css/extended/--cleanup</span></td><td>删除旧酸性 · scanline · glitch · RGB shift · noise 等</td></tr>
+      <tr><td>6</td><td><span class="mono">layouts/partials/footer.html</span></td><td>最小页脚 · 3 行信息 · Phosphor 图标 (github-logo/rss/sitemap)</td></tr>
+      <tr><td>7</td><td><span class="mono">static/js/admin.js</span></td><td>管理后台 · Dashboard · Editor · 媒体上传</td></tr>
+      <tr><td>8</td><td><span class="mono">assets/css/extended/--cleanup</span></td><td>删除旧酸性 · scanline · glitch · 替换 emoji 为 Phosphor</td></tr>
     </tbody>
   </table>
 </section>
