@@ -340,6 +340,16 @@
   /* ── FOCUS ── */
   :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
+  /* ── INPUT / TEXTAREA ── */
+  .input,textarea.input{
+    background:var(--bg);border:1px solid var(--border);border-radius:4px;
+    padding:10px 14px;font-size:13px;color:var(--fg);outline:none;
+    font-family:inherit;width:100%;resize:vertical;
+    transition:border-color .2s;
+  }
+  .input:focus,textarea.input:focus{border-color:var(--accent)}
+  .input::placeholder,textarea.input::placeholder{color:var(--faint)}
+
   /* ── ARTICLE ── */
   .article-layout{display:grid;grid-template-columns:1fr 200px;gap:36px;align-items:start}
   @media(max-width:768px){.article-layout{grid-template-columns:1fr}}
@@ -384,6 +394,9 @@
   .auth-modal .am-title{font-size:18px;font-weight:500;margin-bottom:24px;color:var(--white)}
   .auth-modal .am-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
   .auth-modal .am-field label{font-size:11px;color:var(--muted);font-family:"JetBrains Mono",monospace;text-transform:uppercase;letter-spacing:1px}
+  .auth-modal .am-field input{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 14px;font-size:13px;color:var(--fg);outline:none;font-family:inherit;transition:border-color .2s}
+  .auth-modal .am-field input:focus{border-color:var(--accent)}
+  .auth-modal .am-field input::placeholder{color:var(--faint)}
   .auth-modal .am-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:11px;color:var(--faint)}
   .auth-modal .am-divider::before,.auth-modal .am-divider::after{content:"";flex:1;height:1px;background:var(--border)}
   .auth-modal .am-footer{text-align:center;font-size:11px;color:var(--muted);margin-top:20px}
@@ -1027,8 +1040,8 @@
         <div class="auth-modal">
           <button class="am-close">✕</button>
           <div class="am-title">Sign in</div>
-          <div class="am-field"><label>Email</label><input class="input" placeholder="you@email.com" style="border-radius:4px;" value="levia808@users.noreply"></div>
-          <div class="am-field"><label>Password</label><input class="input" type="password" placeholder="········" style="border-radius:4px;" value="········"></div>
+          <div class="am-field"><label>Email</label><input placeholder="you@email.com" value="levia808@users.noreply"></div>
+          <div class="am-field"><label>Password</label><input type="password" placeholder="········" value="········"></div>
           <button class="btn" style="width:100%;justify-content:center;margin-top:8px;">> Sign in</button>
           <div class="am-divider">or</div>
           <button class="btn" style="width:100%;justify-content:center;border-color:var(--border);">GitHub</button>
@@ -1082,7 +1095,7 @@
         <div class="comment-item" style="width:100%;">
           <div class="ci-avatar" style="background:var(--bg);">L</div>
           <div class="ci-body">
-            <textarea class="input" rows="3" placeholder="Write a comment... (Markdown)" style="border-radius:4px;"></textarea>
+            <textarea class="input" rows="3" placeholder="Write a comment... (Markdown)"></textarea>
             <div style="display:flex;justify-content:flex-end;margin-top:8px;">
               <button class="btn" style="font-size:11px;padding:6px 16px;">> Submit</button>
             </div>
