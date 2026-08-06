@@ -3,268 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>暗色酸性粗野主义博客设计方案 — 完整版</title>
+<title>自然科技 · 凌厉冷淡 — 博客设计方案 v6</title>
 <style>
   :root {
-    --bg:#0A0A0A; --surface:#141414; --border:#2A2A2A;
-    --fg:#EBEBEB; --muted:#777; --acid:#39FF14;
-    --acid2:#CCFF00; --yellow:#FFD700; --pink:#FF2D55;
-    --cyan:#00FFFF; --purple:#AF52DE; --white:#F5F5F5;
-    --bw:2px; --sp:4px;
+    --bg:      #0C0C0B;
+    --surface: #161615;
+    --border:  #2C2C2A;
+    --fg:      #E8E8E3;
+    --muted:   #7A7A75;
+    --faint:   #3E3E3C;
+    --accent:  #6B8B6B;
+    --white:   #F2F2ED;
+    --bw:      1px;
+    --sp:      4px;
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   body{
     background:var(--bg);color:var(--fg);
-    font-family:"Space Grotesk","IBM Plex Sans","Noto Sans SC",sans-serif;
-    font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+    font-family:"Inter","Space Grotesk","Noto Sans SC",sans-serif;
+    font-size:15px;line-height:1.75;font-weight:350;
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:-0.1px;
   }
-  body::after{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
-    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(57,255,20,0.015) 2px,rgba(57,255,20,0.015) 4px);
-  }
-  .container{max-width:1040px;margin:0 auto;padding:0 28px}
-  h1{font-size:clamp(36px,6vw,64px);font-weight:900;letter-spacing:-1.5px;line-height:1.05}
-  h2{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;text-transform:uppercase}
-  h3{font-size:18px;font-weight:700;letter-spacing:-0.3px}
-  .mono{font-family:"JetBrains Mono","IBM Plex Mono","Geist Mono",monospace}
-  .label{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--acid)}
-  .acid{color:var(--acid)}.acid2{color:var(--acid2)}.pink{color:var(--pink)}.cyan{color:var(--cyan)}.yellow{color:var(--yellow)}
+  .container{max-width:960px;margin:0 auto;padding:0 32px}
+  h1{font-size:clamp(32px,5.5vw,52px);font-weight:500;letter-spacing:-1.5px;line-height:1.1}
+  h2{font-size:24px;font-weight:450;letter-spacing:-0.5px;line-height:1.2;color:var(--white)}
+  h3{font-size:15px;font-weight:550;letter-spacing:-0.2px;color:var(--white)}
+  .mono{font-family:"JetBrains Mono","IBM Plex Mono",monospace;font-size:11.5px;font-weight:400}
+  .label{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:450;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
 
+  /* ── BUTTON (cold, precise) ── */
   .btn{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:10px 24px;font-family:"Space Grotesk","JetBrains Mono",sans-serif;
-    font-size:13px;font-weight:800;text-decoration:none;
-    border:var(--bw) solid var(--acid);border-radius:6px;
-    background:transparent;color:var(--acid);
-    text-transform:uppercase;letter-spacing:1px;
-    transition:background .1s,color .1s;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:9px 22px;font-size:12px;font-weight:500;text-decoration:none;
+    border:var(--bw) solid var(--border);border-radius:4px;
+    background:transparent;color:var(--fg);
+    letter-spacing:0.3px;
+    transition:transform .15s ease-out,border-color .3s;
   }
-  .btn:hover{background:var(--acid);color:var(--bg)}
-  .btn-filled{background:var(--acid);color:var(--bg)}
-  .btn-filled:hover{background:transparent;color:var(--acid)}
-  .btn-pink{border-color:var(--pink);color:var(--pink)}
-  .btn-pink:hover{background:var(--pink);color:var(--bg)}
-  .btn-cyan{border-color:var(--cyan);color:var(--cyan)}
-  .btn-cyan:hover{background:var(--cyan);color:var(--bg)}
+  .btn:hover{transform:scale(1.03);border-color:var(--muted)}
+  .btn:active{transform:scale(0.98)}
+  .btn-primary{background:var(--white);color:var(--bg);border-color:var(--white);font-weight:500}
+  .btn-primary:hover{transform:scale(1.03);border-color:var(--white)}
 
-  .card{background:var(--surface);border:var(--bw) solid var(--border);border-radius:0;padding:28px}
-  .card-acid{border-color:var(--acid);border-left-width:4px}
-  .card-pink{border-color:var(--pink);border-left-width:4px}
-  .card-cyan{border-color:var(--cyan);border-left-width:4px}
-  .card-yellow{border-color:var(--yellow);border-left-width:4px}
+  /* ── CARD ── */
+  .card{background:var(--surface);border:var(--bw) solid var(--border);padding:32px;border-radius:6px}
+  .card-accent{border-left:2px solid var(--accent)}
 
-  .terminal{background:#0C0C0C;border:1px solid #333;border-radius:0;overflow:hidden;margin:24px 0}
-  .term-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#1A1A1A;border-bottom:1px solid #333}
-  .term-dot{width:10px;height:10px;border-radius:0}
-  .term-dot:nth-child(1){background:var(--pink)}.term-dot:nth-child(2){background:var(--yellow)}.term-dot:nth-child(3){background:var(--acid)}
-  .term-body{padding:20px 24px;font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.9;color:var(--acid)}
-  .prompt{color:var(--pink)}.output{color:var(--white)}
-
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
-  @media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
-
-  section{padding:80px 0}
+  /* ── SECTION ── */
+  section{padding:72px 0}
   hr{border:none;border-top:1px solid var(--border);margin:0}
 
-  .header{padding:100px 0 60px;text-align:center;border-bottom:var(--bw) solid var(--border)}
-  .header .sub{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--acid);margin-bottom:20px;letter-spacing:2px}
-  .header h1{max-width:700px;margin:0 auto 16px}
-  .header p{color:var(--muted);max-width:500px;margin:0 auto 32px}
+  /* ── HEADER ── */
+  .header{padding:96px 0 56px;text-align:center;border-bottom:var(--bw) solid var(--border)}
+  .header .sub{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted);margin-bottom:24px;letter-spacing:3px}
+  .header h1{max-width:640px;margin:0 auto 16px}
+  .header h1 em{font-style:normal;color:var(--accent)}
+  .header p{color:var(--muted);max-width:440px;margin:0 auto 32px;font-size:14px}
 
-  .ref-card{background:var(--surface);border:1px solid var(--border);border-radius:0;overflow:hidden}
-  .ref-card .thumb{height:170px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
-  .ref-card .info{padding:16px 18px}
-  .ref-card h4{font-size:14px;margin-bottom:4px}
-  .ref-card .url{font-size:11px;color:var(--acid);font-family:"JetBrains Mono",monospace}
-  .ref-card .tags{font-size:11px;color:var(--muted);margin-top:6px}
+  /* ── PRINCIPLES ── */
+  .principle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin:24px 0}
+  .principle-card{background:var(--surface);padding:36px 28px;text-align:center}
+  .principle-card .idx{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-bottom:14px;letter-spacing:1px}
+  .principle-card .title{font-size:14px;font-weight:500;margin-bottom:8px;color:var(--white)}
+  .principle-card p{font-size:11px;color:var(--muted);line-height:1.6}
+  @media(max-width:768px){.principle-grid{grid-template-columns:1fr 1fr}}
 
-  .principle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:32px 0}
-  @media(max-width:768px){.principle-grid{grid-template-columns:1fr}}
-  .principle-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--acid);padding:28px 24px;border-radius:0}
-  .principle-card:nth-child(2){border-left-color:var(--pink)}
-  .principle-card:nth-child(3){border-left-color:var(--cyan)}
-  .principle-card:nth-child(4){border-left-color:var(--acid2)}
-  .principle-card:nth-child(5){border-left-color:var(--yellow)}
-  .principle-card:nth-child(6){border-left-color:var(--pink)}
-  .principle-card:nth-child(7){border-left-color:var(--purple)}
-  .principle-card .idx{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--muted);margin-bottom:10px}
-  .principle-card .title{font-size:15px;font-weight:800;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  /* ── GRID ── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  @media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
-  .swatch-row{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
-  .swatch{width:80px;height:80px;border:1px solid #333;border-radius:8px;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700}
-  .typo-card{background:var(--surface);border:1px solid var(--border);border-radius:0;padding:24px}
-
-  .table{width:100%;border-collapse:collapse;font-size:13px;margin:24px 0}
-  .table th,.table td{padding:10px 16px;text-align:left;border-bottom:1px solid var(--border)}
-  .table th{background:var(--surface);color:var(--acid);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:"JetBrains Mono",monospace}
+  /* ── TABLE ── */
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin:28px 0}
+  .table th,.table td{padding:9px 16px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:2px;font-family:"JetBrains Mono",monospace}
   .table td{background:var(--bg)}.table tr:last-child td{border-bottom:none}
 
-  .box{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--acid);padding:18px 22px;line-height:1.8;font-size:13px;margin:24px 0;border-radius:0}
+  /* ── BOX ── */
+  .box{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);padding:18px 24px;line-height:1.9;font-size:12px;margin:28px 0}
 
-  .mockup{border:1px solid var(--border);border-radius:0;overflow:hidden;margin-top:32px}
-  .mockup-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#111;border-bottom:1px solid var(--border)}
-  .mockup-dot{width:10px;height:10px;border-radius:0}
-  .mockup-dot:nth-child(1){background:var(--pink)}.mockup-dot:nth-child(2){background:var(--yellow)}.mockup-dot:nth-child(3){background:var(--acid)}
-  .mockup-body{padding:48px 32px}
+  /* ── SWATCH ── */
+  .swatch-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+  .swatch{width:64px;height:64px;border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;justify-content:flex-end;padding:6px;font-family:"JetBrains Mono",monospace;font-size:9px}
+  .swatch .hex{color:inherit;mix-blend-mode:difference;font-weight:500}
 
-  .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:60px}
-  .blog-nav .logo{font-size:20px;font-weight:900;letter-spacing:-1px;color:var(--white)}
-  .blog-nav .links{display:flex;gap:28px}
-  .blog-nav .links a{font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:1px}
-  .blog-nav .links a:hover{color:var(--acid)}
+  /* ── TYPO ── */
+  .typo-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:28px}
 
-  .blog-hero{border:1px solid var(--acid);padding:56px 48px;margin-bottom:48px;position:relative;overflow:hidden;background:#0D0D0D;border-radius:8px}
-  .blog-hero::before{content:"★ FEATURED";position:absolute;top:16px;right:24px;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--acid);letter-spacing:2px;font-weight:700}
-  .blog-hero .hero-tag{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--pink);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:14px;display:block}
-  .blog-hero .hero-title{font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;max-width:480px}
-  .blog-hero .hero-excerpt{font-size:14px;color:var(--muted);max-width:440px;margin-bottom:18px;line-height:1.6}
-  .blog-hero .hero-meta{font-family:"JetBrains Mono",monospace;font-size:11px;color:#555}
+  /* ── TERMINAL ── */
+  .terminal{background:#0A0A09;border:1px solid var(--faint);border-radius:0;overflow:hidden;margin:24px 0}
+  .term-bar{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#101010;border-bottom:1px solid var(--faint)}
+  .term-dot{width:9px;height:9px;border-radius:3px}
+  .term-dot:nth-child(1){background:#555}.term-dot:nth-child(2){background:#555}.term-dot:nth-child(3){background:#555}
+  .term-body{padding:22px 28px;font-family:"JetBrains Mono",monospace;font-size:12px;line-height:2;color:var(--muted)}
+  .term-body .prompt{color:var(--accent)}
+  .term-body .output{color:var(--fg)}
 
-  .post-card{background:var(--surface);border:1px solid var(--border);padding:24px;border-radius:8px;transition:border-color .15s}
-  .post-card:hover{border-color:var(--acid)}
-  .post-card .pc-tag{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;display:block}
-  .post-card .pc-title{font-size:16px;font-weight:800;line-height:1.35;margin-bottom:6px}
-  .post-card .pc-excerpt{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px}
-  .post-card .pc-meta{font-family:"JetBrains Mono",monospace;font-size:10px;color:#555}
+  /* ── MOCKUP ── */
+  .mockup{border:1px solid var(--border);border-radius:0;overflow:hidden;margin-top:28px}
+  .mockup-bar{display:flex;align-items:center;gap:7px;padding:7px 16px;background:#101010;border-bottom:1px solid var(--border)}
+  .mockup-dot{width:9px;height:9px;border-radius:3px}
+  .mockup-dot:nth-child(1){background:#555}.mockup-dot:nth-child(2){background:#555}.mockup-dot:nth-child(3){background:#555}
+  .mockup-body{padding:48px 36px}
 
-  /* ── GLITCH ── */
-  @keyframes glitch{0%{clip-path:inset(40% 0 61% 0)}20%{clip-path:inset(92% 0 1% 0)}40%{clip-path:inset(43% 0 1% 0)}60%{clip-path:inset(25% 0 58% 0)}80%{clip-path:inset(54% 0 7% 0)}100%{clip-path:inset(58% 0 43% 0)}}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-  @keyframes typewriter{from{width:0}to{width:100%}}
-  @keyframes rgb-shift{0%,100%{text-shadow:2px 0 var(--acid),-2px 0 var(--pink)}25%{text-shadow:-2px 0 var(--acid),2px 0 var(--cyan)}50%{text-shadow:2px 0 var(--pink),-2px 0 var(--cyan)}75%{text-shadow:-2px 0 var(--pink),2px 0 var(--acid)}}
-  @keyframes noise{0%{transform:translate(0)}10%{transform:translate(-1px,1px)}20%{transform:translate(1px,-1px)}30%{transform:translate(-1px,-1px)}40%{transform:translate(1px,1px)}50%{transform:translate(0)}100%{transform:translate(0)}}
-  @keyframes border-breathe{0%,100%{border-color:var(--acid)}50%{border-color:var(--pink)}}
-  @keyframes cursor-flash{0%,100%{border-right-color:var(--acid)}50%{border-right-color:transparent}}
-  @keyframes scanline-scroll{0%{background-position:0 0}100%{background-position:0 8px}}
+  /* ── WELCOME ── */
+  .welcome-page{background:var(--bg);min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;padding:48px 24px}
+  .welcome-page .boot-log{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);line-height:2;margin-bottom:48px;opacity:.6}
+  .welcome-page .boot-log span{color:var(--muted)}
+  @keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .welcome-main{animation:fade-up .6s .3s both}
+  .welcome-main .w-title{font-size:clamp(28px,4.5vw,44px);font-weight:400;letter-spacing:-1px;margin-bottom:12px}
+  .welcome-main .w-sub{font-size:14px;color:var(--muted);max-width:380px;margin:0 auto 32px;line-height:1.7}
+  .welcome-main .w-links{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;font-family:"JetBrains Mono",monospace;font-size:13px}
+  .welcome-main .w-links a{color:var(--fg);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;transition:transform .15s,border-color .3s}
+  .welcome-main .w-links a:hover{transform:translateY(-2px);border-bottom-color:var(--accent)}
 
-  .cursor-blink{display:inline-block;width:8px;height:16px;background:var(--acid);animation:blink 1s step-end infinite}
-  .cursor-typing{display:inline-block;border-right:2px solid var(--acid);padding-right:4px;animation:cursor-flash .8s step-end infinite}
-  .rgb-text{animation:rgb-shift .15s infinite}
-  .noise-hover:hover{animation:noise .15s infinite}
+  /* ── BLOG MOCKUP ── */
+  .blog-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:56px}
+  .blog-nav .logo{font-size:17px;font-weight:550;letter-spacing:1px;color:var(--white)}
+  .blog-nav .links{display:flex;gap:32px}
+  .blog-nav .links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:.5px;transition:transform .15s}
+  .blog-nav .links a:hover{transform:translateY(-1px);color:var(--fg)}
 
-  .ascii-decor{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);line-height:1.3;white-space:pre;opacity:.4;margin:32px 0;overflow:hidden}
-  footer{border-top:1px solid var(--border);padding:32px 0;text-align:center;font-size:11px;color:var(--muted);font-family:"JetBrains Mono",monospace}
+  .blog-hero{border:1px solid var(--border);padding:52px 48px;margin-bottom:40px;border-radius:6px;background:var(--surface);transition:transform .3s}
+  .blog-hero:hover{transform:scale(1.005)}
+  .blog-hero .hero-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px}
+  .blog-hero .hero-title{font-size:30px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:10px}
+  .blog-hero .hero-excerpt{font-size:13px;color:var(--muted);max-width:420px;line-height:1.7;margin-bottom:16px}
 
-  /* ── NEW: MOTION DEMO ELEMENTS ── */
-  .motion-demo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-  .motion-demo{
-    background:var(--surface);border:1px solid var(--border);
-    padding:24px 20px;border-radius:0;
-    display:flex;flex-direction:column;align-items:center;gap:12px;
-  }
-  .motion-demo .name{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--acid);text-transform:uppercase;letter-spacing:1px}
-  .motion-demo .desc{font-size:11px;color:var(--muted);text-align:center}
+  .post-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;transition:transform .2s ease-out,border-color .3s}
+  .post-card:hover{transform:translateY(-2px);border-color:var(--muted)}
+  .post-card .pc-date{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);margin-bottom:12px;letter-spacing:.5px}
+  .post-card .pc-title{font-size:15px;font-weight:500;line-height:1.4;margin-bottom:6px}
+  .post-card .pc-excerpt{font-size:12px;color:var(--muted);line-height:1.6}
 
-  /* ── NEW: FORM INPUTS ── */
-  .input{
-    background:var(--bg);border:1px solid var(--border);
-    color:var(--fg);padding:10px 14px;font-family:"IBM Plex Sans",sans-serif;
-    font-size:14px;border-radius:6px;outline:none;width:100%;
-    transition:border-color .1s;
-  }
-  .input:focus{border-color:var(--acid)}
-  .input::placeholder{color:#444}
-  .select{
-    background:var(--bg);border:1px solid var(--border);
-    color:var(--fg);padding:10px 14px;font-family:"IBM Plex Sans",sans-serif;
-    font-size:14px;border-radius:6px;outline:none;
-    appearance:none;cursor:pointer;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23777' stroke-width='2'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center;
-  }
-  .checkbox-row{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}
-  .checkbox-row input[type=checkbox]{
-    appearance:none;width:16px;height:16px;
-    border:2px solid var(--border);background:var(--bg);border-radius:3px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
-  }
-  .checkbox-row input[type=checkbox]:checked{
-    border-color:var(--acid);background:var(--acid);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1 5l3 3 5-6' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:center;
-  }
+  /* ── TRANSFORM MOTION DEMOS ── */
+  .motion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:24px 0}
+  .motion-demo{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+  .motion-demo .name{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+  .motion-demo .target{transition:transform .2s ease-out}
+  .motion-demo .desc{font-size:10px;color:var(--faint)}
+  @keyframes subtle-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @keyframes rotate-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-  /* ── NEW: TOAST ── */
-  .toast{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:10px 18px;font-size:12px;font-weight:700;
-    border:1px solid var(--border);background:var(--surface);border-radius:8px;
-    font-family:"JetBrains Mono",monospace;
-  }
-  .toast-success{border-color:var(--acid);color:var(--acid)}
-  .toast-error{border-color:var(--pink);color:var(--pink)}
-  .toast-info{border-color:var(--cyan);color:var(--cyan)}
+  /* ── LINK ── */
+  .link{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--faint);padding-bottom:1px;transition:border-color .3s}
+  .link:hover{border-bottom-color:var(--accent)}
 
-  /* ── NEW: SKELETON ── */
-  @keyframes skeleton{0%{opacity:.3}50%{opacity:.6}100%{opacity:.3}}
-  .skeleton-block{
-    background:var(--border);animation:skeleton 1.5s infinite;
-    height:14px;border-radius:0;
-  }
+  /* ── FOOTER ── */
+  footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;font-size:11px;color:var(--faint);font-family:"JetBrains Mono",monospace}
 
-  /* ── NEW: FOCUS RING ── */
-  :focus-visible{
-    outline:2px solid var(--acid);outline-offset:2px;
-  }
+  /* ── SKELETON ── */
+  @keyframes skeleton{0%,100%{opacity:.25}50%{opacity:.45}}
+  .skeleton-block{background:var(--faint);animation:skeleton 2s infinite;height:12px;border-radius:3px}
 
-  /* ── NEW: ARTICLE MOCKUP ── */
-  .article-layout{display:grid;grid-template-columns:1fr 220px;gap:40px;align-items:start}
+  /* ── FOCUS ── */
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  /* ── ARTICLE ── */
+  .article-layout{display:grid;grid-template-columns:1fr 200px;gap:36px;align-items:start}
   @media(max-width:768px){.article-layout{grid-template-columns:1fr}}
-  .article-main{border:1px solid var(--border);padding:48px;background:var(--surface)}
-  .article-toc{
-    position:sticky;top:20px;
-    border:1px solid var(--border);padding:20px;background:var(--surface);
-  }
-  .article-toc .toc-title{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--acid);text-transform:uppercase;margin-bottom:12px;letter-spacing:1px}
-  .article-toc a{display:block;font-size:12px;color:var(--muted);text-decoration:none;padding:4px 0;border-left:2px solid transparent;padding-left:10px;line-height:1.5}
-  .article-toc a:hover,.article-toc a.active{color:var(--acid);border-left-color:var(--acid)}
+  .article-main{border:1px solid var(--border);padding:44px 40px;background:var(--surface);border-radius:6px}
+  .article-toc{position:sticky;top:24px;border:1px solid var(--border);padding:20px;background:var(--surface);border-radius:6px}
+  .article-toc .toc-t{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;letter-spacing:2px}
+  .article-toc a{display:block;font-size:11px;color:var(--muted);text-decoration:none;padding:3px 0;border-left:1px solid transparent;padding-left:10px;line-height:1.6;transition:border-color .3s,transform .15s}
+  .article-toc a:hover,.article-toc a.active{border-left-color:var(--accent);color:var(--fg);transform:translateX(2px)}
 
-  .step-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  @media(max-width:768px){.step-row{grid-template-columns:1fr}}
-
-  /* ── NEW: RESPONSIVE DEMO ── */
-  .bp-row{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
-  .bp-tag{font-family:"JetBrains Mono",monospace;font-size:10px;padding:4px 10px;border:1px solid var(--border);color:var(--muted);font-weight:700}
-  .bp-tag.current{border-color:var(--acid);color:var(--acid)}
-
-  /* ── NEW: LINK STYLE ── */
-  .acid-link{color:var(--acid);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .1s}
-  .acid-link:hover{border-bottom-color:var(--acid)}
-
-  /* ── NEW: DIVIDER VARIANTS ── */
-  .div-dash{border:none;border-top:1px dashed var(--border);margin:0}
-  .div-acid{border:none;border-top:2px solid var(--acid);margin:0}
-  .div-thick{border:none;border-top:2px solid var(--border);margin:0}
-
-  /* ── WELCOME PAGE ── */
-  .welcome-frame{border:1px solid var(--border);background:var(--bg);min-height:480px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:0}
-  .welcome-frame::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;z-index:1}
-  @keyframes boot-cursor{0%,100%{opacity:1}50%{opacity:0}}
-  @keyframes boot-fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes boot-line{0%{opacity:0}40%{opacity:1}100%{opacity:1}}
-  .boot-line{font-family:"JetBrains Mono",monospace;font-size:12px;line-height:2;opacity:1}
-  .boot-line .dim{color:#444}.boot-line .info{color:var(--cyan)}.boot-line .ok{color:var(--acid)}.boot-line .warn{color:var(--yellow)}
-  .boot-cursor{display:inline-block;width:8px;height:14px;background:var(--acid);animation:boot-cursor 1s step-end infinite;vertical-align:middle;margin-left:2px}
-  .welcome-hero{position:relative;z-index:2;text-align:center;padding:0 24px;animation:boot-fade-in .6s .5s both}
-  .welcome-ascii{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--acid);line-height:1.3;white-space:pre;margin-bottom:32px;opacity:.7}
-  .welcome-title{font-size:clamp(28px,5vw,48px);font-weight:900;letter-spacing:-1.5px;margin-bottom:12px}
-  .welcome-sub{font-size:14px;color:var(--muted);max-width:400px;margin:0 auto 28px;line-height:1.6}
-  .welcome-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-  .welcome-footer{font-family:"JetBrains Mono",monospace;font-size:10px;color:#444;margin-top:40px}
-
-  /* ── MINIMALISM DEMO ── */
-  .minimal-compare{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .minimal-block{padding:48px 40px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
-  .minimal-block.sparse{padding:64px 56px;border:none;background:transparent}
-  .minimal-block .mini-title{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--acid);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
-  @media(max-width:768px){.minimal-compare{grid-template-columns:1fr}}
-
-  /* ── TERMINAL DECORATION ── */
-  .hacker-banner{background:#010;border:1px solid #0a0;padding:16px 20px;margin:20px 0;font-family:"JetBrains Mono",monospace;font-size:11px;position:relative;overflow:hidden}
-  .hacker-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,transparent 0%,rgba(0,255,0,.03) 50%,transparent 100%);pointer-events:none;animation:scanline-scroll .1s linear infinite}
+  /* ── COMPARE ── */
+  .compare-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
+  .compare-cell{border:1px solid var(--border);padding:20px;border-radius:4px;text-align:center;font-size:12px}
+  .compare-cell.current{border-color:var(--accent);background:var(--surface)}
+  .compare-cell .c-name{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-family:"JetBrains Mono",monospace}
+  .compare-cell .c-val{font-size:13px;color:var(--fg);font-weight:500}
 </style>
 </head>
 <body>
@@ -273,714 +185,406 @@
 
 <!-- ═══════════ HEADER ═══════════ -->
 <header class="header">
-  <div class="sub">▶ ./design-proposal —v4 —mode dark-acid-flat —detail deep</div>
-  <h1><span class="acid">暗色酸性</span><br>粗野主义 · 完整方案</h1>
-  <p>Neo-Brutalism × Acid Design × Flat × Motion. 从配色到动效，从栅格到组件，从加载到错误态——一纸覆盖全部 UI/UX 细节。</p>
+  <div class="sub">natur ＋ technik · version 6</div>
+  <h1>自然与科技<br><em>凌厉冷淡</em></h1>
+  <p>单色矿物肌理 · 建筑般精密排版 · 变换驱动的克制动效 · 退出喧嚣，进入秩序。</p>
   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-    <a href="#motion" class="btn">> 动效系统</a>
-    <a href="#spacing" class="btn btn-cyan">> 栅格间距</a>
-    <a href="#ui-details" class="btn btn-pink">> UI 细节</a>
-    <a href="#article" class="btn btn-filled">> 文章页面</a>
+    <a href="#palette" class="btn">色彩</a>
+    <a href="#motion" class="btn">动效</a>
+    <a href="#welcome" class="btn">欢迎页</a>
+    <a href="#mockup" class="btn btn-primary">Mockup</a>
   </div>
 </header>
 
 <hr>
 
-<!-- ═══════════ 01 + 02 + 03 + 04 (保留精华) ═══════════ -->
-<section id="references">
-  <div class="label">.01/references</div>
-  <h2>参考设计</h2>
-  <div class="grid-auto">
-    <a href="https://brutallyhuman.com/" target="_blank" style="text-decoration:none;color:inherit;"><div class="ref-card"><div class="thumb" style="background:#0C0C0C;align-items:baseline;padding:24px;"><div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);">.selected</div><div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--white);margin-top:4px;">.about</div><div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);margin-top:4px;">.work</div></div><div class="info"><h4>Brutally Human</h4><div class="url">brutallyhuman.com</div><div class="tags">点号标签 · 裸HTML感 · 极暗</div></div></div></a>
-    <a href="https://obys.agency/" target="_blank" style="text-decoration:none;color:inherit;"><div class="ref-card"><div class="thumb" style="background:#0C0C0C;align-items:center;justify-content:center;gap:4px;display:flex;"><div style="width:60px;height:8px;background:var(--white);"></div><div style="width:20px;height:8px;background:var(--white);"></div><div style="width:8px;height:8px;background:var(--acid);"></div></div><div class="info"><h4>Obys Agency</h4><div class="url">obys.agency</div><div class="tags">巨大标题 · 精确排版 · 高端</div></div></div></a>
-    <a href="https://www.bloomberg.com/features" target="_blank" style="text-decoration:none;color:inherit;"><div class="ref-card"><div class="thumb" style="background:#080808;align-items:center;justify-content:center;display:flex;"><div style="font-size:48px;font-weight:900;letter-spacing:-3px;color:var(--white);">B</div><div style="width:3px;height:40px;background:var(--pink);margin:0 8px;"></div><div style="font-size:36px;font-weight:900;letter-spacing:-2px;color:var(--white);">BL</div></div><div class="info"><h4>Bloomberg Features</h4><div class="url">bloomberg.com/features</div><div class="tags">数据美学 · 不规则栅格</div></div></div></a>
-    <div class="ref-card"><div class="thumb" style="background:#020;align-items:center;justify-content:center;display:flex;font-family:'JetBrains Mono',monospace;font-size:11px;color:#0f0;">┌─[root@acid]─[~/blog]<br>└─▶ ./hugo build<br>&nbsp;&nbsp;&nbsp;Pages: 22 | Time: 43ms<br>└─▶ <span style="color:var(--pink);">DEPLOY SUCCESS</span></div><div class="info"><h4>终端美学 (概念)</h4><div class="url">酸性设计 × CLI界面</div><div class="tags">CRT荧光 · ASCII · 黑客感</div></div></div>
-  </div>
-  <div class="box" style="border-left-color:var(--acid);"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ insight.txt</span><br>暗色酸性粗野主义 = <strong>粗野结构</strong>（硬边框、暴露栅格）+ <strong>酸性色彩</strong>（#39FF14 + #FF2D55）+ <strong>纯扁平化</strong>（零阴影、零圆角、零渐变）。中文技术博客领域几乎空白。</div>
-</section>
-
-<hr>
-
+<!-- ═══════════ 01 PHILOSOPHY ═══════════ -->
 <section>
-  <div class="label">.02/principles</div>
-  <h2>六项设计法则</h2>
+  <div class="label">01 · 设计哲学</div>
+  <h2>五种材质</h2>
   <div class="principle-grid">
-    <div class="principle-card"><div class="idx">[01]</div><div class="title">纯平无影</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">zero box-shadow · zero gradient · zero backdrop-filter</p></div>
-    <div class="principle-card"><div class="idx">[02]</div><div class="title">绝对直线</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">border-radius: 0 · 全直角 · 无温和处理</p></div>
-    <div class="principle-card"><div class="idx">[03]</div><div class="title">深黑底色</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">#0A0A0A · #141414 · 极暗灰阶</p></div>
-    <div class="principle-card"><div class="idx">[04]</div><div class="title">酸性点缀</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">#39FF14 · #FF2D55 · #CCFF00 · #00FFFF</p></div>
-    <div class="principle-card"><div class="idx">[05]</div><div class="title">粗野结构</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">2px实线 · 非对称 · 暴露网格</p></div>
-    <div class="principle-card"><div class="idx">[06]</div><div class="title">终端黑客</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">CLI提示符 · 绿黑磷光 · glitch · system boot</p></div>
-    <div class="principle-card"><div class="idx">[07]</div><div class="title">形状等级</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">结构=锐利 · 交互=圆角 · 圆角=可点性</p></div>
-    <div class="principle-card"><div class="idx">[08]</div><div class="title">极简克制</div><p style="font-size:12px;color:var(--muted);margin-top:8px;">少色 · 少装饰 · 大空白 · 言简意赅</p></div>
+    <div class="principle-card">
+      <div class="idx">黑曜石</div>
+      <div class="title">底色 · 深邃</div>
+      <p>#0C0C0B 不纯黑。像抛光石面吸收光线，沉降一切视觉噪音。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">石英</div>
+      <div class="title">白 · 洁净</div>
+      <p>#F2F2ED 不纯白。矿物白，不是屏幕白。仅在关键处出现。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">石灰岩</div>
+      <div class="title">灰阶 · 过渡</div>
+      <p>从 #161615 到 #7A7A75。五级岩层灰阶，无跳跃。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">苔藓</div>
+      <div class="title">唯一点缀</div>
+      <p>#6B8B6B 暗哑绿。唯一的彩色。用在焦点、链接、分割。不超过屏面 5%。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">钢材</div>
+      <div class="title">边框 · 精确</div>
+      <p>1px hairline。所有分隔由单一线条完成。无阴影、无渐变、无模糊。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">玻璃</div>
+      <div class="title">动效 · 变换</div>
+      <p>仅用 transform: scale / translate / rotate。无色彩渐变、无透明度闪烁。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">冰</div>
+      <div class="title">间距 · 克制</div>
+      <p>6 级间距 8→64px。大量空白，信息被冷空气包围。每屏只放一件事。</p>
+    </div>
+    <div class="principle-card">
+      <div class="idx">化石</div>
+      <div class="title">终端 · 沉淀</div>
+      <p>JetBrains Mono 等宽字体作结构标记。系统信息式呈现。冷，但精确。</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="box" style="border-left-color:var(--accent);">
+      <span class="mono" style="color:var(--accent);">accept: ✓</span><br>
+      <span class="mono" style="line-height:2.4;">
+        <span style="color:var(--fg);">transform: scale / translate / rotate</span><br>
+        <span style="color:var(--fg);">1px hairline 单色分隔</span><br>
+        <span style="color:var(--fg);">#6B8B6B 唯一 accent</span><br>
+        <span style="color:var(--fg);">大面积留白 · 每屏一事</span><br>
+        <span style="color:var(--fg);">终端提示符作结构标点</span>
+      </span>
+    </div>
+    <div class="box" style="border-left-color:var(--faint);">
+      <span class="mono" style="color:var(--faint);">reject: ✗</span><br>
+      <span class="mono" style="line-height:2.4;color:var(--faint);">
+        box-shadow / gradient / blur<br>
+        多彩酸性色板<br>
+        border-radius &gt; 8px<br>
+        glitch / RGB shift / neon<br>
+        opacity 过渡 / 色彩动画<br>
+        CRT scanline 等装饰层
+      </span>
+    </div>
   </div>
 </section>
 
 <hr>
 
-<section id="design-system">
-  <div class="label">.03/design-system</div>
-  <h2>配色 · 字体 · 间距</h2>
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 酸性暗色色板</h3>
+<!-- ═══════════ 02 PALETTE ═══════════ -->
+<section id="palette">
+  <div class="label">02 · 色彩</div>
+  <h2>矿物单色 · 单点苔绿</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">五个中性色 + 一个 accent。拒绝多彩，拒绝渐变。色彩本身就是一种克制。</p>
+
   <div class="swatch-row">
-    <div class="swatch" style="background:#0A0A0A;"><span class="hex" style="color:var(--white);">#0A0A0A</span></div>
-    <div class="swatch" style="background:#141414;"><span class="hex" style="color:var(--white);">#141414</span></div>
-    <div class="swatch" style="background:#2A2A2A;"><span class="hex" style="color:var(--white);">#2A2A2A</span></div>
-    <div class="swatch" style="background:#4A4A4A;"><span class="hex" style="color:var(--white);">#4A4A4A</span></div>
-    <div class="swatch" style="background:#EBEBEB;"><span class="hex" style="color:var(--bg);">#EBEBEB</span></div>
-    <div class="swatch" style="background:#777;"><span class="hex" style="color:var(--white);">#777</span></div>
+    <div class="swatch" style="background:#0C0C0B;"><span class="hex">#0C0C0B</span></div>
+    <div class="swatch" style="background:#161615;"><span class="hex">#161615</span></div>
+    <div class="swatch" style="background:#2C2C2A;"><span class="hex">#2C2C2A</span></div>
+    <div class="swatch" style="background:#7A7A75;"><span class="hex">#7A7A75</span></div>
+    <div class="swatch" style="background:#F2F2ED;"><span class="hex">#F2F2ED</span></div>
+    <div style="width:8px;"></div>
+    <div class="swatch" style="background:#6B8B6B;"><span class="hex">#6B8B6B</span></div>
   </div>
-  <div class="swatch-row">
-    <div class="swatch" style="background:#39FF14;"><span class="hex" style="color:var(--bg);">#39FF14</span></div>
-    <div class="swatch" style="background:#CCFF00;"><span class="hex" style="color:var(--bg);">#CCFF00</span></div>
-    <div class="swatch" style="background:#FFD700;"><span class="hex" style="color:var(--bg);">#FFD700</span></div>
-    <div class="swatch" style="background:#FF2D55;"><span class="hex" style="color:var(--white);">#FF2D55</span></div>
-    <div class="swatch" style="background:#00FFFF;"><span class="hex" style="color:var(--bg);">#00FFFF</span></div>
-    <div class="swatch" style="background:#AF52DE;"><span class="hex" style="color:var(--white);">#AF52DE</span></div>
-  </div>
-  <h3 style="color:var(--acid);margin:36px 0 16px;text-transform:uppercase;font-size:14px;">▸ 字体系统</h3>
+
+  <table class="table" style="margin-top:16px;">
+    <thead><tr><th>Token</th><th>Hex</th><th>角色</th><th>占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">--bg</span></td><td><span class="mono">#0C0C0B</span></td><td>画布底色</td><td>~75%</td></tr>
+      <tr><td><span class="mono">--surface</span></td><td><span class="mono">#161615</span></td><td>卡片/区块</td><td>~15%</td></tr>
+      <tr><td><span class="mono">--border</span></td><td><span class="mono">#2C2C2A</span></td><td>分隔线</td><td>~4%</td></tr>
+      <tr><td><span class="mono">--fg</span></td><td><span class="mono">#E8E8E3</span></td><td>正文</td><td>~3%</td></tr>
+      <tr><td><span class="mono">--muted</span></td><td><span class="mono">#7A7A75</span></td><td>次要文字</td><td>~2%</td></tr>
+      <tr><td><span class="mono">--accent</span></td><td><span class="mono" style="color:var(--accent);">#6B8B6B</span></td><td>焦点/链接</td><td>≤1%</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:32px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:13px;color:var(--muted);">字体系统</h3>
   <div class="grid-2">
-    <div class="typo-card" style="border-left:4px solid var(--acid);"><div style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:900;letter-spacing:-1px;">Space Grotesk</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">标题 H1-H3 · 700-900 weight</div></div>
-    <div class="typo-card" style="border-left:4px solid var(--pink);"><div style="font-family:'IBM Plex Sans','Noto Sans SC',sans-serif;font-size:28px;font-weight:600;">IBM Plex Sans</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">正文 · 中文降级 Noto Sans SC</div></div>
-    <div class="typo-card" style="border-left:4px solid var(--cyan);"><div style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;">JetBrains Mono</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">代码 · 标签 · 终端 · 导航</div></div>
-    <div class="typo-card" style="border-left:4px solid var(--acid2);"><div style="font-family:'Noto Sans SC',sans-serif;font-size:26px;font-weight:600;">Noto Sans SC</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px;">中文正文 · 备选</div></div>
+    <div class="typo-card" style="border-left:2px solid var(--accent);">
+      <div style="font-size:28px;font-weight:400;letter-spacing:-1px;">Inter · Space Grotesk</div>
+      <div class="mono" style="color:var(--muted);margin-top:8px;">标题 300-500 · 正文 350</div>
+    </div>
+    <div class="typo-card" style="border-left:2px solid var(--faint);">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:400;">JetBrains Mono</div>
+      <div class="mono" style="color:var(--muted);margin-top:8px;">标签 · 终端 · 代码 · 数字 · 元信息</div>
+    </div>
+    <div class="typo-card">
+      <div style="font-family:'Noto Sans SC',sans-serif;font-size:24px;font-weight:400;">Noto Sans SC</div>
+      <div class="mono" style="color:var(--muted);margin-top:8px;">中文正文 · 备选</div>
+    </div>
+    <div class="typo-card">
+      <span style="font-size:10px;color:var(--muted);display:block;">H1</span><span style="font-size:44px;font-weight:400;">44 / 400</span>
+      <span style="font-size:10px;color:var(--muted);display:block;margin-top:8px;">H2</span><span style="font-size:24px;font-weight:450;">24 / 450</span>
+      <span style="font-size:10px;color:var(--muted);display:block;margin-top:8px;">Body</span><span style="font-size:15px;font-weight:350;">15 / 350</span>
+    </div>
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ TERMINAL AESTHETICS ═══════════ -->
-<section id="terminal">
-  <div class="label">.03b/terminal-hacker</div>
-  <h2>终端美学 · 黑客浪漫</h2>
-  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">不是廉价的"绿色代码雨"——而是<strong>系统引导序列</strong>、<strong>CLI 提示符</strong>、<strong>磷光屏幕</strong>与<strong>极简终端哲学</strong>的融合。黑客美学=看穿系统的眼睛。</p>
-
-  <div class="grid-2" style="margin:24px 0;">
-    <div class="card card-acid" style="border:1px solid #0a0;background:#010;">
-      <div class="mono" style="font-size:10px;color:#0a0;margin-bottom:12px;">[TERMINAL ELEMENTS]</div>
-      <ul style="font-size:12px;line-height:2.4;list-style:none;padding:0;color:#0c0;font-family:'JetBrains Mono',monospace;">
-        <li>▶ $ prompt 命令行提示</li>
-        <li>▶ [OK] / [FAIL] 状态标签</li>
-        <li>▶ ---- 水平分隔线</li>
-        <li>▶ boot sequence 启动序列</li>
-        <li>▶ system info (uname -a)</li>
-        <li>▶ ASCII art logo/banner</li>
-        <li>▶ path 路径面包屑</li>
-        <li>▶ █ 块状光标闪烁</li>
-      </ul>
-    </div>
-    <div class="card card-cyan" style="border:1px solid #0a0;background:#010;">
-      <div class="mono" style="font-size:10px;color:#0a0;margin-bottom:12px;">[HACKER ROMANTIC]</div>
-      <ul style="font-size:12px;line-height:2.4;list-style:none;padding:0;color:#0c0;font-family:'JetBrains Mono',monospace;">
-        <li>▶ "glitch as punctuation"</li>
-        <li>▶ 数据比装饰更美</li>
-        <li>▶ cron job 般精准排版</li>
-        <li>▶ 暴露系统信息 (build time, commit hash)</li>
-        <li>▶ 用终端作导航隐喻</li>
-        <li>▶ 错误页 → kernel panic</li>
-        <li>▶ 加载 → compiling...</li>
-        <li>▶ RSS → /dev/feed</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- hacker banner demo -->
-  <div class="hacker-banner">
-    <span style="color:#0c0;">┌─[root@blog]─[~/posts]──────────────────────────────────────────────┐</span><br>
-    <span style="color:#0a0;">│  $ cat latest.md</span><br>
-    <span style="color:#0c0;">│  title: "构建现代化博客"  │  date: 2026-08-06  │  tags: [hugo,cloudflare]  │</span><br>
-    <span style="color:#0a0;">│  $ █</span><br>
-    <span style="color:#0c0;">└──────────────────────────────────────────────────────────────────────┘</span>
-  </div>
-
-  <div class="box" style="border-left-color:#0a0;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#0a0;">▶ terminal-philosophy.txt</span><br>
-    终端美学的核心不是炫技——是<strong>用系统语言讲故事</strong>。导航栏=文件路径。加载态=编译输出。404=kernel panic。RSS=/dev/feed。将整个博客体验包装成一个<strong>优雅运行的系统</strong>，而不是一个网页。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ MINIMALISM ═══════════ -->
-<section id="minimalism">
-  <div class="label">.03c/minimalism</div>
-  <h2>极简克制 · 少即是多</h2>
-  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">暗色酸性风格容易"元素过载"——荧光绿处处都是反而失去冲击力。极简主义在这里的角色是<strong>约束酸性</strong>：80% 的极简黑底 + 15% 的结构线 + 5% 的酸性点缀。</p>
-
-  <div class="minimal-compare" style="margin:24px 0;">
-    <div class="minimal-block">
-      <div class="mini-title">[OVERLOADED — 拒绝]</div>
-      <div style="font-size:13px;line-height:2;color:var(--muted);font-family:'JetBrains Mono',monospace;">
-        <span style="color:var(--pink);">✘</span> 每个卡片都有绿色边框<br>
-        <span style="color:var(--pink);">✘</span> 到处是 ASCII 装饰<br>
-        <span style="color:var(--pink);">✘</span> 所有文字都是荧光绿<br>
-        <span style="color:var(--pink);">✘</span> 5+ 种酸性色同时出现<br>
-        <span style="color:var(--pink);">✘</span> 按钮/标签/文字抢注意力
-      </div>
-    </div>
-    <div class="minimal-block sparse">
-      <div class="mini-title">[RESTRAINED — 目标]</div>
-      <div style="font-size:13px;line-height:2;color:var(--muted);font-family:'JetBrains Mono',monospace;">
-        <span style="color:var(--acid);">✔</span> 仅 Hero 用绿色边框<br>
-        <span style="color:var(--acid);">✔</span> ASCII 装饰仅页首/页尾<br>
-        <span style="color:var(--acid);">✔</span> 正文用 #EBEBEB 白色<br>
-        <span style="color:var(--acid);">✔</span> 每屏 ≤ 2 种酸性色<br>
-        <span style="color:var(--acid);">✔</span> 大量留白做视觉呼吸
-      </div>
-    </div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 80/15/5 配色分配法则</h3>
-  <div style="background:var(--surface);border:1px solid var(--border);padding:28px 32px;display:flex;gap:0;height:28px;border-radius:0;margin-bottom:24px;">
-    <div style="width:80%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">80% 黑底 · 留白</div>
-    <div style="width:15%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">15% 结构</div>
-    <div style="width:5%;background:var(--acid);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--bg);">5% 酸性</div>
-  </div>
-
-  <div class="box" style="border-left-color:var(--acid);">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ minimalism-rule.txt</span><br>
-    <strong>酸性点缀像辣椒</strong>——一撮提味，半碗毁菜。一个页面上，酸性绿只应出现在 <strong>1-2 个元素</strong>上：当前导航项 + Hero 边框 + 或许一个 CTA 按钮。其他元素用暗色灰阶 + 白色文字，让那一点绿真正"亮"起来。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ WELCOME PAGE ═══════════ -->
-<section id="welcome">
-  <div class="label">.04/welcome-page</div>
-  <h2>欢迎页 · 系统引导</h2>
-  <p style="color:var(--muted);margin-bottom:24px;max-width:620px;">首页不是文章列表——它是一个<strong>系统引导序列</strong>。访客进入博客时，看到的是一段优雅的终端启动过程，最后以极简的导航入口收尾。不堆砌信息，只给路径。</p>
-
-  <div class="mockup" style="margin-top:24px;">
-    <div class="mockup-bar">
-      <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-      <span style="font-size:10px;color:var(--muted);margin-left:8px;font-family:'JetBrains Mono',monospace;">blog-go3.pages.dev — Welcome</span>
-    </div>
-    <div class="mockup-body" style="padding:0;">
-      <div class="welcome-frame">
-        <!-- BOOT SEQUENCE OVERLAY -->
-        <div style="position:absolute;top:20px;left:28px;z-index:2;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;">
-          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">kernel: blog-hugo v0.164.0 loaded</span></div>
-          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">theme: PaperMod (submodule)</span></div>
-          <div class="boot-line"><span class="dim">[</span><span class="ok">OK</span><span class="dim">]</span> <span class="dim">deploy: Cloudflare Pages + GitHub Pages</span></div>
-          <div class="boot-line"><span class="dim">[</span><span class="info">..</span><span class="dim">]</span> <span class="dim">SSH: git@github.com:Levia808/blog.git</span></div>
-          <div class="boot-line"><span class="dim">[</span><span class="info">..</span><span class="dim">]</span> <span class="dim">auth: Supabase GitHub OAuth — ready</span></div>
-          <div class="boot-line" style="margin-top:4px;"><span class="dim">$ systemctl start blog.service</span><span class="boot-cursor"></span></div>
-        </div>
-
-        <!-- CENTERED WELCOME CONTENT -->
-        <div class="welcome-hero">
-          <div class="welcome-ascii">
-  ██╗     ███████╗██╗   ██╗██╗ █████╗ ██╗  ██╗ ██████╗ ██╗
-  ██║     ██╔════╝██║   ██║██║██╔══██╗╚██╗██╔╝██╔═████╗██║
-  ██║     █████╗  ██║   ██║██║███████║ ╚███╔╝ ██║██╔██║██║
-  ██║     ██╔══╝  ╚██╗ ██╔╝██║██╔══██║ ██╔██╗ ████╔╝██║╚═╝
-  ███████╗███████╗ ╚████╔╝ ██║██║  ██║██╔╝ ██╗╚██████╔╝██╗
-  ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝
-          </div>
-          <div class="welcome-title"><span class="acid">$</span> 个人技术博客</div>
-          <div class="welcome-sub">
-            记录学习、思考与构建。用代码写文章，用终端做设计。<br>
-            <span style="color:var(--muted);font-size:12px;">boot completed in 43ms · 22 pages · build passing</span>
-          </div>
-          <div class="welcome-actions">
-            <a href="#" class="btn btn-filled">> cd /posts</a>
-            <a href="#" class="btn">> cat about.md</a>
-          </div>
-          <div class="welcome-footer">
-            ▶ press [P] for posts  ·  [A] for about  ·  [S] for search  ·  [ESC] to exit
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 欢迎页结构分解</h3>
-  <table class="table">
-    <thead><tr><th>层级</th><th>元素</th><th>作用</th><th>设计</th></tr></thead>
-    <tbody>
-      <tr><td><strong>L1 背景</strong></td><td>纯黑底 + radial 暗角</td><td>营造屏幕/空间感</td><td>#0A0A0A + vignette</td></tr>
-      <tr><td><strong>L2 左上</strong></td><td>Boot 启动序列</td><td>终端美学 · 系统感</td><td>[OK] 绿色 · 等宽 · 11px</td></tr>
-      <tr><td><strong>L3 居中</strong></td><td>ASCII logo + 标题 + 简介</td><td>品牌 · 一句话定位</td><td>延迟淡入 · 高空隙</td></tr>
-      <tr><td><strong>L4 按钮</strong></td><td>2 个入口 CTA</td><td>引导进入内容</td><td>CLI 风格标签 · 酸性绿边框</td></tr>
-      <tr><td><strong>L5 底部</strong></td><td>键盘快捷键提示</td><td>黑客体验 · 效率感</td><td>monospace · #444 暗色</td></tr>
-    </tbody>
-  </table>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 简化版方案 (手机端)</h3>
-  <div class="welcome-frame" style="max-width:375px;min-height:360px;margin:0 auto;">
-    <div class="welcome-hero">
-      <div class="welcome-ascii" style="font-size:7px;margin-bottom:16px;">
-  ██╗     ███████╗██╗   ██╗██╗ █████╗
-  ██║     ██╔════╝██║   ██║██║██╔══██╗
-  ██║     █████╗  ██║   ██║██║███████║
-  ███████╗███████╗ ╚████╔╝ ██║██║  ██║
-  ╚══════╝╚══════╝  ╚═══╝  ╚═╝╚═╝  ╚═╝
-      </div>
-      <div class="welcome-title" style="font-size:24px;"><span class="acid">$</span> 个人技术博客</div>
-      <div class="welcome-sub" style="font-size:12px;">记录学习、思考与构建。<br><span style="font-size:10px;color:var(--muted);">22 pages · build passing</span></div>
-      <div class="welcome-actions">
-        <a href="#" class="btn btn-filled" style="font-size:11px;padding:8px 18px;">> cd /posts</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="box" style="border-left-color:var(--cyan);margin-top:24px;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);">▶ welcome-ux.txt</span><br>
-    欢迎页的核心哲学：<strong>不堆砌内容，只给方向</strong>。访客 3 秒内看到"个人技术博客"和两个入口。左上角 boot log 是气氛装饰（非必须阅读）。底部快捷键提示是彩蛋。整个页面的信息密度约等于一个终端窗口——极致克制。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ NEW: 04 SPACING ═══════════ -->
-<section id="spacing">
-  <div class="label">.04/spacing-layout</div>
-  <h2>栅格 · 间距 · 布局</h2>
-  <div class="terminal">
-    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:10px;color:var(--muted);margin-left:8px;font-family:'JetBrains Mono',monospace;">spacing-tokens.css</span></div>
-    <div class="term-body">
-      <span class="prompt">$</span> <span class="output">cat spacing.css</span><br>
-      <span style="color:var(--muted);">--space-xs:</span> <span style="color:var(--white);">4px</span>   <span style="color:#444;">// 紧密间距</span><br>
-      <span style="color:var(--muted);">--space-sm:</span> <span style="color:var(--white);">8px</span>   <span style="color:#444;">// 小组件内边距</span><br>
-      <span style="color:var(--muted);">--space-md:</span> <span style="color:var(--white);">16px</span>  <span style="color:#444;">// 卡片间距</span><br>
-      <span style="color:var(--muted);">--space-lg:</span> <span style="color:var(--white);">24px</span>  <span style="color:#444;">// 区块内边距</span><br>
-      <span style="color:var(--muted);">--space-xl:</span> <span style="color:var(--white);">32px</span>  <span style="color:#444;">// 大区块间距</span><br>
-      <span style="color:var(--muted);">--space-2xl:</span><span style="color:var(--white);">48px</span>  <span style="color:#444;">// 区块间分隔</span><br>
-      <span style="color:var(--muted);">--space-3xl:</span><span style="color:var(--white);">64px</span>  <span style="color:#444;">// Section padding</span><br>
-      <span style="color:var(--muted);">--space-4xl:</span><span style="color:var(--white);">80px</span>  <span style="color:#444;">// 大段落间距</span><br>
-      <br>
-      <span style="color:var(--muted);">--content-max:</span> <span style="color:var(--white);">1040px</span> <span style="color:#444;">// 正文最大宽</span><br>
-      <span style="color:var(--muted);">--content-narrow:</span><span style="color:var(--white);">720px</span> <span style="color:#444;">// 文章正文宽</span><br>
-      <span style="color:var(--muted);">--content-col-gap:</span><span style="color:var(--white);">20px</span> <span style="color:#444;">// 列间距</span><br>
-    </div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 网格策略</h3>
-  <table class="table">
-    <thead><tr><th>网格</th><th>CSS</th><th>用途</th></tr></thead>
-    <tbody>
-      <tr><td>2栏</td><td><span class="mono" style="font-size:11px;color:var(--cyan);">grid-template-columns: 1fr 1fr</span></td><td>关于页、对比卡片</td></tr>
-      <tr><td>3栏</td><td><span class="mono" style="font-size:11px;color:var(--cyan);">grid-template-columns: repeat(3,1fr)</span></td><td>首页文章卡片、特色推荐</td></tr>
-      <tr><td>自适应</td><td><span class="mono" style="font-size:11px;color:var(--cyan);">grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))</span></td><td>标签云、参考资料</td></tr>
-      <tr><td>文章+侧栏</td><td><span class="mono" style="font-size:11px;color:var(--cyan);">grid-template-columns: 1fr 220px</span></td><td>文章详情页</td></tr>
-      <tr><td>非对称 3:2</td><td><span class="mono" style="font-size:11px;color:var(--cyan);">grid-template-columns: 3fr 2fr</span></td><td>Hero 左右分栏 (可选)</td></tr>
-    </tbody>
-  </table>
-
-  <div class="box" style="border-left-color:var(--cyan);">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);">▶ rule.txt</span><br>
-    粗野主义鼓励<strong>打破对称</strong>。不要所有列等宽。Hero 用 3:2，文章页用主内容+窄侧栏。卡片网格可以考虑<strong>错位排列</strong>（某些卡片跨多列），打破完全均匀的栅格感。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ SHAPE/RADIUS SYSTEM ═══════════ -->
-<section id="radius">
-  <div class="label">.04b/shape-radius</div>
-  <h2>形状等级：圆角 vs 锐利</h2>
-  <p style="color:var(--muted);margin-bottom:24px;">粗野主义不意味全直角——用<strong>形状差异</strong>暗示<strong>交互层级</strong>。结构元素保持锐利，可交互元素用微圆角。</p>
-
-  <table class="table" style="margin-bottom:24px;">
-    <thead><tr><th>类型</th><th>border-radius</th><th>示例元素</th><th>理由</th></tr></thead>
-    <tbody>
-      <tr><td><strong>锐利 (Sharp)</strong></td><td><span class="mono" style="color:var(--acid);">0</span></td><td>section 边界 · 图块表 · 分割线 · 页脚 · 终端窗口</td><td>结构框架 · 无需亲和力</td></tr>
-      <tr><td><strong>微圆角 (Subtle)</strong></td><td><span class="mono" style="color:var(--cyan);">4-6px</span></td><td>按钮 · 输入框 · Checkbox · 搜索框</td><td>控件亲和 · 暗示可操作</td></tr>
-      <tr><td><strong>圆角 (Rounded)</strong></td><td><span class="mono" style="color:var(--pink);">8-12px</span></td><td>文章卡片 · Hero 卡片 · Toast · 色板 · 模态</td><td>内容容器 · 可点击区域</td></tr>
-      <tr><td><strong>胶囊 (Pill)</strong></td><td><span class="mono" style="color:var(--purple);">99px</span></td><td>标签徽章 · 筛选 chip</td><td>小型信息标签 · 高亲和</td></tr>
-    </tbody>
-  </table>
-
-  <div class="grid-2" style="margin:24px 0;">
-    <div class="card card-acid" style="border-radius:0;">
-      <div class="mono" style="font-size:10px;color:var(--acid);margin-bottom:8px;">[SHARP 0px] — 结构卡片</div>
-      <div style="font-weight:800;font-size:14px;">Section · 页脚 · 表格</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;">纯直角，传达"这是框架，不是可点击目标"。</div>
-    </div>
-    <div class="card card-pink" style="border-radius:8px;">
-      <div class="mono" style="font-size:10px;color:var(--pink);margin-bottom:8px;">[ROUNDED 8px] — 内容卡片</div>
-      <div style="font-weight:800;font-size:14px;">文章卡 · Hero · Toast</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;">微圆角，传达"这是内容区块，可以交互"。</div>
-    </div>
-  </div>
-
-  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0;">
-    <button class="btn" style="border-radius:6px;">> 圆角按钮 6px</button>
-    <input class="input" value="输入框 6px" style="width:auto;border-radius:6px;">
-    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border:1px solid var(--acid);border-radius:99px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--acid);text-transform:uppercase;letter-spacing:1px;">.CAPSULE 99px</div>
-  </div>
-
-  <div class="box" style="border-left-color:var(--purple);">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--purple);">▶ shape-philosophy.txt</span><br>
-    圆角不是装饰，是<strong>功能信号</strong>。用户扫视页面时，<strong>看到的圆角 = 这是我能点/能输入的东西</strong>。锐利的元素 = 这是框架/结构/只读内容。这个等级系统让粗野主义既保留态度，又有现代 UI 的可读性。
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ NEW: 05 MOTION ═══════════ -->
+<!-- ═══════════ 03 MOTION ═══════════ -->
 <section id="motion">
-  <div class="label">.05/motion</div>
-  <h2>动效设计系统</h2>
-  <p style="color:var(--muted);margin-bottom:24px;">暗色酸性风格的动效哲学：<strong>锋利 · 瞬时 · 机械 · 荧光</strong>。不使用弹性/回弹/渐进柔和曲线——一切都应该是锐利、终端般的响应。</p>
+  <div class="label">03 · 动效</div>
+  <h2>变换驱动 · 克制运动</h2>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:13px;">仅使用 CSS <span class="mono">transform</span> (scale, translate, rotate)。禁用 opacity 过渡、色彩动画、glitch、粒子效果。动效不需要"炫"，只需要"准"。</p>
 
-  <div class="grid-2" style="margin-bottom:24px;">
-    <div class="card card-acid">
-      <div class="mono" style="font-size:10px;color:var(--acid);margin-bottom:8px;">[motion_principles]</div>
-      <ul style="font-size:12px;line-height:2.2;list-style:none;padding:0;color:var(--white);">
-        <li>■ 过渡时长 ≤ 150ms</li>
-        <li>■ ease-out / step-end 为主</li>
-        <li>■ 禁用 spring / bounce / elastic</li>
-        <li>■ hover → 立即反色或边框变色</li>
-        <li>■ 页面切换 → 无过渡或淡入</li>
-        <li>■ 滚动揭示 → 简单 fade-up (50ms delay)</li>
-        <li>■ loading → 闪烁光标 + typewriter</li>
-      </ul>
+  <div class="motion-grid">
+    <div class="motion-demo">
+      <div class="name">scale · hover</div>
+      <div class="target" onmouseenter="this.style.transform='scale(1.06)'" onmouseleave="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">▣</div>
+      <div class="desc">按钮/卡片 hover<br>scale(1.03-1.06)</div>
     </div>
-    <div class="card card-cyan">
-      <div class="mono" style="font-size:10px;color:var(--cyan);margin-bottom:8px;">[timing_tokens]</div>
-      <div class="mono" style="font-size:11px;line-height:2.4;">
-        <span style="color:var(--muted);">--dur-instant:</span> <span style="color:var(--white);">50ms</span>   // 边框闪变<br>
-        <span style="color:var(--muted);">--dur-fast:</span>    <span style="color:var(--white);">100ms</span>  // hover 反馈<br>
-        <span style="color:var(--muted);">--dur-normal:</span>  <span style="color:var(--white);">150ms</span>  // 展开/折叠<br>
-        <span style="color:var(--muted);">--dur-slow:</span>    <span style="color:var(--white);">300ms</span>  // 模态进出<br>
+    <div class="motion-demo">
+      <div class="name">scale · press</div>
+      <div class="target" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;">▢</div>
+      <div class="desc">点击反馈<br>scale(0.95-0.98)</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">translateY · hover</div>
+      <div class="target" onmouseenter="this.style.transform='translateY(-3px)'" onmouseleave="this.style.transform='translateY(0)'" style="width:48px;height:48px;background:var(--surface);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">▤</div>
+      <div class="desc">卡片悬浮上移<br>translateY(-2~-4px)</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">translateX · link</div>
+      <div class="target" onmouseenter="this.style.transform='translateX(3px)'" onmouseleave="this.style.transform='translateX(0)'" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg);">→ hover me</div>
+      <div class="desc">侧栏/链接微移<br>translateX(2-3px)</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">rotate · loading</div>
+      <div class="target" style="animation:rotate-slow 3s linear infinite;width:28px;height:28px;border:1px solid var(--faint);border-radius:3px;border-top-color:var(--accent);"></div>
+      <div class="desc">旋转加载指示器<br>rotate 360°</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">float · idle</div>
+      <div class="target" style="animation:subtle-float 3s ease-in-out infinite;font-size:20px;">◆</div>
+      <div class="desc">装饰元素呼吸<br>translateY(-4px)</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">fade-up · enter</div>
+      <div class="target" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">opacity 0→1<br>translateY 8→0</div>
+      <div class="desc">页面进入动画<br>唯一 opacity 例外</div>
+    </div>
+    <div class="motion-demo">
+      <div class="name">stagger · list</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="width:100%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s both;"></div>
+        <div style="width:80%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s .1s both;"></div>
+        <div style="width:60%;height:4px;background:var(--faint);border-radius:2px;animation:fade-up .4s .2s both;"></div>
       </div>
+      <div class="desc">列表渐进呈现<br>50-80ms stagger</div>
     </div>
   </div>
 
-  <h3 style="color:var(--acid);margin:32px 0 16px;text-transform:uppercase;font-size:14px;">▸ 动效效果集</h3>
-  <div class="motion-demo-grid">
-    <div class="motion-demo">
-      <div class="name">[01] BLINK</div>
-      <div style="display:inline-block;width:8px;height:16px;background:var(--acid);animation:blink 1s step-end infinite;"></div>
-      <div class="desc">step-end 闪烁光标<br>load / typing / 等待</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[02] RGB SHIFT</div>
-      <div class="rgb-text" style="font-size:14px;font-weight:900;">ACID</div>
-      <div class="desc">RGB 色散偏移<br>用于鼠标悬停标题</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[03] NOISE</div>
-      <div class="noise-hover" style="padding:8px 16px;border:2px solid var(--acid);font-size:11px;font-weight:800;letter-spacing:1px;cursor:pointer;">HOVER ME ▼</div>
-      <div class="desc">小幅度噪声抖动<br>hover 微反馈</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[04] BORDER BREATHE</div>
-      <div style="padding:8px 16px;border:2px solid var(--acid);animation:border-breathe 2s infinite;font-size:11px;font-weight:800;letter-spacing:1px;">BREATHING</div>
-      <div class="desc">边框呼吸渐变色<br>加载中的卡片</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[05] TYPEWRITER</div>
-      <div class="cursor-typing" style="font-size:12px;font-family:'JetBrains Mono',monospace;">loading...</div>
-      <div class="desc">打字机光标效果<br>加载文案/搜索框</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[06] BORDER FLASH</div>
-      <div style="padding:8px 16px;border:2px solid var(--border);font-size:11px;font-weight:800;letter-spacing:1px;transition:border-color .1s;cursor:pointer;" onmouseenter="this.style.borderColor='var(--acid)'" onmouseleave="this.style.borderColor='var(--border)'">HOVER ME</div>
-      <div class="desc">hover 边框瞬间变色<br>卡片/按钮核心交互</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[07] SKELETON</div>
-      <div style="width:100%;display:flex;flex-direction:column;gap:8px;">
-        <div class="skeleton-block" style="width:80%;"></div>
-        <div class="skeleton-block" style="width:100%;"></div>
-        <div class="skeleton-block" style="width:60%;"></div>
-      </div>
-      <div class="desc">骨架屏加载<br>文章列表预加载</div>
-    </div>
-    <div class="motion-demo">
-      <div class="name">[08] SCANLINE SCROLL</div>
-      <div style="width:100%;height:32px;background:linear-gradient(0deg,transparent 0%,rgba(57,255,20,0.04) 50%,transparent 100%);background-size:100% 8px;animation:scanline-scroll .15s linear infinite;"></div>
-      <div class="desc">CRT 扫描线滚动<br>全局背景装饰</div>
-    </div>
-  </div>
-
-  <div class="terminal" style="margin-top:28px;">
-    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:10px;color:var(--muted);margin-left:8px;font-family:'JetBrains Mono',monospace;">motion-rules.conf</span></div>
+  <div class="terminal">
+    <div class="term-bar"><div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">motion-tokens.css</span></div>
     <div class="term-body">
-      <span class="prompt">$</span> <span class="output">cat motion-rules.conf</span><br>
-      <span style="color:var(--muted);"># 过渡执行策略</span><br>
-      <span style="color:var(--white);">hover-in:</span>  <span style="color:var(--acid);">0ms-delay, 100ms-duration, ease-out</span><br>
-      <span style="color:var(--white);">hover-out:</span> <span style="color:var(--acid);">0ms-delay, 100ms-duration, ease-out</span><br>
-      <span style="color:var(--white);">modal-in:</span>  <span style="color:var(--cyan);">fade 150ms + slide-up 100ms</span><br>
-      <span style="color:var(--white);">modal-out:</span> <span style="color:var(--cyan);">fade 100ms + slide-down 50ms</span><br>
-      <span style="color:var(--white);">scroll-reveal:</span><span style="color:var(--pink);"> translateY(12px) → 0, opacity 0→1, 300ms, ease-out, staggered 50ms per item</span><br>
-      <span style="color:var(--white);">page-transition:</span><span style="color:var(--pink);"> crossfade 200ms (no slide, no zoom)</span><br>
-      <span style="color:var(--white);">prefers-reduced:</span><span style="color:var(--acid);"> all motion → instant (0ms), no animation</span><br>
-      <br><span class="prompt">$</span> <span style="color:var(--acid);">█</span>
+      <span class="prompt">$</span> <span class="output">cat tokens.css</span><br>
+      <span style="color:var(--faint);">--ease-out:</span> <span style="color:var(--fg);">cubic-bezier(0.16,1,0.3,1)</span><br>
+      <span style="color:var(--faint);">--dur-fast:</span>  <span style="color:var(--fg);">120ms</span>  <span style="color:var(--faint);">// hover/press 反馈</span><br>
+      <span style="color:var(--faint);">--dur-normal:</span><span style="color:var(--fg);">200ms</span>  <span style="color:var(--faint);">// 卡片/元素过渡</span><br>
+      <span style="color:var(--faint);">--dur-slow:</span>  <span style="color:var(--fg);">350ms</span>  <span style="color:var(--faint);">// 页面进入 fade</span><br>
+      <span style="color:var(--faint);">--dur-idle:</span>  <span style="color:var(--fg);">3000ms</span> <span style="color:var(--faint);">// 循环漂浮</span><br>
+      <br>
+      <span style="color:var(--faint);">// 禁止使用的属性:</span><br>
+      <span style="color:var(--faint);">// transition-property 不包含: opacity, color, background, box-shadow, filter</span><br>
+      <span class="prompt">$</span> <span style="color:var(--accent);">█</span>
     </div>
+  </div>
+
+  <div class="box">
+    <span class="mono" style="color:var(--accent);">▶ motion-rule</span><br>
+    唯一允许的 opacity 变化：页面首屏 fade-up 进入动画。此后所有交互反馈仅使用 <strong>transform</strong>。色彩和透明度在整个交互生命周期中保持不变。这创建了一种<strong>物理质感</strong>——元素像有质量的物体一样移动，而不是像 LED 屏幕一样闪烁。
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ NEW: 06 UI DETAILS ═══════════ -->
-<section id="ui-details">
-  <div class="label">.06/ui-details</div>
-  <h2>UI 细节规范</h2>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 表单控件</h3>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
-    <div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:6px;">[input:text]</div>
-      <input class="input" placeholder="输入邮箱地址..." value="">
-    </div>
-    <div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:6px;">[input:select]</div>
-      <select class="select" style="width:100%;"><option>选择标签分类</option><option>技术</option><option>随笔</option></select>
-    </div>
-    <div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:6px;">[textarea]</div>
-      <textarea class="input" rows="3" placeholder="写评论... (支持 Markdown)"></textarea>
-    </div>
-    <div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:6px;">[checkbox]</div>
-      <label class="checkbox-row"><input type="checkbox" checked>记住登录状态</label>
-    </div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 按钮变体 &amp; 状态</h3>
-  <table class="table">
-    <thead><tr><th>类型</th><th>Default</th><th>Hover</th><th>Active/Pressed</th><th>Disabled</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Outline</strong></td><td>透明底 + 酸性绿边</td><td>酸性绿实心底 + 黑字</td><td>背景 #2ACC0F</td><td>边框 #444 + 文字 #555</td></tr>
-      <tr><td><strong>Filled</strong></td><td>酸性绿实心底 + 黑字</td><td>透明底 + 酸性绿字</td><td>背景 #2ACC0F</td><td>背景 #222 + 文字 #555</td></tr>
-      <tr><td><strong>Pink</strong></td><td>透明底 + 粉色边</td><td>粉色实心底 + 白字</td><td>背景 #E0264C</td><td>边框 #444 + 文字 #555</td></tr>
-      <tr><td><strong>Cyan</strong></td><td>透明底 + 青色边</td><td>青色实心底 + 黑字</td><td>背景 #00DADF</td><td>边框 #444 + 文字 #555</td></tr>
-    </tbody>
-  </table>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 通知 / Toast</h3>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="toast toast-success">✔ 文章已发布</div>
-    <div class="toast toast-error">✘ 登录失败: 邮箱未注册</div>
-    <div class="toast toast-info">ℹ 新评论已收到</div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 焦点指示器</h3>
-  <div class="box" style="border-left-color:var(--acid);">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ focus-ring.css</span><br>
-    <span class="mono" style="font-size:11px;color:var(--cyan);">:focus-visible { outline: 2px solid #39FF14; outline-offset: 2px; }</span><br>
-    全站使用酸性绿 focus ring，替换浏览器默认蓝框。不隐藏焦点环（破坏可访问性）。
-  </div>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 状态: 加载 / 空 / 错误</h3>
-  <div class="grid-3">
-    <div class="post-card">
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div class="skeleton-block" style="width:60%;height:10px;"></div>
-        <div class="skeleton-block" style="width:100%;height:14px;"></div>
-        <div class="skeleton-block" style="width:100%;height:14px;"></div>
-        <div class="skeleton-block" style="width:40%;height:14px;"></div>
-      </div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-top:14px;">[SKELETON] 文章列表加载</div>
-    </div>
-    <div class="post-card" style="text-align:center;padding:40px 24px;">
-      <div style="font-size:28px;margin-bottom:8px;">[ ]</div>
-      <div style="font-weight:800;font-size:13px;margin-bottom:4px;">暂无文章</div>
-      <div style="font-size:11px;color:var(--muted);">这个分类还没有内容</div>
-      <div class="mono" style="font-size:10px;color:var(--muted);margin-top:14px;">[EMPTY] 空状态</div>
-    </div>
-    <div class="post-card" style="text-align:center;padding:40px 24px;border-color:var(--pink);">
-      <div class="mono" style="font-size:10px;color:var(--pink);margin-bottom:8px;">[ERROR]</div>
-      <div style="font-weight:800;font-size:13px;margin-bottom:4px;">加载失败</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">网络连接异常，请稍后重试</div>
-      <button class="btn btn-pink" style="font-size:11px;padding:6px 16px;">> 重试</button>
-    </div>
-  </div>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 链接样式</h3>
-  <div style="display:flex;gap:28px;font-size:13px;">
-    <a href="#" class="acid-link">正文内链</a>
-    <a href="#" style="color:var(--pink);text-decoration:none;">导航链接 (无下划线)</a>
-    <a href="#" style="color:var(--cyan);text-decoration:none;border-bottom:1px dashed var(--cyan);">外部链接 (虚线)</a>
-  </div>
-</section>
-
-<hr>
-
-<!-- ═══════════ NEW: 07 ARTICLE MOCKUP ═══════════ -->
-<section id="article">
-  <div class="label">.07/article-page</div>
-  <h2>文章详情页布局</h2>
+<!-- ═══════════ 04 WELCOME PAGE ═══════════ -->
+<section id="welcome">
+  <div class="label">04 · 欢迎页</div>
+  <h2>矿物表面 · 冷冽入口</h2>
 
   <div class="mockup">
-    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:10px;color:var(--muted);margin-left:8px;font-family:'JetBrains Mono',monospace;">blog-go3.pages.dev/posts/hello-world — 文章详情</span></div>
-    <div class="mockup-body">
-
-      <div class="article-layout">
-        <!-- MAIN CONTENT -->
-        <div class="article-main">
-          <div class="mono" style="font-size:10px;color:var(--acid);letter-spacing:1.5px;margin-bottom:12px;">[POST] 2026-08-06 · 5 min · TAGS: [hugo] [cloudflare] [devops]</div>
-          <div style="font-size:36px;font-weight:900;letter-spacing:-1px;line-height:1.15;margin-bottom:16px;">构建现代化个人博客</div>
-          <div style="color:var(--muted);font-size:14px;margin-bottom:32px;line-height:1.7;">从 Hugo 静态站点生成器到 GitHub Pages + Cloudflare Pages 双线部署的完整实践指南。</div>
-
-          <!-- fake article body -->
-          <div style="line-height:1.9;color:#ccc;font-size:14px;">
-            <p style="margin-bottom:16px;">本文将带你一步步搭建一个支持 <span class="acid-link">GitHub OAuth 登录</span>、Supabase 评论系统、Fuse.js 全文搜索的现代化个人博客。</p>
-            <h3 style="color:var(--white);margin:24px 0 12px;font-size:18px;">1. 为什么选择 Hugo</h3>
-            <p style="margin-bottom:16px;">Hugo 是 Go 语言编写的静态站点生成器，构建速度极快（22 个页面仅需 43ms），天然支持 Markdown、多语言、自定义布局。</p>
-            <div style="background:#0C0C0C;border:1px solid #333;border-left:3px solid var(--acid);padding:16px 20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;">
-              <span style="color:var(--muted);">// hugo.yaml — 一行命令搞定构建</span><br>
-              <span style="color:var(--pink);">baseURL</span>: <span style="color:var(--cyan);">https://blog-go3.pages.dev/</span><br>
-              <span style="color:var(--pink);">theme</span>: <span style="color:var(--cyan);">PaperMod</span><br>
-              <span style="color:var(--pink);">locale</span>: <span style="color:var(--cyan);">zh-cn</span>
-            </div>
-            <h3 style="color:var(--white);margin:24px 0 12px;font-size:18px;">2. 双线部署策略</h3>
-            <p style="margin-bottom:16px;">GitHub Pages 用于海外访问，Cloudflare Pages 用于国内加速。一次 push，两边自动构建。</p>
-            <blockquote style="border-left:3px solid var(--pink);padding:12px 20px;margin:16px 0;color:var(--muted);font-style:italic;font-size:13px;">
-              部署的本质不是"放在哪里"，而是"如何让内容最快到达读者"。—— 双 CDN 策略的核心
-            </blockquote>
-            <p>以上展示了一个完整文章页面的排版结构：<strong>代码块带左绿边</strong>、<strong>引用块带左粉边</strong>、<strong>正文内链带酸性绿下划线</strong>。</p>
-          </div>
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — welcome</span></div>
+    <div class="mockup-body" style="padding:0;">
+      <div class="welcome-page">
+        <div class="boot-log">
+          <span>init</span> · kernel loaded<br>
+          <span>mount</span> · content volume ready<br>
+          <span>start</span> · blog.service — running
         </div>
-
-        <!-- TOC SIDEBAR -->
-        <div class="article-toc">
-          <div class="toc-title">▶ TOC</div>
-          <a href="#" class="active">1. 为什么选择 Hugo</a>
-          <a href="#">2. 双线部署策略</a>
-          <a href="#">3. GitHub OAuth 集成</a>
-          <a href="#">4. Supabase 评论</a>
-          <a href="#">5. 性能优化</a>
+        <div class="welcome-main">
+          <div class="w-title">LEVIA808</div>
+          <div class="w-sub">
+            个人技术博客。记录构建、阅读与思考。<br>
+            <span style="font-size:11px;color:var(--faint);">build 2026 · 22 pages · hugo v0.164.0</span>
+          </div>
+          <div class="w-links">
+            <a href="#">/posts</a>
+            <a href="#">/about</a>
+            <a href="#">/archive</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="box" style="border-left-color:var(--acid);margin-top:24px;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ article-spec.txt</span><br>
-    <strong>代码块</strong>: 黑底 #0C0C0C + 左 3px 酸性绿线 + JetBrains Mono。<br>
-    <strong>引用块</strong>: 左 3px 粉色线 + 斜体 + muted 颜色。<br>
-    <strong>TOC 侧栏</strong>: sticky 定位 + 当前章节酸性绿高亮 + 左 2px 指示线。<br>
-    <strong>正文宽度</strong>: 内容区 max-width 720px，左对齐，不居中。<br>
-    <strong>标题层级</strong>: H1→36px 900, H2→24px 800, H3→18px 700。<br>
-    <strong>正文</strong>: 15px, line-height 1.9, 颜色 #CCC（略低于纯白减轻眼疲劳）。
+  <div class="box" style="margin-top:24px;">
+    <span class="mono" style="color:var(--accent);">▶ structure</span><br>
+    <strong>L1</strong> 左上 boot log — 系统启动氛围 · <strong>L2</strong> 居中品牌 — 纯文字无装饰 · <strong>L3</strong> 三个路径 — 简洁导航。全页仅 ~60 个词，留白率 &gt; 80%。进入动画：boot log 立即呈现 → 中心内容 300ms fade-up。
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ NEW: 08 RESPONSIVE ═══════════ -->
-<section>
-  <div class="label">.08/responsive</div>
-  <h2>响应式规范</h2>
+<!-- ═══════════ 05 BLOG MOCKUP ═══════════ -->
+<section id="mockup">
+  <div class="label">05 · 首页</div>
+  <h2>文章列表</h2>
 
-  <table class="table">
-    <thead><tr><th>断点</th><th>宽度</th><th>布局变化</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Desktop</strong></td><td>≥ 1024px</td><td>3 列文章网格 · 文章+TOC 侧栏 · 完整导航</td></tr>
-      <tr><td><strong>Tablet</strong></td><td>768-1023px</td><td>2 列文章网格 · TOC 移到底部 · 导航保持</td></tr>
-      <tr><td><strong>Mobile</strong></td><td>≤ 767px</td><td>单列布局 · TOC 折叠 · 导航→汉堡菜单 · 字体缩小</td></tr>
-    </tbody>
-  </table>
-
-  <h3 style="color:var(--acid);margin:28px 0 16px;text-transform:uppercase;font-size:14px;">▸ 移动端适配规范</h3>
-  <div class="grid-2">
-    <div class="card card-acid">
-      <div class="mono" style="font-size:10px;color:var(--acid);margin-bottom:8px;">[mobile_nav]</div>
-      <ul style="font-size:12px;line-height:2.2;list-style:none;padding:0;color:var(--white);">
-        <li>■ ≤ 767px: 导航折叠为 ☰</li>
-        <li>■ 展开覆盖全屏（无动画，即刻显示）</li>
-        <li>■ 关闭按钮在右上角 ×</li>
-        <li>■ 链接放大为 18px 粗体</li>
-        <li>■ 点击链接后立即关闭</li>
-      </ul>
-    </div>
-    <div class="card card-pink">
-      <div class="mono" style="font-size:10px;color:var(--pink);margin-bottom:8px;">[mobile_sizing]</div>
-      <ul style="font-size:12px;line-height:2.2;list-style:none;padding:0;color:var(--white);">
-        <li>■ H1: clamp(28px,8vw,48px)</li>
-        <li>■ Section padding: 48px (vs 80px)</li>
-        <li>■ 卡片 padding: 20px (vs 28px)</li>
-        <li>■ 最小触摸目标: 44×44px</li>
-        <li>■ 按钮间距 ≥ 8px</li>
-      </ul>
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts</span></div>
+    <div class="mockup-body">
+      <div class="blog-nav">
+        <div class="logo">LEVIA808</div>
+        <div class="links"><a href="#">Posts</a><a href="#">Archive</a><a href="#">About</a></div>
+      </div>
+      <div class="blog-hero">
+        <div class="hero-date">2026 · 08 · 06</div>
+        <div class="hero-title">构建现代化个人博客</div>
+        <div class="hero-excerpt">从 Hugo 到双线部署的完整实践。一份代码，GitHub Pages 与 Cloudflare Pages 同步构建。</div>
+        <div class="mono" style="font-size:10px;color:var(--faint);">hugo · cloudflare · devops</div>
+      </div>
+      <div class="grid-3">
+        <div class="post-card"><div class="pc-date">2025 · 06 · 15</div><div class="pc-title">Rust 所有权模型</div><div class="pc-excerpt">通过实例理解 ownership 与 borrowing。</div></div>
+        <div class="post-card"><div class="pc-date">2025 · 05 · 20</div><div class="pc-title">编辑器配置 2025</div><div class="pc-excerpt">高效的 VS Code 与 Neovim 工作流。</div></div>
+        <div class="post-card"><div class="pc-date">2025 · 04 · 10</div><div class="pc-title">Container Queries</div><div class="pc-excerpt">组件级响应式设计的现代方案。</div></div>
+      </div>
     </div>
   </div>
 </section>
 
 <hr>
 
-<!-- ═══════════ 09 COMPONENT SPEC ═══════════ -->
+<!-- ═══════════ 06 ARTICLE ═══════════ -->
 <section>
-  <div class="label">.09/component-spec</div>
-  <h2>组件完整规格</h2>
+  <div class="label">06 · 文章页</div>
+  <h2>阅读布局</h2>
+
+  <div class="mockup">
+    <div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span style="font-size:9px;color:var(--faint);margin-left:6px;font-family:'JetBrains Mono',monospace;">blog — /posts/hello-world</span></div>
+    <div class="mockup-body">
+      <div class="article-layout">
+        <div class="article-main">
+          <div class="mono" style="font-size:10px;color:var(--muted);margin-bottom:16px;">2026-08-06 · 5 min · hugo cloudflare devops</div>
+          <div style="font-size:32px;font-weight:500;letter-spacing:-1px;line-height:1.2;margin-bottom:16px;">构建现代化个人博客</div>
+          <div style="color:var(--muted);font-size:13px;margin-bottom:32px;line-height:1.7;">从 Hugo 静态站点生成器到 GitHub Pages + Cloudflare Pages 双线部署的完整实践。</div>
+          <div style="line-height:1.9;color:var(--fg);font-size:14px;font-weight:350;">
+            <p style="margin-bottom:14px;">本文带你从零搭建一个现代化个人博客。</p>
+            <h3 style="font-size:16px;font-weight:500;margin:28px 0 10px;color:var(--white);">Hugo 静态站点</h3>
+            <p style="margin-bottom:14px;">Hugo 是 Go 编写的静态站点生成器，构建 22 页耗时 43ms。</p>
+            <div style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);padding:16px 20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;">
+              <span style="color:var(--muted);"># hugo.yaml</span><br>
+              <span style="color:var(--fg);">baseURL</span>: <span style="color:var(--accent);">https://blog-go3.pages.dev</span><br>
+              <span style="color:var(--fg);">theme</span>: <span style="color:var(--accent);">PaperMod</span>
+            </div>
+            <blockquote style="border-left:1px solid var(--faint);padding:10px 18px;margin:16px 0;color:var(--muted);font-style:italic;font-size:13px;">
+              部署的本质不是"放在哪里"，而是"如何让内容最快到达读者"。
+            </blockquote>
+          </div>
+        </div>
+        <div class="article-toc">
+          <div class="toc-t">On this page</div>
+          <a href="#" class="active">Hugo 静态站点</a>
+          <a href="#">双线部署策略</a>
+          <a href="#">GitHub OAuth</a>
+          <a href="#">性能优化</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 07 COMPONENTS ═══════════ -->
+<section>
+  <div class="label">07 · 组件</div>
+  <h2>UI 元素规格</h2>
+
   <table class="table">
-    <thead><tr><th>组件</th><th>暗色酸性处理</th><th>动效</th><th>P</th></tr></thead>
+    <thead><tr><th>组件</th><th>处理</th><th>动效</th><th>P</th></tr></thead>
     <tbody>
-      <tr><td><strong>首页 Hero</strong></td><td>1px 酸性绿边框 + [ACID FEATURE] · 无圆角</td><td>边框呼吸可选</td><td>P0</td></tr>
-      <tr><td><strong>文章卡片</strong></td><td>#141414 + 1px 暗边 · hover→酸性绿边框</td><td>100ms 边框变色</td><td>P0</td></tr>
-      <tr><td><strong>导航栏</strong></td><td>.前缀 + 大写 monospace 标签 · 当前页绿色</td><td>100ms 颜色过渡</td><td>P0</td></tr>
-      <tr><td><strong>文章详情</strong></td><td>720px 正文 + 220px sticky TOC · 代码 3px 绿左线</td><td>滚动 TOC 高亮跟随</td><td>P0</td></tr>
-      <tr><td><strong>按钮</strong></td><td>2px 单色边框 · 直角 · hover 反色填充</td><td>100ms 背景+颜色切换</td><td>P0</td></tr>
-      <tr><td><strong>表单输入</strong></td><td>黑底 1px 暗边 · focus→酸性绿边 2px · 无圆角</td><td>100ms 边框变色</td><td>P0</td></tr>
-      <tr><td><strong>标签/徽章</strong></td><td>[TEXT] 方括号 monospace · 单色边框</td><td>无</td><td>P1</td></tr>
-      <tr><td><strong>终端窗口</strong></td><td>黑底 + 三色点标题栏 + ▶提示符 + 绿等宽</td><td>闪烁光标</td><td>P1</td></tr>
-      <tr><td><strong>Toast</strong></td><td>黑底 + acid/pink/cyan 单色边框 + monospace</td><td>150ms fade-in 无滑入</td><td>P1</td></tr>
-      <tr><td><strong>搜索</strong></td><td>$ prompt 风格输入 · Ctrl+K 唤起</td><td>50ms 聚焦边框变绿</td><td>P1</td></tr>
-      <tr><td><strong>Skeleton</strong></td><td>#2A2A2A 灰色块 · 无圆角</td><td>1.5s 呼吸透明度</td><td>P1</td></tr>
-      <tr><td><strong>Empty/Error</strong></td><td>居中卡片 · [EMPTY]/[ERROR] monospace 标签</td><td>无</td><td>P1</td></tr>
-      <tr><td><strong>评论区</strong></td><td>2px 边框 textarea + terminal 按钮</td><td>100ms 边框变色</td><td>P2</td></tr>
-      <tr><td><strong>ASCII 装饰</strong></td><td>box-drawing 字符分隔线 · CRT scanline 全站叠加</td><td>scanline 滚动</td><td>P2</td></tr>
-      <tr><td><strong>主题切换</strong></td><td>浅色: 白底黑字保留酸性绿 · 结构不变</td><td>无过渡(即时切换)</td><td>P2</td></tr>
+      <tr><td><strong>欢迎页</strong></td><td>boot log + 居中品牌 + 三路径 · 纯文字无装饰</td><td>fade-up 入口</td><td>P0</td></tr>
+      <tr><td><strong>导航栏</strong></td><td>大写字母 · 间距 32px · 底部无下划线</td><td>hover → translateY(-1px)</td><td>P0</td></tr>
+      <tr><td><strong>文章卡片</strong></td><td>#161615 底 · 1px 边框 · 6px 圆角</td><td>hover → translateY(-2px) + 边框变亮</td><td>P0</td></tr>
+      <tr><td><strong>文章详情</strong></td><td>正文 720px + TOC 200px · 代码块 2px 左 accent 线</td><td>TOC hover → translateX(2px)</td><td>P0</td></tr>
+      <tr><td><strong>按钮</strong></td><td>1px border · 4px 圆角 · 12px 字体</td><td>hover → scale(1.03) · press → scale(0.98)</td><td>P0</td></tr>
+      <tr><td><strong>表单输入</strong></td><td>黑底 1px 暗边 · 4px 圆角 · focus→亮 border</td><td>—</td><td>P0</td></tr>
+      <tr><td><strong>终端窗口</strong></td><td>#0A0A09 底 · 灰点标题栏 · JetBrains Mono</td><td>—</td><td>P1</td></tr>
+      <tr><td><strong>标签</strong></td><td>monospace 10px · color: var(--muted)</td><td>—</td><td>P1</td></tr>
+      <tr><td><strong>分割线</strong></td><td>1px solid #2C2C2A · 唯一分隔方式</td><td>—</td><td>P1</td></tr>
+      <tr><td><strong>Skeleton</strong></td><td>#2C2C2A 灰条 · 3px 圆角</td><td>opacity 呼吸 2s</td><td>P1</td></tr>
+      <tr><td><strong>Toast</strong></td><td>黑底 1px 边框 · monospace 标签</td><td>fade-up + fade-out</td><td>P2</td></tr>
+      <tr><td><strong>404 页</strong></td><td>"page not found" · 终端风格 · 回首页链接</td><td>—</td><td>P2</td></tr>
     </tbody>
   </table>
 </section>
 
 <hr>
 
-<!-- ═══════════ 10 IMPLEMENTATION ═══════════ -->
+<!-- ═══════════ 08 COMPARISON ═══════════ -->
 <section>
-  <div class="label">.10/implementation</div>
-  <h2>实施路径 &amp; 文件映射</h2>
+  <div class="label">08 · 对比</div>
+  <h2>方案演进</h2>
 
-  <div class="step-row">
-    <div class="card card-acid"><div class="mono" style="font-size:13px;color:var(--acid);margin-bottom:10px;">step_01</div><div style="font-weight:800;font-size:14px;margin-bottom:6px;text-transform:uppercase;">CSS 令牌</div><div style="font-size:12px;color:var(--muted);">注入 CSS 变量 + 配色 + 字体 + 间距</div></div>
-    <div class="card card-pink"><div class="mono" style="font-size:13px;color:var(--pink);margin-bottom:10px;">step_02</div><div style="font-weight:800;font-size:14px;margin-bottom:6px;text-transform:uppercase;">字体 · 排版</div><div style="font-size:12px;color:var(--muted);">加载 Google Fonts · 替换 Inter</div></div>
-    <div class="card card-cyan"><div class="mono" style="font-size:13px;color:var(--cyan);margin-bottom:10px;">step_03</div><div style="font-weight:800;font-size:14px;margin-bottom:6px;text-transform:uppercase;">组件酸性化</div><div style="font-size:12px;color:var(--muted);">卡片/按钮/标签/导航逐一批改</div></div>
-    <div class="card card-yellow"><div class="mono" style="font-size:13px;color:var(--yellow);margin-bottom:10px;">step_04</div><div style="font-weight:800;font-size:14px;margin-bottom:6px;text-transform:uppercase;">终端 + 动效</div><div style="font-size:12px;color:var(--muted);">ASCII 装饰 · CRT scanline · 8 种动效</div></div>
+  <div class="compare-row">
+    <div class="compare-cell"><div class="c-name">v1 编辑风</div><div class="c-val">暗色 · 琥珀金 · Inter · 12px 圆角 · 软</div></div>
+    <div class="compare-cell"><div class="c-name">v3 酸性粗野</div><div class="c-val">荧光绿 · 粉 · 青 · 扫描线 · 零圆角 · 闹</div></div>
+    <div class="compare-cell current"><div class="c-name">v6 自然科技</div><div class="c-val">单色 · 苔绿 · transform · 精密 · 冷</div></div>
   </div>
 
-  <div class="box" style="border-left-color:var(--acid);margin-top:24px;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acid);">▶ key-files.map</span><br>
-    <span class="mono" style="font-size:11px;line-height:2.2;">
-      assets/css/extended/design-system.css → CSS Variables + 全局样式 + 排版<br>
-      assets/css/extended/animations.css   → 动效 @keyframes + transition 规则<br>
-      assets/css/extended/nav.css          → 导航栏 · 酸性标签 · 汉堡菜单<br>
-      assets/css/extended/comments.css     → 评论区粗野化<br>
-      layouts/partials/header.html         → 导航 HTML · 用户菜单<br>
-      layouts/partials/auth-modal.html     → 登录弹窗 · GitHub 按钮<br>
-      layouts/partials/footer.html         → 页脚 · ASCII 装饰<br>
-      layouts/_default/single.html(覆盖)   → 文章页 TOC 侧栏 · 代码块<br>
-      hugo.yaml                            → Google Fonts · fuseOpts
-    </span>
-  </div>
+  <table class="table">
+    <thead><tr><th>维度</th><th>v3 酸性粗野主义</th><th>v6 自然科技 (当前)</th></tr></thead>
+    <tbody>
+      <tr><td>色彩数量</td><td>8+ 种酸性色</td><td>5 灰阶 + 1 accent</td></tr>
+      <tr><td>accent</td><td>#39FF14 荧光绿</td><td>#6B8B6B 暗苔绿</td></tr>
+      <tr><td>动效方式</td><td>blink / RGB shift / noise / glitch</td><td>scale / translate / rotate</td></tr>
+      <tr><td>圆角</td><td>0-8px 形状等级</td><td>4-6px 统一微圆角</td></tr>
+      <tr><td>氛围</td><td>黑客 · 朋克 · 反叛</td><td>建筑 · 矿物 · 沉静</td></tr>
+      <tr><td>装饰</td><td>scanline · ASCII · 终端窗口</td><td>仅 boot log · 极简终端</td></tr>
+      <tr><td>信息密度</td><td>中</td><td>极低 · 大量留白</td></tr>
+    </tbody>
+  </table>
+</section>
 
-  <div class="box" style="border-left-color:var(--pink);margin-top:16px;">
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--pink);">▶ motion-checklist.txt</span><br>
-    <span class="mono" style="font-size:11px;line-height:2.2;">
-      [x] blink 闪烁光标 — loading 态<br>
-      [x] RGB shift — 标题 hover 酸性效果<br>
-      [x] noise 抖动 — 按钮微反馈<br>
-      [x] border breathe — 加载卡片边框呼吸<br>
-      [x] typewriter — 等待文案<br>
-      [x] border flash — 卡片/输入框 hover<br>
-      [x] skeleton — 文章列表骨架屏<br>
-      [x] scanline — CRT 全局扫描线<br>
-      [ ] reduced-motion 适配 — @media (prefers-reduced-motion)
-    </span>
-  </div>
+<hr>
+
+<!-- ═══════════ 09 IMPLEMENTATION ═══════════ -->
+<section>
+  <div class="label">09 · 实施</div>
+  <h2>文件映射</h2>
+  <table class="table">
+    <thead><tr><th>步骤</th><th>文件</th><th>变更</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><span class="mono">assets/css/extended/design-system.css</span></td><td>CSS 变量 · 矿物色板 · <span class="mono">transform</span> 动效规则</td></tr>
+      <tr><td>2</td><td><span class="mono">hugo.yaml</span></td><td>Google Fonts (Inter + JetBrains Mono + Noto Sans SC)</td></tr>
+      <tr><td>3</td><td><span class="mono">layouts/index.html</span></td><td>欢迎页 boot log + 三路径入口</td></tr>
+      <tr><td>4</td><td><span class="mono">layouts/partials/header.html</span></td><td>导航 · 大写 · 32px 间距</td></tr>
+      <tr><td>5</td><td><span class="mono">layouts/_default/single.html</span></td><td>文章页 TOC 侧栏 · 代码块 accent 左线</td></tr>
+      <tr><td>6</td><td><span class="mono">layouts/partials/footer.html</span></td><td>最小页脚 · 3 行信息</td></tr>
+      <tr><td>7</td><td><span class="mono">assets/css/extended/--cleanup</span></td><td>删除旧酸性 · scanline · glitch · RGB shift · noise 等</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <footer>
-┌──────────────────────────────────────────────────────────────────────────────────────────────┐<br>
-│  DARK ACID BRUTALIST BLOG · COMPLETE DESIGN SYSTEM v4  │  2026-08-07  │  PREPARED FOR LEVIA808  │<br>
-└──────────────────────────────────────────────────────────────────────────────────────────────┘
+  v6 · natur + technik · 2026-08-07 · LEVIA808
 </footer>
 
 </div>
+
 </body>
 </html>
