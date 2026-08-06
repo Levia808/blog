@@ -1,0 +1,56 @@
+{{- $currentPage := . -}}
+<header class="glass-header" id="siteHeader">
+  <nav class="glass-nav" aria-label="主导航">
+    <a class="glass-brand" href="{{ "" | absLangURL }}" aria-label="{{ site.Title }}">
+      <span class="glass-brand__mark" aria-hidden="true"></span>
+      <span>{{ site.Title }}</span>
+    </a>
+
+    <div class="glass-links">
+      {{- range site.Menus.main }}
+      {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
+      {{- $isActive := eq $menuItemURL $currentPage.RelPermalink -}}
+      <a class="glass-link{{ if $isActive }} is-active{{ end }}" href="{{ .URL | absLangURL }}">{{ .Name }}</a>
+      {{- end }}
+    </div>
+
+    <div class="glass-actions">
+      {{- if (not site.Params.disableThemeToggle) }}
+      <button id="theme-toggle" class="glass-theme-toggle" accesskey="t" title="切换主题 (Alt + T)" aria-label="切换主题">
+        <svg class="moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+      {{- end }}
+      <button type="button" class="glass-login-btn" id="navLoginBtn">登录</button>
+      <div class="glass-user" id="userMenuContainer" hidden>
+        <button type="button" class="glass-avatar-btn" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
+          <img class="glass-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
+        </button>
+        <div class="glass-user-menu" id="userDropdown" hidden>
+          <div class="glass-user-menu__head">
+            <img class="glass-user-menu__avatar" id="userMenuAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
+            <div>
+              <strong id="userMenuName">博客读者</strong>
+              <span id="userMenuEmail"></span>
+            </div>
+          </div>
+          <a class="glass-user-menu__item" href="{{ "profile/" | relURL }}">个人主页</a>
+          <a class="glass-user-menu__item" id="adminLink" href="{{ "admin/" | relURL }}" hidden>控制台</a>
+          <button type="button" class="glass-user-menu__item glass-user-menu__item--button" id="logoutBtn">注销</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

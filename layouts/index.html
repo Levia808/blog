@@ -1,0 +1,47 @@
+{{ define "main" }}
+{{- $posts := first 8 (where site.RegularPages "Section" "posts") -}}
+<section class="blog-home">
+  <header class="blog-hero" data-reveal>
+    <p class="blog-eyebrow">Personal Blog</p>
+    <h1>{{ site.Title }}</h1>
+    <p>{{ site.Params.description }}</p>
+    <div class="blog-hero__actions">
+      <a href="{{ "archives/" | relURL }}">归档</a>
+      <a href="{{ "tags/" | relURL }}">标签</a>
+      <a href="{{ "search/" | relURL }}">搜索</a>
+    </div>
+  </header>
+
+  <section class="blog-section" aria-labelledby="latest-posts">
+    <div class="blog-section__head" data-reveal>
+      <h2 id="latest-posts">最新文章</h2>
+      <a href="{{ "archives/" | relURL }}">查看全部</a>
+    </div>
+
+    <div class="blog-post-grid">
+      {{- if $posts }}
+      {{- range $posts }}
+      <article class="blog-post-card" data-reveal>
+        <a class="blog-post-card__link" href="{{ .RelPermalink }}">
+          <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+          <h3>{{ .Title }}</h3>
+          <p>{{ .Summary | plainify | truncate 118 }}</p>
+          {{- with .Params.tags }}
+          <span>{{ index . 0 }}</span>
+          {{- end }}
+        </a>
+      </article>
+      {{- end }}
+      {{- else }}
+      <article class="blog-post-card" data-reveal>
+        <div class="blog-post-card__link">
+          <time>暂无文章</time>
+          <h3>还没有发布内容</h3>
+          <p>发布第一篇文章后，这里会显示最近更新。</p>
+        </div>
+      </article>
+      {{- end }}
+    </div>
+  </section>
+</section>
+{{ end }}

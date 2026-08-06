@@ -1,0 +1,133 @@
+﻿{{- /* Liquid Group 瀵艰埅鏍?*/ -}}
+<header class="header" id="siteHeader">
+    <nav class="header-nav">
+        <div class="logo">
+            {{- $label_text := (site.Params.label.text | default site.Title) }}
+            {{- if site.Title }}
+            <a href="{{ "" | absLangURL }}" accesskey="h" title="{{ $label_text }} (Alt + H)">
+                {{- if site.Params.label.icon }}
+                {{- $img := resources.Get site.Params.label.icon }}
+                {{- if $img }}
+                    {{- $processableFormats := (slice "jpg" "jpeg" "png" "tif" "bmp" "gif") -}}
+                    {{- if hugo.IsExtended -}}
+                        {{- $processableFormats = $processableFormats | append "webp" -}}
+                    {{- end -}}
+                    {{- if (and (in $processableFormats $img.MediaType.SubType) (hugo.IsProduction | or (eq site.Params.env "production"))) }}
+                        {{- $img = $img.Resize (printf "x%d" (site.Params.label.iconHeight | default 30)) }}
+                    {{- end }}
+                    <img src="{{ $img.Permalink }}" alt="" aria-label="logo"
+                        height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- else }}
+                <img src="{{- site.Params.label.icon | absURL -}}" alt="" aria-label="logo"
+                    height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- end -}}
+                {{- end -}}
+                {{- $label_text -}}
+            </a>
+            {{- end }}
+        </div>
+
+        {{- $currentPage := . }}
+        {{- $menuItems := site.Menus.main }}
+        {{- $itemCount := len $menuItems }}
+        {{- $activeIdx := 0 }}
+        <nav class="liquid-group" data-count="{{ $itemCount }}">
+            <div class="liquid-slider" id="liquidSlider" style="transform:translateX(0%)"></div>
+            {{- range $index, $item := $menuItems }}
+            {{- $menu_item_url := (cond (strings.HasSuffix $item.URL "/") $item.URL (printf "%s/" $item.URL) ) }}
+            {{- $page_url := $currentPage.RelPermalink }}
+            {{- $isActive := eq $menu_item_url $page_url }}
+            {{- if $isActive }}{{ $activeIdx = $index }}{{ end }}
+            <a href="{{ $item.URL | absLangURL }}"
+               class="liquid-label{{ if $isActive }} active{{ end }}"
+               data-index="{{ $index }}">
+                {{- $item.Name -}}
+            </a>
+            {{- end }}
+        </nav>
+
+        <div class="nav-actions">
+            {{- if (not site.Params.disableThemeToggle) }}
+            <button id="theme-toggle" class="nav-icon-btn" accesskey="t" title="切换主题 (Alt + T)" aria-label="Toggle theme">
+                <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+            {{- end }}
+
+            <button class="nav-login-btn" id="navLoginBtn" hidden>登录</button>
+
+            <div class="user-menu-container" id="userMenuContainer" hidden>
+                <button class="user-menu-trigger" id="userMenuTrigger" aria-label="用户菜单">
+                    <img class="user-avatar" id="userAvatar" src="" alt="" width="30" height="30">
+                </button>
+                <div class="user-menu-dropdown" id="userDropdown" hidden>
+                    <div class="user-menu-header">
+                        <img class="user-menu-avatar" id="userMenuAvatar" src="" alt="" width="44" height="44">
+                        <div>
+                            <div class="user-menu-name" id="userMenuName"></div>
+                            <div class="user-menu-email" id="userMenuEmail"></div>
+                        </div>
+                    </div>
+                    <a href="{{ "profile/" | relURL }}" class="user-menu-item">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人主页
+                    </a>
+                    <a href="{{ "admin/" | relURL }}" class="user-menu-item admin-only" id="adminLink" hidden>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6"/></svg>
+                        管理后台
+                    </a>
+                    <hr class="user-menu-divider">
+                    <button class="user-menu-item user-menu-logout" id="logoutBtn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        退出登录                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<script>
+(function () {
+  var group = document.querySelector('.liquid-group');
+  var slider = document.getElementById('liquidSlider');
+  if (!group || !slider) return;
+  var count = parseInt(group.dataset.count) || 4;
+  slider.style.width = 'calc(100% / ' + count + ' - var(--lg-gap))';
+
+  var labels = group.querySelectorAll('.liquid-label');
+  var activeIdx = 0;
+
+  labels.forEach(function (l, i) {
+    if (l.classList.contains('active')) activeIdx = i;
+    l.addEventListener('mouseenter', function () { moveSlider(i); });
+    l.addEventListener('mouseleave', function () { moveSlider(activeIdx); });
+  });
+
+  function moveSlider(i) {
+    slider.style.transform = 'translateX(' + (i * 100) + '%)';
+  }
+
+  moveSlider(activeIdx);
+
+  // Recalc on window resize
+  window.addEventListener('resize', function () {
+    count = parseInt(group.dataset.count) || 4;
+    slider.style.width = 'calc(100% / ' + count + ' - var(--lg-gap))';
+    moveSlider(activeIdx);
+  });
+})();
+</script>

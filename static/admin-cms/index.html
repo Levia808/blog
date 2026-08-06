@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>文章编辑器 - 我的博客</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; font-family: system-ui, sans-serif; }
+    .cms-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; color: #18211d; background: #eef1ed; }
+    .cms-gate[hidden] { display: none; }
+    .cms-gate-card { max-width: 420px; padding: 28px; border: 1px solid #cbd5ce; background: #fff; }
+    .cms-gate-card a { color: inherit; }
+  </style>
+</head>
+<body>
+  <main class="cms-gate" id="cmsGate">
+    <div class="cms-gate-card">
+      <h1>文章编辑器</h1>
+      <p id="cmsGateMessage">正在验证管理员权限…</p>
+      <a id="cmsGateBack" href="../admin/" hidden>返回管理后台</a>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script>
+    (async function () {
+      var message = document.getElementById('cmsGateMessage');
+      var back = document.getElementById('cmsGateBack');
+      try {
+        var allowed = await window.Admin.isAdmin();
+        if (!allowed) {
+          message.textContent = '此编辑器仅对管理员开放。';
+          back.hidden = false;
+          return;
+        }
+        document.getElementById('cmsGate').hidden = true;
+        var cms = document.createElement('script');
+        cms.type = 'module';
+        cms.src = 'https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js';
+        document.head.appendChild(cms);
+      } catch (error) {
+        message.textContent = '管理员权限验证失败，请返回后台重试。';
+        back.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -6,6 +6,11 @@ theme: PaperMod
 enableRobotsTXT: true
 hasCJKLanguage: true
 
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
 outputs:
   home:
     - HTML
@@ -16,7 +21,7 @@ params:
   env: production
   author: Levia808
   description: 个人技术博客 — 记录学习、思考与技术分享。
-  defaultTheme: auto
+  defaultTheme: light
   ShowReadingTime: true
   ShowShareButtons: false
   ShowPostNavLinks: true
@@ -50,19 +55,6 @@ params:
       - summary
       - tags
 
-  giscus:
-    enable: true
-    repo: Levia808/blog
-    repoId: R_kgDOTvhUqg
-    category: General
-    categoryId: DIC_kwDOTvhUqs4DCyZB
-    mapping: pathname
-    reactionsEnabled: "1"
-    emitMetadata: "0"
-    inputPosition: top
-    theme: preferred_color_scheme
-    lang: zh-CN
-    loading: lazy
 
 menu:
   main:

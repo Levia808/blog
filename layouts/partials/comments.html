@@ -1,20 +1,30 @@
-{{- if .Site.Params.giscus.enable }}
-<div class="giscus">
-  <script src="https://giscus.app/client.js"
-    data-repo="{{ .Site.Params.giscus.repo }}"
-    data-repo-id="{{ .Site.Params.giscus.repoId }}"
-    data-category="{{ .Site.Params.giscus.category }}"
-    data-category-id="{{ .Site.Params.giscus.categoryId }}"
-    data-mapping="{{ .Site.Params.giscus.mapping | default "pathname" }}"
-    data-strict="{{ .Site.Params.giscus.strict | default "0" }}"
-    data-reactions-enabled="{{ .Site.Params.giscus.reactionsEnabled | default "1" }}"
-    data-emit-metadata="{{ .Site.Params.giscus.emitMetadata | default "0" }}"
-    data-input-position="{{ .Site.Params.giscus.inputPosition | default "bottom" }}"
-    data-theme="{{ .Site.Params.giscus.theme | default "preferred_color_scheme" }}"
-    data-lang="{{ .Site.Params.giscus.lang | default "zh-CN" }}"
-    data-loading="{{ .Site.Params.giscus.loading | default "lazy" }}"
-    crossorigin="anonymous"
-    async>
-  </script>
-</div>
+﻿{{- if .Site.Params.comments }}
+<section class="native-comments" id="comments" data-post-path="{{ .RelPermalink }}" aria-labelledby="comments-title">
+  <div class="comments-heading">
+    <div>
+      <span class="comments-kicker">COMMENTS</span>
+      <h2 id="comments-title">评论</h2>
+    </div>
+    <span class="comments-count" id="commentsCount">0</span>
+  </div>
+  <div class="comments-notice" id="commentsNotice" role="status" aria-live="polite" hidden></div>
+  <div class="comments-auth-wall" id="commentsAuthWall" hidden>
+    <p>登录后参与讨论，评论会显示在这篇文章下。</p>
+    <button type="button" class="comments-button comments-button-primary" data-comment-login>登录后评论</button>
+  </div>
+  <form class="comment-form" id="commentForm" hidden>
+    <div class="comment-editor-tabs" role="tablist" aria-label="评论编辑器">
+      <button type="button" class="comment-tab is-active" data-editor-tab="write" role="tab" aria-selected="true">写评论</button>
+      <button type="button" class="comment-tab" data-editor-tab="preview" role="tab" aria-selected="false">预览</button>
+    </div>
+    <textarea id="commentInput" maxlength="2000" rows="6" placeholder="写下你的想法，支持基础 Markdown…" aria-label="评论内容"></textarea>
+    <div class="comment-preview" id="commentPreview" hidden aria-live="polite"></div>
+    <div class="comment-form-footer">
+      <span class="comment-hint">Markdown 可用</span>
+      <span class="comment-count" id="commentCharCount">0 / 2000</span>
+      <button type="submit" class="comments-button comments-button-primary" id="commentSubmit">发送评论</button>
+    </div>
+  </form>
+  <div class="comments-list" id="commentsList" aria-live="polite"></div>
+</section>
 {{- end }}

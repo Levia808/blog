@@ -1,0 +1,38 @@
+﻿<div class="auth-overlay" id="authOverlay" hidden>
+  <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button class="auth-close" id="authClose" aria-label="关闭">&times;</button>
+    <div class="auth-panel" id="authLogin">
+      <h2 class="auth-title" id="authTitle">登录</h2>
+      <form id="loginForm" class="auth-form">
+        <label class="auth-label"><span>邮箱</span><input type="email" name="email" required placeholder="your@email.com" class="auth-input"></label>
+        <label class="auth-label"><span>密码</span><input type="password" name="password" required minlength="6" placeholder="至少 6 位" class="auth-input"></label>
+        <p class="auth-error" id="loginError" hidden></p>
+        <button type="submit" class="auth-btn auth-btn-primary">登录</button>
+      </form>
+      <div class="auth-divider"><span>或</span></div>
+      <button class="auth-btn auth-btn-github" id="githubLogin">GitHub 登录</button>
+      <p class="auth-switch">还没有账号？<button class="auth-link" data-panel="authRegister">注册</button></p>
+    </div>
+    <div class="auth-panel" id="authRegister" hidden>
+      <h2 class="auth-title">注册</h2>
+      <form id="registerForm" class="auth-form">
+        <label class="auth-label"><span>显示名称</span><input type="text" name="displayName" required placeholder="你的名称" class="auth-input"></label>
+        <label class="auth-label"><span>邮箱</span><input type="email" name="email" required placeholder="your@email.com" class="auth-input"></label>
+        <label class="auth-label"><span>密码</span><input type="password" name="password" required minlength="6" placeholder="至少 6 位" class="auth-input"></label>
+        <p class="auth-error" id="registerError" hidden></p>
+        <button type="submit" class="auth-btn auth-btn-primary">注册</button>
+      </form>
+      <p class="auth-switch">已有账号？<button class="auth-link" data-panel="authLogin">登录</button></p>
+    </div>
+    <div class="auth-panel" id="authReset" hidden>
+      <h2 class="auth-title">重置密码</h2>
+      <form id="resetForm" class="auth-form">
+        <label class="auth-label"><span>邮箱</span><input type="email" name="email" required placeholder="your@email.com" class="auth-input"></label>
+        <p class="auth-error" id="resetError" hidden></p>
+        <p class="auth-success" id="resetSuccess" hidden>重置链接已发送到你的邮箱。</p>
+        <button type="submit" class="auth-btn auth-btn-primary">发送重置链接</button>
+      </form>
+      <p class="auth-switch"><button class="auth-link" data-panel="authLogin">返回登录</button></p>
+    </div>
+  </div>
+</div>
