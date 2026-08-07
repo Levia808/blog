@@ -290,17 +290,22 @@
     if (likeBtn) {
       if (!currentUser) { window.BlogAuth.open('login'); return; }
       var momentId = likeBtn.dataset.momentLike;
-      var card = likeBtn.closest('.moment-card');
       var liked = likeBtn.classList.contains('is-liked');
       likeBtn.disabled = true;
       if (!liked) likeBurst(likeBtn);
+      // 乐观更新 UI, 防止重复点击触发重复插入
+      likeBtn.classList.toggle('is-liked', !liked);
+      likeBtn.childNodes[1] && (likeBtn.childNodes[1].textContent = liked ? '点赞' : '已赞');
       var op = liked
         ? window.blogSupabase.from('moment_likes').delete().eq('moment_id', momentId).eq('user_id', currentUser.id)
-        : window.blogSupabase.from('moment_likes').insert({ moment_id: momentId, user_id: currentUser.id });
+        : window.blogSupabase.from('moment_likes')
+            .upsert({ moment_id: momentId, user_id: currentUser.id }, { onConflict: 'moment_id,user_id' });
       op.then(function (result) {
         if (result.error) throw result.error;
         return loadMoments();
       }).catch(function (error) {
+        likeBtn.classList.toggle('is-liked', liked);
+        likeBtn.childNodes[1] && (likeBtn.childNodes[1].textContent = liked ? '已赞' : '点赞');
         alert('操作失败：' + (error.message || error));
       }).finally(function () {
         likeBtn.disabled = false;
