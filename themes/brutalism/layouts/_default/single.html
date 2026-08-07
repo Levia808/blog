@@ -2,7 +2,7 @@
 {{- $showToc := and (default site.Params.ShowToc .Params.ShowToc) .TableOfContents }}
 {{- $tocHTML := .TableOfContents }}
 {{- $bg := "" }}
-{{- $bgRel := strings.TrimPrefix "/" .Params.background }}
+{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .Params.background).Path }}
 {{- $bgRes := resources.Get $bgRel }}
 {{- if $bgRes }}
 {{- $bg = $bgRes.Resize "2560x q80" }}

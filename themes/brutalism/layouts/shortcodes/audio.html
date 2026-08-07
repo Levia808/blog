@@ -1,10 +1,20 @@
 {{- $src := .Get "src" | default "" }}
 {{- $caption := .Get "caption" | default "" }}
 {{- $class := .Get "class" | default "" }}
+{{- $resolved := $src }}
+{{- if $src }}
+{{- $rel := strings.TrimPrefix "/" (urls.Parse $src).Path }}
+{{- $res := resources.Get $rel }}
+{{- if $res }}
+{{- $resolved = $res.RelPermalink }}
+{{- else if fileExists (printf "static/%s" $rel) }}
+{{- $resolved = printf "/%s" $rel }}
+{{- end }}
+{{- end }}
 {{- if $src }}
 <figure class="media-block{{ with $class }} {{ . }}{{ end }}">
   <audio class="media-audio" controls preload="metadata">
-    <source src="{{ $src | safeURL }}" type="audio/mpeg">
+    <source src="{{ $resolved | safeURL }}" type="audio/mpeg">
     你的浏览器不支持 HTML5 音频。
   </audio>
   {{- with $caption }}

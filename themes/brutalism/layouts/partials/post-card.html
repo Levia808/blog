@@ -3,7 +3,7 @@
 {{- $img := "" }}
 {{- $isStatic := false }}
 {{- if $cover }}
-{{- $rel := strings.TrimPrefix "/" $cover }}
+{{- $rel := strings.TrimPrefix "/" (urls.Parse $cover).Path }}
 {{- $res := resources.Get $rel }}
 {{- if $res }}
 {{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $rel | lower) }}

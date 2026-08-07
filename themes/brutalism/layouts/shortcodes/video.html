@@ -2,10 +2,30 @@
 {{- $poster := .Get "poster" | default "" }}
 {{- $caption := .Get "caption" | default "" }}
 {{- $class := .Get "class" | default "" }}
+{{- $resolved := $src }}
+{{- if $src }}
+{{- $rel := strings.TrimPrefix "/" (urls.Parse $src).Path }}
+{{- $res := resources.Get $rel }}
+{{- if $res }}
+{{- $resolved = $res.RelPermalink }}
+{{- else if fileExists (printf "static/%s" $rel) }}
+{{- $resolved = printf "/%s" $rel }}
+{{- end }}
+{{- end }}
+{{- $posterResolved := $poster }}
+{{- if $poster }}
+{{- $posterRel := strings.TrimPrefix "/" (urls.Parse $poster).Path }}
+{{- $posterRes := resources.Get $posterRel }}
+{{- if $posterRes }}
+{{- $posterResolved = $posterRes.RelPermalink }}
+{{- else if fileExists (printf "static/%s" $posterRel) }}
+{{- $posterResolved = printf "/%s" $posterRel }}
+{{- end }}
+{{- end }}
 {{- if $src }}
 <figure class="media-block{{ with $class }} {{ . }}{{ end }}">
-  <video class="media-video" controls preload="metadata"{{ with $poster }} poster="{{ . | safeURL }}"{{ end }}>
-    <source src="{{ $src | safeURL }}" type="video/mp4">
+  <video class="media-video" controls preload="metadata"{{ with $posterResolved }} poster="{{ . | safeURL }}"{{ end }}>
+    <source src="{{ $resolved | safeURL }}" type="video/mp4">
     你的浏览器不支持 HTML5 视频。
   </video>
   {{- with $caption }}
