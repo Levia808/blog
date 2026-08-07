@@ -37,7 +37,7 @@ collections:
       - label: 发布日期
         name: date
         widget: datetime
-        required: false
+        required: true
       - label: 草稿
         name: draft
         widget: boolean
@@ -58,8 +58,6 @@ collections:
         name: background
         widget: image
         choose_url: true
-        media_folder: static/images
-        public_folder: /images
         required: false
       - label: 卡片封面图（首页/列表卡片）
         name: cover
@@ -71,8 +69,6 @@ collections:
             name: image
             widget: image
             choose_url: true
-            media_folder: static/images
-            public_folder: /images
             required: false
       - label: 正文
         name: body
