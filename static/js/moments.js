@@ -125,8 +125,8 @@
   }
 
   function renderComments(moment) {
-    if (!moment.comments || !moment.comments.length) return '';
-    return '<div class="moment-comments">' + moment.comments.map(function (c) {
+    if (!moment.moment_comments || !moment.moment_comments.length) return '';
+    return '<div class="moment-comments">' + moment.moment_comments.map(function (c) {
       var p = c.profiles || {};
       var name = p.display_name || p.username || '读者';
       return '<div class="moment-comment">' +
@@ -141,11 +141,11 @@
     var p = moment.profiles || {};
     var name = p.display_name || p.username || '博客读者';
     var liked = false;
-    if (currentUser && Array.isArray(moment.likes)) {
-      liked = moment.likes.some(function (l) { return l.user_id === currentUser.id; });
+    if (currentUser && Array.isArray(moment.moment_likes)) {
+      liked = moment.moment_likes.some(function (l) { return l.user_id === currentUser.id; });
     }
-    var likeCount = (moment.likes && moment.likes.length) || 0;
-    var commentCount = (moment.comments && moment.comments.length) || 0;
+    var likeCount = (moment.moment_likes && moment.moment_likes.length) || 0;
+    var commentCount = (moment.moment_comments && moment.moment_comments.length) || 0;
     return '<article class="moment-card" data-moment-id="' + moment.id + '">' +
       '<div class="moment-head">' + avatarHtml(p, 'moment-avatar', 'moment-avatar-fallback') +
       '<div><div class="moment-author">' + escapeHtml(name) + '</div>' +
