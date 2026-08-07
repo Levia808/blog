@@ -291,21 +291,26 @@
       if (!currentUser) { window.BlogAuth.open('login'); return; }
       var momentId = likeBtn.dataset.momentLike;
       var liked = likeBtn.classList.contains('is-liked');
+      var countEl = likeBtn.querySelector('.ma-count');
+      var count = countEl ? parseInt(countEl.textContent, 10) || 0 : 0;
       likeBtn.disabled = true;
       if (!liked) likeBurst(likeBtn);
-      // 乐观更新 UI, 防止重复点击触发重复插入
+      // 乐观更新: 状态 + 文案 + 数字同步 ±1 (即时刷新)
       likeBtn.classList.toggle('is-liked', !liked);
-      likeBtn.childNodes[1] && (likeBtn.childNodes[1].textContent = liked ? '点赞' : '已赞');
+      var labelNode = Array.prototype.find.call(likeBtn.childNodes, function (n) { return n.nodeType === 3; });
+      if (labelNode) labelNode.textContent = liked ? '点赞 ' : '已赞 ';
+      if (countEl) countEl.textContent = Math.max(0, count + (liked ? -1 : 1));
       var op = liked
         ? window.blogSupabase.from('moment_likes').delete().eq('moment_id', momentId).eq('user_id', currentUser.id)
         : window.blogSupabase.from('moment_likes')
             .upsert({ moment_id: momentId, user_id: currentUser.id }, { onConflict: 'moment_id,user_id' });
       op.then(function (result) {
         if (result.error) throw result.error;
-        return loadMoments();
       }).catch(function (error) {
+        // 失败回滚: 状态/文案/数字全部还原
         likeBtn.classList.toggle('is-liked', liked);
-        likeBtn.childNodes[1] && (likeBtn.childNodes[1].textContent = liked ? '已赞' : '点赞');
+        if (labelNode) labelNode.textContent = liked ? '已赞 ' : '点赞 ';
+        if (countEl) countEl.textContent = count;
         alert('操作失败：' + (error.message || error));
       }).finally(function () {
         likeBtn.disabled = false;
@@ -331,10 +336,34 @@
       var text = input.value.trim();
       if (!text) return;
       submitBtn.disabled = true;
-      window.blogSupabase.from('moment_comments').insert({ moment_id: momentId2, user_id: currentUser.id, content: text })
+      window.blogSupabase.from('moment_comments')
+        .insert({ moment_id: momentId2, user_id: currentUser.id, content: text })
+        .select('id, content, created_at, profiles(display_name, username, avatar_url)')
+        .single()
         .then(function (result) {
           if (result.error) throw result.error;
-          return loadMoments();
+          // 本地追加评论 DOM + 评论数字 +1, 不重渲染
+          var comment = result.data;
+          var panel = listEl.querySelector('[data-moment-comments="' + momentId2 + '"]');
+          if (panel) {
+            var p = comment.profiles || {};
+            var name = p.display_name || p.username || '读者';
+            var node = document.createElement('div');
+            node.className = 'moment-comment';
+            node.innerHTML = avatarHtml(p, 'mc-avatar', 'mc-avatar-fallback') +
+              '<div class="mcc-body"><span class="mcc-author">' + escapeHtml(name) + '</span> ' +
+              '<span class="mcc-text">' + escapeHtml(comment.content) + '</span>' +
+              '<div class="mcc-time">刚刚</div></div>';
+            panel.insertBefore(node, panel.querySelector('.moment-comment-input'));
+            panel.hidden = false;
+          }
+          var card = listEl.querySelector('[data-moment-id="' + momentId2 + '"]');
+          if (card) {
+            var toggle = card.querySelector('[data-moment-toggle-comments]');
+            var cc = toggle ? toggle.querySelector('.ma-count') : null;
+            if (cc) cc.textContent = (parseInt(cc.textContent, 10) || 0) + 1;
+          }
+          if (input) input.value = '';
         }).catch(function (error) {
           alert('评论失败：' + (error.message || error));
         }).finally(function () {
