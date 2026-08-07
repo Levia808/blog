@@ -58,6 +58,9 @@
     clearTimeout(userMenuCloseTimer);
     userMenuContainer.hidden = false;
     userDropdown.hidden = false;
+    window.requestAnimationFrame(function () {
+      userDropdown.classList.add('is-open');
+    });
     if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'true');
   }
 
@@ -65,7 +68,11 @@
     if (!userMenuContainer || !userDropdown) return;
     clearTimeout(userMenuCloseTimer);
     var sync = function () {
-      userDropdown.hidden = true;
+      userDropdown.classList.remove('is-open');
+      // 等待退出过渡(120ms)完成后再隐藏，期间可被打断重新打开
+      window.setTimeout(function () {
+        if (!userDropdown.classList.contains('is-open')) userDropdown.hidden = true;
+      }, 140);
       if (userMenuTrigger) userMenuTrigger.setAttribute('aria-expanded', 'false');
     };
     if (delay) userMenuCloseTimer = window.setTimeout(sync, delay);
@@ -231,7 +238,10 @@
       } else {
         navLoginBtn && (navLoginBtn.hidden = false);
         userMenuContainer && (userMenuContainer.hidden = true);
-        if (userDropdown) userDropdown.hidden = true;
+        if (userDropdown) {
+          userDropdown.classList.remove('is-open');
+          userDropdown.hidden = true;
+        }
         if (adminLink) adminLink.hidden = true;
       }
     });

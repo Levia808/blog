@@ -160,8 +160,8 @@
   .theme-toggle{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;transition:transform .15s,border-color .3s}
   .theme-toggle:hover{transform:rotate(15deg);border-color:var(--accent)}
   .dropdown{position:relative;display:inline-block}
-  .dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;z-index:50;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s}
-  .dropdown:hover .dropdown-menu,.dropdown-menu.open{opacity:1;visibility:visible;transform:translateY(0)}
+  .dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 0;z-index:50;opacity:0;visibility:hidden;transform:translateY(4px) scale(.98);transform-origin:top right;transition:opacity .12s ease-out,transform .12s ease-out,visibility 0s .12s}
+  .dropdown-menu.is-open{opacity:1;visibility:visible;transform:none;transition:opacity .15s ease-out,transform .25s ease-out,visibility 0s}
   .dropdown-menu a,.dropdown-menu button{display:block;width:100%;text-align:left;padding:8px 16px;font-size:12px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;transition:color .2s,transform .15s;font-family:"JetBrains Mono",monospace}
   .dropdown-menu a:hover,.dropdown-menu button:hover{color:var(--fg);transform:translateX(2px)}
   .dropdown-menu .dm-divider{height:1px;background:var(--border);margin:4px 0}
@@ -521,6 +521,7 @@
     </div>
   </div></div>
   <div class="box" style="margin-top:12px;"><span class="mono" style="color:var(--accent);">▶ scroll behavior</span><br><strong>position: sticky; top: 0</strong> · ↓下滑 &gt;60px → <span class="mono">translateY(-100%)</span> · ↑上滑 &gt;60px → <span class="mono">translateY(0)</span> · 250ms ease-out · rAF 节流</div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ menu-open · 可打断</span><br>头像悬停展开二级菜单：<span class="mono">translateY(4px) scale(.98) → 0/1</span> 进入 <strong>250ms</strong> ease-out（transform-origin: top right）；移出 <strong>120ms</strong> ease-out 快退，退出过渡期间重新进入立即反向（class 驱动 <span class="mono">is-open</span>，130ms 后才置 hidden）。头像 hover 动效与菜单展开动效可互相打断。</div>
 
   <!-- NAV MOBILE -->
   <h3 style="color:var(--muted);margin:28px 0 16px;text-transform:uppercase;letter-spacing:1px;font-size:12px;">▸ 导航栏 (Mobile ≤ 768px)</h3>

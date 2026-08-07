@@ -7,3 +7,9 @@
 {{- if and site.Params.comments (fileExists "static/js/comments.js") }}
 <script src="{{ "js/comments.js" | relURL }}"></script>
 {{- end }}
+{{- if and site.Params.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}
+<script src="{{ "js/profile.js" | relURL }}"></script>
+{{- end }}
+{{- if and site.Params.auth (eq .Layout "admin") (fileExists "static/js/admin.js") }}
+<script src="{{ "js/admin.js" | relURL }}"></script>
+{{- end }}

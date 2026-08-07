@@ -271,23 +271,34 @@
     }
   });
 
-  Auth.user().then(async function (user) {
-    if (!user) {
-      show(unauthorized);
-      return;
-    }
-    try {
-      adminProfile = await Admin.profile();
-      if (!adminProfile || adminProfile.role !== 'superadmin' || adminProfile.account_status !== 'active') {
+  function whenAuthReady(cb) {
+    if (window.Auth) { cb(); return; }
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries += 1;
+      if (window.Auth || tries > 30) { clearInterval(timer); cb(); }
+    }, 100);
+  }
+
+  whenAuthReady(function () {
+    Auth.user().then(async function (user) {
+      if (!user) {
         show(unauthorized);
         return;
       }
-      await loadDashboard();
-    } catch (error) {
-      showError(error.message);
-      show(content);
-    }
-  }).catch(function () {
-    show(unauthorized);
+      try {
+        adminProfile = await Admin.profile();
+        if (!adminProfile || adminProfile.role !== 'superadmin' || adminProfile.account_status !== 'active') {
+          show(unauthorized);
+          return;
+        }
+        await loadDashboard();
+      } catch (error) {
+        showError(error.message);
+        show(content);
+      }
+    }).catch(function () {
+      show(unauthorized);
+    });
   });
 })();

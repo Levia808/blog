@@ -108,11 +108,21 @@
   });
 
   // Init
-  Auth.user().then(function (user) {
-    if (user) {
-      loadProfile(user);
-    } else {
-      show(loggedOut);
-    }
+  function whenAuthReady(cb) {
+    if (window.Auth) { cb(); return; }
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries += 1;
+      if (window.Auth || tries > 30) { clearInterval(timer); cb(); }
+    }, 100);
+  }
+  whenAuthReady(function () {
+    Auth.user().then(function (user) {
+      if (user) {
+        loadProfile(user);
+      } else {
+        show(loggedOut);
+      }
+    });
   });
 })();

@@ -8,11 +8,11 @@ sitemap:
 
 <div class="admin-page" id="adminPage">
   <div id="adminLoading" class="page-state"><p>加载中…</p></div>
-  <div id="adminUnauthorized" class="page-state" hidden><h2>无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="auth-btn auth-btn-primary">返回首页</a></div>
+  <div id="adminUnauthorized" class="page-state" hidden><h2>无访问权限</h2><p>此页面仅管理员可访问。</p><a href="../" class="auth-btn auth-btn-primary">返回首页</a></div>
   <div id="adminContent" hidden>
     <div class="dashboard-heading">
       <div><p class="eyebrow">ADMIN / CONTROL</p><h2>管理后台</h2><p class="admin-subtitle" id="adminIdentity"></p></div>
-      <a href="{{ "admin-cms/" | relURL }}" class="auth-btn auth-btn-primary">写文章</a>
+      <a href="admin-cms/" class="auth-btn auth-btn-primary">写文章</a>
     </div>
 
     <section class="dashboard-stats" aria-label="运营统计">
@@ -25,7 +25,7 @@ sitemap:
     </section>
 
     <section class="dashboard-section">
-      <div class="admin-section-heading"><h3>内容</h3><a href="{{ "admin-cms/" | relURL }}" class="admin-inline-link">打开文章编辑器 →</a></div>
+      <div class="admin-section-heading"><h3>内容</h3><a href="admin-cms/" class="admin-inline-link">打开文章编辑器 →</a></div>
       <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>路径</th><th>状态</th><th>更新时间</th></tr></thead><tbody id="adminContentTable"></tbody></table></div>
     </section>
 
@@ -50,4 +50,3 @@ sitemap:
     <div class="auth-error" id="adminError" hidden></div>
   </div>
 </div>
-<script src="{{ "js/admin.js" | relURL }}"></script>

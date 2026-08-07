@@ -266,10 +266,13 @@ html.js [data-reveal].reveal-visible {
 .nf-avatar:hover .nf-avatar-img, .nf-avatar:focus-visible .nf-avatar-img { transform: scale(1.18); }
 .nf-avatar:not(:hover):not(:focus-visible) .nf-avatar-img { transition-duration: 120ms; }
 /* 菜单展开时保持激活态 */
-.dropdown:has(.dropdown-menu:not([hidden])) .nf-avatar { border-color: var(--accent); }
-.dropdown:has(.dropdown-menu:not([hidden])) .nf-avatar::after { transform: scale(1); }
+.dropdown:has(.dropdown-menu.is-open) .nf-avatar { border-color: var(--accent); }
+.dropdown:has(.dropdown-menu.is-open) .nf-avatar::after { transform: scale(1); }
 
 .dropdown { position: relative; }
+/* 二级菜单 — 可打断展开动效
+   进入: 250ms ease-out (translateY+scale 慢进) · 移出: 120ms ease-out 快退
+   is-open 由 auth-ui.js 驱动，任意时刻移出均从当前帧平滑反向 */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -280,6 +283,17 @@ html.js [data-reveal].reveal-visible {
   border-radius: 6px;
   padding: 4px 0;
   z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px) scale(0.98);
+  transform-origin: top right;
+  transition: opacity var(--dur-fast) ease-out, transform var(--dur-fast) ease-out, visibility 0s linear var(--dur-fast);
+}
+.dropdown-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition: opacity 150ms ease-out, transform 250ms ease-out, visibility 0s linear;
 }
 .dropdown-menu a, .dropdown-menu button {
   display: block;
