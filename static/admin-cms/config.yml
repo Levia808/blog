@@ -43,6 +43,7 @@ collections:
         name: date
         widget: datetime
         required: true
+        format: YYYY-MM-DDTHH:mm:ssZ
       - label: 发布状态
         name: draft
         widget: boolean
