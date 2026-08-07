@@ -38,26 +38,230 @@
     }
   }
 
-  function renderStats(stats, mediaCount) {
-    document.getElementById('adminUserCount').textContent = stats.totalUsers;
-    document.getElementById('adminActiveUserCount').textContent = stats.activeUsers;
-    document.getElementById('adminCommentCount').textContent = stats.totalComments;
-    document.getElementById('adminPendingCommentCount').textContent = stats.pendingComments;
-    document.getElementById('adminReportCount').textContent = stats.openReports;
-    document.getElementById('adminMediaCount').textContent = mediaCount;
+  /* ── 面板切换 ── */
+  var sections = ['dashboard', 'posts', 'comments', 'users', 'media', 'settings'];
+
+  function switchSection(name) {
+    sections.forEach(function (section) {
+      var panel = document.querySelector('[data-admin-panel="' + section + '"]');
+      if (panel) panel.hidden = section !== name;
+      var link = document.querySelector('[data-admin-section="' + section + '"]');
+      if (link) link.classList.toggle('active', section === name);
+    });
   }
 
-  function renderContent(items) {
-    var table = document.getElementById('adminContentTable');
-    if (!items.length) {
-      table.innerHTML = '<tr><td colspan="4" class="admin-empty">暂无内容记录。文章通过编辑器写入 Hugo 仓库后，可在这里登记审核状态。</td></tr>';
+  document.querySelectorAll('[data-admin-section]').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      switchSection(link.dataset.adminSection);
+    });
+  });
+
+  /* ── 统计 (设计稿 4 卡) ── */
+  function renderStats(stats) {
+    document.getElementById('adminPostCount').textContent = stats.posts;
+    document.getElementById('adminCommentCount').textContent = stats.comments;
+    document.getElementById('adminUserCount').textContent = stats.users;
+    document.getElementById('adminPendingCommentCount').textContent = stats.pending;
+  }
+
+  async function loadStats() {
+    var stats = await Admin.getStats();
+    renderStats({
+      posts: stats.publishedContent,
+      comments: stats.totalComments,
+      users: stats.totalUsers,
+      pending: stats.pendingComments
+    });
+  }
+
+  /* ── GitHub 发布模块 ── */
+  var GH_REPO = 'Levia808/blog';
+  var GH_OAUTH_URL = 'https://sveltia-cms-auth.18013013170.workers.dev';
+  var ghToken = null;
+  var ghPostsCache = [];
+
+  function getGhToken() {
+    if (ghToken) return ghToken;
+    try { ghToken = window.localStorage.getItem('blog_gh_publish_token') || null; } catch (e) {}
+    return ghToken;
+  }
+
+  function base64Encode(str) {
+    var bytes = new TextEncoder().encode(str);
+    var binary = '';
+    bytes.forEach(function (b) { binary += String.fromCharCode(b); });
+    return btoa(binary);
+  }
+
+  function ghFetch(path, options) {
+    options = options || {};
+    options.headers = Object.assign({
+      Authorization: 'Bearer ' + getGhToken(),
+      Accept: 'application/vnd.github+json'
+    }, options.headers || {});
+    return fetch('https://api.github.com' + path, options).then(function (res) {
+      if (!res.ok) {
+        return res.json().then(function (data) {
+          throw new Error(data.message || ('GitHub API ' + res.status));
+        });
+      }
+      return res.json();
+    });
+  }
+
+  function parseFrontMatter(text) {
+    var meta = { title: '', draft: true, date: '' };
+    var m = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!m) return meta;
+    m[1].split(/\r?\n/).forEach(function (line) {
+      var kv = line.match(/^([A-Za-z_]+):\s*(.*)$/);
+      if (!kv) return;
+      var key = kv[1];
+      var value = kv[2].trim();
+      if (key === 'title') meta.title = value.replace(/^['"]|['"]$/g, '');
+      else if (key === 'draft') meta.draft = value !== 'false';
+      else if (key === 'date') meta.date = value.replace(/^['"]|['"]$/g, '');
+    });
+    return meta;
+  }
+
+  function setDraft(text, draft) {
+    var flag = draft ? 'true' : 'false';
+    if (/^draft:\s*true\s*$/m.test(text)) {
+      return text.replace(/^draft:\s*true\s*$/m, 'draft: ' + flag);
+    }
+    if (/^draft:\s*false\s*$/m.test(text)) {
+      return text.replace(/^draft:\s*false\s*$/m, 'draft: ' + flag);
+    }
+    return text.replace(/^---\r?\n/, '---\ndraft: ' + flag + '\n');
+  }
+
+  async function loadGhPosts() {
+    var files = await ghFetch('/repos/' + GH_REPO + '/contents/content/posts');
+    if (!Array.isArray(files)) files = [];
+    var posts = [];
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (!/\.md$/.test(file.name)) continue;
+      try {
+        var raw = await fetch(file.download_url).then(function (r) { return r.text(); });
+        var meta = parseFrontMatter(raw);
+        posts.push({ name: file.name, sha: file.sha, title: meta.title || file.name, draft: meta.draft, date: meta.date });
+      } catch (e) {
+        posts.push({ name: file.name, sha: file.sha, title: file.name, draft: true, date: '' });
+      }
+    }
+    posts.sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+    ghPostsCache = posts;
+    return posts;
+  }
+
+  function renderPostRows(posts, tableId, showActions) {
+    var table = document.getElementById(tableId);
+    if (!posts.length) {
+      table.innerHTML = '<tr><td colspan="4" class="admin-empty">暂无文章。点击 + New Post 创建。</td></tr>';
       return;
     }
-    table.innerHTML = items.map(function (item) {
-      return '<tr><td>' + escapeHtml(item.title) + '</td><td><code>' + escapeHtml(item.post_path) + '</code></td><td><span class="admin-status admin-status-' + escapeHtml(item.status) + '">' + escapeHtml(item.status) + '</span></td><td>' + formatDate(item.updated_at) + '</td></tr>';
+    table.innerHTML = posts.map(function (post) {
+      var status = post.draft
+        ? '<span class="admin-status"><span class="status-dot status-draft"></span>draft</span>'
+        : '<span class="admin-status"><span class="status-dot status-published"></span>published</span>';
+      var date = post.date ? post.date.slice(0, 10) : '—';
+      var actions = showActions
+        ? '<div class="admin-action-group">' +
+          (post.draft
+            ? '<button type="button" class="admin-row-action is-primary" data-post-publish="' + escapeHtml(post.name) + '">发布</button>'
+            : '<button type="button" class="admin-row-action" data-post-draft="' + escapeHtml(post.name) + '">转草稿</button>') +
+          '<a class="admin-row-action" href="admin-cms/">编辑</a>' +
+          '</div>'
+        : '';
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(post.title) + '</strong><br><code>' + escapeHtml(post.name) + '</code></td>' +
+        '<td>' + status + '</td>' +
+        '<td>' + date + '</td>' +
+        (showActions ? '<td>' + actions + '</td>' : '') +
+        '</tr>';
     }).join('');
   }
 
+  async function refreshPosts() {
+    var posts = await loadGhPosts();
+    renderPostRows(posts.slice(0, 8), 'adminPostTable', false);
+    document.getElementById('adminPostHint').textContent = 'showing ' + Math.min(8, posts.length) + ' of ' + posts.length + ' posts';
+    renderPostRows(posts, 'adminPublishTable', true);
+    document.getElementById('adminPublishHint').textContent = 'showing ' + posts.length + ' of ' + posts.length + ' posts';
+  }
+
+  async function setPostPublished(name, published) {
+    var post = ghPostsCache.find(function (p) { return p.name === name; });
+    if (!post) throw new Error('未找到文章 ' + name);
+    var raw = await fetch('https://raw.githubusercontent.com/' + GH_REPO + '/main/content/posts/' + encodeURIComponent(name))
+      .then(function (r) { return r.text(); });
+    var updated = setDraft(raw, !published);
+    var path = 'content/posts/' + name;
+    var message = published ? 'publish: ' + post.title : 'draft: ' + post.title;
+    await ghFetch('/repos/' + GH_REPO + '/contents/' + path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message, content: base64Encode(updated), sha: post.sha })
+    });
+    await refreshPosts();
+  }
+
+  function updateGhAuthStatus() {
+    var authorized = Boolean(getGhToken());
+    var statusEl = document.getElementById('ghAuthStatus');
+    if (statusEl) statusEl.textContent = authorized ? '已授权' : '未授权';
+    var authBtn = document.getElementById('ghAuthBtn');
+    if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权发布';
+    if (authorized) {
+      refreshPosts().catch(function (error) { showError(error.message); });
+    }
+  }
+
+  function authorizeGitHub() {
+    var state = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    var url = GH_OAUTH_URL + '/auth?provider=github&scope=repo&state=' + state;
+    var popup = window.open(url, 'sveltia_oauth', 'width=560,height=720');
+    if (!popup) {
+      showError('浏览器拦截了授权窗口，请允许弹出窗口后重试。');
+      return;
+    }
+    window.__ghAuthResolve = function (token) {
+      try { window.localStorage.setItem('blog_gh_publish_token', token); } catch (e) {}
+      ghToken = token;
+      updateGhAuthStatus();
+    };
+  }
+
+  window.addEventListener('message', function (event) {
+    if (typeof event.data !== 'string' || !event.data.startsWith('authorizing:github')) return;
+    event.source.postMessage('authorizing:github', event.origin);
+  });
+
+  window.addEventListener('message', function (event) {
+    if (typeof event.data !== 'string' || !event.data.startsWith('authorization:github:')) return;
+    var parts = event.data.split(':');
+    var state = parts[2];
+    var payload = event.data.slice(event.data.indexOf('{'));
+    try {
+      var data = JSON.parse(payload);
+      if (state === 'success' && data.token) {
+        window.__ghAuthResolve && window.__ghAuthResolve(data.token);
+        showError('');
+      } else if (data.error) {
+        showError(data.error);
+      }
+    } catch (e) {}
+  });
+
+  var ghAuthBtn = document.getElementById('ghAuthBtn');
+  if (ghAuthBtn) ghAuthBtn.addEventListener('click', authorizeGitHub);
+  var ghAuthBtn2 = document.getElementById('ghAuthBtn2');
+  if (ghAuthBtn2) ghAuthBtn2.addEventListener('click', authorizeGitHub);
+
+  /* ── 用户 / 评论 / 媒体 ── */
   function renderUsers(users) {
     var table = document.getElementById('adminUserTable');
     if (!users.length) {
@@ -80,7 +284,7 @@
         }).join('') + '</select>';
       return '<tr>' +
         '<td>' + (avatar ? '<img class="admin-avatar" src="' + escapeHtml(avatar) + '" alt="" loading="lazy">' : '—') + '</td>' +
-        '<td><strong>' + escapeHtml(name) + '</strong><small>' + escapeHtml(user.username || '') + '</small></td>' +
+        '<td><strong>' + escapeHtml(name) + '</strong><br><code>' + escapeHtml(user.username || '') + '</code></td>' +
         '<td>' + escapeHtml(user.email || '—') + '</td>' +
         '<td>' + roleControl + '</td><td>' + statusControl + '</td>' +
         '<td><button type="button" class="admin-row-action" data-user-save="' + escapeHtml(user.id) + '">保存</button></td>' +
@@ -98,13 +302,13 @@
       var author = comment.display_name || comment.username || '读者';
       var excerpt = String(comment.content || '').slice(0, 140);
       return '<tr>' +
-        '<td class="admin-comment-cell">' + escapeHtml(excerpt) + '</td>' +
+        '<td>' + escapeHtml(excerpt) + '</td>' +
         '<td><code>' + escapeHtml(comment.post_path) + '</code></td>' +
         '<td>' + escapeHtml(author) + '</td>' +
         '<td><span class="admin-status admin-status-' + escapeHtml(comment.moderation_status) + '">' + escapeHtml(comment.moderation_status) + '</span></td>' +
         '<td>' + formatDate(comment.created_at) + '</td>' +
         '<td><div class="admin-action-group">' +
-          '<button type="button" class="admin-row-action" data-comment-action="approved" data-comment-id="' + comment.id + '">通过</button>' +
+          '<button type="button" class="admin-row-action is-primary" data-comment-action="approved" data-comment-id="' + comment.id + '">通过</button>' +
           '<button type="button" class="admin-row-action is-danger" data-comment-action="hidden" data-comment-id="' + comment.id + '">隐藏</button>' +
           '<button type="button" class="admin-row-action is-danger" data-comment-action="rejected" data-comment-id="' + comment.id + '">拒绝</button>' +
         '</div></td>' +
@@ -154,22 +358,15 @@
     var results = await Promise.all([
       Admin.getStats().catch(function (error) { showError(error.message); return null; }),
       Admin.getAllUsers().catch(function (error) { showError(error.message); return []; }),
-      Admin.getContent().catch(function (error) { showError(error.message); return []; }),
       Admin.getComments().catch(function (error) { showError(error.message); return []; }),
       Admin.getMedia().catch(function (error) { showError(error.message); return []; })
     ]);
-    renderStats(results[0] || {
-      totalUsers: '—',
-      activeUsers: '—',
-      totalComments: '—',
-      pendingComments: '—',
-      openReports: '—'
-    }, results[4].length);
+    renderStats(results[0] || { posts: '—', comments: '—', users: '—', pending: '—' });
     renderUsers(results[1]);
-    renderContent(results[2]);
-    renderComments(results[3]);
-    renderMedia(results[4]);
-    document.getElementById('adminIdentity').textContent = (adminProfile.display_name || adminProfile.username || '管理员') + ' · ' + adminProfile.role;
+    renderComments(results[2]);
+    renderMedia(results[3]);
+    document.getElementById('adminIdentity').textContent =
+      (adminProfile.display_name || adminProfile.username || '管理员') + ' · ' + adminProfile.role;
     show(content);
   }
 
@@ -188,14 +385,40 @@
     var refresh = event.target.closest('[data-admin-refresh]');
     if (refresh) {
       try {
+        if (refresh.dataset.adminRefresh === 'stats') await loadStats();
         if (refresh.dataset.adminRefresh === 'users') await loadUsers();
         if (refresh.dataset.adminRefresh === 'comments') await loadComments();
         if (refresh.dataset.adminRefresh === 'media') {
           var count = await loadMedia();
-          document.getElementById('adminMediaCount').textContent = count;
         }
       } catch (error) {
         showError(error.message);
+      }
+      return;
+    }
+
+    var publishBtn = event.target.closest('[data-post-publish]');
+    if (publishBtn) {
+      try {
+        publishBtn.disabled = true;
+        await setPostPublished(publishBtn.dataset.postPublish, true);
+      } catch (error) {
+        showError(error.message || '发布失败，请确认已授权 GitHub。');
+      } finally {
+        publishBtn.disabled = false;
+      }
+      return;
+    }
+
+    var draftBtn = event.target.closest('[data-post-draft]');
+    if (draftBtn) {
+      try {
+        draftBtn.disabled = true;
+        await setPostPublished(draftBtn.dataset.postDraft, false);
+      } catch (error) {
+        showError(error.message || '操作失败。');
+      } finally {
+        draftBtn.disabled = false;
       }
       return;
     }
@@ -239,8 +462,6 @@
         deleteMedia.disabled = true;
         await Admin.deleteMedia(deleteMedia.dataset.mediaDelete);
         await loadMedia();
-        var count = await Admin.getMedia();
-        document.getElementById('adminMediaCount').textContent = count.length;
       } catch (error) {
         showError(error.message);
       }
@@ -261,8 +482,7 @@
       uploadButton.textContent = '上传中…';
       await Admin.uploadMedia(file);
       input.value = '';
-      var count = await loadMedia();
-      document.getElementById('adminMediaCount').textContent = count;
+      await loadMedia();
     } catch (error) {
       showError(error.message, 'adminMediaError');
     } finally {
@@ -293,6 +513,7 @@
           return;
         }
         await loadDashboard();
+        updateGhAuthStatus();
       } catch (error) {
         showError(error.message);
         show(content);
