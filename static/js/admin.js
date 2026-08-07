@@ -100,7 +100,7 @@
   async function loadStats() {
     var stats = await Admin.getStats();
     renderStats({
-      posts: stats.publishedContent,
+      posts: document.getElementById('adminPostCount').textContent,
       comments: stats.totalComments,
       users: stats.totalUsers,
       pending: stats.pendingComments
@@ -245,6 +245,8 @@
     if (!getGhToken()) {
       var hint = document.getElementById('adminPublishHint');
       var note = document.getElementById('ghPublishNote');
+      var postCountEl = document.getElementById('adminPostCount');
+      if (postCountEl) postCountEl.textContent = '—';
       renderPostRows([], 'adminPostTable', true);
       renderPostRows([], 'adminPublishTable', true);
       if (hint) hint.textContent = '';
@@ -252,6 +254,8 @@
       return;
     }
     var posts = await loadGhPosts();
+    var postCountEl = document.getElementById('adminPostCount');
+    if (postCountEl) postCountEl.textContent = posts.length;
     renderPostRows(posts.slice(0, 8), 'adminPostTable', true);
     document.getElementById('adminPostHint').textContent = '共 ' + posts.length + ' 篇文章 · 显示最近 ' + Math.min(8, posts.length) + ' 篇';
     renderPostRows(posts, 'adminPublishTable', true);
@@ -408,6 +412,15 @@
     }).join('');
   }
 
+  function guessMime(name) {
+    var ext = String(name).split('.').pop().toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image/' + (ext === 'jpg' ? 'jpeg' : ext);
+    if (ext === 'mp4') return 'video/mp4';
+    if (ext === 'webm') return 'video/webm';
+    if (['mp3', 'm4a', 'wav', 'ogg'].includes(ext)) return 'audio/' + ext;
+    return 'application/octet-stream';
+  }
+
   function renderMedia(assets) {
     var grid = document.getElementById('adminMediaGrid');
     if (!assets.length) {
@@ -415,23 +428,48 @@
       return;
     }
     grid.innerHTML = assets.map(function (asset) {
+      var mime = asset.mime_type || guessMime(asset.file_name || asset.name || '');
+      var url = asset.public_url || asset.url || '';
+      var size = asset.size_bytes != null ? asset.size_bytes : (asset.size != null ? asset.size : 0);
       var preview;
       var embedBtn = '';
-      if (/^image\//i.test(asset.mime_type)) {
-        preview = '<img src="' + escapeHtml(asset.public_url) + '" alt="' + escapeHtml(asset.file_name) + '" loading="lazy">';
-      } else if (/^video\//i.test(asset.mime_type)) {
-        preview = '<video src="' + escapeHtml(asset.public_url) + '" controls preload="metadata"></video>';
-        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="video" data-url="' + escapeHtml(asset.public_url) + '">复制视频代码</button>';
-      } else {
+      if (/^image\//i.test(mime)) {
+        preview = '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(asset.file_name || asset.name) + '" loading="lazy">';
+      } else if (/^video\//i.test(mime)) {
+        preview = '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="video" data-url="' + escapeHtml(url) + '">复制视频代码</button>';
+      } else if (/^audio\//i.test(mime)) {
         preview = '<div class="admin-media-audio">AUDIO</div>';
-        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="audio" data-url="' + escapeHtml(asset.public_url) + '">复制音频代码</button>';
+        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="audio" data-url="' + escapeHtml(url) + '">复制音频代码</button>';
+      } else {
+        preview = '<div class="admin-media-audio">FILE</div>';
       }
+      var delBtn = asset.source === 'github'
+        ? '<button type="button" class="admin-row-action is-danger" data-gh-media-delete="' + escapeHtml(asset.name) + '" data-gh-sha="' + escapeHtml(asset.sha) + '" data-gh-path="' + escapeHtml(asset.gh_path) + '">删除</button>'
+        : '<button type="button" class="admin-row-action is-danger" data-media-delete="' + escapeHtml(asset.id) + '">删除</button>';
+      var sourceTag = asset.source === 'github' ? ' · 仓库' : '';
       return '<article class="admin-media-item">' + preview +
-        '<div class="admin-media-meta"><strong title="' + escapeHtml(asset.file_name) + '">' + escapeHtml(asset.file_name) + '</strong>' +
-        '<small>' + escapeHtml(asset.mime_type) + ' · ' + Math.ceil(asset.size_bytes / 1024) + ' KB</small>' +
+        '<div class="admin-media-meta"><strong title="' + escapeHtml(asset.file_name || asset.name) + '">' + escapeHtml(asset.file_name || asset.name) + '</strong>' +
+        '<small>' + escapeHtml(mime) + ' · ' + Math.ceil(size / 1024) + ' KB' + sourceTag + '</small>' +
         '<div class="admin-action-group">' + embedBtn +
-        '<a class="admin-row-action" href="' + escapeHtml(asset.public_url) + '" target="_blank" rel="noopener">打开</a><button type="button" class="admin-row-action is-danger" data-media-delete="' + escapeHtml(asset.id) + '">删除</button></div></div></article>';
+        '<a class="admin-row-action" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">打开</a>' + delBtn + '</div></div></article>';
     }).join('');
+  }
+
+  async function loadGhMedia() {
+    if (!getGhToken()) return [];
+    var files = [];
+    try {
+      for (var dir of ['assets/images', 'static/images']) {
+        var list = await ghFetch('/repos/' + GH_REPO + '/contents/' + dir);
+        if (!Array.isArray(list)) continue;
+        list.forEach(function (f) {
+          if (f.type !== 'file') return;
+          files.push({ name: f.name, sha: f.sha, size: f.size, url: '/' + dir + '/' + encodeURIComponent(f.name), source: 'github', gh_path: dir + '/' + f.name });
+        });
+      }
+    } catch (e) { /* 目录不存在或未授权时忽略 */ }
+    return files;
   }
 
   async function loadUsers() {
@@ -444,7 +482,11 @@
   }
 
   async function loadMedia() {
-    var assets = await Admin.getMedia();
+    var results = await Promise.all([
+      Admin.getMedia().catch(function () { return []; }),
+      loadGhMedia()
+    ]);
+    var assets = results[0].concat(results[1]);
     renderMedia(assets);
     return assets.length;
   }
@@ -628,6 +670,26 @@
         });
       } else {
         window.prompt('复制以下代码到文章正文：', code);
+      }
+      return;
+    }
+
+    var ghDeleteMedia = event.target.closest('[data-gh-media-delete]');
+    if (ghDeleteMedia) {
+      if (!window.confirm('确认删除仓库文件「' + ghDeleteMedia.dataset.ghMediaDelete + '」？此操作会提交删除，不可恢复。')) return;
+      try {
+        ghDeleteMedia.disabled = true;
+        await ghFetch('/repos/' + GH_REPO + '/contents/' + ghDeleteMedia.dataset.ghPath, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '删除媒体: ' + ghDeleteMedia.dataset.ghMediaDelete, sha: ghDeleteMedia.dataset.ghSha })
+        });
+        showToast('已删除：' + ghDeleteMedia.dataset.ghMediaDelete, 'success');
+        await loadMedia();
+      } catch (error) {
+        showError(error.message || '删除失败。');
+      } finally {
+        ghDeleteMedia.disabled = false;
       }
       return;
     }
