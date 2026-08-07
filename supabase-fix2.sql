@@ -1,5 +1,6 @@
 -- ============================================================
 -- supabase-fix2.sql · 修复管理面板 structure of query 报错
+-- 更新: admin_list_users email 类型转换 (auth.users.email 为 varchar(255))
 -- 幂等可重复执行。运行后: 重新登录站点 → 打开管理面板
 -- ============================================================
 
@@ -250,7 +251,7 @@ BEGIN
     RAISE EXCEPTION 'Administrator access required' USING ERRCODE = '42501';
   END IF;
   RETURN QUERY
-  SELECT p.id, u.email, p.username, p.display_name, p.avatar_url,
+  SELECT p.id, u.email::TEXT, p.username, p.display_name, p.avatar_url,
          p.github_username, p.role, p.account_status, p.created_at, u.last_sign_in_at
   FROM public.profiles p
   LEFT JOIN auth.users u ON u.id = p.id

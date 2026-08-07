@@ -622,7 +622,7 @@ BEGIN
     RAISE EXCEPTION 'Administrator access required' USING ERRCODE = '42501';
   END IF;
   RETURN QUERY
-  SELECT p.id, u.email, p.username, p.display_name, p.avatar_url,
+  SELECT p.id, u.email::TEXT, p.username, p.display_name, p.avatar_url,
          p.github_username, p.role, p.account_status, p.created_at, u.last_sign_in_at
   FROM public.profiles p
   LEFT JOIN auth.users u ON u.id = p.id
