@@ -200,7 +200,9 @@
         ? '<span class="admin-status"><span class="status-dot status-draft"></span>草稿</span>'
         : '<span class="admin-status"><span class="status-dot status-published"></span>已发布</span>';
       var date = post.date ? post.date.slice(0, 10) : '—';
-      var cmsEntry = 'admin-cms/#/collections/posts/entries/' + encodeURIComponent(post.name.replace(/\.md$/, ''));
+      var cmsBaseEl = document.getElementById('cmsNewPost');
+      var cmsBase = cmsBaseEl ? cmsBaseEl.getAttribute('href') : 'admin-cms/';
+      var cmsEntry = cmsBase + '#/collections/posts/entries/' + encodeURIComponent(post.name.replace(/\.md$/, ''));
       var actions = showActions
         ? '<div class="admin-action-group">' +
           (post.draft
