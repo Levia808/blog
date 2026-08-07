@@ -33,6 +33,19 @@
     }).join('');
   }
 
+  var noticeTimer = null;
+  function flashNotice(text) {
+    hintEl.hidden = false;
+    hintEl.textContent = text;
+    hintEl.style.color = 'var(--danger)';
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(function () {
+      hintEl.hidden = true;
+      hintEl.textContent = '';
+      hintEl.style.color = '';
+    }, 3000);
+  }
+
   /* ── 开源动画: Anime.js 点赞 heart-burst + 粒子迸发 (Twitter 风格) ── */
   function likeBurst(btn) {
     if (!window.anime) return;
@@ -311,7 +324,7 @@
         likeBtn.classList.toggle('is-liked', liked);
         if (labelNode) labelNode.textContent = liked ? '已赞 ' : '点赞 ';
         if (countEl) countEl.textContent = count;
-        alert('操作失败：' + (error.message || error));
+        flashNotice('点赞失败：' + (error.message || error));
       }).finally(function () {
         likeBtn.disabled = false;
       });
@@ -365,7 +378,7 @@
           }
           if (input) input.value = '';
         }).catch(function (error) {
-          alert('评论失败：' + (error.message || error));
+          flashNotice('评论失败：' + (error.message || error));
         }).finally(function () {
           submitBtn.disabled = false;
         });

@@ -69,7 +69,7 @@ CREATE POLICY moment_comments_delete ON public.moment_comments FOR DELETE USING 
 GRANT SELECT ON public.moments TO anon, authenticated;
 GRANT INSERT, DELETE ON public.moments TO authenticated;
 GRANT SELECT ON public.moment_likes TO anon, authenticated;
-GRANT INSERT, DELETE ON public.moment_likes TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.moment_likes TO authenticated;
 GRANT SELECT ON public.moment_comments TO anon, authenticated;
 GRANT INSERT, DELETE ON public.moment_comments TO authenticated;
 
