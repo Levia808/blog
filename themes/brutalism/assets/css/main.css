@@ -567,7 +567,7 @@ html.js [data-reveal].reveal-visible {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center;
+  background-position: bottom center;
   background-repeat: no-repeat;
   opacity: 0.18;
   z-index: 0;
