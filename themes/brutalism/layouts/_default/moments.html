@@ -1,0 +1,33 @@
+{{- define "main" }}
+<section class="container moments-page">
+  <header class="list-header" data-reveal>
+    <div class="label">MOMENTS</div>
+    <h1 class="list-title">动态</h1>
+    <p class="mono list-count">分享生活与技术 · 支持图片 / 视频 / 评论 / 点赞</p>
+  </header>
+
+  <div class="moments-wrap" data-reveal>
+    <div class="moments-composer" id="momentsComposer" hidden>
+      <div class="mc-head">
+        <span class="mono mc-label">[ NEW MOMENT ]</span>
+        <button type="button" class="btn" id="mcCancelBtn">取消</button>
+      </div>
+      <textarea id="mcInput" rows="3" maxlength="2000" placeholder="分享此刻…（支持 Markdown）" aria-label="动态内容"></textarea>
+      <div class="mc-media-list" id="mcMediaList"></div>
+      <div class="mc-actions">
+        <label class="btn" style="cursor:pointer;">+ 添加图片 / 视频<input type="file" id="mcFileInput" accept="image/*,video/*" multiple hidden></label>
+        <button type="button" class="btn btn-primary" id="mcPublishBtn">发布</button>
+      </div>
+      <p class="auth-error" id="mcError" hidden></p>
+    </div>
+
+    <div class="moments-login-wall" id="momentsLoginWall">
+      <p>登录后发布动态、点赞与评论。</p>
+      <button type="button" class="comments-button comments-button-primary" data-moment-login>登录</button>
+    </div>
+
+    <div class="moments-list" id="momentsList" aria-live="polite"></div>
+    <div class="hint" id="momentsHint" style="text-align:center;"></div>
+  </div>
+</section>
+{{- end }}

@@ -52,6 +52,9 @@ params:
 
 menu:
   main:
+    - name: 动态
+      url: moments/
+      weight: 5
     - name: 归档
       url: archives/
       weight: 10

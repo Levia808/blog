@@ -9,6 +9,9 @@
 {{- if and site.Params.comments (not (eq .Layout "admin")) (fileExists "static/js/comments.js") }}
 <script src="{{ "js/comments.js" | relURL }}"></script>
 {{- end }}
+{{- if and site.Params.auth (eq .Layout "moments") (fileExists "static/js/moments.js") }}
+<script src="{{ "js/moments.js" | relURL }}"></script>
+{{- end }}
 {{- if and site.Params.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}
 <script src="{{ "js/profile.js" | relURL }}"></script>
 {{- end }}
