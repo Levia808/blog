@@ -2,10 +2,10 @@
 {{- $showToc := and (default site.Params.ShowToc .Params.ShowToc) .TableOfContents }}
 {{- $tocHTML := .TableOfContents }}
 {{- $bg := "" }}
-{{- if .Params.background }}
-{{- with resources.Get (printf "images/%s" (path.Base .Params.background)) }}
-{{- $bg = .Resize "2560x q80" }}
-{{- end }}
+{{- $bgRel := strings.TrimPrefix "/" .Params.background }}
+{{- $bgRes := resources.Get $bgRel }}
+{{- if $bgRes }}
+{{- $bg = $bgRes.Resize "2560x q80" }}
 {{- end }}
 <article class="container article-page">
   <div class="article-layout">

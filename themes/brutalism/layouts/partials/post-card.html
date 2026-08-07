@@ -1,29 +1,29 @@
 {{- $cover := .Params.cover.image }}
 {{- $glyph := substr (.Title | plainify) 0 1 }}
-{{- $thumb := "" }}
+{{- $img := "" }}
+{{- $isStatic := false }}
 {{- if $cover }}
-{{- with resources.Get (printf "images/%s" (path.Base $cover)) }}
-{{- $thumb = .Resize "320x q80" }}
+{{- $rel := strings.TrimPrefix "/" $cover }}
+{{- $res := resources.Get $rel }}
+{{- if $res }}
+{{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $rel | lower) }}
+{{- $img = $res.Resize "320x q80" }}
+{{- else }}
+{{- $img = $res }}
+{{- end }}
+{{- else if fileExists (printf "static/%s" $rel) }}
+{{- $isStatic = true }}
+{{- $img = printf "/%s" $rel }}
 {{- end }}
 {{- end }}
 <article class="post-card-cover" data-reveal>
   <a class="pc-link" href="{{ .RelPermalink }}">
     <div class="pc-img">
-      {{- if $thumb }}
-      <img src="{{ $thumb.RelPermalink }}" alt="{{ .Title }} 封面" loading="lazy">
+      {{- if $img }}
+      <img src="{{ if $isStatic }}{{ $img }}{{ else }}{{ $img.RelPermalink }}{{ end }}" alt="{{ .Title }} 封面" loading="lazy">
       {{- else if $cover }}
       <img src="{{ $cover | relURL }}" alt="{{ .Title }} 封面" loading="lazy">
       {{- else }}
       <span class="pc-img-placeholder" aria-hidden="true">{{ $glyph }}</span>
       {{- end }}
     </div>
-    <div class="pc-body">
-      <div class="pc-date">{{ .Date.Format "2006 · 01 · 02" }}</div>
-      <h3 class="pc-title">{{ .Title }}</h3>
-      <p class="pc-excerpt">{{ .Summary | plainify | truncate 96 }}</p>
-      {{- with .Params.tags }}
-      <div class="pc-tags">{{ range . }}<span class="pc-tag">{{ . }}</span>{{ end }}</div>
-      {{- end }}
-    </div>
-  </a>
-</article>
