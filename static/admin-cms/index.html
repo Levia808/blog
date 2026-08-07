@@ -4,13 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>文章编辑器 - 我的博客</title>
+  <title>文章编辑器 - Levia's blog</title>
   <style>
     html, body { margin: 0; min-height: 100%; font-family: system-ui, sans-serif; }
     .cms-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; color: #18211d; background: #eef1ed; }
     .cms-gate[hidden] { display: none; }
-    .cms-gate-card { max-width: 420px; padding: 28px; border: 1px solid #cbd5ce; background: #fff; }
+    .cms-gate-card { max-width: 460px; padding: 28px; border: 1px solid #cbd5ce; background: #fff; }
     .cms-gate-card a { color: inherit; }
+    .cms-gate-card ol { padding-left: 20px; font-size: 13px; line-height: 1.8; color: #33413a; }
+    .cms-gate-card code { background: #eef1ed; padding: 1px 6px; border-radius: 3px; font-size: 12px; }
   </style>
 </head>
 <body>
@@ -30,13 +32,12 @@
       try {
         var allowed = await window.Admin.isAdmin();
         if (!allowed) {
-          message.textContent = '此编辑器仅对管理员开放。';
+          message.innerHTML = '此编辑器仅对管理员开放。请确认：<ol><li>已用 GitHub 账号登录本站（右上角头像）</li><li>该账号为 SUPERADMIN（个人主页可查看角色徽章）</li></ol>';
           back.hidden = false;
           return;
         }
         document.getElementById('cmsGate').hidden = true;
         var cms = document.createElement('script');
-        cms.type = 'module';
         cms.src = 'https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js';
         document.head.appendChild(cms);
       } catch (error) {

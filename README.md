@@ -192,9 +192,9 @@ git push
 | 配置项 | 值 |
 |--------|---|
 | 入口 | `/admin/` |
-| 认证 | GitHub OAuth |
-| Client ID | `Ov23lixCL7W5rvZ3DKFB` |
-| Callback | `https://api.sveltia-cms.auth.amplify.aws/callback` |
+| 认证 | GitHub 个人访问令牌 (PAT) — 登录页点 "Sign in with Token" |
+| Token 权限 | `repo`（仓库读写） |
+| 一键登录 | 可选：部署 [Sveltia CMS Authenticator](https://github.com/sveltia/sveltia-cms-auth) 到 Cloudflare Workers，`config.yml` 配 `base_url` |
 | 内容类型 | 文章 (posts)、页面 (pages) |
 
 ### 6.3 Supabase

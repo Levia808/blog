@@ -28,7 +28,7 @@
 | 认证 | Supabase Auth | 邮箱 + GitHub OAuth |
 | 数据库 | PostgreSQL (Supabase) | profiles / comments / uploads |
 | 文件存储 | Supabase Storage | 头像上传 |
-| CMS | Sveltia CMS | `/admin/`，Decap CMS 协议 |
+| CMS | Sveltia CMS | `/admin-cms/`，登录页使用 "Sign in with Token"（GitHub PAT，需 repo 权限） |
 | 搜索 | Fuse.js | 静态 JSON 索引 |
 | 部署 | Cloudflare Pages + GitHub Pages | 双线 |
 | CI/CD | GitHub Actions | 自动构建 → GitHub Pages |
@@ -625,7 +625,7 @@ if (window.location.hostname === 'levia808.github.io') {
 | CMS | Sveltia CMS (Decap CMS 兼容) |
 | 配置 | `static/admin-cms/config.yml` |
 | 入口 | `static/admin-cms/index.html` |
-| 认证 | GitHub OAuth（独立 App） |
+| 认证 | GitHub PAT Token（或自建 Sveltia CMS Authenticator Worker） |
 | 后端 | GitHub API（操作仓库文件） |
 | 站点 URL | `https://blog-go3.pages.dev` |
 

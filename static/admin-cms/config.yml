@@ -1,7 +1,15 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+
 backend:
   name: github
   repo: Levia808/blog
   branch: main
+  # 如需 GitHub 按钮一键登录（非 Token 方式）：
+  # 1. 部署 Sveltia CMS Authenticator 到 Cloudflare Workers
+  #    https://github.com/sveltia/sveltia-cms-auth
+  # 2. 在 GitHub 注册 OAuth App，回调地址填 <worker>/callback
+  # 3. 将 Worker URL 填入下方 base_url
+  # base_url: https://sveltia-cms-auth.你的子域.workers.dev
 
 media_folder: static/images
 public_folder: /images
