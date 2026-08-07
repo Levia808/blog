@@ -895,3 +895,15 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .moment-comment-input button:hover { transform: scale(1.03); }
 .moments-empty { border: 1px dashed var(--border); border-radius: 6px; padding: 48px 20px; text-align: center; color: var(--muted); }
+
+/* ── 点赞粒子 (Anime.js 迸发) ── */
+.like-particle {
+  position: fixed;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+  z-index: 400;
+  pointer-events: none;
+}
+.moment-action-btn .heart-icon { transition: color var(--dur-slow); }
+.moment-action-btn.is-liked .heart-icon { color: var(--accent); }

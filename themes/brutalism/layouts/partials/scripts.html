@@ -10,6 +10,7 @@
 <script src="{{ "js/comments.js" | relURL }}"></script>
 {{- end }}
 {{- if and site.Params.auth (eq .Layout "moments") (fileExists "static/js/moments.js") }}
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
 <script src="{{ "js/moments.js" | relURL }}"></script>
 {{- end }}
 {{- if and site.Params.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}

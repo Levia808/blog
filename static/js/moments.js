@@ -33,6 +33,54 @@
     }).join('');
   }
 
+  /* ── 开源动画: Anime.js 点赞 heart-burst + 粒子迸发 (Twitter 风格) ── */
+  function likeBurst(btn) {
+    if (!window.anime) return;
+    var icon = btn.querySelector('.heart-icon');
+    if (icon) {
+      anime({
+        targets: icon,
+        scale: [1, 1.7, 0.85, 1.25, 1],
+        rotate: [0, -12, 8, 0],
+        duration: 620,
+        easing: 'easeOutCubic'
+      });
+    }
+    var rect = btn.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    for (var i = 0; i < 7; i++) {
+      var dot = document.createElement('span');
+      dot.className = 'like-particle';
+      dot.style.left = cx + 'px';
+      dot.style.top = cy + 'px';
+      document.body.appendChild(dot);
+      var angle = (Math.PI * 2 / 7) * i + Math.random() * 0.6;
+      var dist = 24 + Math.random() * 16;
+      anime({
+        targets: dot,
+        translateX: Math.cos(angle) * dist,
+        translateY: Math.sin(angle) * dist,
+        scale: [1, 0.15],
+        opacity: [1, 0],
+        duration: 560,
+        easing: 'easeOutCubic',
+        complete: function () { dot.remove(); }
+      });
+    }
+  }
+
+  function animateIn(el) {
+    if (!window.anime) { el.classList.add('animate__animated', 'animate__fadeInUp'); return; }
+    anime({
+      targets: el,
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 280,
+      easing: 'easeOutCubic'
+    });
+  }
+
   function fmtTime(iso) {
     var d = new Date(iso);
     var diff = (Date.now() - d.getTime()) / 1000;
@@ -93,6 +141,7 @@
       renderMedia(moment.media, (moment.media || []).length === 1) +
       '<div class="moment-actions">' +
       '<button type="button" class="moment-action-btn' + (liked ? ' is-liked' : '') + '" data-moment-like="' + moment.id + '">' +
+      '<svg class="heart-icon" viewBox="0 0 32 32" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M16 29s-13-8.2-13-17.5C3 6.9 6.7 3.5 10.5 3.5c2.3 0 4.5 1.1 5.5 2.9 1-1.8 3.2-2.9 5.5-2.9C25.3 3.5 29 6.9 29 11.5 29 20.8 16 29 16 29z"/></svg>' +
       (liked ? '已赞' : '点赞') + ' <span class="ma-count">' + likeCount + '</span></button>' +
       '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '">评论 <span class="ma-count">' + commentCount + '</span></button>' +
       (currentUser && currentUser.id === moment.user_id ? '' : '') +
@@ -116,6 +165,16 @@
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      if (window.anime && moments.length) {
+        anime({
+          targets: listEl.querySelectorAll('.moment-card'),
+          opacity: [0, 1],
+          translateY: [14, 0],
+          delay: anime.stagger(45),
+          duration: 380,
+          easing: 'easeOutCubic'
+        });
+      }
       hintEl.textContent = moments.length ? '共 ' + moments.length + ' 条动态' : '';
       hintEl.hidden = Boolean(moments.length);
     } catch (error) {
@@ -228,6 +287,7 @@
       var card = likeBtn.closest('.moment-card');
       var liked = likeBtn.classList.contains('is-liked');
       likeBtn.disabled = true;
+      if (!liked) likeBurst(likeBtn);
       var op = liked
         ? window.blogSupabase.from('moment_likes').delete().eq('moment_id', momentId).eq('user_id', currentUser.id)
         : window.blogSupabase.from('moment_likes').insert({ moment_id: momentId, user_id: currentUser.id });
@@ -245,7 +305,10 @@
     var toggleBtn = e.target.closest('[data-moment-toggle-comments]');
     if (toggleBtn) {
       var panel = listEl.querySelector('[data-moment-comments="' + toggleBtn.dataset.momentToggleComments + '"]');
-      if (panel) panel.hidden = !panel.hidden;
+      if (panel) {
+        panel.hidden = !panel.hidden;
+        if (!panel.hidden) animateIn(panel);
+      }
       return;
     }
 
