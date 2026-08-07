@@ -383,7 +383,7 @@ html.js [data-reveal].reveal-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Roboto Flex', 'Space Grotesk', var(--font-display);
+  font-family: 'Playfair Display', Georgia, serif;
   font-weight: 900;
   font-size: 220px;
   letter-spacing: -0.03em;

@@ -231,18 +231,7 @@
       var to = parseSettings(toStr);
       var axes = Object.keys(from);
 
-      /* 字体池: 每个字母随机一种字体 (跨字体混排) */
-      var FONT_POOL = [
-        "'Roboto Flex', sans-serif",
-        "'Space Grotesk', sans-serif",
-        "'JetBrains Mono', monospace",
-        "'Inter', sans-serif",
-        "'Noto Sans SC', sans-serif",
-        "Georgia, 'Times New Roman', serif"
-      ];
-      function randFont() { return FONT_POOL[Math.floor(Math.random() * FONT_POOL.length)]; }
-
-      /* 按词拆分字符 (空格保留), 每字母随机字体 */
+      /* 按词拆分字符 (空格保留), 继承标题字体 (杂志感衬线) */
       var words = titleEl.textContent.split(' ');
       titleEl.textContent = '';
       var letters = [];
@@ -253,7 +242,6 @@
         word.split('').forEach(function (ch) {
           var s = document.createElement('span');
           s.style.display = 'inline-block';
-          s.style.fontFamily = randFont();
           s.style.fontVariationSettings = fromStr;
           s.textContent = ch;
           wSpan.appendChild(s);
@@ -262,16 +250,6 @@
         titleEl.appendChild(wSpan);
         if (wi < words.length - 1) titleEl.appendChild(document.createTextNode(' '));
       });
-
-      /* 每 0.5s 随机一个字母切换字体 */
-      if (!reduced && letters.length) {
-        setInterval(function () {
-          var idx = Math.floor(Math.random() * letters.length);
-          var el = letters[idx];
-          el.style.fontFamily = randFont();
-          el.style.transition = 'font-family 200ms ease-out';
-        }, 500);
-      }
       fitTitle();
       window.addEventListener('resize', fitTitle);
       if (reduced) return;
