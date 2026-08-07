@@ -446,13 +446,12 @@
     };
   }
 
-  /* ── Sparks 火花 (鼠标点击迸发, Vue Bits ClickSpark 移植, 苔绿) ── */
+  /* ── Sparks 火花 (全局点击迸发, Vue Bits ClickSpark 移植, 苔绿) ── */
   function initClickSparks() {
-    var zone = document.getElementById('welcome');
-    if (!zone || reducedMotion) return;
+    if (reducedMotion) return;
     var canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3';
-    zone.appendChild(canvas);
+    canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:999';
+    document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
 
     var cfg = window.welcomeCfg || {};
@@ -475,9 +474,8 @@
     }
 
     function resize() {
-      var r = zone.getBoundingClientRect();
-      canvas.width = r.width;
-      canvas.height = r.height;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     }
     resize();
     window.addEventListener('resize', resize);
@@ -509,13 +507,9 @@
     }
     rafId = requestAnimationFrame(draw);
 
-    zone.addEventListener('click', function (e) {
-      var rect = canvas.getBoundingClientRect();
-      var x = e.clientX - rect.left;
-      var y = e.clientY - rect.top;
-      var now = performance.now();
+    document.addEventListener('click', function (e) {
       for (var i = 0; i < sparkCount; i++) {
-        sparks.push({ x: x, y: y, angle: (2 * Math.PI * i) / sparkCount, startTime: now });
+        sparks.push({ x: e.clientX, y: e.clientY, angle: (2 * Math.PI * i) / sparkCount, startTime: performance.now() });
       }
     });
   }

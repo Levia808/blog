@@ -12,8 +12,8 @@ proximityFalloff = "linear"
 shapeSize = 1.2
 roundness = 0.4
 borderSize = 0.05
-circleSize = 0.3
-circleEdge = 0.5
+circleSize = 0.55
+circleEdge = 0.35
 # Sparks 火花
 sparkColor = "#6B8B6B"
 sparkSize = 10
