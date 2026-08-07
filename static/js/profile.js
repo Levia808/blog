@@ -32,6 +32,14 @@
       document.getElementById('editBio').value = profile.bio || '';
       document.getElementById('editWebsite').value = profile.website || '';
 
+      var roleText = profile.role || 'user';
+      var roleLabel = { superadmin: 'SUPERADMIN', admin: 'ADMIN', author: 'AUTHOR', user: 'USER' }[roleText] || String(roleText).toUpperCase();
+      document.getElementById('profileRole').textContent = roleLabel;
+      document.getElementById('profileJoined').textContent = profile.created_at
+        ? new Date(profile.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '—';
+      document.getElementById('profileAccountStatus').textContent = profile.account_status || 'active';
+
       if (profile.github_username || ghName) {
         var ghUser = profile.github_username || ghName;
         document.getElementById('profileGithub').innerHTML =

@@ -4,6 +4,9 @@
 <article class="container article-page">
   <div class="article-layout">
     <div class="article-main" data-reveal>
+      {{- if .Params.background }}
+      <div class="article-bg" role="img" aria-label="{{ .Title }} 底图" style="background-image:url('{{ .Params.background | relURL }}')"></div>
+      {{- end }}
       {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
       <header class="article-header">
         <div class="mono article-meta">

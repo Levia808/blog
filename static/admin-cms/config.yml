@@ -44,6 +44,26 @@ collections:
         name: description
         widget: string
         required: false
+      - label: 文章底图（页面顶部横幅，与卡片封面无关）
+        name: background
+        widget: image
+        choose_url: true
+        media_folder: static/images
+        public_folder: /images
+        required: false
+      - label: 卡片封面图（首页/列表卡片）
+        name: cover
+        widget: object
+        required: false
+        collapsed: true
+        fields:
+          - label: 封面图片
+            name: image
+            widget: image
+            choose_url: true
+            media_folder: static/images
+            public_folder: /images
+            required: false
       - label: 正文
         name: body
         widget: markdown

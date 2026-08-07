@@ -1,6 +1,6 @@
 baseURL: https://blog-go3.pages.dev/
 locale: zh-cn
-title: 我的博客
+title: "Levia's blog"
 theme: brutalism
 
 enableRobotsTXT: true
@@ -19,8 +19,8 @@ outputs:
 
 params:
   env: production
-  author: Levia808
-  navLogo: LEVIA808
+  author: Levia
+  navLogo: "Levia's blog"
   description: 个人技术博客 — 记录学习、思考与技术分享。
   keywords: [博客, 技术, 编程, 学习]
 

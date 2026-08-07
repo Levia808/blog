@@ -318,6 +318,27 @@
 .profile-avatar-lg { width: 72px; height: 72px; }
 .profile-info h2 { font-size: 18px; font-weight: 500; color: var(--white); font-family: var(--font-display); margin-bottom: 4px; }
 .profile-info .label { display: block; margin-top: 2px; }
+.profile-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.profile-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  padding: 2px 10px;
+}
+.profile-meta-item { font-size: 10px; color: var(--faint); }
+.profile-field-hint {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--faint);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
 .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .profile-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
 .profile-field-wide { grid-column: 1 / -1; }

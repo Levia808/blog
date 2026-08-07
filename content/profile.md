@@ -13,10 +13,22 @@ sitemap:
     <button class="auth-btn auth-btn-primary" onclick="BlogAuth.open('login')">登录</button>
   </div>
   <div id="profileContent" hidden>
-    <div class="profile-header"><img class="profile-avatar profile-avatar-lg" id="profileAvatar" src="" alt=""><div class="profile-info"><h2 id="profileDisplayName"></h2><p class="label" id="profileEmail"></p><p class="label" id="profileGithub"></p></div></div>
+    <div class="profile-header">
+      <img class="profile-avatar profile-avatar-lg" id="profileAvatar" src="" alt="">
+      <div class="profile-info">
+        <h2 id="profileDisplayName"></h2>
+        <p class="label" id="profileEmail"></p>
+        <p class="label" id="profileGithub"></p>
+        <div class="profile-meta">
+          <span class="profile-badge" id="profileRole">USER</span>
+          <span class="mono profile-meta-item">joined <span id="profileJoined">—</span></span>
+          <span class="mono profile-meta-item">status <span id="profileAccountStatus">active</span></span>
+        </div>
+      </div>
+    </div>
     <div class="profile-form-grid">
-      <label class="profile-field" for="editUsername">用户名<input id="editUsername" placeholder="设置唯一用户名"></label>
-      <label class="profile-field" for="editDisplayName">显示名称<input id="editDisplayName" placeholder="你的名称"></label>
+      <label class="profile-field" for="editUsername">用户名<small class="profile-field-hint">唯一标识，用于个人主页链接</small><input id="editUsername" placeholder="设置唯一用户名"></label>
+      <label class="profile-field" for="editDisplayName">昵称（显示名称）<small class="profile-field-hint">在导航菜单与评论中展示</small><input id="editDisplayName" placeholder="你的名称"></label>
       <label class="profile-field profile-field-wide" for="editBio">个人简介<textarea id="editBio" placeholder="介绍一下你自己"></textarea></label>
       <label class="profile-field profile-field-wide" for="editWebsite">网站<input id="editWebsite" placeholder="https://example.com" type="url"></label>
     </div>

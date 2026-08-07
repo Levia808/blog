@@ -4,6 +4,7 @@ draft: false
 title: '构建现代化个人博客'
 description: '从 Hugo 到双线部署的完整实践。一份代码，两边构建。'
 tags: [hugo, cloudflare, devops]
+background: /images/bg-demo.svg
 ShowToc: true
 ---
 
