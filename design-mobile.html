@@ -210,14 +210,14 @@
       <div class="m-article">
         <div class="meta">2026-08-07 · 5 min read · 1234 words</div>
         <h1>构建现代化个人博客</h1>
+        <div class="m-toc" style="margin:0;"><div class="toc-t">[ 目录 · INDEX ]</div><a href="#">概述</a><a href="#">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">内容工作流</a></div>
         <div class="p">从 Hugo 到双线部署的完整实践。一份代码，两边构建。</div>
         <div class="p" style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:4px;padding:12px;font-family:var(--font-mono);font-size:11px;">baseURL: https://blog-go3.pages.dev/</div>
         <div class="p">部署的本质不是「放在哪里」，而是「如何让内容最快到达读者」。</div>
       </div>
-      <div class="m-toc"><div class="toc-t">[ 目录 · INDEX ]</div><a href="#">概述</a><a href="#">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">内容工作流</a></div>
     </div>
   </div>
-  <div class="phone-caption">正文全宽单列 · 右侧 TOC 侧栏在移动端移至正文底部（非 sticky）</div>
+  <div class="phone-caption">正文全宽单列 · TOC 统一置于<b>文章标题下方</b>（桌面/移动一致）· 滚动高亮跟随</div>
 </section>
 
 <hr>
@@ -254,8 +254,21 @@
   <div class="phone-frame">
     <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>admin — mobile</span></div>
     <div class="phone-body">
-      <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--accent)">SUPERADMIN</span></div>
-      <div class="m-admin-nav"><a class="active" href="#">仪表盘</a><a href="#">文章管理</a><a href="#">内容归档</a><a href="#">评论审核</a><a href="#">用户管理</a><a href="#">媒体库</a><a href="#">设置</a></div>
+      <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><button class="burger">☰</button></div>
+      <div class="m-drawer-mask"></div>
+      <div class="m-drawer" style="position:relative;width:260px;border-right:1px solid var(--border);">
+        <div class="dh"><span class="logo">LEVIA'S BLOG</span><button class="x">✕</button></div>
+        <div class="menu">
+          <a class="active" href="#"><span class="idx">01</span>仪表盘<span class="arr">&gt;&gt;&gt;</span></a>
+          <a href="#"><span class="idx">02</span>文章管理<span class="arr">&gt;&gt;</span></a>
+          <a href="#"><span class="idx">03</span>内容归档<span class="arr">&gt;&gt;</span></a>
+          <a href="#"><span class="idx">04</span>评论审核<span class="arr">&gt;&gt;</span></a>
+          <a href="#"><span class="idx">05</span>用户管理<span class="arr">&gt;&gt;</span></a>
+          <a href="#"><span class="idx">06</span>媒体库<span class="arr">&gt;&gt;</span></a>
+          <a href="#"><span class="idx">07</span>系统设置<span class="arr">&gt;&gt;</span></a>
+        </div>
+        <div class="user"><div>› 退出登录</div></div>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px;">
         <div style="border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:14px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">文章数</div><div style="font-size:24px;font-weight:500;color:var(--white)">4</div></div>
         <div style="border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:14px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">评论数</div><div style="font-size:24px;font-weight:500;color:var(--white)">2</div></div>
@@ -267,7 +280,7 @@
       </div>
     </div>
   </div>
-  <div class="phone-caption">左侧 240px 竖向导航折叠为顶部横向滚动 · 统计卡 2 列 · 表格横向滚动</div>
+  <div class="phone-caption">左侧竖向导航折叠为<b>同款左侧滑入抽屉</b>（与主站一致）· 点菜单切换面板并自动收起 · 统计卡 2 列</div>
 </section>
 
 <hr>
