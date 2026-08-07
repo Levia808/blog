@@ -376,24 +376,42 @@ html.js [data-reveal].reveal-visible {
   overflow: hidden;
   background: var(--bg);
 }
-.welcome-full .term-box {
-  font-family: var(--font-mono);
-  font-size: clamp(11px, 1.8vw, 14px);
-  color: var(--muted);
-  text-align: left;
-  width: clamp(280px, 50vw, 420px);
-  line-height: 2.4;
+/* ScrambleText 大标题 + 页脚打字机 */
+.welcome-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(40px, 8vw, 96px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--white);
+  text-align: center;
+  user-select: none;
+  padding: 0 20px;
 }
-.welcome-full .tl { white-space: pre-wrap; overflow: hidden; opacity: 0; min-height: 1em; }
-.welcome-full .tl.visible { opacity: 1; }
-.welcome-full .tl.typed { animation: term-line-enter 240ms ease-out both; }
-.welcome-full .tl[data-ok] { color: var(--accent); }
-.welcome-full .tl[data-line="0"] { color: var(--faint); }
-.welcome-full .cursor-line { opacity: 0; }
-.welcome-full .cursor-line.visible { opacity: 1; }
-.welcome-full .term-box.done .cursor-line .blink-cursor { animation: term-cursor-flash 1s step-end infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .welcome-full .tl { animation: none !important; }
+.welcome-title .st-char { display: inline-block; will-change: transform, opacity; }
+.welcome-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1.8vw, 15px);
+  color: var(--muted);
+  min-height: 30px;
+  max-width: 86vw;
+}
+.welcome-prefix { color: var(--accent); flex-shrink: 0; }
+.welcome-type { white-space: pre-wrap; }
+.welcome-full .blink-cursor {
+  display: inline-block;
+  width: 9px; height: 16px;
+  background: var(--accent);
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: term-cursor-flash 1s step-end infinite;
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .welcome-title { font-size: clamp(30px, 9vw, 46px); }
 }
 .welcome-full .tl .blink-cursor {
   display: inline-block;
@@ -819,7 +837,6 @@ html.js [data-reveal].reveal-visible {
   .hero-title { font-size: 24px; }
   .article-main { padding: 28px 22px; }
   .article-title { font-size: 26px; }
-  .welcome-full .term-box { width: calc(100vw - 64px); }
   .search-overlay { padding-top: 10vh; }
 }
 @media (max-width: 640px) {

@@ -188,82 +188,96 @@
     } catch (e) { /* GLightbox 未就绪时忽略 */ }
   }
 
-  /* ── 开屏终端打字机 (商用级: 逐字/退格/循环/跳过/无障碍) ── */
-  function initWelcomeTypewriter() {
-    var box = document.getElementById('welcomeTerm');
-    if (!box) return;
-    var lines = Array.prototype.slice.call(box.querySelectorAll('.tl[data-line]'));
-    var cursorLine = box.querySelector('.cursor-line');
-    var texts = lines.map(function (l) { return l.textContent; });
-    var TYPE_MS = 52, LINE_GAP = 110, RESTART = false, SKIP_MS = 2400;
+  /* ── 欢迎页: ScrambleText 指针乱码标题 + 页脚打字机 (data/welcome.toml 驱动) ── */
+  function initWelcomeEffects() {
+    var cfg = window.welcomeCfg || {};
+    var reduced = reducedMotion;
 
-    if (reducedMotion) {
-      lines.forEach(function (l, i) { l.textContent = texts[i]; l.classList.add('typed', 'visible'); });
-      return;
-    }
-
-    function blank() {
-      lines.forEach(function (l) { l.textContent = ''; l.classList.remove('typed'); });
-      if (cursorLine) cursorLine.classList.remove('visible');
-    }
-
-    var cancelled = false;
-    var skipOn = false;
-    function skipAll() {
-      if (skipOn) return;
-      skipOn = true;
-      lines.forEach(function (l, i) { l.textContent = texts[i]; l.classList.add('typed', 'visible'); });
-      if (cursorLine) cursorLine.classList.add('visible');
-      box.classList.add('done');
-    }
-
-    var timer = null;
-    function typeLoop() {
-      var li = 0, ci = 0;
-      function tick() {
-        if (cancelled) return;
-        if (skipOn) return;
-        if (li < lines.length) {
-          var line = lines[li];
-          var text = texts[li];
-          if (ci < text.length) {
-            line.textContent = text.slice(0, ci + 1);
-            ci++;
-            timer = setTimeout(tick, TYPE_MS + (ci % 4 === 0 ? 8 : 0));
-          } else {
-            line.classList.add('typed');
-            if (cursorLine) cursorLine.classList.add('visible');
-            li++;
-            ci = 0;
-            timer = setTimeout(tick, LINE_GAP);
-          }
-        } else {
-          box.classList.add('done');
-          timer = setTimeout(function () {
-            if (RESTART && !cancelled && !skipOn) {
-              blank();
-              typeLoop();
+    /* ScrambleText: 指针附近字符乱码重组 (Vue Bits 组件等价实现) */
+    var titleEl = document.getElementById('welcomeTitle');
+    if (titleEl) {
+      var radius = cfg.scrambleRadius || 160;
+      var duration = cfg.scrambleDuration || 1.2;
+      var speed = cfg.scrambleSpeed || 0.5;
+      var charsPool = (cfg.scrambleChars || '.:·#%').split('');
+      var text = titleEl.textContent;
+      titleEl.textContent = '';
+      var spans = text.split('').map(function (ch) {
+        var span = document.createElement('span');
+        span.className = 'st-char';
+        span.textContent = ch;
+        span.dataset.content = ch;
+        titleEl.appendChild(span);
+        return span;
+      });
+      if (!reduced) {
+        var timers = {};
+        function scrambleChar(span, distFactor) {
+          var key = Array.prototype.indexOf.call(spans, span);
+          clearTimeout(timers[key]);
+          var d = (duration * (1 - distFactor)) * 1000;
+          var frames = Math.max(2, Math.round(d / 40));
+          var f = 0;
+          var iv = setInterval(function () {
+            f++;
+            if (span.textContent !== span.dataset.content) {
+              span.textContent = charsPool[Math.floor(Math.random() * charsPool.length)];
             }
-          }, 4000);
+            if (f >= frames) {
+              clearInterval(iv);
+              span.textContent = span.dataset.content;
+            }
+          }, Math.max(16, 40 * speed));
+          timers[key] = setTimeout(function () { clearInterval(iv); span.textContent = span.dataset.content; }, d + 300);
         }
+        var zone = document.getElementById('welcome');
+        zone.addEventListener('pointermove', function (e) {
+          spans.forEach(function (span) {
+            var r = span.getBoundingClientRect();
+            var dx = e.clientX - (r.left + r.width / 2);
+            var dy = e.clientY - (r.top + r.height / 2);
+            var dist = Math.hypot(dx, dy);
+            if (dist < radius) {
+              var factor = dist / radius;
+              if (span.textContent === span.dataset.content) {
+                span.textContent = charsPool[Math.floor(Math.random() * charsPool.length)];
+              }
+              scrambleChar(span, factor);
+            }
+          });
+        });
       }
-      tick();
     }
-    typeLoop();
 
-    // 点击跳过 / 滚动离开取消
-    box.addEventListener('click', skipAll);
-    var skipTimer = setTimeout(skipAll, SKIP_MS);
-    function onScroll() {
-      var rect = box.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) {
-        cancelled = true;
-        clearTimeout(skipTimer);
-        skipAll();
-        window.removeEventListener('scroll', onScroll);
+    /* 页脚打字机 (data 配置循环) */
+    var typeEl = document.getElementById('welcomeType');
+    if (typeEl) {
+      var text2 = cfg.typewriterText || '写代码，也写生活。记录学习与思考。';
+      var typeMs = cfg.typeSpeed || 70;
+      var delMs = cfg.deleteSpeed || 38;
+      var pauseMs = cfg.pause || 1800;
+      if (reduced) {
+        typeEl.textContent = text2;
+      } else {
+        var ci = 0, deleting = false;
+        (function tick() {
+          if (deleting) {
+            ci--;
+            typeEl.textContent = text2.slice(0, Math.max(0, ci));
+            if (ci <= 0) { deleting = false; setTimeout(tick, 400); return; }
+            setTimeout(tick, delMs);
+          } else {
+            if (ci < text2.length) {
+              ci++;
+              typeEl.textContent = text2.slice(0, ci);
+              setTimeout(tick, typeMs);
+            } else {
+              setTimeout(function () { deleting = true; tick(); }, pauseMs);
+            }
+          }
+        })();
       }
     }
-    window.addEventListener('scroll', onScroll, { passive: true });
   }
 
   /* ── 搜索 (Fuse.js + index.json) ── */
@@ -436,7 +450,7 @@
 
   function boot() {
     initLightbox();
-    initWelcomeTypewriter();
+    initWelcomeEffects();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();

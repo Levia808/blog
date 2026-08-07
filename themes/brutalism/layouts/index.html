@@ -1,19 +1,17 @@
 {{- define "title" }}{{ site.Title }}{{ end }}
 {{- define "main" }}
+{{- with site.Data.welcome }}
+<script>window.welcomeCfg = {{ . | jsonify | safeJS }};</script>
+{{- end }}
 {{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
 
 <section class="welcome-full" id="welcome" aria-label="欢迎">
-  <div class="term-box" id="welcomeTerm" role="presentation" aria-live="polite">
-    <div class="tl" data-line="0">$ ssh blog.levia.dev</div>
-    <div class="tl" data-line="1">$ loading kernel modules...</div>
-    <div class="tl" data-line="2">$ hugo v{{ hugo.Version }} — {{ len site.RegularPages }} pages mounted</div>
-    <div class="tl" data-line="3">$ theme brutalism — initialized</div>
-    <div class="tl" data-line="4" data-ok="1">$ blog.service — active (running)</div>
-    <div class="tl" data-line="5">$ deploy: Cloudflare Pages ✓</div>
-    <div class="tl" data-line="6">$ auth: Supabase GitHub OAuth ✓</div>
-    <div class="tl cursor-line"><span class="blink-cursor"></span></div>
+  <h1 class="welcome-title" id="welcomeTitle" aria-label="Levia's Blog">{{ site.Params.navLogo | default site.Title }}</h1>
+  <div class="welcome-foot">
+    <span class="mono welcome-prefix">//</span>
+    <span class="welcome-type" id="welcomeType" aria-live="polite"></span><span class="blink-cursor"></span>
   </div>
   <div class="scroll-hint"><div>scroll</div><div class="sh-arrow"></div></div>
 </section>

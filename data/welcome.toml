@@ -1,0 +1,9 @@
+# 欢迎页配置 (管理面板「系统设置」可编辑)
+typewriterText = "写代码，也写生活。记录学习与思考。"
+typeSpeed = 70
+deleteSpeed = 38
+pause = 1800
+scrambleRadius = 160
+scrambleDuration = 1.2
+scrambleSpeed = 0.5
+scrambleChars = ".:·#%"
