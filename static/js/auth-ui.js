@@ -14,6 +14,8 @@
   var githubLoginBtn = document.getElementById('githubLogin');
   var adminLink = document.getElementById('adminLink');
   var cmsLink = document.getElementById('cmsLink');
+  var mobileAdminLink = document.getElementById('mobileAdminLink');
+  var mobileCmsLink = document.getElementById('mobileCmsLink');
   var userMenuCloseTimer = null;
 
   var panels = {
@@ -229,15 +231,21 @@
           if (profile && profile.role === 'superadmin' && profile.account_status === 'active') {
             adminLink && (adminLink.hidden = false);
             cmsLink && (cmsLink.hidden = false);
+            mobileAdminLink && (mobileAdminLink.hidden = false);
+            mobileCmsLink && (mobileCmsLink.hidden = false);
           } else if (adminLink) {
             adminLink.hidden = true;
             cmsLink && (cmsLink.hidden = true);
+            mobileAdminLink && (mobileAdminLink.hidden = true);
+            mobileCmsLink && (mobileCmsLink.hidden = true);
           }
         }).catch(function () {
           var meta = user.user_metadata || {};
           updateUserDisplay('', meta.user_name || user.email, user.email);
           adminLink && (adminLink.hidden = true);
           cmsLink && (cmsLink.hidden = true);
+          mobileAdminLink && (mobileAdminLink.hidden = true);
+          mobileCmsLink && (mobileCmsLink.hidden = true);
         });
       } else {
         navLoginBtn && (navLoginBtn.hidden = false);
@@ -248,6 +256,8 @@
         }
         if (adminLink) adminLink.hidden = true;
         if (cmsLink) cmsLink.hidden = true;
+        if (mobileAdminLink) mobileAdminLink.hidden = true;
+        if (mobileCmsLink) mobileCmsLink.hidden = true;
       }
     });
   }

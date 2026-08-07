@@ -1,9 +1,17 @@
 {{- $cover := .Params.cover.image }}
 {{- $glyph := substr (.Title | plainify) 0 1 }}
+{{- $thumb := "" }}
+{{- if $cover }}
+{{- with resources.Get (printf "images/%s" (path.Base $cover)) }}
+{{- $thumb = .Resize "320x q80" }}
+{{- end }}
+{{- end }}
 <article class="post-card-cover" data-reveal>
   <a class="pc-link" href="{{ .RelPermalink }}">
     <div class="pc-img">
-      {{- if $cover }}
+      {{- if $thumb }}
+      <img src="{{ $thumb.RelPermalink }}" alt="{{ .Title }} 封面" loading="lazy">
+      {{- else if $cover }}
       <img src="{{ $cover | relURL }}" alt="{{ .Title }} 封面" loading="lazy">
       {{- else }}
       <span class="pc-img-placeholder" aria-hidden="true">{{ $glyph }}</span>

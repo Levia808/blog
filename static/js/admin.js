@@ -23,6 +23,10 @@
     return value ? new Date(value).toLocaleString('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
   }
 
+  function commentStatusName(status) {
+    return { pending: '待审核', approved: '已通过', rejected: '已拒绝', hidden: '已隐藏' }[status] || status;
+  }
+
   function showError(message, targetId) {
     var target = document.getElementById(targetId || 'adminError');
     if (!target) return;
@@ -160,20 +164,21 @@
   function renderPostRows(posts, tableId, showActions) {
     var table = document.getElementById(tableId);
     if (!posts.length) {
-      table.innerHTML = '<tr><td colspan="4" class="admin-empty">暂无文章。点击 + New Post 创建。</td></tr>';
+      table.innerHTML = '<tr><td colspan="4" class="admin-empty">暂无文章。点击「+ 新建文章」创建。</td></tr>';
       return;
     }
     table.innerHTML = posts.map(function (post) {
       var status = post.draft
-        ? '<span class="admin-status"><span class="status-dot status-draft"></span>draft</span>'
-        : '<span class="admin-status"><span class="status-dot status-published"></span>published</span>';
+        ? '<span class="admin-status"><span class="status-dot status-draft"></span>草稿</span>'
+        : '<span class="admin-status"><span class="status-dot status-published"></span>已发布</span>';
       var date = post.date ? post.date.slice(0, 10) : '—';
+      var cmsEntry = 'admin-cms/#/collections/posts/entries/' + encodeURIComponent(post.name.replace(/\.md$/, ''));
       var actions = showActions
         ? '<div class="admin-action-group">' +
           (post.draft
             ? '<button type="button" class="admin-row-action is-primary" data-post-publish="' + escapeHtml(post.name) + '">发布</button>'
             : '<button type="button" class="admin-row-action" data-post-draft="' + escapeHtml(post.name) + '">转草稿</button>') +
-          '<a class="admin-row-action" href="admin-cms/">编辑</a>' +
+          '<a class="admin-row-action" href="' + cmsEntry + '">编辑</a>' +
           '</div>'
         : '';
       return '<tr>' +
@@ -186,11 +191,20 @@
   }
 
   async function refreshPosts() {
+    if (!getGhToken()) {
+      var hint = document.getElementById('adminPublishHint');
+      var note = document.getElementById('ghPublishNote');
+      renderPostRows([], 'adminPostTable', true);
+      renderPostRows([], 'adminPublishTable', true);
+      if (hint) hint.textContent = '';
+      if (note) note.textContent = '尚未授权 GitHub。点击右上角「GitHub 授权」后即可管理并一键发布文章。';
+      return;
+    }
     var posts = await loadGhPosts();
     renderPostRows(posts.slice(0, 8), 'adminPostTable', true);
-    document.getElementById('adminPostHint').textContent = 'showing ' + Math.min(8, posts.length) + ' of ' + posts.length + ' posts';
+    document.getElementById('adminPostHint').textContent = '共 ' + posts.length + ' 篇文章 · 显示最近 ' + Math.min(8, posts.length) + ' 篇';
     renderPostRows(posts, 'adminPublishTable', true);
-    document.getElementById('adminPublishHint').textContent = 'showing ' + posts.length + ' of ' + posts.length + ' posts';
+    document.getElementById('adminPublishHint').textContent = '共 ' + posts.length + ' 篇文章';
   }
 
   async function setPostPublished(name, published) {
@@ -200,7 +214,7 @@
       .then(function (r) { return r.text(); });
     var updated = setDraft(raw, !published);
     var path = 'content/posts/' + name;
-    var message = published ? 'publish: ' + post.title : 'draft: ' + post.title;
+    var message = published ? '发布: ' + post.title : '转为草稿: ' + post.title;
     await ghFetch('/repos/' + GH_REPO + '/contents/' + path, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -214,9 +228,12 @@
     var statusEl = document.getElementById('ghAuthStatus');
     if (statusEl) statusEl.textContent = authorized ? '已授权' : '未授权';
     var authBtn = document.getElementById('ghAuthBtn');
-    if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权发布';
+    if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权';
     if (authorized) {
       refreshPosts().catch(function (error) { showError(error.message); });
+    } else {
+      renderPostRows([], 'adminPostTable', true);
+      renderPostRows([], 'adminPublishTable', true);
     }
   }
 
@@ -271,16 +288,18 @@
     table.innerHTML = users.map(function (user) {
       var avatar = user.avatar_url || '';
       var name = user.display_name || user.username || '—';
+      var roleNames = { user: '用户', author: '作者', admin: '管理员', superadmin: '超级管理员' };
+      var statusNames = { active: '正常', suspended: '停用', deleted: '已删除' };
       var canChangeRole = adminProfile && adminProfile.role === 'superadmin';
       var roleControl = canChangeRole
         ? '<select class="admin-row-select" data-user-role="' + escapeHtml(user.id) + '">' +
           ['user', 'author', 'admin', 'superadmin'].map(function (role) {
-            return '<option value="' + role + '"' + (user.role === role ? ' selected' : '') + '>' + role + '</option>';
+            return '<option value="' + role + '"' + (user.role === role ? ' selected' : '') + '>' + (roleNames[role] || role) + '</option>';
           }).join('') + '</select>'
-        : '<span class="admin-role">' + escapeHtml(user.role) + '</span>';
+        : '<span class="admin-role">' + escapeHtml(roleNames[user.role] || user.role) + '</span>';
       var statusControl = '<select class="admin-row-select" data-user-status="' + escapeHtml(user.id) + '">' +
         ['active', 'suspended', 'deleted'].map(function (status) {
-          return '<option value="' + status + '"' + (user.account_status === status ? ' selected' : '') + '>' + status + '</option>';
+          return '<option value="' + status + '"' + (user.account_status === status ? ' selected' : '') + '>' + (statusNames[status] || status) + '</option>';
         }).join('') + '</select>';
       return '<tr>' +
         '<td>' + (avatar ? '<img class="admin-avatar" src="' + escapeHtml(avatar) + '" alt="" loading="lazy">' : '—') + '</td>' +
@@ -319,7 +338,7 @@
   function renderMedia(assets) {
     var grid = document.getElementById('adminMediaGrid');
     if (!assets.length) {
-      grid.innerHTML = '<div class="admin-empty">媒体库为空</div>';
+      grid.innerHTML = '<div class="admin-empty">媒体库为空，点击「上传媒体」添加文件</div>';
       return;
     }
     grid.innerHTML = assets.map(function (asset) {

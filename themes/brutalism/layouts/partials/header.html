@@ -59,6 +59,8 @@
   {{- end }}
   {{- if site.Params.auth }}
   <a href="{{ "profile/" | relLangURL }}">个人主页</a>
+  <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden>写文章</a>
+  <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden>管理后台</a>
   <button type="button" class="nm-action" id="mobileLoginBtn">登录</button>
   {{- end }}
 </div>

@@ -17,8 +17,9 @@ backend:
   branch: main
   base_url: https://sveltia-cms-auth.18013013170.workers.dev
 
-media_folder: static/images
+media_folder: assets/images
 public_folder: /images
+# 图片上传到 assets/images 后由主题 Hugo Pipes 自动压缩: 卡片封面 320px · 文章底图 2K
 
 locale: zh-cn
 site_url: https://blog-go3.pages.dev/

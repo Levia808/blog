@@ -1,11 +1,17 @@
 {{- define "main" }}
 {{- $showToc := and (default site.Params.ShowToc .Params.ShowToc) .TableOfContents }}
 {{- $tocHTML := .TableOfContents }}
+{{- $bg := "" }}
+{{- if .Params.background }}
+{{- with resources.Get (printf "images/%s" (path.Base .Params.background)) }}
+{{- $bg = .Resize "2560x q80" }}
+{{- end }}
+{{- end }}
 <article class="container article-page">
   <div class="article-layout">
     <div class="article-main" data-reveal>
-      {{- if .Params.background }}
-      <div class="article-bg" role="img" aria-label="{{ .Title }} 底图" style="background-image:url('{{ .Params.background | relURL }}')"></div>
+      {{- with .Params.background }}
+      <div class="article-bg" role="img" aria-label="{{ $.Title }} 底图" style="background-image:url('{{ if $bg }}{{ $bg.RelPermalink }}{{ else }}{{ . | relURL }}{{ end }}')"></div>
       {{- end }}
       {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
       <header class="article-header">
@@ -19,11 +25,6 @@
         <p class="article-description">{{ . }}</p>
         {{- end }}
       </header>
-      {{- if .Params.cover.image }}
-      <figure class="article-cover">
-        <img src="{{ .Params.cover.image | relURL }}" alt="{{ .Title }} 封面">
-      </figure>
-      {{- end }}
       <div class="article-body">
         {{ .Content }}
       </div>
