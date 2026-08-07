@@ -193,9 +193,27 @@
     var cfg = window.welcomeCfg || {};
     var reduced = reducedMotion;
 
-    /* VariableProximity: 指针靠近 → 可变字体字重/opsz 插值 (与 Vue Bits 组件逻辑一致) */
+    /* 标题自适应: 字号撑满视口宽度 (占满页面) */
     var titleEl = document.getElementById('welcomeTitle');
     if (titleEl) {
+      function fitTitle() {
+        var spans = titleEl.querySelectorAll('.st-char');
+        if (!spans.length) return;
+        var maxW = window.innerWidth * 0.94;
+        var maxH = window.innerHeight * 0.72;
+        var fs = 240;
+        titleEl.style.fontSize = fs + 'px';
+        for (var i = 0; i < 20; i++) {
+          var w = 0;
+          spans.forEach(function (s) { w += s.getBoundingClientRect().width; });
+          var h = titleEl.getBoundingClientRect().height;
+          if (w <= maxW && h <= maxH) break;
+          fs = fs * Math.min(maxW / (w || 1), maxH / (h || 1));
+          if (fs < 14) fs = 14;
+          titleEl.style.fontSize = fs + 'px';
+        }
+      }
+      /* VariableProximity: 指针靠近 → 可变字体字重/opsz 插值 (与 Vue Bits 组件逻辑一致) */
       var fromStr = cfg.titleVariationFrom || "'wght' 400, 'opsz' 9";
       var toStr = cfg.titleVariationTo || "'wght' 1000, 'opsz' 40";
       var radius = cfg.proximityRadius || 140;
@@ -232,6 +250,8 @@
         titleEl.appendChild(wSpan);
         if (wi < words.length - 1) titleEl.appendChild(document.createTextNode(' '));
       });
+      fitTitle();
+      window.addEventListener('resize', fitTitle);
       if (reduced) return;
 
       function calcFalloff(distance) {

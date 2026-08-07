@@ -376,20 +376,30 @@ html.js [data-reveal].reveal-visible {
   overflow: hidden;
   background: var(--bg);
 }
-/* ScrambleText 大标题 + 页脚打字机 */
+/* 超大标题 (占满页面) + 页脚打字机 */
 .welcome-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Roboto Flex', 'Space Grotesk', var(--font-display);
   font-weight: 900;
-  font-size: clamp(40px, 8vw, 96px);
+  font-size: 220px;
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--white);
   text-align: center;
   user-select: none;
-  padding: 0 20px;
+  padding: 0 3vw;
+  white-space: nowrap;
 }
-.welcome-title .st-char { display: inline-block; will-change: transform, opacity; }
+.welcome-title .st-char { display: inline-block; }
 .welcome-foot {
+  position: absolute;
+  bottom: 88px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -398,6 +408,7 @@ html.js [data-reveal].reveal-visible {
   color: var(--muted);
   min-height: 30px;
   max-width: 86vw;
+  white-space: nowrap;
 }
 .welcome-prefix { color: var(--accent); flex-shrink: 0; }
 .welcome-type { white-space: pre-wrap; }
@@ -410,8 +421,11 @@ html.js [data-reveal].reveal-visible {
   animation: term-cursor-flash 1s step-end infinite;
   flex-shrink: 0;
 }
+@media (max-width: 768px) {
+  .welcome-foot { bottom: 84px; }
+}
 @media (max-width: 480px) {
-  .welcome-title { font-size: clamp(30px, 9vw, 46px); }
+  .welcome-foot { bottom: 80px; max-width: 92vw; font-size: 12px; }
 }
 .welcome-full .tl .blink-cursor {
   display: inline-block;
