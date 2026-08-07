@@ -1,8 +1,8 @@
 {{- define "main" }}
 <div class="admin-wrap">
   <div class="admin-shell" id="adminPage">
-    <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;min-height:600px;justify-content:center;"><span class="state-tag">[ LOADING ]</span><p>加载中…</p></div>
-    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;min-height:600px;justify-content:center;" hidden><span class="state-tag">[ LOCKED ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
+    <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="state-tag">[ LOADING ]</span><p>加载中…</p></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ LOCKED ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
     <div id="adminContent" hidden>
       <aside class="admin-nav">
         <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
