@@ -31,7 +31,7 @@
   .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
   .phone-frame{
     width:375px; max-width:100%;
-    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    border:1px solid var(--border); border-radius:2px; overflow:hidden;
     margin:20px auto 0; background:var(--bg);
     font-size:14px;
   }
@@ -44,26 +44,32 @@
   .m-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0}
   .m-nav .logo{font-size:15px;font-weight:550;color:var(--white);letter-spacing:1px}
   .m-nav .burger{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);background:none;font-size:18px}
-  .m-menu{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--surface)}
-  .m-menu a{padding:14px 20px;font-size:15px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;border-bottom:1px solid var(--border)}
-  .m-menu a.active{color:var(--fg);border-left-color:var(--accent)}
+  .m-menu{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--border);gap:1px}
+  .m-menu a{display:flex;gap:12px;align-items:center;padding:15px 20px;min-height:48px;font-size:15px;color:var(--muted);text-decoration:none;background:var(--surface)}
+  .m-menu a .idx{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.1em}
+  .m-menu a .arr{font-family:var(--font-mono);font-size:12px;color:var(--faint)}
+  .m-menu a.active{color:var(--fg);background:var(--surface)}
+  .m-menu a.active .arr{color:var(--accent)}
   .m-hero{border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:24px 18px;margin:16px;display:flex;flex-direction:column;gap:8px}
   .m-hero .t{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
   .m-hero .d{font-size:12px;color:var(--muted)}
-  .m-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);margin:0 16px 12px}
+  .m-card{border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface);margin:0 16px 12px}
   .m-card .img{height:150px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:36px;color:var(--faint)}
   .m-card .body{padding:14px 16px 16px}
-  .m-card .date{font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:6px}
-  .m-card .title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:4px}
+  .m-card .date{font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:6px;letter-spacing:.08em}
+  .m-card .date::before{content:"[";color:var(--faint)}
+  .m-card .date::after{content:"]";color:var(--faint)}
+  .m-card .title{font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.1;color:var(--white);margin-bottom:4px}
   .m-card .ex{font-size:11px;color:var(--muted)}
-  .m-article{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:16px;padding:20px 16px;display:flex;flex-direction:column;gap:10px}
+  .m-article{border:1px solid var(--border);border-radius:2px;background:var(--surface);margin:16px;padding:20px 16px;display:flex;flex-direction:column;gap:10px}
   .m-article .meta{font-family:var(--font-mono);font-size:9px;color:var(--muted)}
-  .m-article h1{font-size:22px;line-height:1.25}
+  .m-article h1{font-size:24px;line-height:1.08;letter-spacing:-.03em}
   .m-article .p{font-size:13px;color:var(--muted);line-height:1.8}
   .m-toc{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:0 16px 16px;padding:14px 16px}
   .m-toc .toc-t{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px}
-  .m-toc a{display:block;font-size:12px;color:var(--muted);text-decoration:none;padding:4px 0;border-left:1px solid var(--border);padding-left:10px}
-  .m-moment{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:0 16px 12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .m-toc a{display:block;font-size:12px;color:var(--muted);text-decoration:none;padding:5px 0;border-left:1px solid var(--border);padding-left:10px;font-family:var(--font-mono);letter-spacing:.04em}
+  .m-toc a::before{content:"▸ ";color:var(--faint)}
+  .m-moment{border:1px solid var(--border);border-radius:2px;background:var(--surface);margin:0 16px 12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
   .m-moment .head{display:flex;gap:10px;align-items:center}
   .m-moment .av{width:36px;height:36px;border-radius:4px;background:var(--faint)}
   .m-moment .nm{font-size:13px;font-weight:500;color:var(--white)}
@@ -72,10 +78,15 @@
   .m-moment .media{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .m-moment .media div{height:110px;background:var(--bg);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--faint);font-family:var(--font-mono);font-size:9px}
   .m-moment .acts{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:10px}
-  .m-moment .act{flex:1;height:38px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:var(--font-mono);font-size:11px}
+  .m-moment .act{flex:1;height:42px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:2px;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:.04em}
+  .m-moment .act::before{content:"+";color:var(--faint);margin-right:6px}
+  .m-moment .act.liked{color:var(--accent);border-color:var(--accent)}
+  .m-moment .act.liked::before{content:"✓";color:var(--accent)}
   .m-admin-nav{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--surface)}
-  .m-admin-nav a{padding:12px 16px;font-size:12px;font-family:var(--font-mono);color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+  .m-admin-nav a{padding:13px 14px;font-size:12px;font-family:var(--font-mono);color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.05em}
+  .m-admin-nav a::before{content:"/> ";color:var(--faint)}
   .m-admin-nav a.active{color:var(--fg);border-bottom-color:var(--accent)}
+  .m-admin-nav a.active::before{color:var(--accent)}
   .m-search{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:50}
   .m-search .box{width:92vw}
   .m-search .input{display:flex;gap:8px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
@@ -88,13 +99,15 @@
   .m-auth label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:6px}
   .m-auth input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-size:15px;color:var(--fg);outline:none}
   .m-auth .btn{width:100%;height:44px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:var(--bg);font-weight:600;margin-top:6px}
-  .m-profile{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:16px;padding:18px 16px}
+  .m-profile{border:1px solid var(--border);border-radius:2px;background:var(--surface);margin:16px;padding:18px 16px}
   .m-profile .head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
   .m-profile .av{width:64px;height:64px;border-radius:6px;background:var(--faint);flex-shrink:0}
   .m-profile .nm{font-size:16px;font-weight:500;color:var(--white)}
   .m-profile .em{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
   .m-profile .grid{display:grid;grid-template-columns:1fr;gap:12px}
-  .m-profile .f label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:5px}
+  .m-profile .f label{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:.1em;display:block;margin-bottom:5px}
+  .m-profile .f label::before{content:"[ ";color:var(--faint)}
+  .m-profile .f label::after{content:" ]";color:var(--faint)}
   .m-profile .f input,.m-profile .f textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:11px 13px;font-size:14px;color:var(--fg);outline:none}
   .m-profile .f textarea{min-height:72px;resize:vertical}
   .grid-spec{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
@@ -123,7 +136,11 @@
     <div class="phone-body">
       <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><button class="burger">☰</button></div>
       <div class="m-menu">
-        <a class="active" href="#">动态</a><a href="#">归档</a><a href="#">搜索</a><a href="#">标签</a><a href="#">关于</a>
+        <a class="active" href="#"><span class="idx">01</span>动态<span class="arr">&gt;&gt;&gt;</span></a>
+        <a href="#"><span class="idx">02</span>归档<span class="arr">&gt;&gt;</span></a>
+        <a href="#"><span class="idx">03</span>搜索<span class="arr">&gt;&gt;</span></a>
+        <a href="#"><span class="idx">04</span>标签<span class="arr">&gt;&gt;</span></a>
+        <a href="#"><span class="idx">05</span>关于<span class="arr">&gt;&gt;</span></a>
       </div>
     </div>
   </div>
@@ -139,11 +156,12 @@
   <div class="phone-frame">
     <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>home — mobile</span></div>
     <div class="phone-body">
-      <div style="height:150px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;color:var(--faint);border-bottom:1px solid var(--border);">$ ssh blog.levia.dev — 终端动画 (高度压缩)</div>
+      <div style="height:150px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;color:var(--faint);border-bottom:1px solid var(--border);background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);">$ ssh blog.levia.dev — <span style="color:var(--accent)">[ BOOT ]</span></div>
       <div class="m-hero"><span class="mono" style="font-size:9px;color:var(--muted)">2026 · 08 · 07</span><span class="t">构建现代化个人博客</span><span class="d">从 Hugo 到双线部署的完整实践。</span></div>
       <div class="m-card"><div class="img">▦</div><div class="body"><div class="date">2026 · 08 · 07</div><div class="title">这是一个测试</div><div class="ex">这是我 Hugo 站点的第一个测试…</div></div></div>
       <div class="m-card"><div class="img">构</div><div class="body"><div class="date">2026 · 08 · 06</div><div class="title">构建现代化个人博客</div><div class="ex">从 Hugo 到双线部署的完整实践。</div></div></div>
       <div class="m-card"><div class="img">H</div><div class="body"><div class="date">2026 · 08 · 06</div><div class="title">Hello World</div><div class="ex">这是我的第一篇博客文章…</div></div></div>
+      <div style="margin:0 16px 16px;font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:.1em;">[ END OF FEED ] · 查看全部 →</div>
     </div>
   </div>
   <div class="phone-caption">终端欢迎页视口高度压缩至 40vh · 文章卡片单列全宽 · 3:2 封面保持</div>
@@ -165,7 +183,7 @@
         <div class="p" style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:4px;padding:12px;font-family:var(--font-mono);font-size:11px;">baseURL: https://blog-go3.pages.dev/</div>
         <div class="p">部署的本质不是「放在哪里」，而是「如何让内容最快到达读者」。</div>
       </div>
-      <div class="m-toc"><div class="toc-t">目录</div><a href="#">概述</a><a href="#">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">内容工作流</a></div>
+      <div class="m-toc"><div class="toc-t">[ 目录 · INDEX ]</div><a href="#">概述</a><a href="#">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">内容工作流</a></div>
     </div>
   </div>
   <div class="phone-caption">正文全宽单列 · 右侧 TOC 侧栏在移动端移至正文底部（非 sticky）</div>
@@ -184,12 +202,12 @@
         <div class="head"><div class="av"></div><div><div class="nm">Levia</div><div class="tm">2 小时前</div></div></div>
         <div class="tx">分享一个很棒的 B 站视频，值得一看。</div>
         <div class="media"><div>图1</div><div>视频</div></div>
-        <div class="acts"><div class="act">♥ 点赞 12</div><div class="act">💬 评论 3</div></div>
+        <div class="acts"><div class="act liked">点赞 12</div><div class="act">评论 3</div></div>
       </div>
       <div class="m-moment">
         <div class="head"><div class="av"></div><div><div class="nm">Levia</div><div class="tm">昨天</div></div></div>
         <div class="tx">Hugo 主题重构完成 🎉</div>
-        <div class="acts"><div class="act">♥ 点赞 5</div><div class="act">💬 评论 1</div></div>
+        <div class="acts"><div class="act">点赞 5</div><div class="act">评论 1</div></div>
       </div>
     </div>
   </div>
@@ -298,6 +316,8 @@
       <tr><td><span class="mono">≤ 640px</span></td><td>文章卡片网格 3/2 列 → 单列 · 动态媒体 2 列保持 · 归档条目换行</td></tr>
       <tr><td><span class="mono">≤ 480px</span></td><td>统计卡 2 列 → 保持 · 终端欢迎页高度 40vh · 字号微降</td></tr>
       <tr><td><span class="mono">全局</span></td><td>触控目标 ≥44px · 按钮间距 ≥8px · 水平溢出滚动（表格/导航）· 禁 hover 依赖（触摸）</td></tr>
+      <tr><td><span class="mono">无障碍</span></td><td>正文对比 ≥4.5:1 · 大字号 ≥3:1 · :focus-visible 苔绿环 · aria-label 补足</td></tr>
+      <tr><td><span class="mono">安全区</span></td><td>底部 padding 适配 iOS 手势条 (env(safe-area-inset-bottom)) · 顶部 sticky 导航含状态栏间隙</td></tr>
     </tbody>
   </table>
   <div class="grid-spec">
@@ -305,13 +325,16 @@
     <div class="spec-card"><strong>单列优先</strong>内容全宽，最大行宽 640px 内自然阅读</div>
     <div class="spec-card"><strong>折叠优先</strong>TOC/表格/导航均折叠或横向滚动，不挤压内容</div>
     <div class="spec-card"><strong>hover 降级</strong>触摸设备交互以 :active + 过渡替代 hover</div>
+    <div class="spec-card"><strong>移动优先</strong>min-width 渐进增强 · 桌面复杂度在 ≥768px 叠加</div>
+    <div class="spec-card"><strong>ASCII 语法</strong>mono 元数据统一 [ ] 方括号 / ▸ / &gt;/&gt; 前缀装饰</div>
+    <div class="spec-card"><strong>直角纪律</strong>radius ≤2px · gap:1px 生成微细分割线 · 无阴影无渐变</div>
   </div>
 </section>
 
 </div>
 
 <footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
-  design-mobile v1 · brutalism · 2026-08-07 · LEVIA
+  design-mobile v2 · brutalism · 2026-08-07 · LEVIA · <span style="letter-spacing:6px;font-size:9px;">▮▮▮▮▮▮▮▮▮▮▮▮</span>
 </footer>
 </div>
 </body>

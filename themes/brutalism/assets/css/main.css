@@ -54,6 +54,7 @@
 html { scroll-behavior: smooth; }
 
 body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
@@ -547,6 +548,8 @@ html.js [data-reveal].reveal-visible {
 }
 .pc-body { padding: 20px 22px 22px; flex: 1; display: flex; flex-direction: column; }
 .pc-date { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; }
+.pc-date::before { content: "["; color: var(--faint); }
+.pc-date::after { content: "]"; color: var(--faint); }
 .pc-title { font-size: 15px; font-weight: 500; line-height: 1.35; margin-bottom: 6px; color: var(--white); font-family: var(--font-display); }
 .pc-excerpt { font-size: 11px; color: var(--muted); line-height: 1.55; }
 .pc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 12px; }

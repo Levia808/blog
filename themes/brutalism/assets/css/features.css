@@ -852,6 +852,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .moment-action-btn:hover { transform: scale(1.04); border-color: var(--accent); color: var(--accent); }
 .moment-action-btn.is-liked { color: var(--accent); border-color: var(--accent); }
 .moment-action-btn .ma-count { color: var(--faint); }
+.moment-action-btn::before { content: "+"; color: var(--faint); margin-right: 2px; }
+.moment-action-btn.is-liked::before { content: "✓"; color: var(--accent); }
 
 .moment-comments { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
 .moment-comment { display: flex; gap: 10px; }
