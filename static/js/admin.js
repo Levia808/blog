@@ -30,8 +30,23 @@
   function showError(message, targetId) {
     var target = document.getElementById(targetId || 'adminError');
     if (!target) return;
-    target.textContent = message || '操作失败，请稍后重试。';
+    var text = '';
+    if (message && typeof message === 'object') {
+      text = message.message || '操作失败，请稍后重试。';
+      if (message.details) text += '\n详情: ' + message.details;
+      if (message.hint) text += '\n提示: ' + message.hint;
+    } else {
+      text = message || '操作失败，请稍后重试。';
+    }
+    target.textContent = text;
     target.hidden = false;
+  }
+
+  function errorText(error) {
+    if (!error) return '操作失败，请稍后重试。';
+    var text = error.message || String(error);
+    if (error.details) text += ' — ' + error.details;
+    return text;
   }
 
   function showToast(message, type) {
@@ -301,7 +316,7 @@
     var authBtn = document.getElementById('ghAuthBtn');
     if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权';
     if (authorized) {
-      refreshPosts().catch(function (error) { showError(error.message); });
+      refreshPosts().catch(function (error) { showError(errorText(error)); });
     } else {
       renderPostRows([], 'adminPostTable', true);
       renderPostRows([], 'adminPublishTable', true);
@@ -497,10 +512,10 @@
     renderSkeleton('adminUserTable', 6, 3);
     renderSkeleton('adminCommentTable', 6, 3);
     var results = await Promise.all([
-      Admin.getStats().catch(function (error) { showError(error.message); return null; }),
-      Admin.getAllUsers().catch(function (error) { showError(error.message); return []; }),
-      Admin.getComments().catch(function (error) { showError(error.message); return []; }),
-      Admin.getMedia().catch(function (error) { showError(error.message); return []; })
+      Admin.getStats().catch(function (error) { showError(errorText(error)); return null; }),
+      Admin.getAllUsers().catch(function (error) { showError(errorText(error)); return []; }),
+      Admin.getComments().catch(function (error) { showError(errorText(error)); return []; }),
+      Admin.getMedia().catch(function (error) { showError(errorText(error)); return []; })
     ]);
     renderStats(results[0] || { posts: '—', comments: '—', users: '—', pending: '—' });
     renderUsers(results[1]);
@@ -518,7 +533,7 @@
       event.target.dataset.changed = 'true';
     }
     if (event.target.id === 'adminCommentFilter') {
-      try { await loadComments(); } catch (error) { showError(error.message); }
+      try { await loadComments(); } catch (error) { showError(errorText(error)); }
     }
   });
 
@@ -543,7 +558,7 @@
         }
         if (refresh.dataset.adminRefresh === 'archive') await refreshPosts();
       } catch (error) {
-        showError(error.message);
+        showError(errorText(error));
       } finally {
         if (btn) { btn.classList.remove('is-loading'); btn.disabled = false; }
       }
@@ -556,7 +571,7 @@
         publishBtn.disabled = true;
         await setPostPublished(publishBtn.dataset.postPublish, true);
       } catch (error) {
-        showError(error.message || '发布失败，请确认已授权 GitHub。');
+        showError(errorText(error));
       } finally {
         publishBtn.disabled = false;
       }
@@ -569,7 +584,7 @@
         draftBtn.disabled = true;
         await setPostPublished(draftBtn.dataset.postDraft, false);
       } catch (error) {
-        showError(error.message || '操作失败。');
+        showError(errorText(error));
       } finally {
         draftBtn.disabled = false;
       }
@@ -582,7 +597,7 @@
         archiveBtn.disabled = true;
         await setPostArchived(archiveBtn.dataset.postArchive, true);
       } catch (error) {
-        showError(error.message || '归档失败。');
+        showError(errorText(error));
       } finally {
         archiveBtn.disabled = false;
       }
@@ -595,7 +610,7 @@
         unarchiveBtn.disabled = true;
         await setPostArchived(unarchiveBtn.dataset.postUnarchive, false);
       } catch (error) {
-        showError(error.message || '取消归档失败。');
+        showError(errorText(error));
       } finally {
         unarchiveBtn.disabled = false;
       }
@@ -619,7 +634,7 @@
         showToast('已删除：' + (target.title || postName), 'success');
         await refreshPosts();
       } catch (error) {
-        showError(error.message || '删除失败。');
+        showError(errorText(error));
       } finally {
         deleteBtn.disabled = false;
       }
@@ -637,7 +652,7 @@
         if (roleSelect && adminProfile.role === 'superadmin') await Admin.updateRole(userId, roleSelect.value);
         await loadUsers();
       } catch (error) {
-        showError(error.message);
+        showError(errorText(error));
       } finally {
         saveUser.disabled = false;
       }
@@ -651,7 +666,7 @@
         await Admin.moderateComment(Number(moderationButton.dataset.commentId), moderationButton.dataset.commentAction);
         await loadComments();
       } catch (error) {
-        showError(error.message);
+        showError(errorText(error));
       } finally {
         moderationButton.disabled = false;
       }
@@ -687,7 +702,7 @@
         showToast('已删除：' + ghDeleteMedia.dataset.ghMediaDelete, 'success');
         await loadMedia();
       } catch (error) {
-        showError(error.message || '删除失败。');
+        showError(errorText(error));
       } finally {
         ghDeleteMedia.disabled = false;
       }
@@ -702,7 +717,7 @@
         await Admin.deleteMedia(deleteMedia.dataset.mediaDelete);
         await loadMedia();
       } catch (error) {
-        showError(error.message);
+        showError(errorText(error));
       }
     }
   });
@@ -770,7 +785,7 @@
         await loadDashboard();
         updateGhAuthStatus();
       } catch (error) {
-        showError(error.message);
+        showError(errorText(error));
         show(content);
       }
     }).catch(function () {
