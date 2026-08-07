@@ -92,8 +92,9 @@
     sections.forEach(function (section) {
       var panel = document.querySelector('[data-admin-panel="' + section + '"]');
       if (panel) panel.hidden = section !== name;
-      var link = document.querySelector('[data-admin-section="' + section + '"]');
-      if (link) link.classList.toggle('active', section === name);
+      document.querySelectorAll('[data-admin-section="' + section + '"]').forEach(function (link) {
+        link.classList.toggle('active', section === name);
+      });
     });
   }
 
@@ -101,7 +102,55 @@
     link.addEventListener('click', function (event) {
       event.preventDefault();
       switchSection(link.dataset.adminSection);
+      closeAdminDrawer();
     });
+  });
+
+  /* ── 移动端左侧抽屉 (与主站同款) ── */
+  var adminDrawer = document.getElementById('adminDrawer');
+  var adminMask = document.getElementById('adminDrawerMask');
+  var adminToggle = document.getElementById('adminDrawerToggle');
+  var adminClose = document.getElementById('adminDrawerClose');
+
+  function openAdminDrawer() {
+    if (!adminDrawer) return;
+    adminMask.hidden = false;
+    adminDrawer.hidden = false;
+    adminDrawer.setAttribute('aria-hidden', 'false');
+    adminToggle && adminToggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    window.requestAnimationFrame(function () {
+      adminDrawer.classList.add('is-open');
+      adminMask.classList.add('is-show');
+    });
+  }
+
+  function closeAdminDrawer() {
+    if (!adminDrawer) return;
+    adminDrawer.classList.remove('is-open');
+    adminMask.classList.remove('is-show');
+    adminToggle && adminToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    window.setTimeout(function () {
+      if (!adminDrawer.classList.contains('is-open')) {
+        adminDrawer.hidden = true;
+        adminMask.hidden = true;
+        adminDrawer.setAttribute('aria-hidden', 'true');
+      }
+    }, 180);
+  }
+
+  if (adminToggle) adminToggle.addEventListener('click', function () {
+    if (adminDrawer.hidden || !adminDrawer.classList.contains('is-open')) openAdminDrawer();
+    else closeAdminDrawer();
+  });
+  if (adminClose) adminClose.addEventListener('click', closeAdminDrawer);
+  if (adminMask) adminMask.addEventListener('click', closeAdminDrawer);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && adminDrawer && !adminDrawer.hidden) closeAdminDrawer();
+  });
+  if (adminDrawer) adminDrawer.addEventListener('click', function (e) {
+    if (e.target.closest('a')) closeAdminDrawer();
   });
 
   /* ── 统计 (设计稿 4 卡) ── */
@@ -779,9 +828,12 @@
         if (avatarEl && avatar) avatarEl.src = avatar;
         if (roleEl) roleEl.textContent = String(adminProfile.role || 'user').toUpperCase();
         var logoutBtn = document.getElementById('adminLogoutBtn');
-        if (logoutBtn) logoutBtn.addEventListener('click', function () {
+        var drawerLogout = document.getElementById('adminDrawerLogout');
+        var doLogout = function () {
           Auth.signOut().then(function () { window.location.reload(); });
-        });
+        };
+        if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
+        if (drawerLogout) drawerLogout.addEventListener('click', doLogout);
         await loadDashboard();
         updateGhAuthStatus();
       } catch (error) {

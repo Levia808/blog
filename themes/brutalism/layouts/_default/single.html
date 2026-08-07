@@ -28,6 +28,12 @@
         <p class="article-description">{{ . }}</p>
         {{- end }}
       </header>
+      {{- if $showToc }}
+      <aside class="article-toc" aria-label="目录">
+        <div class="toc-t">[ 目录 ]</div>
+        {{ $tocHTML }}
+      </aside>
+      {{- end }}
       <div class="article-body">
         {{ .Content }}
       </div>
@@ -40,12 +46,6 @@
       {{- end }}
     </div>
 
-    {{- if $showToc }}
-    <aside class="article-toc" aria-label="目录">
-      <div class="toc-t">ON THIS PAGE</div>
-      {{ $tocHTML }}
-    </aside>
-    {{- end }}
   </div>
 
   {{- if site.Params.ShowPostNavLinks }}

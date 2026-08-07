@@ -1,6 +1,35 @@
 {{- define "body-class" }}admin-only{{ end }}
 {{- define "main" }}
 <div class="admin-wrap">
+  <div class="admin-mobile-bar" id="adminMobileBar">
+    <span class="an-logo-sm">{{ site.Title }}<span class="an-role" id="adminRoleSm">—</span></span>
+    <button type="button" class="admin-burger" id="adminDrawerToggle" aria-label="打开菜单" aria-expanded="false">
+      <svg viewBox="0 0 256 256" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
+    </button>
+  </div>
+  <div class="drawer-mask" id="adminDrawerMask" hidden aria-hidden="true"></div>
+  <aside class="drawer admin-drawer" id="adminDrawer" role="dialog" aria-modal="true" aria-label="后台导航" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="drawer-logo">{{ site.Title }}</span>
+      <button type="button" class="drawer-close" id="adminDrawerClose" aria-label="关闭菜单">
+        <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
+      </button>
+    </div>
+    <nav class="drawer-menu">
+      <a href="#" class="active" data-admin-section="dashboard"><span class="dm-idx">01</span>仪表盘<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="posts"><span class="dm-idx">02</span>文章管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="archive"><span class="dm-idx">03</span>内容归档<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="comments"><span class="dm-idx">04</span>评论审核<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="users"><span class="dm-idx">05</span>用户管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="settings"><span class="dm-idx">07</span>系统设置<span class="dm-arr">››</span></a>
+    </nav>
+    <div class="drawer-user">
+      <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
+      <button type="button" id="adminDrawerLogout"><span class="dm-idx">×</span>退出登录</button>
+    </div>
+    <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
+  </aside>
   <div class="admin-shell" id="adminPage">
     <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="state-tag">[ 加载中 ]</span><p>正在加载管理面板…</p></div>
     <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>

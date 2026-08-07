@@ -924,3 +924,31 @@ body.admin-only { overflow: hidden; height: 100vh; }
   .moment-card { padding: 14px 12px; }
   .moment-content { font-size: 13px; }
 }
+
+/* ── 管理面板移动端顶栏 + 抽屉 ── */
+.admin-mobile-bar { display: none; }
+@media (max-width: 820px) {
+  .admin-mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .an-logo-sm { font-size: 15px; font-weight: 550; letter-spacing: 1px; color: var(--white); font-family: var(--font-display); }
+  .an-logo-sm .an-role { display: block; font-family: var(--font-mono); font-size: 9px; color: var(--accent); letter-spacing: 1.5px; }
+  .admin-burger {
+    width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 2px;
+    background: none; color: var(--muted); cursor: pointer;
+  }
+  .admin-burger:hover { border-color: var(--accent); color: var(--fg); }
+  .admin-shell .admin-nav { display: none; }
+  .admin-drawer { width: min(300px, 84vw); }
+  .admin-drawer .drawer-menu a { min-height: 52px; font-size: 15px; }
+}
