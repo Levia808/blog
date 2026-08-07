@@ -188,61 +188,39 @@
     } catch (e) { /* GLightbox 未就绪时忽略 */ }
   }
 
-  /* ── 欢迎页: ScrambleText 指针乱码标题 + 页脚打字机 (data/welcome.toml 驱动) ── */
+  /* ── 欢迎页: ScrambleText 指针乱码标题 (GSAP SplitText + ScrambleTextPlugin, 与 Vue Bits 组件同源) + 页脚打字机 ── */
   function initWelcomeEffects() {
     var cfg = window.welcomeCfg || {};
     var reduced = reducedMotion;
 
-    /* ScrambleText: 指针附近字符乱码重组 (Vue Bits 组件等价实现) */
+    /* ScrambleText: GSAP 插件版 (gsap 3.13+ 免费), 行为与组件源码一致 */
     var titleEl = document.getElementById('welcomeTitle');
     if (titleEl) {
-      var radius = cfg.scrambleRadius || 160;
+      var radius = cfg.scrambleRadius || 100;
       var duration = cfg.scrambleDuration || 1.2;
       var speed = cfg.scrambleSpeed || 0.5;
-      var charsPool = (cfg.scrambleChars || '.:·#%').split('');
-      var text = titleEl.textContent;
-      titleEl.textContent = '';
-      var spans = text.split('').map(function (ch) {
-        var span = document.createElement('span');
-        span.className = 'st-char';
-        span.textContent = ch;
-        span.dataset.content = ch;
-        titleEl.appendChild(span);
-        return span;
-      });
-      if (!reduced) {
-        var timers = {};
-        function scrambleChar(span, distFactor) {
-          var key = Array.prototype.indexOf.call(spans, span);
-          clearTimeout(timers[key]);
-          var d = (duration * (1 - distFactor)) * 1000;
-          var frames = Math.max(2, Math.round(d / 40));
-          var f = 0;
-          var iv = setInterval(function () {
-            f++;
-            if (span.textContent !== span.dataset.content) {
-              span.textContent = charsPool[Math.floor(Math.random() * charsPool.length)];
-            }
-            if (f >= frames) {
-              clearInterval(iv);
-              span.textContent = span.dataset.content;
-            }
-          }, Math.max(16, 40 * speed));
-          timers[key] = setTimeout(function () { clearInterval(iv); span.textContent = span.dataset.content; }, d + 300);
-        }
+      var chars = cfg.scrambleChars || '.:';
+      var hasGsap = window.gsap && window.SplitText && window.ScrambleTextPlugin;
+      if (hasGsap && !reduced) {
+        gsap.registerPlugin(SplitText, ScrambleTextPlugin);
+        var split = new SplitText(titleEl, { type: 'chars', charsClass: 'st-char' });
+        split.chars.forEach(function (el) {
+          gsap.set(el, { attr: { 'data-content': el.innerHTML } });
+        });
         var zone = document.getElementById('welcome');
         zone.addEventListener('pointermove', function (e) {
-          spans.forEach(function (span) {
-            var r = span.getBoundingClientRect();
+          split.chars.forEach(function (el) {
+            var r = el.getBoundingClientRect();
             var dx = e.clientX - (r.left + r.width / 2);
             var dy = e.clientY - (r.top + r.height / 2);
             var dist = Math.hypot(dx, dy);
             if (dist < radius) {
-              var factor = dist / radius;
-              if (span.textContent === span.dataset.content) {
-                span.textContent = charsPool[Math.floor(Math.random() * charsPool.length)];
-              }
-              scrambleChar(span, factor);
+              gsap.to(el, {
+                overwrite: true,
+                duration: duration * (1 - dist / radius),
+                scrambleText: { text: el.dataset.content || '', chars: chars, speed: speed },
+                ease: 'none'
+              });
             }
           });
         });
