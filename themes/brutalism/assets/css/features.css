@@ -249,7 +249,9 @@
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid var(--border);
+  transition: transform var(--dur-fast) ease-out, border-color var(--dur-slow) ease-out;
 }
+.comment-avatar:hover { transform: scale(1.08); border-color: var(--accent); }
 .comment-avatar-fallback {
   display: flex;
   align-items: center;
@@ -314,8 +316,10 @@
   border: 1px solid var(--border);
   background: var(--bg);
   object-fit: cover;
+  transition: transform var(--dur-fast) ease-out, border-color var(--dur-slow) ease-out;
 }
 .profile-avatar-lg { width: 72px; height: 72px; }
+.profile-avatar:hover, .profile-avatar:focus-visible { transform: translateY(-2px) scale(1.03); border-color: var(--accent); }
 .profile-info h2 { font-size: 18px; font-weight: 500; color: var(--white); font-family: var(--font-display); margin-bottom: 4px; }
 .profile-info .label { display: block; margin-top: 2px; }
 .profile-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }

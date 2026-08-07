@@ -416,6 +416,7 @@
     <div class="motion-demo"><div class="name">stagger</div><div style="display:flex;flex-direction:column;gap:4px;width:100%;"><div class="skeleton-block" style="width:100%;animation:fade-up .4s both;"></div><div class="skeleton-block" style="width:80%;animation:fade-up .4s .1s both;"></div><div class="skeleton-block" style="width:60%;animation:fade-up .4s .2s both;"></div></div><div class="desc">列表渐进<br>50-80ms stagger</div></div>
   </div>
   <div class="box"><span class="mono" style="color:var(--accent);">▶ motion-rule</span><br>唯一允许的 opacity 变化：页面首屏 fade-up。此后所有交互仅用 transform。动效时长 <strong>120ms fast · 200ms normal · 350ms slow</strong>。淡出比淡入快。</div>
+  <div class="box" style="border-left-color:var(--faint);"><span class="mono" style="color:var(--accent);">▶ avatar-hover · 可打断</span><br>导航头像悬停：外层 <span class="mono">translateY(-2px) scale(1.08)</span> 120ms + 边框 → accent；内层图片 <span class="mono">scale(1.18)</span> 350ms ease-out 慢进；右上角 6px accent 方块 <span class="mono">scale(0→1)</span> 200ms。<strong>移出时 <span class="mono">:not(:hover)</span> 将 transition-duration 压至 120ms 快退</strong>——任意时刻移出均从当前帧平滑反向，无跳变、无排队（CSS transition 天然可打断，无需 JS）。菜单展开时经 <span class="mono">:has()</span> 保持激活态；键盘 <span class="mono">:focus-visible</span> 同效。</div>
 </section>
 
 <hr>
