@@ -8,11 +8,11 @@
 {{- $bg = $bgRes.Resize "2560x q80" }}
 {{- end }}
 <article class="container article-page">
+  {{- with .Params.background }}
+  <div class="article-bg" role="img" aria-label="{{ $.Title }} 底图" style="background-image:url('{{ if $bg }}{{ $bg.RelPermalink }}{{ else }}{{ . | relURL }}{{ end }}')"></div>
+  {{- end }}
   <div class="article-layout">
     <div class="article-main" data-reveal>
-      {{- with .Params.background }}
-      <div class="article-bg" role="img" aria-label="{{ $.Title }} 底图" style="background-image:url('{{ if $bg }}{{ $bg.RelPermalink }}{{ else }}{{ . | relURL }}{{ end }}')"></div>
-      {{- end }}
       {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
       <header class="article-header">
         {{- if .Params.archived }}

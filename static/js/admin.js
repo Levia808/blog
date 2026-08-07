@@ -226,7 +226,9 @@
             ? '<button type="button" class="admin-row-action is-primary" data-post-unarchive="' + escapeHtml(post.name) + '">取消归档</button>'
             : (post.draft
               ? '<button type="button" class="admin-row-action is-primary" data-post-publish="' + escapeHtml(post.name) + '">发布</button>'
-              : '<button type="button" class="admin-row-action" data-post-archive="' + escapeHtml(post.name) + '">归档</button>')) +
+              : '<button type="button" class="admin-row-action" data-post-draft="' + escapeHtml(post.name) + '">下架</button>' +
+                '<button type="button" class="admin-row-action" data-post-archive="' + escapeHtml(post.name) + '">归档</button>')) +
+          '<button type="button" class="admin-row-action is-danger" data-post-delete="' + escapeHtml(post.name) + '">删除</button>' +
           '<a class="admin-row-action" href="' + cmsEntry + '">编辑</a>' +
           '</div>'
         : '';
@@ -535,6 +537,30 @@
         showError(error.message || '取消归档失败。');
       } finally {
         unarchiveBtn.disabled = false;
+      }
+      return;
+    }
+
+    var deleteBtn = event.target.closest('[data-post-delete]');
+    if (deleteBtn) {
+      var postName = deleteBtn.dataset.postDelete;
+      var post = ghPostsCache.find(function (p) { return p.name === postName; });
+      if (!window.confirm('确认删除文章「' + (post ? post.title : postName) + '」？此操作会从仓库删除文件，不可恢复。')) return;
+      try {
+        deleteBtn.disabled = true;
+        var target = ghPostsCache.find(function (p) { return p.name === postName; });
+        if (!target) throw new Error('未找到文章 ' + postName);
+        await ghFetch('/repos/' + GH_REPO + '/contents/content/posts/' + postName, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '删除: ' + (target.title || postName), sha: target.sha })
+        });
+        showToast('已删除：' + (target.title || postName), 'success');
+        await refreshPosts();
+      } catch (error) {
+        showError(error.message || '删除失败。');
+      } finally {
+        deleteBtn.disabled = false;
       }
       return;
     }
