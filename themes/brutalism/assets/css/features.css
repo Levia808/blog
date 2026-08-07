@@ -7,7 +7,7 @@
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -551,7 +551,7 @@ body.admin-only { overflow: hidden; height: 100vh; }
   background: var(--surface);
 }
 .admin-table tbody tr { transition: background var(--dur-normal) ease-out; }
-.admin-table tbody tr:hover { background: #1B1B1A; }
+.admin-table tbody tr:hover { background: var(--hover-bg); }
 .admin-table td { color: var(--fg); }
 .admin-table tbody tr:last-child td { border-bottom: none; }
 .admin-table tbody td:first-child strong { font-size: 14px; color: var(--white); font-weight: 500; }
