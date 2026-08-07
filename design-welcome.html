@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>欢迎页 v2 设计稿 — ASCII 矩阵标题 + 页脚打字机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700;900&display=swap">
 <style>
   :root {
     --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
@@ -77,12 +80,12 @@
 <section>
   <div class="label">01 · 欢迎舞台</div>
   <h2>ASCII 矩阵大标题 + 页脚打字机</h2>
-  <p style="color:var(--muted);font-size:13px;margin:10px 0 16px;">完整可运行演示：标题字符矩阵实时变换（苔绿），页脚打字机循环（打字→停顿→删除→重打），参数下方可调。</p>
+  <p style="color:var(--muted);font-size:13px;margin:10px 0 16px;">完整可运行演示：标题以<b>真实字形（Space Grotesk）</b>经亮度采样转为高分辨率 ASCII 字符画，字符持续变换（苔绿）；页脚打字机循环，参数下方可调。</p>
   <div class="stage">
     <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ASCII matrix + footer typewriter</span></div>
     <div class="welcome">
       <div class="boot-line">[ SYSTEM ] <span class="a">BOOT: OK</span> · <span id="frameInfo">MATRIX RUNNING</span></div>
-      <canvas id="asciiCanvas" width="760" height="210"></canvas>
+      <canvas id="asciiCanvas" width="900" height="230"></canvas>
       <div class="foot-type">
         <span class="prefix">//</span>
         <span class="ttype" id="typeTarget"></span><span class="cur"></span>
@@ -90,7 +93,7 @@
     </div>
   </div>
   <div class="spec">
-    <div class="spec-card"><strong>ASCII 矩阵</strong><code>canvas + RAF</code> · 5×7 点阵字库 · 每帧字符位随机切换 · 苔绿 #6B8B6B · 字体 JetBrains Mono</div>
+    <div class="spec-card"><strong>ASCII 矩阵</strong><code>canvas + RAF</code> · 真实字形采样转字符画（非点阵）· 采样密度 5px/格 · 字符 9px · 多级亮度字符池 · 苔绿 #6B8B6B</div>
     <div class="spec-card"><strong>页脚打字机</strong><code>JS typewriter</code> · 打字→停顿→删除→重打循环 · 光标 step-end 闪烁</div>
     <div class="spec-card"><strong>参数可配</strong>文本 / 打字速度 / 删除速度 / 停顿时长（下方面板实时调节验证）</div>
   </div>
@@ -118,7 +121,7 @@
       <tr><td>打字速度</td><td rowspan="3"><span class="mono">data/welcome.toml</span></td><td rowspan="3">管理面板「系统设置」表单</td><td>typeSpeed: 70（ms/字）</td></tr>
       <tr><td>删除速度</td><td>deleteSpeed: 38（ms/字）</td></tr>
       <tr><td>停顿时长</td><td>pause: 1800（ms）</td></tr>
-      <tr><td>标题字符集/字号</td><td><span class="mono">data/welcome.toml</span></td><td>同上</td><td>asciiChars: "█▮▞#$%&@*+≠·"（变换字符池）</td></tr>
+      <tr><td>标题字符集/字号</td><td><span class="mono">data/welcome.toml</span></td><td>同上</td><td>asciiCharSets（按亮度分级的变换字符池）· 采样密度 5px · 字形字体 Space Grotesk</td></tr>
     </tbody>
   </table>
   <div class="spec" style="margin-top:16px;">
@@ -135,7 +138,7 @@
   <div class="label">03 · 验收清单</div>
   <h2>待验收项</h2>
   <div class="spec">
-    <div class="spec-card"><strong>① ASCII 标题</strong>字符矩阵组成 "LEVIA'S BLOG" · 字符持续变换 · 苔绿 · reduced-motion 时静止显示</div>
+    <div class="spec-card"><strong>① ASCII 标题</strong>真实字形(粗体)转字符画 "LEVIA'S BLOG" · 高分辨率小字符 · 字符持续变换 · 苔绿 · reduced-motion 静止</div>
     <div class="spec-card"><strong>② 页脚打字机</strong>一句话循环打字 · 光标闪烁 · 参数实时可调</div>
     <div class="spec-card"><strong>③ 后台可配</strong>文本/打字/删除/停顿四项后台可编辑 · 保存即生效（重建）</div>
     <div class="spec-card"><strong>④ 性能</strong>RAF 矩阵 ≤ 1ms/帧 · 滚动离开暂停 · 移动端自适应字号</div>
@@ -150,77 +153,82 @@
 </div>
 
 <script>
-/* ═══════ ASCII 点阵字库 (5×7) ═══════ */
-var FONT = {
-  'L':['#....','#....','#....','#....','#....','#....','#####'],
-  'E':['#####','#....','#....','####.','#....','#....','#####'],
-  'V':['#...#','#...#','#...#','#...#','.#.#.','.#.#.','..#..'],
-  'I':['#####','..#..','..#..','..#..','..#..','..#..','#####'],
-  'A':['..#..','.#.#.','#...#','#...#','#####','#...#','#...#'],
-  "'":['.....','.....','..#..','..#..','..#..','..#..','.....'],
-  'S':['#####','#....','#....','####.','....#','....#','#####'],
-  'B':['####.','#...#','#...#','####.','#...#','#...#','####.'],
-  'O':['####.','#...#','#...#','#...#','#...#','#...#','####.'],
-  'G':['.###.','#....','#....','#.##.','#..#.','#..#.','.###.'],
-  ' ':['.....','.....','.....','.....','.....','.....','.....']
-};
+/* ═══════ ASCII 矩阵引擎 (真实字形采样 → 字符画) ═══════ */
 var TITLE = "LEVIA'S BLOG";
-var ASCII_CHARS = '█▮▞#$%&@*+≠◊';
+var TITLE_FONT = '900 120px "Space Grotesk", sans-serif';
+var SAMPLE = 5;          // 采样密度 px/格 (分辨率)
+var CHARS_BY_LUMA = [    // 亮度分级字符池 (暗 → 亮)
+  ['█', '▮', '▓', '▒'],
+  ['#', '%', '&', '@'],
+  ['*', '+', '≠', '◊'],
+  ['·', '·', '.', ' ']
+];
 
 var canvas = document.getElementById('asciiCanvas');
 var ctx = canvas.getContext('2d');
-var CELL = 14, GAP = 3, glyphs = [];
 
-function buildGlyphs() {
-  glyphs = [];
-  var totalW = 0;
-  TITLE.split('').forEach(function (ch) {
-    var rows = FONT[ch] || FONT[' '];
-    glyphs.push(rows);
-    totalW += rows[0].length;
-  });
-  var spacing = 2;
-  totalW += spacing * (glyphs.length - 1);
-  canvas.width = totalW * CELL + GAP * 2;
-  canvas.height = 7 * CELL + GAP * 2;
-  var x = GAP;
-  glyphs.forEach(function (rows, gi) {
-    glyphs[gi] = { rows: rows, x: x };
-    x += rows[0].length * CELL + spacing * CELL;
-  });
+/* 离屏: 用真实字形绘制标题 */
+var off = document.createElement('canvas');
+var octx = off.getContext('2d');
+function buildOffscreen() {
+  off.width = canvas.width;
+  off.height = canvas.height;
+  octx.clearRect(0, 0, off.width, off.height);
+  octx.font = TITLE_FONT;
+  octx.textAlign = 'center';
+  octx.textBaseline = 'middle';
+  octx.fillStyle = '#fff';
+  octx.fillText(TITLE, off.width / 2, off.height / 2 + 8);
 }
-buildGlyphs();
+buildOffscreen();
+var imgData = octx.getImageData(0, 0, off.width, off.height);
 
-/* 每帧随机字符矩阵绘制 */
-function draw() {
+/* 亮度映射表 */
+var luma = [];
+var cols = Math.ceil(canvas.width / SAMPLE);
+var rows = Math.ceil(canvas.height / SAMPLE);
+for (var r = 0; r < rows; r++) {
+  luma[r] = [];
+  for (var c = 0; c < cols; c++) {
+    var px = imgData.data[((r * SAMPLE + SAMPLE / 2) * off.width + (c * SAMPLE + SAMPLE / 2)) * 4];
+    luma[r][c] = px > 200 ? 3 : px > 110 ? 2 : px > 36 ? 1 : 0;
+  }
+}
+
+function drawMatrix() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = CELL + 'px "JetBrains Mono", monospace';
+  ctx.font = '9px "JetBrains Mono", monospace';
   ctx.fillStyle = '#6B8B6B';
-  glyphs.forEach(function (g) {
-    g.rows.forEach(function (row, r) {
-      for (var c = 0; c < row.length; c++) {
-        if (row[c] === '#') {
-          var ch = Math.random() < 0.55 ? ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)] : '·';
-          ctx.fillText(ch, g.x + c * CELL, GAP + r * CELL + CELL - 2);
-        }
-      }
-    });
-  });
-  requestAnimationFrame(draw);
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      var l = luma[r][c];
+      if (l === 0) continue;                     // 空白区跳过
+      var pool = CHARS_BY_LUMA[l];
+      var ch = pool[Math.floor(Math.random() * pool.length)];
+      ctx.fillText(ch, c * SAMPLE, r * SAMPLE + 9);
+    }
+  }
+  requestAnimationFrame(drawMatrix);
 }
-/* reduced-motion: 静止显示实心块 */
-if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  ctx.font = CELL + 'px "JetBrains Mono", monospace';
+
+/* reduced-motion: 静止显示每格最密字符 */
+function drawStatic() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = '9px "JetBrains Mono", monospace';
   ctx.fillStyle = '#6B8B6B';
-  glyphs.forEach(function (g) {
-    g.rows.forEach(function (row, r) {
-      for (var c = 0; c < row.length; c++) {
-        if (row[c] === '#') ctx.fillText('█', g.x + c * CELL, GAP + r * CELL + CELL - 2);
-      }
-    });
-  });
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      var l = luma[r][c];
+      if (l === 0) continue;
+      ctx.fillText(CHARS_BY_LUMA[l][0], c * SAMPLE, r * SAMPLE + 9);
+    }
+  }
+}
+
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  drawStatic();
 } else {
-  draw();
+  drawMatrix();
 }
 
 /* ═══════ 页脚打字机 (参数可调) ═══════ */
