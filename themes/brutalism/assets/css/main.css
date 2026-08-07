@@ -365,6 +365,10 @@ html.js [data-reveal].reveal-visible {
 }
 
 .welcome-full {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 100vh;
   min-height: 600px;
   display: flex;
@@ -372,14 +376,15 @@ html.js [data-reveal].reveal-visible {
   align-items: center;
   justify-content: center;
   text-align: center;
-  position: relative;
   overflow: hidden;
   background: var(--bg);
+  z-index: 1;
 }
 /* 超大标题 (占满页面) + 页脚打字机 */
 .welcome-title {
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -459,7 +464,7 @@ html.js [data-reveal].reveal-visible {
 }
 
 /* ── 首页 ── */
-.blog-home { padding: 64px 32px 96px; }
+.blog-home { margin-top: 100vh; padding: 64px 32px 96px; }
 
 .blog-hero {
   display: block;
@@ -1006,4 +1011,11 @@ html.js [data-reveal].reveal-visible {
 }
 @media (min-width: 769px) {
   .drawer, .drawer-mask { display: none; }
+}
+
+.shape-blur {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
 }
