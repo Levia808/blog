@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>开屏欢迎动画设计方案 — vue-bits powered</title>
+<title>欢迎页 v2 设计稿 — ASCII 矩阵标题 + 页脚打字机</title>
 <style>
   :root {
     --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
@@ -16,67 +16,49 @@
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);line-height:1.75;-webkit-font-smoothing:antialiased}
   .container{max-width:1060px;margin:0 auto;padding:0 28px}
-  h1{font-size:clamp(26px,4.5vw,44px);font-weight:500;letter-spacing:-1.2px;font-family:var(--font-display)}
+  h1{font-size:clamp(24px,4.5vw,42px);font-weight:500;letter-spacing:-1.2px;font-family:var(--font-display)}
   h2{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
   .label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
   .mono{font-family:var(--font-mono);font-size:11px}
-  .header{padding:64px 0 40px;text-align:center;border-bottom:1px solid var(--border)}
-  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:16px;letter-spacing:3px}
-  .header p{color:var(--muted);max-width:520px;margin:14px auto 0;font-size:13px}
+  .header{padding:60px 0 36px;text-align:center;border-bottom:1px solid var(--border)}
+  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:14px;letter-spacing:3px}
+  .header p{color:var(--muted);max-width:560px;margin:12px auto 0;font-size:13px}
   hr{border:none;border-top:1px solid var(--border)}
-  .plan{padding:64px 0}
-  .plan-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
-  .plan-head .pno{font-family:var(--font-mono);font-size:12px;color:var(--accent)}
-  .plan-head .pname{font-size:22px;font-weight:500;color:var(--white);font-family:var(--font-display)}
-  .plan-desc{color:var(--muted);font-size:13px;max-width:640px;margin-bottom:16px}
-  .stage{
-    position:relative;width:100%;height:420px;overflow:hidden;
-    border:1px solid var(--border);border-radius:2px;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .stage-bar{position:absolute;top:0;left:0;right:0;display:flex;gap:7px;padding:8px 14px;background:#101010;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--faint)}
+  section{padding:56px 0}
+  .stage{position:relative;width:100%;min-height:460px;overflow:hidden;border:1px solid var(--border);border-radius:2px;background:var(--bg)}
+  .stage-bar{display:flex;align-items:center;gap:7px;padding:8px 14px;background:#101010;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:1px}
   .stage-bar .dot{width:9px;height:9px;border-radius:50%;background:#555}
-  .stage-bar .t{flex:1;text-align:right;letter-spacing:1px}
-  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px}
+  .stage-bar .t{flex:1;text-align:right}
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:16px}
   .spec-card{border:1px solid var(--border);border-radius:2px;padding:12px 14px;background:var(--surface);font-size:12px;color:var(--muted)}
-  .spec-card strong{display:block;color:var(--white);margin-bottom:4px;font-size:12px;font-family:var(--font-mono);letter-spacing:.5px}
+  .spec-card strong{display:block;color:var(--white);margin-bottom:4px;font-size:12px;font-family:var(--font-mono)}
   .spec-card code{font-family:var(--font-mono);font-size:11px;color:var(--accent)}
-  .verdict{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .verdict span{border:1px solid var(--border);border-radius:99px;padding:3px 12px;font-family:var(--font-mono);font-size:10px;color:var(--muted)}
-
-  /* ── 光标 ── */
-  .cur{display:inline-block;width:9px;height:16px;background:var(--accent);vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite}
-  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
-
-  /* 方案 A 终端打字 */
-  .term{font-family:var(--font-mono);font-size:clamp(12px,1.9vw,15px);line-height:2.1;width:min(88%,560px);text-align:left}
-  .term .ln{white-space:pre-wrap;word-break:break-all}
-  .term .ok{color:var(--accent)}
-  .term .dim{color:var(--faint)}
-  .term .cmd{color:var(--fg)}
-
-  /* 方案 B 解密 */
-  .decrypt{text-align:center;display:flex;flex-direction:column;gap:22px;align-items:center}
-  .decrypt h1{font-size:clamp(34px,7vw,68px);letter-spacing:-.04em;color:var(--white);font-family:var(--font-display);font-weight:600}
-  .decrypt .sub{font-family:var(--font-mono);font-size:clamp(11px,1.6vw,13px);color:var(--muted);letter-spacing:.35em}
-  .decrypt .boot{font-family:var(--font-mono);font-size:11px;color:var(--faint);letter-spacing:.15em}
-  .decrypt .boot .a{color:var(--accent)}
-
-  /* 方案 C ASCII */
-  .ascii-stage{display:flex;align-items:center;justify-content:center}
-  .ascii-box{font-family:var(--font-mono);font-size:10px;line-height:1.15;color:var(--accent);letter-spacing:2px;text-align:center;user-select:none}
-  .ascii-glitch{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.5) 3px,rgba(0,0,0,.5) 4px);pointer-events:none}
-
-  /* 方案 D 乱码 */
-  .scramble{text-align:center;display:flex;flex-direction:column;gap:18px;align-items:center}
-  .scramble h1{font-size:clamp(30px,6.5vw,60px);letter-spacing:-.03em;color:var(--white);font-family:var(--font-display);font-weight:600;min-height:1.2em}
-  .scramble .meta{font-family:var(--font-mono);font-size:11px;color:var(--faint);letter-spacing:.2em;display:flex;gap:20px}
-  .scramble .meta b{color:var(--accent);font-weight:400}
-
-  /* 方案对比表 */
-  .table{width:100%;border-collapse:collapse;font-size:12px;margin-top:20px}
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin-top:16px}
   .table th,.table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
   .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
+
+  /* 欢迎舞台 */
+  .welcome{height:100vh;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;position:relative;overflow:hidden}
+  canvas#asciiCanvas{display:block}
+  .boot-line{font-family:var(--font-mono);font-size:11px;color:var(--faint);letter-spacing:.2em}
+  .boot-line .a{color:var(--accent)}
+
+  /* 页脚打字机 */
+  .foot-type{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:clamp(12px,1.8vw,15px);color:var(--muted);min-height:44px}
+  .foot-type .prefix{color:var(--accent)}
+  .foot-type .ttype{white-space:pre-wrap}
+  .foot-type .cur{display:inline-block;width:9px;height:16px;background:var(--accent);animation:blink 1s step-end infinite}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+  /* 配置面板 (模拟后台) */
+  .panel{border:1px solid var(--border);border-radius:2px;background:var(--surface);padding:18px;display:flex;flex-direction:column;gap:14px}
+  .panel .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .panel label{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:110px}
+  .panel input[type=text]{flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);border-radius:2px;padding:9px 12px;font-size:13px;color:var(--fg);outline:none}
+  .panel input[type=range]{flex:1;accent-color:var(--accent)}
+  .panel input:focus{border-color:var(--accent)}
+  .panel .val{font-family:var(--font-mono);font-size:11px;color:var(--accent);min-width:52px;text-align:right}
+  .panel .hint{font-family:var(--font-mono);font-size:10px;color:var(--faint)}
 </style>
 </head>
 <body>
@@ -84,207 +66,206 @@
 <div class="container">
 
 <header class="header">
-  <div class="sub">[ WELCOME ANIMATION ] · vue-bits.dev 组件方案</div>
-  <h1>开屏欢迎动画 · 商用实现版</h1>
-  <p>基于 vue-bits.dev（DavidHDev/vue-bits · 4.3k★）动画组件思路。方案 A 已落地为<b>主题内真实打字机引擎</b>（theme.js initWelcomeTypewriter），其余方案附完整可复制实现。</p>
+  <div class="sub">[ WELCOME v2 ] · 验收设计稿</div>
+  <h1>欢迎页 v2 · ASCII 矩阵标题 + 页脚打字机</h1>
+  <p>大标题以 ASCII 字符矩阵构成「LEVIA'S BLOG」，字符持续变换流动；页脚一句话打字机循环，文本与速度参数<b>后台可编辑</b>。</p>
 </header>
 
-<!-- ═══════ 方案 A ═══════ -->
-<section class="plan" id="plan-a">
-  <div class="plan-head"><span class="pno">方案 A</span><h2>终端启动流 · TextType <span style="font-size:10px;color:var(--accent);font-family:var(--font-mono)">[ 已落地主题 ]</span></h2></div>
-  <p class="plan-desc">延续现欢迎页气质，升级为<b>真打字机</b>：终端命令逐行敲出，苔绿状态行渐亮，光标闪烁收尾。<b>已在主题上线</b>（逐字 52ms · 行间 110ms · 点击跳过 · 滚动离开取消 · reduced-motion 直显）。</p>
+<hr>
+
+<!-- ═══════ 01 欢迎舞台 ═══════ -->
+<section>
+  <div class="label">01 · 欢迎舞台</div>
+  <h2>ASCII 矩阵大标题 + 页脚打字机</h2>
+  <p style="color:var(--muted);font-size:13px;margin:10px 0 16px;">完整可运行演示：标题字符矩阵实时变换（苔绿），页脚打字机循环（打字→停顿→删除→重打），参数下方可调。</p>
   <div class="stage">
-    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — TextType typing loop</span></div>
-    <div class="term" id="termA">
-      <div class="ln dim" id="a1">$ ssh blog.levia.dev</div>
-      <div class="ln" id="a2"></div>
-      <div class="ln" id="a3"></div>
-      <div class="ln" id="a4"></div>
-      <div class="ln" id="a5"></div>
-      <div class="ln" id="a6"></div>
-      <div class="ln" id="a7"></div>
-      <div class="ln" id="a8"><span class="cur"></span></div>
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ASCII matrix + footer typewriter</span></div>
+    <div class="welcome">
+      <div class="boot-line">[ SYSTEM ] <span class="a">BOOT: OK</span> · <span id="frameInfo">MATRIX RUNNING</span></div>
+      <canvas id="asciiCanvas" width="760" height="210"></canvas>
+      <div class="foot-type">
+        <span class="prefix">//</span>
+        <span class="ttype" id="typeTarget"></span><span class="cur"></span>
+      </div>
     </div>
   </div>
   <div class="spec">
-    <div class="spec-card"><strong>落地实现</strong><code>theme.js → initWelcomeTypewriter</code> · TYPE_MS 52 · LINE_GAP 110 · 点击跳过 · 2.4s 自动跳过 · 滚动离开取消</div>
-    <div class="spec-card"><strong>内容</strong>$ ssh · 加载内核 · hugo 挂载 · 主题初始化 · 服务 active(苔绿) · 部署/认证 ✓ · 光标</div>
-    <div class="spec-card"><strong>动效</strong>逐字打字 58ms · 退格删 24ms · 句间停顿 900ms · 8 行循环 · 光标 step-end 1s</div>
-    <div class="spec-card"><strong>气质</strong>极客 · 秩序 · 克制动效 · 完全贴合终端语言</div>
+    <div class="spec-card"><strong>ASCII 矩阵</strong><code>canvas + RAF</code> · 5×7 点阵字库 · 每帧字符位随机切换 · 苔绿 #6B8B6B · 字体 JetBrains Mono</div>
+    <div class="spec-card"><strong>页脚打字机</strong><code>JS typewriter</code> · 打字→停顿→删除→重打循环 · 光标 step-end 闪烁</div>
+    <div class="spec-card"><strong>参数可配</strong>文本 / 打字速度 / 删除速度 / 停顿时长（下方面板实时调节验证）</div>
   </div>
-  <div class="verdict"><span>贴合度 ★★★★★</span><span>实现成本 低</span><span>性能 优</span><span>推荐 ★</span></div>
+
+  <h3 style="font-size:15px;color:var(--white);margin:26px 0 12px;font-family:var(--font-display)">参数配置面板（模拟后台设置，实时生效）</h3>
+  <div class="panel">
+    <div class="row"><label>打字机文本</label><input type="text" id="cfgText" value="写代码，也写生活。记录学习与思考。"><span class="hint">← 后台可编辑的一句话</span></div>
+    <div class="row"><label>打字速度</label><input type="range" id="cfgTypeSpeed" min="30" max="160" value="70"><span class="val" id="valTypeSpeed">70ms</span></div>
+    <div class="row"><label>删除速度</label><input type="range" id="cfgDelSpeed" min="20" max="120" value="38"><span class="val" id="valDelSpeed">38ms</span></div>
+    <div class="row"><label>停顿时长</label><input type="range" id="cfgPause" min="500" max="5000" step="100" value="1800"><span class="val" id="valPause">1.8s</span></div>
+    <div class="row"><label>循环模式</label><span style="font-family:var(--font-mono);font-size:12px;color:var(--fg)">打字 → 停顿 → 删除 → 重打（循环）</span></div>
+  </div>
 </section>
 
 <hr>
 
-<!-- ═══════ 方案 B ═══════ -->
-<section class="plan" id="plan-b">
-  <div class="plan-head"><span class="pno">方案 B</span><h2>解密标题 · DecryptedText</h2></div>
-  <p class="plan-desc">站点名从乱码矩阵<b>逐字解密</b>为「LEVIA'S BLOG」，副标与启动日志静态垫底。黑客/精密气质。</p>
-  <div class="stage">
-    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — DecryptedText</span></div>
-    <div class="decrypt">
-      <div class="boot">[ SYSTEM ] <span class="a">AUTH: OK</span> · KERNEL: OK · <span id="bDecState">DECRYPTING…</span></div>
-      <h1 id="bTitle">▮▮▮▮▮ ▮▮▮▮</h1>
-      <div class="sub" id="bSub">MINERAL · TERMINAL · MOSS</div>
-      <div class="cur"></div>
-    </div>
-  </div>
-  <div class="spec">
-    <div class="spec-card"><strong>组件</strong><code>&lt;DecryptedText&gt;</code> · text="LEVIA'S BLOG" · animateOn=load · sequential · speed 80ms · revealDirection start</div>
-    <div class="spec-card"><strong>内容</strong>标题解密 + 状态行 [ SYSTEM ] + 副标 mono 宽字距</div>
-    <div class="spec-card"><strong>动效</strong>乱码→正文字符 80ms/位 · 顺序解密 · 仅一次非循环 · 光标收尾</div>
-    <div class="spec-card"><strong>气质</strong>黑客 · 精密 · 一次性的仪式感</div>
-  </div>
-  <div class="verdict"><span>贴合度 ★★★★</span><span>实现成本 低</span><span>性能 优</span></div>
-</section>
-
-<hr>
-
-<!-- ═══════ 方案 C ═══════ -->
-<section class="plan" id="plan-c">
-  <div class="plan-head"><span class="pno">方案 C</span><h2>ASCII 波形 · ASCIIText</h2></div>
-  <p class="plan-desc">标题以<b>ASCII 字符矩阵</b>呈现（enableWaves 波纹），叠加 LetterGlitch 字母故障背景 + CRT 扫描线。先锋实验室气质。</p>
-  <div class="stage ascii-stage">
-    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ASCIIText + LetterGlitch</span></div>
-    <div class="ascii-box" id="asciiBox">LEVIA'S BLOG</div>
-    <div class="ascii-glitch"></div>
-  </div>
-  <div class="spec">
-    <div class="spec-card"><strong>组件</strong><code>&lt;ASCIIText&gt;</code> · text 大标题 · asciiFontSize 14 · textFontSize 64 · enableWaves · textColor 苔绿；背景 <code>&lt;LetterGlitch&gt;</code></div>
-    <div class="spec-card"><strong>内容</strong>ASCII 字符雨组成标题 + 故障字母背景层</div>
-    <div class="spec-card"><strong>动效</strong>ASCII↔文字形态切换 400ms · 波形 4Hz · 扫描线常驻 · 背景字母故障随机位移</div>
-    <div class="spec-card"><strong>气质</strong>先锋 · 实验室 · 视觉冲击最强</div>
-  </div>
-  <div class="verdict"><span>贴合度 ★★★</span><span>实现成本 中(Canvas)</span><span>性能 中</span><span>风格大胆</span></div>
-</section>
-
-<hr>
-
-<!-- ═══════ 方案 D ═══════ -->
-<section class="plan" id="plan-d">
-  <div class="plan-head"><span class="pno">方案 D</span><h2>乱码重组 · ScrambleText</h2></div>
-  <p class="plan-desc">标题<b>逐词乱码重组</b>落定，底部 mono 元信息行（构建版本/文章数）。轻快工业感。</p>
-  <div class="stage">
-    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ScrambleText</span></div>
-    <div class="scramble">
-      <h1 id="dTitle">▮▮▮▮▮ ▮▮▮▮▮▮</h1>
-      <div class="meta"><span>BUILD <b>2026</b></span><span>HUGO <b>v0.164</b></span><span>POSTS <b>04</b></span></div>
-      <div class="cur"></div>
-    </div>
-  </div>
-  <div class="spec">
-    <div class="spec-card"><strong>组件</strong><code>&lt;ScrambleText&gt;</code> · text 标题 · type=chars · speed 60ms · scrambleChars "█▮▞#$%" · duration 900ms</div>
-    <div class="spec-card"><strong>内容</strong>标题重组 + 数据行 (BUILD/HUGO/POSTS 苔绿)</div>
-    <div class="spec-card"><strong>动效</strong>逐字符乱码→落定 60ms · 一次成型 · 数据行静态</div>
-    <div class="spec-card"><strong>气质</strong>轻快 · 工业 · 数据感</div>
-  </div>
-  <div class="verdict"><span>贴合度 ★★★★</span><span>实现成本 低</span><span>性能 优</span></div>
-</section>
-
-<hr>
-
-<!-- ═══════ 对比总表 ═══════ -->
-<section class="plan">
-  <div class="plan-head"><span class="pno">×</span><h2>方案对比总表</h2></div>
+<!-- ═══════ 02 后台配置方案 ═══════ -->
+<section>
+  <div class="label">02 · 后台配置</div>
+  <h2>打字机内容与参数的后台编辑</h2>
   <table class="table">
-    <thead><tr><th>方案</th><th>组件</th><th>气质</th><th>动效节奏</th><th>成本</th><th>推荐度</th></tr></thead>
+    <thead><tr><th>配置项</th><th>存储位置</th><th>后台入口</th><th>说明</th></tr></thead>
     <tbody>
-      <tr><td>A · 终端启动流</td><td><span class="mono">TextType</span></td><td>极客·秩序</td><td>循环打字 58ms</td><td>低</td><td>★ 首选（延续现风格升级）</td></tr>
-      <tr><td>B · 解密标题</td><td><span class="mono">DecryptedText</span></td><td>黑客·精密</td><td>一次性解密 80ms</td><td>低</td><td>★★★★</td></tr>
-      <tr><td>C · ASCII 波形</td><td><span class="mono">ASCIIText</span>+<span class="mono">LetterGlitch</span></td><td>先锋·实验室</td><td>波形+故障 常驻</td><td>中</td><td>★★★ 视觉最强</td></tr>
-      <tr><td>D · 乱码重组</td><td><span class="mono">ScrambleText</span></td><td>轻快·工业</td><td>一次性重组 60ms</td><td>低</td><td>★★★★</td></tr>
+      <tr><td>打字机文本</td><td><span class="mono">data/welcome.toml 或 hugo.yaml params</span></td><td>管理面板「系统设置」分区 / Sveltia CMS 文件集合</td><td>一句话，Markdown 后渲染</td></tr>
+      <tr><td>打字速度</td><td rowspan="3"><span class="mono">data/welcome.toml</span></td><td rowspan="3">管理面板「系统设置」表单</td><td>typeSpeed: 70（ms/字）</td></tr>
+      <tr><td>删除速度</td><td>deleteSpeed: 38（ms/字）</td></tr>
+      <tr><td>停顿时长</td><td>pause: 1800（ms）</td></tr>
+      <tr><td>标题字符集/字号</td><td><span class="mono">data/welcome.toml</span></td><td>同上</td><td>asciiChars: "█▮▞#$%&@*+≠·"（变换字符池）</td></tr>
     </tbody>
   </table>
+  <div class="spec" style="margin-top:16px;">
+    <div class="spec-card"><strong>方案 A · data 文件</strong><code>data/welcome.toml</code> 配置，Hugo 构建注入主题；管理面板「系统设置」分区提供表单保存（GitHub API 提交 data 文件）</div>
+    <div class="spec-card"><strong>方案 B · CMS 文件集合</strong>Sveltia CMS 增加 <code>welcome</code> 文件集合，可视化编辑文本与参数后保存提交</div>
+    <div class="spec-card"><strong>建议</strong>两者结合：CMS 文件集合编辑（可视化）+ 管理面板「系统设置」快捷表单</div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════ 03 验收清单 ═══════ -->
+<section>
+  <div class="label">03 · 验收清单</div>
+  <h2>待验收项</h2>
+  <div class="spec">
+    <div class="spec-card"><strong>① ASCII 标题</strong>字符矩阵组成 "LEVIA'S BLOG" · 字符持续变换 · 苔绿 · reduced-motion 时静止显示</div>
+    <div class="spec-card"><strong>② 页脚打字机</strong>一句话循环打字 · 光标闪烁 · 参数实时可调</div>
+    <div class="spec-card"><strong>③ 后台可配</strong>文本/打字/删除/停顿四项后台可编辑 · 保存即生效（重建）</div>
+    <div class="spec-card"><strong>④ 性能</strong>RAF 矩阵 ≤ 1ms/帧 · 滚动离开暂停 · 移动端自适应字号</div>
+  </div>
 </section>
 
 </div>
 
 <footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
-  design-welcome v1 · vue-bits.dev powered · 2026-08-07 · LEVIA
+  design-welcome v2 · ASCII matrix + typewriter · 2026-08-07 · LEVIA
 </footer>
 </div>
 
 <script>
-// ── 方案 A: 打字机模拟 ──
-(function () {
-  var lines = [
-    ['$ ssh blog.levia.dev', 'dim'],
-    ['$ loading kernel modules…', 'dim'],
-    ['$ hugo v0.164.0 — 4 pages mounted', ''],
-    ['$ theme brutalism — initialized', ''],
-    ['$ blog.service — <span class="ok">active (running)</span>', ''],
-    ['$ deploy: Cloudflare Pages ✓', ''],
-    ['$ auth: Supabase GitHub OAuth ✓', '']
-  ];
-  var el = document.getElementById('termA');
-  var target = document.getElementById('a8');
-  var li = 0, ci = 0, typing = true;
-  function tick() {
-    if (li < lines.length) {
-      var line = lines[li];
-      var holder = document.getElementById('a' + (li + 1));
-      ci++;
-      if (ci <= line[0].length) {
-        holder.innerHTML = line[0].slice(0, ci);
-      } else {
-        li++; ci = 0;
+/* ═══════ ASCII 点阵字库 (5×7) ═══════ */
+var FONT = {
+  'L':['#....','#....','#....','#....','#....','#....','#####'],
+  'E':['#####','#....','#....','####.','#....','#....','#####'],
+  'V':['#...#','#...#','#...#','#...#','.#.#.','.#.#.','..#..'],
+  'I':['#####','..#..','..#..','..#..','..#..','..#..','#####'],
+  'A':['..#..','.#.#.','#...#','#...#','#####','#...#','#...#'],
+  "'":['.....','.....','..#..','..#..','..#..','..#..','.....'],
+  'S':['#####','#....','#....','####.','....#','....#','#####'],
+  'B':['####.','#...#','#...#','####.','#...#','#...#','####.'],
+  'O':['####.','#...#','#...#','#...#','#...#','#...#','####.'],
+  'G':['.###.','#....','#....','#.##.','#..#.','#..#.','.###.'],
+  ' ':['.....','.....','.....','.....','.....','.....','.....']
+};
+var TITLE = "LEVIA'S BLOG";
+var ASCII_CHARS = '█▮▞#$%&@*+≠◊';
+
+var canvas = document.getElementById('asciiCanvas');
+var ctx = canvas.getContext('2d');
+var CELL = 14, GAP = 3, glyphs = [];
+
+function buildGlyphs() {
+  glyphs = [];
+  var totalW = 0;
+  TITLE.split('').forEach(function (ch) {
+    var rows = FONT[ch] || FONT[' '];
+    glyphs.push(rows);
+    totalW += rows[0].length;
+  });
+  var spacing = 2;
+  totalW += spacing * (glyphs.length - 1);
+  canvas.width = totalW * CELL + GAP * 2;
+  canvas.height = 7 * CELL + GAP * 2;
+  var x = GAP;
+  glyphs.forEach(function (rows, gi) {
+    glyphs[gi] = { rows: rows, x: x };
+    x += rows[0].length * CELL + spacing * CELL;
+  });
+}
+buildGlyphs();
+
+/* 每帧随机字符矩阵绘制 */
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.font = CELL + 'px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#6B8B6B';
+  glyphs.forEach(function (g) {
+    g.rows.forEach(function (row, r) {
+      for (var c = 0; c < row.length; c++) {
+        if (row[c] === '#') {
+          var ch = Math.random() < 0.55 ? ASCII_CHARS[Math.floor(Math.random() * ASCII_CHARS.length)] : '·';
+          ctx.fillText(ch, g.x + c * CELL, GAP + r * CELL + CELL - 2);
+        }
       }
-    } else if (typing) {
-      typing = false;
+    });
+  });
+  requestAnimationFrame(draw);
+}
+/* reduced-motion: 静止显示实心块 */
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  ctx.font = CELL + 'px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#6B8B6B';
+  glyphs.forEach(function (g) {
+    g.rows.forEach(function (row, r) {
+      for (var c = 0; c < row.length; c++) {
+        if (row[c] === '#') ctx.fillText('█', g.x + c * CELL, GAP + r * CELL + CELL - 2);
+      }
+    });
+  });
+} else {
+  draw();
+}
+
+/* ═══════ 页脚打字机 (参数可调) ═══════ */
+var cfg = { text: '写代码，也写生活。记录学习与思考。', typeSpeed: 70, delSpeed: 38, pause: 1800 };
+var typeTarget = document.getElementById('typeTarget');
+var typing = false;
+
+function typewriterLoop() {
+  var text = cfg.text;
+  var ci = 0, deleting = false;
+  function tick() {
+    if (deleting) {
+      ci--;
+      typeTarget.textContent = text.slice(0, Math.max(0, ci));
+      if (ci <= 0) { deleting = false; setTimeout(tick, 300); return; }
+      setTimeout(tick, cfg.delSpeed);
+    } else {
+      if (ci < text.length) {
+        ci++;
+        typeTarget.textContent = text.slice(0, ci);
+        setTimeout(tick, cfg.typeSpeed);
+      } else {
+        setTimeout(function () { deleting = true; tick(); }, cfg.pause);
+      }
     }
-    setTimeout(tick, 26);
   }
   tick();
-})();
+}
+typewriterLoop();
 
-// ── 方案 B: 解密模拟 ──
-(function () {
-  var title = "LEVIA'S BLOG";
-  var sub = 'MINERAL · TERMINAL · MOSS';
-  var chars = '▮▞█#$%&@*+≠';
-  var h1 = document.getElementById('bTitle');
-  var subEl = document.getElementById('bSub');
-  var state = document.getElementById('bDecState');
-  var frame = 0;
-  function render() {
-    if (frame >= title.length + 6) { state.textContent = 'DECRYPTED: OK'; return; }
-    var reveal = frame - 6;
-    var out = '';
-    for (var i = 0; i < title.length; i++) {
-      if (i < reveal && title[i] !== ' ') out += title[i];
-      else if (title[i] === ' ') out += ' ';
-      else out += chars[Math.floor(Math.random() * chars.length)];
-    }
-    h1.textContent = out;
-    if (frame >= 6) subEl.textContent = sub.slice(0, frame - 6);
-    frame++;
-    setTimeout(render, 70);
-  }
-  render();
-})();
-
-// ── 方案 D: 乱码重组模拟 ──
-(function () {
-  var title = "LEVIA'S BLOG";
-  var chars = '▮▞█#$%&@';
-  var el = document.getElementById('dTitle');
-  var frame = 0;
-  var total = 30;
-  function render() {
-    var progress = Math.min(frame / total, 1);
-    var reveal = Math.floor(progress * title.length);
-    var out = '';
-    for (var i = 0; i < title.length; i++) {
-      if (title[i] === ' ') out += ' ';
-      else if (i < reveal) out += title[i];
-      else out += chars[Math.floor(Math.random() * chars.length)];
-    }
-    el.textContent = out;
-    if (frame < total + 4) { frame++; setTimeout(render, 55); }
-  }
-  render();
-})();
+/* 参数面板联动 */
+function bindRange(id, valId, key, fmt) {
+  var input = document.getElementById(id);
+  var val = document.getElementById(valId);
+  input.addEventListener('input', function () {
+    cfg[key] = Number(input.value);
+    val.textContent = fmt ? fmt(cfg[key]) : cfg[key] + 'ms';
+  });
+}
+bindRange('cfgTypeSpeed', 'valTypeSpeed', 'typeSpeed');
+bindRange('cfgDelSpeed', 'valDelSpeed', 'delSpeed');
+bindRange('cfgPause', 'valPause', 'pause', function (v) { return (v / 1000).toFixed(1) + 's'; });
+document.getElementById('cfgText').addEventListener('input', function () {
+  cfg.text = this.value || ' ';
+});
 </script>
 </body>
 </html>
