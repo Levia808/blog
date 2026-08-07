@@ -214,7 +214,9 @@
           : Promise.resolve(false);
         claimPromise.then(function () { return Profile.get(user.id); }).then(function (profile) {
           var avatar = profile?.avatar_url || profile?.github_avatar_url || '';
-          var name = profile?.display_name || user.email;
+          var meta = user.user_metadata || {};
+          var ghName = meta.user_name || meta.preferred_username || '';
+          var name = ghName || profile?.github_username || profile?.display_name || user.email;
           updateUserDisplay(avatar, name, user.email);
           if (profile && profile.role === 'superadmin' && profile.account_status === 'active') {
             adminLink && (adminLink.hidden = false);
@@ -222,7 +224,8 @@
             adminLink.hidden = true;
           }
         }).catch(function () {
-          updateUserDisplay('', user.email, user.email);
+          var meta = user.user_metadata || {};
+          updateUserDisplay('', meta.user_name || user.email, user.email);
           adminLink && (adminLink.hidden = true);
         });
       } else {

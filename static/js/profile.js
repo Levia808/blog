@@ -10,17 +10,32 @@
   function loadProfile(user) {
     Profile.get(user.id).then(function (p) {
       var profile = p || {};
-      document.getElementById('profileAvatar').src = profile.avatar_url || profile.github_avatar_url || '';
-      document.getElementById('profileDisplayName').textContent = profile.display_name || user.email;
+      var meta = user.user_metadata || {};
+      var ghName = meta.user_name || meta.preferred_username || '';
+
+      // 旧数据回填：GitHub OAuth 用户首次进入个人中心时补齐 github_username
+      if (ghName && !profile.github_username) {
+        Profile.update(user.id, {
+          github_username: ghName,
+          github_avatar_url: meta.avatar_url || profile.github_avatar_url || null
+        }).then(function (updated) {
+          profile.github_username = updated.github_username;
+          profile.github_avatar_url = updated.github_avatar_url;
+        }).catch(function () {});
+      }
+
+      document.getElementById('profileAvatar').src = profile.avatar_url || profile.github_avatar_url || meta.avatar_url || '';
+      document.getElementById('profileDisplayName').textContent = profile.display_name || ghName || profile.github_username || user.email;
       document.getElementById('profileEmail').textContent = user.email;
       document.getElementById('editUsername').value = profile.username || '';
       document.getElementById('editDisplayName').value = profile.display_name || '';
       document.getElementById('editBio').value = profile.bio || '';
       document.getElementById('editWebsite').value = profile.website || '';
 
-      if (profile.github_username) {
+      if (profile.github_username || ghName) {
+        var ghUser = profile.github_username || ghName;
         document.getElementById('profileGithub').innerHTML =
-          '<a href="https://github.com/' + profile.github_username + '" target="_blank" rel="noopener">GitHub: @' + profile.github_username + '</a>';
+          '<a href="https://github.com/' + ghUser + '" target="_blank" rel="noopener">GitHub: @' + ghUser + '</a>';
       }
 
       show(content);
