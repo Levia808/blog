@@ -27,3 +27,13 @@
       <span class="pc-img-placeholder" aria-hidden="true">{{ $glyph }}</span>
       {{- end }}
     </div>
+    <div class="pc-body">
+      <div class="pc-date">{{ .Date.Format "2006 · 01 · 02" }}</div>
+      <h3 class="pc-title">{{ .Title }}</h3>
+      <p class="pc-excerpt">{{ .Summary | plainify | truncate 96 }}</p>
+      {{- with .Params.tags }}
+      <div class="pc-tags">{{ range . }}<span class="pc-tag">{{ . }}</span>{{ end }}</div>
+      {{- end }}
+    </div>
+  </a>
+</article>
