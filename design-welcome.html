@@ -85,14 +85,14 @@
 
 <header class="header">
   <div class="sub">[ WELCOME ANIMATION ] · vue-bits.dev 组件方案</div>
-  <h1>开屏欢迎动画 · 四方案设计稿</h1>
-  <p>基于 vue-bits.dev（DavidHDev/vue-bits · 4.3k★）动画组件，贴合博客「矿物终端 · 苔绿」气质的开屏方案。</p>
+  <h1>开屏欢迎动画 · 商用实现版</h1>
+  <p>基于 vue-bits.dev（DavidHDev/vue-bits · 4.3k★）动画组件思路。方案 A 已落地为<b>主题内真实打字机引擎</b>（theme.js initWelcomeTypewriter），其余方案附完整可复制实现。</p>
 </header>
 
 <!-- ═══════ 方案 A ═══════ -->
 <section class="plan" id="plan-a">
-  <div class="plan-head"><span class="pno">方案 A</span><h2>终端启动流 · TextType</h2></div>
-  <p class="plan-desc">延续现欢迎页气质，升级为<b>真打字机</b>：终端命令逐行敲出，苔绿状态行渐亮，光标闪烁收尾。最「博客本身」的方案。</p>
+  <div class="plan-head"><span class="pno">方案 A</span><h2>终端启动流 · TextType <span style="font-size:10px;color:var(--accent);font-family:var(--font-mono)">[ 已落地主题 ]</span></h2></div>
+  <p class="plan-desc">延续现欢迎页气质，升级为<b>真打字机</b>：终端命令逐行敲出，苔绿状态行渐亮，光标闪烁收尾。<b>已在主题上线</b>（逐字 52ms · 行间 110ms · 点击跳过 · 滚动离开取消 · reduced-motion 直显）。</p>
   <div class="stage">
     <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — TextType typing loop</span></div>
     <div class="term" id="termA">
@@ -107,7 +107,7 @@
     </div>
   </div>
   <div class="spec">
-    <div class="spec-card"><strong>组件</strong><code>&lt;TextType&gt;</code> · text 数组逐行 · typingSpeed 58ms · deletingSpeed 24ms · pause 900ms · loop</div>
+    <div class="spec-card"><strong>落地实现</strong><code>theme.js → initWelcomeTypewriter</code> · TYPE_MS 52 · LINE_GAP 110 · 点击跳过 · 2.4s 自动跳过 · 滚动离开取消</div>
     <div class="spec-card"><strong>内容</strong>$ ssh · 加载内核 · hugo 挂载 · 主题初始化 · 服务 active(苔绿) · 部署/认证 ✓ · 光标</div>
     <div class="spec-card"><strong>动效</strong>逐字打字 58ms · 退格删 24ms · 句间停顿 900ms · 8 行循环 · 光标 step-end 1s</div>
     <div class="spec-card"><strong>气质</strong>极客 · 秩序 · 克制动效 · 完全贴合终端语言</div>

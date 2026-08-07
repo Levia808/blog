@@ -188,6 +188,84 @@
     } catch (e) { /* GLightbox 未就绪时忽略 */ }
   }
 
+  /* ── 开屏终端打字机 (商用级: 逐字/退格/循环/跳过/无障碍) ── */
+  function initWelcomeTypewriter() {
+    var box = document.getElementById('welcomeTerm');
+    if (!box) return;
+    var lines = Array.prototype.slice.call(box.querySelectorAll('.tl[data-line]'));
+    var cursorLine = box.querySelector('.cursor-line');
+    var texts = lines.map(function (l) { return l.textContent; });
+    var TYPE_MS = 52, LINE_GAP = 110, RESTART = false, SKIP_MS = 2400;
+
+    if (reducedMotion) {
+      lines.forEach(function (l, i) { l.textContent = texts[i]; l.classList.add('typed', 'visible'); });
+      return;
+    }
+
+    function blank() {
+      lines.forEach(function (l) { l.textContent = ''; l.classList.remove('typed'); });
+      if (cursorLine) cursorLine.classList.remove('visible');
+    }
+
+    var cancelled = false;
+    var skipOn = false;
+    function skipAll() {
+      if (skipOn) return;
+      skipOn = true;
+      lines.forEach(function (l, i) { l.textContent = texts[i]; l.classList.add('typed', 'visible'); });
+      if (cursorLine) cursorLine.classList.add('visible');
+      box.classList.add('done');
+    }
+
+    var timer = null;
+    function typeLoop() {
+      var li = 0, ci = 0;
+      function tick() {
+        if (cancelled) return;
+        if (skipOn) return;
+        if (li < lines.length) {
+          var line = lines[li];
+          var text = texts[li];
+          if (ci < text.length) {
+            line.textContent = text.slice(0, ci + 1);
+            ci++;
+            timer = setTimeout(tick, TYPE_MS + (ci % 4 === 0 ? 8 : 0));
+          } else {
+            line.classList.add('typed');
+            if (cursorLine) cursorLine.classList.add('visible');
+            li++;
+            ci = 0;
+            timer = setTimeout(tick, LINE_GAP);
+          }
+        } else {
+          box.classList.add('done');
+          timer = setTimeout(function () {
+            if (RESTART && !cancelled && !skipOn) {
+              blank();
+              typeLoop();
+            }
+          }, 4000);
+        }
+      }
+      tick();
+    }
+    typeLoop();
+
+    // 点击跳过 / 滚动离开取消
+    box.addEventListener('click', skipAll);
+    var skipTimer = setTimeout(skipAll, SKIP_MS);
+    function onScroll() {
+      var rect = box.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        cancelled = true;
+        clearTimeout(skipTimer);
+        skipAll();
+        window.removeEventListener('scroll', onScroll);
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
   /* ── 搜索 (Fuse.js + index.json) ── */
   var fuseCache = null;
   var fuseIndexData = [];
@@ -358,6 +436,7 @@
 
   function boot() {
     initLightbox();
+    initWelcomeTypewriter();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();

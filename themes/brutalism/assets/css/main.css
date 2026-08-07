@@ -384,7 +384,17 @@ html.js [data-reveal].reveal-visible {
   width: clamp(280px, 50vw, 420px);
   line-height: 2.4;
 }
-.welcome-full .tl { white-space: nowrap; overflow: hidden; opacity: 0; }
+.welcome-full .tl { white-space: pre-wrap; overflow: hidden; opacity: 0; min-height: 1em; }
+.welcome-full .tl.visible { opacity: 1; }
+.welcome-full .tl.typed { animation: term-line-enter 240ms ease-out both; }
+.welcome-full .tl[data-ok] { color: var(--accent); }
+.welcome-full .tl[data-line="0"] { color: var(--faint); }
+.welcome-full .cursor-line { opacity: 0; }
+.welcome-full .cursor-line.visible { opacity: 1; }
+.welcome-full .term-box.done .cursor-line .blink-cursor { animation: term-cursor-flash 1s step-end infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .welcome-full .tl { animation: none !important; }
+}
 .welcome-full .tl .blink-cursor {
   display: inline-block;
   width: 8px; height: 14px;
@@ -393,15 +403,6 @@ html.js [data-reveal].reveal-visible {
   margin-left: 2px;
   animation: term-cursor-flash 1s step-end infinite;
 }
-.welcome-full .tl:nth-child(1) { animation: term-line-in 10s infinite; color: var(--faint); }
-.welcome-full .tl:nth-child(2) { animation: term-line-in 10s 0.7s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(3) { animation: term-line-in 10s 1.4s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(4) { animation: term-line-in 10s 2.1s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(5) { animation: term-line-in 10s 2.8s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(6) { animation: term-line-in 10s 3.5s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(7) { animation: term-line-in 10s 4.2s infinite; color: var(--muted); }
-.welcome-full .tl:nth-child(8) { animation: term-line-in 10s 4.9s infinite; }
-.welcome-full .tl-ok { color: var(--accent); }
 .welcome-full .scroll-hint {
   position: absolute;
   bottom: 36px; left: 50%;
