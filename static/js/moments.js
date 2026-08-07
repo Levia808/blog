@@ -178,7 +178,13 @@
       hintEl.textContent = moments.length ? '共 ' + moments.length + ' 条动态' : '';
       hintEl.hidden = Boolean(moments.length);
     } catch (error) {
-      listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(error.message || error) + '</div>';
+      var msg = error.message || String(error);
+      if (msg.indexOf('PGRST205') >= 0 || msg.indexOf('Could not find the table') >= 0) {
+        listEl.innerHTML = '<div class="moments-empty"><strong>动态功能未初始化</strong><br>' +
+          '<span style="font-size:12px;color:var(--muted);">请在 Supabase SQL Editor 运行仓库中的 <code>supabase-moments.sql</code> 创建动态数据表，然后刷新本页。</span></div>';
+      } else {
+        listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(msg) + '</div>';
+      }
     }
   }
 
