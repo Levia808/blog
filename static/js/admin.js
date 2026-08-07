@@ -412,17 +412,21 @@
     }
     grid.innerHTML = assets.map(function (asset) {
       var preview;
+      var embedBtn = '';
       if (/^image\//i.test(asset.mime_type)) {
         preview = '<img src="' + escapeHtml(asset.public_url) + '" alt="' + escapeHtml(asset.file_name) + '" loading="lazy">';
       } else if (/^video\//i.test(asset.mime_type)) {
         preview = '<video src="' + escapeHtml(asset.public_url) + '" controls preload="metadata"></video>';
+        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="video" data-url="' + escapeHtml(asset.public_url) + '">复制视频代码</button>';
       } else {
         preview = '<div class="admin-media-audio">AUDIO</div>';
+        embedBtn = '<button type="button" class="admin-row-action is-primary" data-copy-embed="audio" data-url="' + escapeHtml(asset.public_url) + '">复制音频代码</button>';
       }
       return '<article class="admin-media-item">' + preview +
         '<div class="admin-media-meta"><strong title="' + escapeHtml(asset.file_name) + '">' + escapeHtml(asset.file_name) + '</strong>' +
         '<small>' + escapeHtml(asset.mime_type) + ' · ' + Math.ceil(asset.size_bytes / 1024) + ' KB</small>' +
-        '<div class="admin-action-group"><a class="admin-row-action" href="' + escapeHtml(asset.public_url) + '" target="_blank" rel="noopener">打开</a><button type="button" class="admin-row-action is-danger" data-media-delete="' + escapeHtml(asset.id) + '">删除</button></div></div></article>';
+        '<div class="admin-action-group">' + embedBtn +
+        '<a class="admin-row-action" href="' + escapeHtml(asset.public_url) + '" target="_blank" rel="noopener">打开</a><button type="button" class="admin-row-action is-danger" data-media-delete="' + escapeHtml(asset.id) + '">删除</button></div></div></article>';
     }).join('');
   }
 
@@ -593,6 +597,22 @@
         showError(error.message);
       } finally {
         moderationButton.disabled = false;
+      }
+      return;
+    }
+
+    var copyEmbed = event.target.closest('[data-copy-embed]');
+    if (copyEmbed) {
+      var code = '{{< ' + copyEmbed.dataset.copyEmbed + ' src="' + copyEmbed.dataset.url + '" >}}';
+      var done = function () {
+        showToast('已复制嵌入代码，粘贴到文章正文即可', 'success');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(function () {
+          window.prompt('复制以下代码到文章正文：', code);
+        });
+      } else {
+        window.prompt('复制以下代码到文章正文：', code);
       }
       return;
     }
