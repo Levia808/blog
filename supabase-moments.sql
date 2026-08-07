@@ -24,13 +24,24 @@ CREATE TABLE IF NOT EXISTS public.moment_likes (
   UNIQUE (moment_id, user_id)
 );
 
--- ③ 动态评论表
+-- ③ 动态评论表 (支持回复)
 CREATE TABLE IF NOT EXISTS public.moment_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   moment_id UUID NOT NULL REFERENCES public.moments(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  parent_id UUID REFERENCES public.moment_comments(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.moment_comments ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES public.moment_comments(id) ON DELETE CASCADE;
+
+-- ③b 评论点赞表
+CREATE TABLE IF NOT EXISTS public.moment_comment_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id UUID NOT NULL REFERENCES public.moment_comments(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (comment_id, user_id)
 );
 
 -- ④ RLS
@@ -60,10 +71,21 @@ CREATE POLICY likes_insert ON public.moment_likes FOR INSERT WITH CHECK (auth.ui
 CREATE POLICY likes_update ON public.moment_likes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY likes_delete ON public.moment_likes FOR DELETE USING (auth.uid() = user_id);
 
--- 评论: 公开浏览, 登录用户写自己的, 管理员可删
+-- 评论: 公开浏览, 登录用户写自己的, 发送者或管理员可删
 CREATE POLICY moment_comments_select ON public.moment_comments FOR SELECT USING (true);
 CREATE POLICY moment_comments_insert ON public.moment_comments FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY moment_comments_delete ON public.moment_comments FOR DELETE USING (auth.uid() = user_id OR public.is_admin());
+
+-- 评论点赞: 公开浏览, 登录用户赞/取消自己的 (含 UPDATE 供 upsert)
+ALTER TABLE public.moment_comment_likes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS mcl_select ON public.moment_comment_likes;
+DROP POLICY IF EXISTS mcl_insert ON public.moment_comment_likes;
+DROP POLICY IF EXISTS mcl_update ON public.moment_comment_likes;
+DROP POLICY IF EXISTS mcl_delete ON public.moment_comment_likes;
+CREATE POLICY mcl_select ON public.moment_comment_likes FOR SELECT USING (true);
+CREATE POLICY mcl_insert ON public.moment_comment_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY mcl_update ON public.moment_comment_likes FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY mcl_delete ON public.moment_comment_likes FOR DELETE USING (auth.uid() = user_id);
 
 -- ⑤ 权限
 GRANT SELECT ON public.moments TO anon, authenticated;
@@ -72,6 +94,8 @@ GRANT SELECT ON public.moment_likes TO anon, authenticated;
 GRANT INSERT, UPDATE, DELETE ON public.moment_likes TO authenticated;
 GRANT SELECT ON public.moment_comments TO anon, authenticated;
 GRANT INSERT, DELETE ON public.moment_comments TO authenticated;
+GRANT SELECT ON public.moment_comment_likes TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.moment_comment_likes TO authenticated;
 
 -- ⑥ 更新时间触发器
 DROP TRIGGER IF EXISTS moments_set_updated_at ON public.moments;
