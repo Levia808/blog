@@ -43,6 +43,7 @@ DROP POLICY IF EXISTS moments_insert ON public.moments;
 DROP POLICY IF EXISTS moments_delete ON public.moments;
 DROP POLICY IF EXISTS likes_select ON public.moment_likes;
 DROP POLICY IF EXISTS likes_insert ON public.moment_likes;
+DROP POLICY IF EXISTS likes_update ON public.moment_likes;
 DROP POLICY IF EXISTS likes_delete ON public.moment_likes;
 DROP POLICY IF EXISTS moment_comments_select ON public.moment_comments;
 DROP POLICY IF EXISTS moment_comments_insert ON public.moment_comments;
@@ -53,9 +54,10 @@ CREATE POLICY moments_select ON public.moments FOR SELECT USING (true);
 CREATE POLICY moments_insert ON public.moments FOR INSERT WITH CHECK (public.is_admin());
 CREATE POLICY moments_delete ON public.moments FOR DELETE USING (public.is_admin());
 
--- 点赞: 公开浏览, 登录用户只能赞/取消自己的
+-- 点赞: 公开浏览, 登录用户只能赞/取消自己的 (含 UPDATE 供 upsert 幂等)
 CREATE POLICY likes_select ON public.moment_likes FOR SELECT USING (true);
 CREATE POLICY likes_insert ON public.moment_likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY likes_update ON public.moment_likes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 CREATE POLICY likes_delete ON public.moment_likes FOR DELETE USING (auth.uid() = user_id);
 
 -- 评论: 公开浏览, 登录用户写自己的, 管理员可删
