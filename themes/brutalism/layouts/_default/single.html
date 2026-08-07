@@ -15,6 +15,9 @@
       {{- end }}
       {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
       <header class="article-header">
+        {{- if .Params.archived }}
+        <div class="article-archived"><span class="status-dot status-draft"></span>此文章已归档，仅保留原文链接</div>
+        {{- end }}
         <div class="mono article-meta">
           {{- if site.Params.ShowReadingTime }}<span>{{ .ReadingTime }} min read</span>{{ end }}
           {{- if site.Params.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}

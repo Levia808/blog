@@ -10,6 +10,7 @@
         <nav class="an-menu" aria-label="后台导航">
           <a href="#" class="an-item active" data-admin-section="dashboard"><span class="an-dot"></span>仪表盘</a>
           <a href="#" class="an-item" data-admin-section="posts"><span class="an-dot"></span>文章管理</a>
+          <a href="#" class="an-item" data-admin-section="archive"><span class="an-dot"></span>内容归档</a>
           <a href="#" class="an-item" data-admin-section="comments"><span class="an-dot"></span>评论审核</a>
           <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>用户管理</a>
           <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
@@ -55,6 +56,16 @@
           <div class="note" id="ghPublishNote">发布 = 将仓库文章的「草稿」状态改为「已发布」并提交，站点自动重建上线。首次使用请先授权 GitHub。</div>
           <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPublishTable"></tbody></table></div>
           <div class="hint" id="adminPublishHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="archive" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">内容归档</p><h3>已归档文章</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="archive">刷新</button></div>
+          </div>
+          <div class="note" id="ghArchiveNote">归档的文章会从首页与列表隐藏，仍可通过原链接访问并显示归档标记。在「文章管理」中可对任意文章执行归档，或在此取消归档。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminArchiveTable"></tbody></table></div>
+          <div class="hint" id="adminArchiveHint"></div>
         </section>
 
         <section class="admin-panel" data-admin-panel="comments" hidden>

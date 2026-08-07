@@ -3,10 +3,10 @@
   <header class="list-header" data-reveal>
     <div class="label">ARCHIVE</div>
     <h1 class="list-title">{{ .Title }}</h1>
-    <p class="mono list-count">{{ len site.RegularPages }} posts</p>
+    <p class="mono list-count">{{ len (where site.RegularPages "Params.archived" "ne" true) }} posts</p>
   </header>
 
-  {{- $groups := site.RegularPages.GroupByDate "2006" }}
+  {{- $groups := (where site.RegularPages "Params.archived" "ne" true).GroupByDate "2006" }}
   {{- range $groups }}
   <section class="archive-year" data-reveal>
     <h2 class="mono archive-year-title">{{ .Key }}</h2>

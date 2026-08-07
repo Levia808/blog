@@ -48,6 +48,12 @@ collections:
         widget: boolean
         default: true
         hint: "勾选 = 草稿（保存后站点不显示）；取消勾选并保存 = 发布上线"
+      - label: 归档
+        name: archived
+        widget: boolean
+        default: false
+        required: false
+        hint: "勾选 = 归档（从首页/列表隐藏，保留原链接并显示归档标记）"
       - label: 标签
         name: tags
         widget: list

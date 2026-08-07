@@ -1,6 +1,6 @@
 {{- define "title" }}{{ site.Title }}{{ end }}
 {{- define "main" }}
-{{- $posts := where site.RegularPages "Section" "posts" }}
+{{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
 

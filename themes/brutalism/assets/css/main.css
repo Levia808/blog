@@ -852,3 +852,18 @@ html.js [data-reveal].reveal-visible {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   html.js [data-reveal] { opacity: 1; transform: none; }
 }
+
+/* ── 归档徽章 ── */
+.article-archived {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--faint);
+  border-radius: 4px;
+  padding: 6px 14px;
+  margin-bottom: 16px;
+}

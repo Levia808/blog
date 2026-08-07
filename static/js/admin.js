@@ -71,7 +71,7 @@
   }
 
   /* ── 面板切换 ── */
-  var sections = ['dashboard', 'posts', 'comments', 'users', 'media', 'settings'];
+  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings'];
 
   function switchSection(name) {
     sections.forEach(function (section) {
@@ -143,7 +143,7 @@
   }
 
   function parseFrontMatter(text) {
-    var meta = { title: '', draft: true, date: '' };
+    var meta = { title: '', draft: true, archived: false, date: '' };
     var m = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (!m) return meta;
     m[1].split(/\r?\n/).forEach(function (line) {
@@ -153,6 +153,7 @@
       var value = kv[2].trim();
       if (key === 'title') meta.title = value.replace(/^['"]|['"]$/g, '');
       else if (key === 'draft') meta.draft = value !== 'false';
+      else if (key === 'archived') meta.archived = value === 'true';
       else if (key === 'date') meta.date = value.replace(/^['"]|['"]$/g, '');
     });
     return meta;
@@ -169,6 +170,20 @@
     return text.replace(/^---\r?\n/, '---\ndraft: ' + flag + '\n');
   }
 
+  function setArchived(text, archived) {
+    var flag = archived ? 'true' : 'false';
+    if (/^archived:\s*true\s*$/m.test(text)) {
+      return text.replace(/^archived:\s*true\s*$/m, 'archived: ' + flag);
+    }
+    if (/^archived:\s*false\s*$/m.test(text)) {
+      return text.replace(/^archived:\s*false\s*$/m, 'archived: ' + flag);
+    }
+    if (archived) {
+      return text.replace(/^(draft:\s*\S+\s*)$/m, '$1\narchived: true');
+    }
+    return text.replace(/^archived:\s*true\s*$/m, '');
+  }
+
   async function loadGhPosts() {
     var files = await ghFetch('/repos/' + GH_REPO + '/contents/content/posts');
     if (!Array.isArray(files)) files = [];
@@ -179,7 +194,7 @@
       try {
         var raw = await fetch(file.download_url).then(function (r) { return r.text(); });
         var meta = parseFrontMatter(raw);
-        posts.push({ name: file.name, sha: file.sha, title: meta.title || file.name, draft: meta.draft, date: meta.date });
+        posts.push({ name: file.name, sha: file.sha, title: meta.title || file.name, draft: meta.draft, archived: meta.archived, date: meta.date });
       } catch (e) {
         posts.push({ name: file.name, sha: file.sha, title: file.name, draft: true, date: '' });
       }
@@ -196,18 +211,22 @@
       return;
     }
     table.innerHTML = posts.map(function (post) {
-      var status = post.draft
-        ? '<span class="admin-status"><span class="status-dot status-draft"></span>草稿</span>'
-        : '<span class="admin-status"><span class="status-dot status-published"></span>已发布</span>';
+      var status = post.archived
+        ? '<span class="admin-status"><span class="status-dot status-draft"></span>已归档</span>'
+        : (post.draft
+          ? '<span class="admin-status"><span class="status-dot status-draft"></span>草稿</span>'
+          : '<span class="admin-status"><span class="status-dot status-published"></span>已发布</span>');
       var date = post.date ? post.date.slice(0, 10) : '—';
       var cmsBaseEl = document.getElementById('cmsNewPost');
       var cmsBase = cmsBaseEl ? cmsBaseEl.getAttribute('href') : 'admin-cms/';
       var cmsEntry = cmsBase + '#/collections/posts/entries/' + encodeURIComponent(post.name.replace(/\.md$/, ''));
       var actions = showActions
         ? '<div class="admin-action-group">' +
-          (post.draft
-            ? '<button type="button" class="admin-row-action is-primary" data-post-publish="' + escapeHtml(post.name) + '">发布</button>'
-            : '<button type="button" class="admin-row-action" data-post-draft="' + escapeHtml(post.name) + '">转草稿</button>') +
+          (post.archived
+            ? '<button type="button" class="admin-row-action is-primary" data-post-unarchive="' + escapeHtml(post.name) + '">取消归档</button>'
+            : (post.draft
+              ? '<button type="button" class="admin-row-action is-primary" data-post-publish="' + escapeHtml(post.name) + '">发布</button>'
+              : '<button type="button" class="admin-row-action" data-post-archive="' + escapeHtml(post.name) + '">归档</button>')) +
           '<a class="admin-row-action" href="' + cmsEntry + '">编辑</a>' +
           '</div>'
         : '';
@@ -235,23 +254,34 @@
     document.getElementById('adminPostHint').textContent = '共 ' + posts.length + ' 篇文章 · 显示最近 ' + Math.min(8, posts.length) + ' 篇';
     renderPostRows(posts, 'adminPublishTable', true);
     document.getElementById('adminPublishHint').textContent = '共 ' + posts.length + ' 篇文章';
+    var archived = posts.filter(function (p) { return p.archived; });
+    renderPostRows(archived, 'adminArchiveTable', true);
+    document.getElementById('adminArchiveHint').textContent = '已归档 ' + archived.length + ' 篇 · 归档后从首页与列表隐藏';
   }
 
-  async function setPostPublished(name, published) {
+  async function commitPost(name, transform, message) {
     var post = ghPostsCache.find(function (p) { return p.name === name; });
     if (!post) throw new Error('未找到文章 ' + name);
     var raw = await fetch('https://raw.githubusercontent.com/' + GH_REPO + '/main/content/posts/' + encodeURIComponent(name))
       .then(function (r) { return r.text(); });
-    var updated = setDraft(raw, !published);
-    var path = 'content/posts/' + name;
-    var message = published ? '发布: ' + post.title : '转为草稿: ' + post.title;
-    await ghFetch('/repos/' + GH_REPO + '/contents/' + path, {
+    var updated = transform(raw);
+    await ghFetch('/repos/' + GH_REPO + '/contents/content/posts/' + name, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: message, content: base64Encode(updated), sha: post.sha })
     });
-    showToast('已' + (published ? '发布：' : '转为草稿：') + post.title, 'success');
+    showToast(message, 'success');
     await refreshPosts();
+  }
+
+  async function setPostPublished(name, published) {
+    await commitPost(name, function (raw) { return setDraft(raw, !published); },
+      (published ? '发布: ' : '转为草稿: ') + name);
+  }
+
+  async function setPostArchived(name, archived) {
+    await commitPost(name, function (raw) { return setArchived(raw, archived); },
+      (archived ? '归档: ' : '取消归档: ') + name);
   }
 
   function updateGhAuthStatus() {
@@ -450,6 +480,7 @@
         if (refresh.dataset.adminRefresh === 'media') {
           var count = await loadMedia();
         }
+        if (refresh.dataset.adminRefresh === 'archive') await refreshPosts();
       } catch (error) {
         showError(error.message);
       }
@@ -478,6 +509,32 @@
         showError(error.message || '操作失败。');
       } finally {
         draftBtn.disabled = false;
+      }
+      return;
+    }
+
+    var archiveBtn = event.target.closest('[data-post-archive]');
+    if (archiveBtn) {
+      try {
+        archiveBtn.disabled = true;
+        await setPostArchived(archiveBtn.dataset.postArchive, true);
+      } catch (error) {
+        showError(error.message || '归档失败。');
+      } finally {
+        archiveBtn.disabled = false;
+      }
+      return;
+    }
+
+    var unarchiveBtn = event.target.closest('[data-post-unarchive]');
+    if (unarchiveBtn) {
+      try {
+        unarchiveBtn.disabled = true;
+        await setPostArchived(unarchiveBtn.dataset.postUnarchive, false);
+      } catch (error) {
+        showError(error.message || '取消归档失败。');
+      } finally {
+        unarchiveBtn.disabled = false;
       }
       return;
     }

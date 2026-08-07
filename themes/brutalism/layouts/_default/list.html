@@ -1,12 +1,13 @@
 {{- define "main" }}
+{{- $pages := where .Pages "Params.archived" "ne" true }}
 <section class="container list-page">
   <header class="list-header" data-reveal>
     <div class="label">{{ if .Data.Singular }}{{ .Data.Singular }}{{ else }}{{ .Section | upper }}{{ end }}</div>
     <h1 class="list-title">{{ .Title }}</h1>
-    <p class="mono list-count">{{ len .Pages }} items</p>
+    <p class="mono list-count">{{ len $pages }} items</p>
   </header>
   <div class="grid-3">
-    {{- range .Pages }}
+    {{- range $pages }}
     {{ partial "post-card.html" . }}
     {{- end }}
   </div>
