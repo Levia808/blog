@@ -721,3 +721,12 @@ body.admin-only { overflow: hidden; height: 100vh; }
 /* ── 管理面板内按钮加大 ── */
 .an-content .btn { font-size: 13px; padding: 9px 18px; }
 .an-content .btn-primary { font-size: 13px; }
+
+/* ── 仪表盘状态行 ── */
+.dashboard-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dashboard-status-row .hint { margin-top: 0; }

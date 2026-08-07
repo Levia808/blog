@@ -29,9 +29,10 @@
             <div><p class="an-head-sub" id="adminIdentity">控制台</p><h3>仪表盘</h3></div>
             <div class="an-actions">
               <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary" id="cmsNewPost">+ 新建文章</a>
-              <button type="button" class="btn" data-admin-refresh="stats">刷新统计</button>
+              <button type="button" class="btn" id="adminRefreshBtn" data-admin-refresh="stats">刷新状态</button>
             </div>
           </div>
+          <div class="dashboard-status-row"><span class="admin-status" id="dashboardGhStatus"><span class="status-dot status-draft"></span>GitHub: 未授权</span><span class="hint" id="dashboardSyncHint"></span></div>
           <div class="stat-grid">
             <div class="stat"><span class="st-label">文章数</span><span class="st-value" id="adminPostCount">—</span></div>
             <div class="stat"><span class="st-label">评论数</span><span class="st-value" id="adminCommentCount">—</span></div>

@@ -290,6 +290,10 @@
     var authorized = Boolean(getGhToken());
     var statusEl = document.getElementById('ghAuthStatus');
     if (statusEl) statusEl.textContent = authorized ? '已授权' : '未授权';
+    var dashStatus = document.getElementById('dashboardGhStatus');
+    if (dashStatus) {
+      dashStatus.innerHTML = '<span class="status-dot ' + (authorized ? 'status-published' : 'status-draft') + '"></span>GitHub: ' + (authorized ? '已授权' : '未授权');
+    }
     var authBtn = document.getElementById('ghAuthBtn');
     if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权';
     if (authorized) {
@@ -479,8 +483,17 @@
   document.addEventListener('click', async function (event) {
     var refresh = event.target.closest('[data-admin-refresh]');
     if (refresh) {
+      var btn = document.getElementById('adminRefreshBtn');
       try {
-        if (refresh.dataset.adminRefresh === 'stats') await loadStats();
+        if (btn) { btn.classList.add('is-loading'); btn.disabled = true; }
+        if (refresh.dataset.adminRefresh === 'stats') {
+          await Promise.all([
+            loadStats().catch(function (e) { showError(e.message); }),
+            refreshPosts().catch(function (e) { showError(e.message); })
+          ]);
+          updateGhAuthStatus();
+          showToast('仪表盘状态已刷新', 'success');
+        }
         if (refresh.dataset.adminRefresh === 'users') await loadUsers();
         if (refresh.dataset.adminRefresh === 'comments') await loadComments();
         if (refresh.dataset.adminRefresh === 'media') {
@@ -489,6 +502,8 @@
         if (refresh.dataset.adminRefresh === 'archive') await refreshPosts();
       } catch (error) {
         showError(error.message);
+      } finally {
+        if (btn) { btn.classList.remove('is-loading'); btn.disabled = false; }
       }
       return;
     }
