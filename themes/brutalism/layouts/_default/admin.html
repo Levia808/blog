@@ -5,7 +5,7 @@
     <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;min-height:600px;justify-content:center;" hidden><span class="state-tag">[ LOCKED ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
     <div id="adminContent" hidden>
       <aside class="admin-nav">
-        <div class="an-logo">{{ site.Title }}<span class="an-role">{{ site.Params.author }}</span></div>
+        <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
         <nav class="an-menu" aria-label="后台导航">
           <a href="#" class="an-item active" data-admin-section="dashboard"><span class="an-dot"></span>/dashboard</a>
           <a href="#" class="an-item" data-admin-section="posts"><span class="an-dot"></span>/posts</a>
@@ -38,7 +38,7 @@
           </div>
           <div>
             <div class="panel-title">Recent Posts</div>
-            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
             <div class="hint" id="adminPostHint"></div>
           </div>
         </section>

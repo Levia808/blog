@@ -180,14 +180,14 @@
         '<td><strong>' + escapeHtml(post.title) + '</strong><br><code>' + escapeHtml(post.name) + '</code></td>' +
         '<td>' + status + '</td>' +
         '<td>' + date + '</td>' +
-        (showActions ? '<td>' + actions + '</td>' : '') +
+        '<td>' + (showActions ? actions : '—') + '</td>' +
         '</tr>';
     }).join('');
   }
 
   async function refreshPosts() {
     var posts = await loadGhPosts();
-    renderPostRows(posts.slice(0, 8), 'adminPostTable', false);
+    renderPostRows(posts.slice(0, 8), 'adminPostTable', true);
     document.getElementById('adminPostHint').textContent = 'showing ' + Math.min(8, posts.length) + ' of ' + posts.length + ' posts';
     renderPostRows(posts, 'adminPublishTable', true);
     document.getElementById('adminPublishHint').textContent = 'showing ' + posts.length + ' of ' + posts.length + ' posts';
@@ -519,9 +519,11 @@
         var nameEl = document.getElementById('adminUserName');
         var emailEl = document.getElementById('adminUserEmail');
         var avatarEl = document.getElementById('adminUserAvatar');
+        var roleEl = document.getElementById('adminRole');
         if (nameEl) nameEl.textContent = name;
         if (emailEl) emailEl.textContent = user.email;
         if (avatarEl && avatar) avatarEl.src = avatar;
+        if (roleEl) roleEl.textContent = String(adminProfile.role || 'user').toUpperCase();
         var logoutBtn = document.getElementById('adminLogoutBtn');
         if (logoutBtn) logoutBtn.addEventListener('click', function () {
           Auth.signOut().then(function () { window.location.reload(); });
