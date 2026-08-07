@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开屏欢迎动画设计方案 — vue-bits powered</title>
+<style>
+  :root {
+    --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
+    --fg:#E8E8E3; --muted:#7A7A75; --faint:#3E3E3C;
+    --accent:#6B8B6B; --white:#F2F2ED;
+    --font-sans:"Inter","Noto Sans SC",system-ui,sans-serif;
+    --font-display:"Space Grotesk","Inter","Noto Sans SC",sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);line-height:1.75;-webkit-font-smoothing:antialiased}
+  .container{max-width:1060px;margin:0 auto;padding:0 28px}
+  h1{font-size:clamp(26px,4.5vw,44px);font-weight:500;letter-spacing:-1.2px;font-family:var(--font-display)}
+  h2{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
+  .mono{font-family:var(--font-mono);font-size:11px}
+  .header{padding:64px 0 40px;text-align:center;border-bottom:1px solid var(--border)}
+  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:16px;letter-spacing:3px}
+  .header p{color:var(--muted);max-width:520px;margin:14px auto 0;font-size:13px}
+  hr{border:none;border-top:1px solid var(--border)}
+  .plan{padding:64px 0}
+  .plan-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .plan-head .pno{font-family:var(--font-mono);font-size:12px;color:var(--accent)}
+  .plan-head .pname{font-size:22px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .plan-desc{color:var(--muted);font-size:13px;max-width:640px;margin-bottom:16px}
+  .stage{
+    position:relative;width:100%;height:420px;overflow:hidden;
+    border:1px solid var(--border);border-radius:2px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .stage-bar{position:absolute;top:0;left:0;right:0;display:flex;gap:7px;padding:8px 14px;background:#101010;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--faint)}
+  .stage-bar .dot{width:9px;height:9px;border-radius:50%;background:#555}
+  .stage-bar .t{flex:1;text-align:right;letter-spacing:1px}
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px}
+  .spec-card{border:1px solid var(--border);border-radius:2px;padding:12px 14px;background:var(--surface);font-size:12px;color:var(--muted)}
+  .spec-card strong{display:block;color:var(--white);margin-bottom:4px;font-size:12px;font-family:var(--font-mono);letter-spacing:.5px}
+  .spec-card code{font-family:var(--font-mono);font-size:11px;color:var(--accent)}
+  .verdict{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .verdict span{border:1px solid var(--border);border-radius:99px;padding:3px 12px;font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+
+  /* ── 光标 ── */
+  .cur{display:inline-block;width:9px;height:16px;background:var(--accent);vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+  /* 方案 A 终端打字 */
+  .term{font-family:var(--font-mono);font-size:clamp(12px,1.9vw,15px);line-height:2.1;width:min(88%,560px);text-align:left}
+  .term .ln{white-space:pre-wrap;word-break:break-all}
+  .term .ok{color:var(--accent)}
+  .term .dim{color:var(--faint)}
+  .term .cmd{color:var(--fg)}
+
+  /* 方案 B 解密 */
+  .decrypt{text-align:center;display:flex;flex-direction:column;gap:22px;align-items:center}
+  .decrypt h1{font-size:clamp(34px,7vw,68px);letter-spacing:-.04em;color:var(--white);font-family:var(--font-display);font-weight:600}
+  .decrypt .sub{font-family:var(--font-mono);font-size:clamp(11px,1.6vw,13px);color:var(--muted);letter-spacing:.35em}
+  .decrypt .boot{font-family:var(--font-mono);font-size:11px;color:var(--faint);letter-spacing:.15em}
+  .decrypt .boot .a{color:var(--accent)}
+
+  /* 方案 C ASCII */
+  .ascii-stage{display:flex;align-items:center;justify-content:center}
+  .ascii-box{font-family:var(--font-mono);font-size:10px;line-height:1.15;color:var(--accent);letter-spacing:2px;text-align:center;user-select:none}
+  .ascii-glitch{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.5) 3px,rgba(0,0,0,.5) 4px);pointer-events:none}
+
+  /* 方案 D 乱码 */
+  .scramble{text-align:center;display:flex;flex-direction:column;gap:18px;align-items:center}
+  .scramble h1{font-size:clamp(30px,6.5vw,60px);letter-spacing:-.03em;color:var(--white);font-family:var(--font-display);font-weight:600;min-height:1.2em}
+  .scramble .meta{font-family:var(--font-mono);font-size:11px;color:var(--faint);letter-spacing:.2em;display:flex;gap:20px}
+  .scramble .meta b{color:var(--accent);font-weight:400}
+
+  /* 方案对比表 */
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin-top:20px}
+  .table th,.table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header class="header">
+  <div class="sub">[ WELCOME ANIMATION ] · vue-bits.dev 组件方案</div>
+  <h1>开屏欢迎动画 · 四方案设计稿</h1>
+  <p>基于 vue-bits.dev（DavidHDev/vue-bits · 4.3k★）动画组件，贴合博客「矿物终端 · 苔绿」气质的开屏方案。</p>
+</header>
+
+<!-- ═══════ 方案 A ═══════ -->
+<section class="plan" id="plan-a">
+  <div class="plan-head"><span class="pno">方案 A</span><h2>终端启动流 · TextType</h2></div>
+  <p class="plan-desc">延续现欢迎页气质，升级为<b>真打字机</b>：终端命令逐行敲出，苔绿状态行渐亮，光标闪烁收尾。最「博客本身」的方案。</p>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — TextType typing loop</span></div>
+    <div class="term" id="termA">
+      <div class="ln dim" id="a1">$ ssh blog.levia.dev</div>
+      <div class="ln" id="a2"></div>
+      <div class="ln" id="a3"></div>
+      <div class="ln" id="a4"></div>
+      <div class="ln" id="a5"></div>
+      <div class="ln" id="a6"></div>
+      <div class="ln" id="a7"></div>
+      <div class="ln" id="a8"><span class="cur"></span></div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>组件</strong><code>&lt;TextType&gt;</code> · text 数组逐行 · typingSpeed 58ms · deletingSpeed 24ms · pause 900ms · loop</div>
+    <div class="spec-card"><strong>内容</strong>$ ssh · 加载内核 · hugo 挂载 · 主题初始化 · 服务 active(苔绿) · 部署/认证 ✓ · 光标</div>
+    <div class="spec-card"><strong>动效</strong>逐字打字 58ms · 退格删 24ms · 句间停顿 900ms · 8 行循环 · 光标 step-end 1s</div>
+    <div class="spec-card"><strong>气质</strong>极客 · 秩序 · 克制动效 · 完全贴合终端语言</div>
+  </div>
+  <div class="verdict"><span>贴合度 ★★★★★</span><span>实现成本 低</span><span>性能 优</span><span>推荐 ★</span></div>
+</section>
+
+<hr>
+
+<!-- ═══════ 方案 B ═══════ -->
+<section class="plan" id="plan-b">
+  <div class="plan-head"><span class="pno">方案 B</span><h2>解密标题 · DecryptedText</h2></div>
+  <p class="plan-desc">站点名从乱码矩阵<b>逐字解密</b>为「LEVIA'S BLOG」，副标与启动日志静态垫底。黑客/精密气质。</p>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — DecryptedText</span></div>
+    <div class="decrypt">
+      <div class="boot">[ SYSTEM ] <span class="a">AUTH: OK</span> · KERNEL: OK · <span id="bDecState">DECRYPTING…</span></div>
+      <h1 id="bTitle">▮▮▮▮▮ ▮▮▮▮</h1>
+      <div class="sub" id="bSub">MINERAL · TERMINAL · MOSS</div>
+      <div class="cur"></div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>组件</strong><code>&lt;DecryptedText&gt;</code> · text="LEVIA'S BLOG" · animateOn=load · sequential · speed 80ms · revealDirection start</div>
+    <div class="spec-card"><strong>内容</strong>标题解密 + 状态行 [ SYSTEM ] + 副标 mono 宽字距</div>
+    <div class="spec-card"><strong>动效</strong>乱码→正文字符 80ms/位 · 顺序解密 · 仅一次非循环 · 光标收尾</div>
+    <div class="spec-card"><strong>气质</strong>黑客 · 精密 · 一次性的仪式感</div>
+  </div>
+  <div class="verdict"><span>贴合度 ★★★★</span><span>实现成本 低</span><span>性能 优</span></div>
+</section>
+
+<hr>
+
+<!-- ═══════ 方案 C ═══════ -->
+<section class="plan" id="plan-c">
+  <div class="plan-head"><span class="pno">方案 C</span><h2>ASCII 波形 · ASCIIText</h2></div>
+  <p class="plan-desc">标题以<b>ASCII 字符矩阵</b>呈现（enableWaves 波纹），叠加 LetterGlitch 字母故障背景 + CRT 扫描线。先锋实验室气质。</p>
+  <div class="stage ascii-stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ASCIIText + LetterGlitch</span></div>
+    <div class="ascii-box" id="asciiBox">LEVIA'S BLOG</div>
+    <div class="ascii-glitch"></div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>组件</strong><code>&lt;ASCIIText&gt;</code> · text 大标题 · asciiFontSize 14 · textFontSize 64 · enableWaves · textColor 苔绿；背景 <code>&lt;LetterGlitch&gt;</code></div>
+    <div class="spec-card"><strong>内容</strong>ASCII 字符雨组成标题 + 故障字母背景层</div>
+    <div class="spec-card"><strong>动效</strong>ASCII↔文字形态切换 400ms · 波形 4Hz · 扫描线常驻 · 背景字母故障随机位移</div>
+    <div class="spec-card"><strong>气质</strong>先锋 · 实验室 · 视觉冲击最强</div>
+  </div>
+  <div class="verdict"><span>贴合度 ★★★</span><span>实现成本 中(Canvas)</span><span>性能 中</span><span>风格大胆</span></div>
+</section>
+
+<hr>
+
+<!-- ═══════ 方案 D ═══════ -->
+<section class="plan" id="plan-d">
+  <div class="plan-head"><span class="pno">方案 D</span><h2>乱码重组 · ScrambleText</h2></div>
+  <p class="plan-desc">标题<b>逐词乱码重组</b>落定，底部 mono 元信息行（构建版本/文章数）。轻快工业感。</p>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ScrambleText</span></div>
+    <div class="scramble">
+      <h1 id="dTitle">▮▮▮▮▮ ▮▮▮▮▮▮</h1>
+      <div class="meta"><span>BUILD <b>2026</b></span><span>HUGO <b>v0.164</b></span><span>POSTS <b>04</b></span></div>
+      <div class="cur"></div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>组件</strong><code>&lt;ScrambleText&gt;</code> · text 标题 · type=chars · speed 60ms · scrambleChars "█▮▞#$%" · duration 900ms</div>
+    <div class="spec-card"><strong>内容</strong>标题重组 + 数据行 (BUILD/HUGO/POSTS 苔绿)</div>
+    <div class="spec-card"><strong>动效</strong>逐字符乱码→落定 60ms · 一次成型 · 数据行静态</div>
+    <div class="spec-card"><strong>气质</strong>轻快 · 工业 · 数据感</div>
+  </div>
+  <div class="verdict"><span>贴合度 ★★★★</span><span>实现成本 低</span><span>性能 优</span></div>
+</section>
+
+<hr>
+
+<!-- ═══════ 对比总表 ═══════ -->
+<section class="plan">
+  <div class="plan-head"><span class="pno">×</span><h2>方案对比总表</h2></div>
+  <table class="table">
+    <thead><tr><th>方案</th><th>组件</th><th>气质</th><th>动效节奏</th><th>成本</th><th>推荐度</th></tr></thead>
+    <tbody>
+      <tr><td>A · 终端启动流</td><td><span class="mono">TextType</span></td><td>极客·秩序</td><td>循环打字 58ms</td><td>低</td><td>★ 首选（延续现风格升级）</td></tr>
+      <tr><td>B · 解密标题</td><td><span class="mono">DecryptedText</span></td><td>黑客·精密</td><td>一次性解密 80ms</td><td>低</td><td>★★★★</td></tr>
+      <tr><td>C · ASCII 波形</td><td><span class="mono">ASCIIText</span>+<span class="mono">LetterGlitch</span></td><td>先锋·实验室</td><td>波形+故障 常驻</td><td>中</td><td>★★★ 视觉最强</td></tr>
+      <tr><td>D · 乱码重组</td><td><span class="mono">ScrambleText</span></td><td>轻快·工业</td><td>一次性重组 60ms</td><td>低</td><td>★★★★</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
+  design-welcome v1 · vue-bits.dev powered · 2026-08-07 · LEVIA
+</footer>
+</div>
+
+<script>
+// ── 方案 A: 打字机模拟 ──
+(function () {
+  var lines = [
+    ['$ ssh blog.levia.dev', 'dim'],
+    ['$ loading kernel modules…', 'dim'],
+    ['$ hugo v0.164.0 — 4 pages mounted', ''],
+    ['$ theme brutalism — initialized', ''],
+    ['$ blog.service — <span class="ok">active (running)</span>', ''],
+    ['$ deploy: Cloudflare Pages ✓', ''],
+    ['$ auth: Supabase GitHub OAuth ✓', '']
+  ];
+  var el = document.getElementById('termA');
+  var target = document.getElementById('a8');
+  var li = 0, ci = 0, typing = true;
+  function tick() {
+    if (li < lines.length) {
+      var line = lines[li];
+      var holder = document.getElementById('a' + (li + 1));
+      ci++;
+      if (ci <= line[0].length) {
+        holder.innerHTML = line[0].slice(0, ci);
+      } else {
+        li++; ci = 0;
+      }
+    } else if (typing) {
+      typing = false;
+    }
+    setTimeout(tick, 26);
+  }
+  tick();
+})();
+
+// ── 方案 B: 解密模拟 ──
+(function () {
+  var title = "LEVIA'S BLOG";
+  var sub = 'MINERAL · TERMINAL · MOSS';
+  var chars = '▮▞█#$%&@*+≠';
+  var h1 = document.getElementById('bTitle');
+  var subEl = document.getElementById('bSub');
+  var state = document.getElementById('bDecState');
+  var frame = 0;
+  function render() {
+    if (frame >= title.length + 6) { state.textContent = 'DECRYPTED: OK'; return; }
+    var reveal = frame - 6;
+    var out = '';
+    for (var i = 0; i < title.length; i++) {
+      if (i < reveal && title[i] !== ' ') out += title[i];
+      else if (title[i] === ' ') out += ' ';
+      else out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    h1.textContent = out;
+    if (frame >= 6) subEl.textContent = sub.slice(0, frame - 6);
+    frame++;
+    setTimeout(render, 70);
+  }
+  render();
+})();
+
+// ── 方案 D: 乱码重组模拟 ──
+(function () {
+  var title = "LEVIA'S BLOG";
+  var chars = '▮▞█#$%&@';
+  var el = document.getElementById('dTitle');
+  var frame = 0;
+  var total = 30;
+  function render() {
+    var progress = Math.min(frame / total, 1);
+    var reveal = Math.floor(progress * title.length);
+    var out = '';
+    for (var i = 0; i < title.length; i++) {
+      if (title[i] === ' ') out += ' ';
+      else if (i < reveal) out += title[i];
+      else out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    el.textContent = out;
+    if (frame < total + 4) { frame++; setTimeout(render, 55); }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
