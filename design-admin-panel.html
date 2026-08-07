@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理面板 · 独立设计稿 — brutalism admin</title>
+<style>
+  :root {
+    --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
+    --fg:#E8E8E3; --muted:#7A7A75; --faint:#3E3E3C;
+    --accent:#6B8B6B; --white:#F2F2ED; --danger:#C08080;
+    --bw:1px;
+    --font-sans:"Inter","Noto Sans SC",system-ui,sans-serif;
+    --font-display:"Space Grotesk","Inter","Noto Sans SC",sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+  .container{max-width:1080px;margin:0 auto;padding:0 32px}
+  h1{font-size:clamp(28px,4.5vw,44px);font-weight:500;letter-spacing:-1.2px;line-height:1.15;font-family:var(--font-display)}
+  h2{font-size:22px;font-weight:500;letter-spacing:-0.5px;color:var(--white);font-family:var(--font-display)}
+  .label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
+  .mono{font-family:var(--font-mono);font-size:11px}
+  section{padding:64px 0}
+  hr{border:none;border-top:1px solid var(--border)}
+  .header{padding:72px 0 48px;text-align:center;border-bottom:1px solid var(--border)}
+  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:20px;letter-spacing:3px}
+  .header p{color:var(--muted);max-width:520px;margin:16px auto 0;font-size:14px}
+  .box{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);padding:16px 24px;line-height:1.9;font-size:12px;margin:20px 0}
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin:24px 0}
+  .table th,.table td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
+  .mockup{border:1px solid var(--border);overflow:hidden;margin-top:20px;border-radius:6px}
+  .mockup-bar{display:flex;align-items:center;gap:7px;padding:7px 16px;background:#101010;border-bottom:1px solid var(--border);font-size:9px;color:var(--faint);font-family:var(--font-mono);letter-spacing:1px}
+  .mockup-dot{width:9px;height:9px;border-radius:3px;background:#555}
+  .mockup-body{padding:0;background:var(--bg)}
+
+  /* ═══════ ADMIN SHELL ═══════ */
+  .admin-shell{display:grid;grid-template-columns:220px 1fr;min-height:640px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)}
+  .admin-nav{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0}
+  .an-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:15px;font-weight:550;letter-spacing:1px;color:var(--white)}
+  .an-logo .an-role{display:block;font-family:var(--font-mono);font-size:9px;color:var(--accent);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
+  .an-menu{flex:1;display:flex;flex-direction:column;padding:12px 0}
+  .an-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-family:var(--font-mono);font-size:12px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;letter-spacing:.3px;transition:color .3s,border-color .3s,transform .15s}
+  .an-item .an-dot{width:5px;height:5px;border-radius:2px;background:var(--faint);transition:background .3s}
+  .an-item:hover,.an-item.active{color:var(--fg);border-left-color:var(--accent);transform:translateX(2px)}
+  .an-item.active .an-dot{background:var(--accent)}
+  .an-user{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .an-user img{width:30px;height:30px;border-radius:4px;border:1px solid var(--border);object-fit:cover}
+  .an-user .au-name{font-size:12px;font-weight:500;color:var(--white)}
+  .an-user .au-email{font-size:9px;color:var(--faint);font-family:var(--font-mono)}
+  .an-user .au-out{width:28px;height:28px;margin-left:auto;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer;font-size:11px;background:none;transition:transform .15s,border-color .3s,color .3s}
+  .an-user .au-out:hover{transform:scale(1.08);border-color:var(--danger);color:var(--danger)}
+  .an-content{padding:28px 32px;display:flex;flex-direction:column;gap:20px;min-width:0}
+  .an-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .an-head h3{font-size:17px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .an-head .an-head-sub{font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+  .an-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:11px;font-family:var(--font-mono);border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--fg);text-decoration:none;cursor:pointer;transition:transform .15s,border-color .3s,color .3s}
+  .btn:hover{transform:scale(1.04);border-color:var(--accent);color:var(--accent)}
+  .btn-primary{background:var(--white);color:var(--bg);border-color:var(--white);font-weight:500}
+  .btn-primary:hover{border-color:var(--white);color:var(--bg)}
+  .btn-danger:hover{border-color:var(--danger);color:var(--danger)}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:3px;transition:transform .15s,border-color .3s}
+  .stat:hover{transform:translateY(-2px);border-color:var(--muted)}
+  .stat .st-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+  .stat .st-value{font-size:26px;font-weight:400;color:var(--white);font-family:var(--font-display)}
+  .panel-title{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 4px}
+  .admin-table{width:100%;border-collapse:collapse;font-size:11px}
+  .admin-table th,.admin-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .admin-table th{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono);background:var(--surface)}
+  .admin-table td{color:var(--fg)}
+  .admin-table tr:last-child td{border-bottom:none}
+  .admin-table code{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+  .status{font-family:var(--font-mono);font-size:10px;padding:2px 9px;border-radius:3px;border:1px solid var(--border);color:var(--muted)}
+  .status-published{color:var(--accent);border-color:var(--accent)}
+  .status-draft{color:var(--faint);border-color:var(--faint)}
+  .status-pending{color:#C9A86A;border-color:#6B5B33}
+  .row-action{font-family:var(--font-mono);font-size:10px;color:var(--muted);background:none;border:1px solid transparent;border-radius:3px;padding:3px 8px;cursor:pointer;transition:transform .15s,border-color .3s,color .3s}
+  .row-action:hover{transform:scale(1.05);border-color:var(--accent);color:var(--accent)}
+  .row-action.primary{color:var(--accent)}
+  .row-action.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .hint{font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:10px}
+  .note{border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:4px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.8}
+  .state-card{border:1px dashed var(--border);border-radius:6px;padding:36px 20px;text-align:center;color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:8px;align-items:center}
+  .state-card .state-tag{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:2px}
+  .filter-row{display:flex;gap:10px;align-items:center}
+  .filter-row select{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:7px 12px;font-size:11px;color:var(--fg);font-family:var(--font-mono);outline:none}
+  .upload-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .upload-row input[type=file]{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+  .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+  .media-item{border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--bg)}
+  .media-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-bottom:1px solid var(--border)}
+  .media-item .mi-meta{padding:8px 10px;font-family:var(--font-mono);font-size:9px;color:var(--faint)}
+  .avatar{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);object-fit:cover;vertical-align:middle}
+  .select-sm{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;font-family:var(--font-mono);color:var(--fg)}
+  @media(max-width:820px){.stat-grid{grid-template-columns:repeat(2,1fr)}.admin-shell{grid-template-columns:1fr}.admin-nav{border-right:none;border-bottom:1px solid var(--border)}.an-menu{flex-direction:row;flex-wrap:wrap;padding:8px 0}.an-item{border-left:none;border-bottom:2px solid transparent;padding:8px 16px}.an-item:hover,.an-item.active{border-left-color:transparent;border-bottom-color:var(--accent);transform:none}.an-user{border-top:none;border-left:1px solid var(--border)}.an-logo{padding:14px 16px}.an-content{padding:20px 16px}}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="header">
+  <div class="sub">brutalism admin · 管理面板独立设计 · v1</div>
+  <h1>管理面板设计稿</h1>
+  <p>靠左竖向导航 · 与主站同配色（矿物单色 + 苔绿 #6B8B6B）· 不复用主页面文章容器。导航 /dashboard /posts /comments /users /media /settings。</p>
+</header>
+
+<hr>
+
+<!-- ═══════════ 01 框架总览 ═══════════ -->
+<section>
+  <div class="label">01 · 框架</div>
+  <h2>Admin Shell · 左导航 + 内容区</h2>
+  <p style="color:var(--muted);font-size:13px;margin:12px 0 4px;">整体为独立壳层：<span class="mono">220px 竖向导航（surface 底 + 右边框）</span> + 弹性内容区（bg 底）。全高布局，页面滚动发生在内容区内部。</p>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — shell overview</span></div>
+  <div class="mockup-body">
+    <div class="admin-shell" style="min-height:560px;">
+      <aside class="admin-nav">
+        <div class="an-logo">LEVIA'S BLOG<span class="an-role">superadmin</span></div>
+        <nav class="an-menu">
+          <a class="an-item active" href="#"><span class="an-dot"></span>/dashboard</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/posts</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/comments</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/users</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/media</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%233E3E3C'/%3E%3Ctext x='15' y='20' font-family='monospace' font-size='13' fill='%23E8E8E3' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" alt="">
+          <div><div class="au-name">Levia</div><div class="au-email">levia@example.com</div></div>
+          <button class="au-out" title="注销">↗</button>
+        </div>
+      </aside>
+      <div class="an-content">
+        <div class="an-head">
+          <div><p class="an-head-sub">CONTROL</p><h3>Dashboard</h3></div>
+          <div class="an-actions"><a class="btn btn-primary" href="#">+ New Post</a><button class="btn">刷新</button></div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><span class="st-label">Posts</span><span class="st-value">22</span></div>
+          <div class="stat"><span class="st-label">Comments</span><span class="st-value">47</span></div>
+          <div class="stat"><span class="st-label">Users</span><span class="st-value">12</span></div>
+          <div class="stat"><span class="st-label">Pending</span><span class="st-value">3</span></div>
+        </div>
+        <div class="panel-title">Recent Posts</div>
+        <table class="admin-table">
+          <thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><strong>构建现代化个人博客</strong><br><code>build-modern-blog.md</code></td><td><span class="status status-published">● published</span></td><td>2026-08-06</td><td><button class="row-action primary">发布</button><button class="row-action">转草稿</button><a class="row-action" href="#">编辑</a></td></tr>
+            <tr><td><strong>这是一个测试</strong><br><code>2026-08-07-这是一个测试.md</code></td><td><span class="status status-published">● published</span></td><td>2026-08-07</td><td><button class="row-action">转草稿</button><a class="row-action" href="#">编辑</a></td></tr>
+            <tr><td><strong>Rust 所有权模型</strong><br><code>rust-ownership.md</code></td><td><span class="status status-draft">○ draft</span></td><td>2025-06-15</td><td><button class="row-action primary">发布</button><a class="row-action" href="#">编辑</a></td></tr>
+          </tbody>
+        </table>
+        <div class="hint">showing 3 of 8 · page 1/3</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ shell-spec</span><br>
+    <strong>导航</strong>: 220px · <span class="mono">--surface</span> 底 + 1px 右边框 · 菜单项 mono 12px，active = 左侧 2px accent 条 + <span class="mono">translateX(2px)</span><br>
+    <strong>内容区</strong>: <span class="mono">--bg</span> 底 · padding 28/32 · 顶部操作行（标题 + 动作按钮）<br>
+    <strong>移动端 ≤820px</strong>: 导航折叠为顶部横向滚动条，active 变底部 accent 线</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 02 Posts ═══════════ -->
+<section>
+  <div class="label">02 · Posts</div>
+  <h2>文章管理 + 一键发布</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — /posts</span></div>
+  <div class="mockup-body">
+    <div class="admin-shell" style="min-height:520px;">
+      <aside class="admin-nav">
+        <div class="an-logo">LEVIA'S BLOG<span class="an-role">superadmin</span></div>
+        <nav class="an-menu">
+          <a class="an-item" href="#"><span class="an-dot"></span>/dashboard</a>
+          <a class="an-item active" href="#"><span class="an-dot"></span>/posts</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/comments</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/users</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/media</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%233E3E3C'/%3E%3C/svg%3E" alt=""><div><div class="au-name">Levia</div><div class="au-email">levia@example.com</div></div><button class="au-out">↗</button></div>
+      </aside>
+      <div class="an-content">
+        <div class="an-head">
+          <div><p class="an-head-sub">CONTENT</p><h3>Posts</h3></div>
+          <div class="an-actions"><button class="btn">GitHub 授权发布</button><a class="btn btn-primary" href="#">+ New Post</a></div>
+        </div>
+        <div class="note">发布 = 将仓库文章的 <span class="mono">draft</span> 改为 <span class="mono">false</span> 并提交，Cloudflare 自动重建上线。授权后点每行「发布」即可。</div>
+        <table class="admin-table">
+          <thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><strong>构建现代化个人博客</strong><br><code>build-modern-blog.md</code></td><td><span class="status status-published">● published</span></td><td>2026-08-06</td><td><div style="display:flex;gap:4px;"><button class="row-action">转草稿</button><a class="row-action" href="#">编辑</a></div></td></tr>
+            <tr><td><strong>这是一个测试</strong><br><code>2026-08-07-这是一个测试.md</code></td><td><span class="status status-published">● published</span></td><td>2026-08-07</td><td><div style="display:flex;gap:4px;"><button class="row-action">转草稿</button><a class="row-action" href="#">编辑</a></div></td></tr>
+            <tr><td><strong>Rust 所有权模型</strong><br><code>rust-ownership.md</code></td><td><span class="status status-draft">○ draft</span></td><td>2025-06-15</td><td><div style="display:flex;gap:4px;"><button class="row-action primary">发布</button><a class="row-action" href="#">编辑</a></div></td></tr>
+            <tr><td><strong>Container Queries 指南</strong><br><code>container-queries.md</code></td><td><span class="status status-draft">○ draft</span></td><td>2025-04-10</td><td><div style="display:flex;gap:4px;"><button class="row-action primary">发布</button><a class="row-action" href="#">编辑</a></div></td></tr>
+          </tbody>
+        </table>
+        <div class="hint">showing 4 of 4 · page 1/1</div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 03 Comments ═══════════ -->
+<section>
+  <div class="label">03 · Comments</div>
+  <h2>评论审核</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — /comments</span></div>
+  <div class="mockup-body">
+    <div class="admin-shell" style="min-height:460px;">
+      <aside class="admin-nav">
+        <div class="an-logo">LEVIA'S BLOG<span class="an-role">superadmin</span></div>
+        <nav class="an-menu">
+          <a class="an-item" href="#"><span class="an-dot"></span>/dashboard</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/posts</a>
+          <a class="an-item active" href="#"><span class="an-dot"></span>/comments</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/users</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/media</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%233E3E3C'/%3E%3C/svg%3E" alt=""><div><div class="au-name">Levia</div><div class="au-email">levia@example.com</div></div><button class="au-out">↗</button></div>
+      </aside>
+      <div class="an-content">
+        <div class="an-head">
+          <div><p class="an-head-sub">MODERATION</p><h3>Comments</h3></div>
+          <div class="an-actions"><button class="btn">刷新</button></div>
+        </div>
+        <div class="filter-row"><label class="mono" style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px;">状态</label><select><option>全部</option><option>待审核</option><option>已通过</option><option>已拒绝</option><option>已隐藏</option></select></div>
+        <table class="admin-table">
+          <thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>双线部署的部分尤其有用。想问 Cloudflare Pages 冷启动时间多久？</td><td><code>/posts/build-modern-blog/</code></td><td>alex_dev</td><td><span class="status status-pending">◆ pending</span></td><td>2026-08-07 14:32</td><td><div style="display:flex;gap:4px;"><button class="row-action primary">通过</button><button class="row-action danger">隐藏</button><button class="row-action danger">拒绝</button></div></td></tr>
+            <tr><td>冷启动 30-80ms，Hugo 构建非常快。</td><td><code>/posts/build-modern-blog/</code></td><td>Levia</td><td><span class="status status-published">● approved</span></td><td>2026-08-07 15:10</td><td><div style="display:flex;gap:4px;"><button class="row-action danger">隐藏</button><button class="row-action danger">拒绝</button></div></td></tr>
+          </tbody>
+        </table>
+        <div class="hint">showing 2 of 47 · page 1/24</div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 04 Users ═══════════ -->
+<section>
+  <div class="label">04 · Users</div>
+  <h2>用户管理</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — /users</span></div>
+  <div class="mockup-body">
+    <div class="admin-shell" style="min-height:440px;">
+      <aside class="admin-nav">
+        <div class="an-logo">LEVIA'S BLOG<span class="an-role">superadmin</span></div>
+        <nav class="an-menu">
+          <a class="an-item" href="#"><span class="an-dot"></span>/dashboard</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/posts</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/comments</a>
+          <a class="an-item active" href="#"><span class="an-dot"></span>/users</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/media</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%233E3E3C'/%3E%3C/svg%3E" alt=""><div><div class="au-name">Levia</div><div class="au-email">levia@example.com</div></div><button class="au-out">↗</button></div>
+      </aside>
+      <div class="an-content">
+        <div class="an-head">
+          <div><p class="an-head-sub">ACCOUNTS</p><h3>Users</h3></div>
+          <div class="an-actions"><button class="btn">刷新</button></div>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><img class="avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect width='28' height='28' fill='%233E3E3C'/%3E%3C/svg%3E" alt=""></td><td><strong>Levia</strong><br><code>levia</code></td><td>levia@example.com</td><td><span class="status status-published">superadmin</span></td><td><select class="select-sm"><option>active</option></select></td><td><button class="row-action">保存</button></td></tr>
+            <tr><td><img class="avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect width='28' height='28' fill='%23161615'/%3E%3C/svg%3E" alt=""></td><td><strong>alex_dev</strong><br><code>alex</code></td><td>alex@example.com</td><td><select class="select-sm"><option>user</option></select></td><td><select class="select-sm"><option>active</option></select></td><td><button class="row-action">保存</button></td></tr>
+          </tbody>
+        </table>
+        <div class="hint">showing 2 of 12 · page 1/6</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ role-matrix</span><br>superadmin（唯一，GitHub levia808 自动持有）· admin · author · user；状态 active / suspended / deleted</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 05 Media ═══════════ -->
+<section>
+  <div class="label">05 · Media</div>
+  <h2>媒体库</h2>
+  <div class="mockup"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — /media</span></div>
+  <div class="mockup-body">
+    <div class="admin-shell" style="min-height:460px;">
+      <aside class="admin-nav">
+        <div class="an-logo">LEVIA'S BLOG<span class="an-role">superadmin</span></div>
+        <nav class="an-menu">
+          <a class="an-item" href="#"><span class="an-dot"></span>/dashboard</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/posts</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/comments</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/users</a>
+          <a class="an-item active" href="#"><span class="an-dot"></span>/media</a>
+          <a class="an-item" href="#"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%233E3E3C'/%3E%3C/svg%3E" alt=""><div><div class="au-name">Levia</div><div class="au-email">levia@example.com</div></div><button class="au-out">↗</button></div>
+      </aside>
+      <div class="an-content">
+        <div class="an-head">
+          <div><p class="an-head-sub">ASSETS</p><h3>Media</h3></div>
+          <div class="an-actions"><button class="btn">刷新</button></div>
+        </div>
+        <div class="upload-row"><input type="file" accept="image/*,video/*,audio/*"><button class="btn btn-primary">上传媒体</button></div>
+        <div class="media-grid">
+          <div class="media-item"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='98'%3E%3Crect width='130' height='98' fill='%23161615'/%3E%3Ctext x='65' y='55' font-family='monospace' font-size='20' fill='%233E3E3C' text-anchor='middle'%3E%3C/text%3E%3C/svg%3E" alt=""><div class="mi-meta">wallhaven-ly22v2.png · 2.4 MB</div></div>
+          <div class="media-item"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='98'%3E%3Crect width='130' height='98' fill='%23161615'/%3E%3Ctext x='65' y='55' font-family='monospace' font-size='20' fill='%233E3E3C' text-anchor='middle'%3E%3C/text%3E%3C/svg%3E" alt=""><div class="mi-meta">kaws-cover.jpg · 1.1 MB</div></div>
+          <div class="media-item"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='98'%3E%3Crect width='130' height='98' fill='%23161615'/%3E%3C/svg%3E" alt=""><div class="mi-meta">demo.mp4 · 12.8 MB</div></div>
+        </div>
+        <div class="hint">showing 3 of 3 assets</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ media-spec</span><br>支持 <span class="mono">image/* video/* audio/*</span> 上传（Supabase Storage）· 网格 <span class="mono">minmax(130px, 1fr)</span> · 文件名 + 大小 mono 标注 · 删除按钮 hover 变 danger</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 06 Settings & 状态 ═══════════ -->
+<section>
+  <div class="label">06 · Settings · 状态组件</div>
+  <h2>设置页与状态组件</h2>
+  <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+    <div class="mockup" style="margin:0;"><div class="mockup-bar"><div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div><span>admin — /settings</span></div>
+    <div class="mockup-body"><div class="an-content" style="padding:24px;">
+      <div class="an-head"><div><p class="an-head-sub">CONFIG</p><h3>Settings</h3></div></div>
+      <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" style="color:var(--accent);">已授权</span><br>授权状态与 /posts 分区共享，可重新授权。</div>
+      <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内<br><code style="font-family:var(--font-mono);font-size:11px;">hugo.yaml</code> · <code style="font-family:var(--font-mono);font-size:11px;">static/admin-cms/config.yml</code> · <code style="font-family:var(--font-mono);font-size:11px;">themes/brutalism/</code></div>
+    </div></div></div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="state-card"><span class="state-tag">[ LOADING ]</span>加载中…<span class="mono" style="font-size:9px;color:var(--faint);">state — loading</span></div>
+      <div class="state-card" style="border-color:var(--danger);"><span class="state-tag">[ ERROR ]</span>操作失败，请重试<span class="mono" style="font-size:9px;color:var(--danger);">state — error (danger 边框)</span></div>
+      <div class="state-card"><span class="state-tag">[ EMPTY ]</span>暂无数据<span class="mono" style="font-size:9px;color:var(--faint);">state — empty</span></div>
+      <div class="state-card"><span class="state-tag">[ LOCKED ]</span>此页面仅管理员可访问<span class="mono" style="font-size:9px;color:var(--faint);">state — unauthorized</span></div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 07 动效 · 响应式 ═══════════ -->
+<section>
+  <div class="label">07 · 动效 · 响应式</div>
+  <h2>交互规则</h2>
+  <table class="table">
+    <thead><tr><th>交互</th><th>效果</th><th>参数</th></tr></thead>
+    <tbody>
+      <tr><td>导航项 hover/active</td><td>左侧 accent 条 + <span class="mono">translateX(2px)</span></td><td>120ms / 200ms</td></tr>
+      <tr><td>统计卡 hover</td><td><span class="mono">translateY(-2px)</span> + 边框变亮</td><td>150ms / 300ms</td></tr>
+      <tr><td>按钮 hover / press</td><td><span class="mono">scale(1.04) / scale(0.98)</span></td><td>120ms 可打断</td></tr>
+      <tr><td>行操作按钮</td><td>边框浮现 + <span class="mono">scale(1.05)</span></td><td>150ms</td></tr>
+      <tr><td>面板切换</td><td>内容区直接切换（无过渡，符合粗野主义）</td><td>instant</td></tr>
+      <tr><td>移动端 ≤820px</td><td>导航横排滚动 · 统计 2 列 · 内容 padding 16</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <div class="box"><span class="mono" style="color:var(--accent);">▶ motion-rule</span><br>沿用主站规则：仅 <span class="mono">transform</span> + 无阴影/渐变/模糊；退出比进入快；面板间切换不设动画（瞬切）。</div>
+</section>
+
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
+  design-admin-panel v1 · brutalism · 2026-08-07 · LEVIA
+</footer>
+</div>
+</body>
+</html>

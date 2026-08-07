@@ -1,102 +1,99 @@
 {{- define "main" }}
-<article class="container article-page article-page--plain">
-  <div class="article-main article-main--plain" data-reveal>
-    <header class="article-header">
-      <div class="mono article-meta"><span>ADMIN</span></div>
-      <h1 class="article-title">{{ .Title }}</h1>
-    </header>
-    <div class="article-body">
-      <div class="admin-page" id="adminPage">
-        <div id="adminLoading" class="page-state"><p>加载中…</p></div>
-        <div id="adminUnauthorized" class="page-state" hidden><h2>无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="auth-btn auth-btn-primary">返回首页</a></div>
-        <div id="adminContent" hidden>
-          <aside class="admin-sidebar">
-            <div class="as-logo">{{ site.Title }}<span>{{ site.Params.author }}</span></div>
-            <nav class="as-nav" aria-label="后台导航">
-              <a href="#" class="active" data-admin-section="dashboard">/dashboard</a>
-              <a href="#" data-admin-section="posts">/posts</a>
-              <a href="#" data-admin-section="comments">/comments</a>
-              <a href="#" data-admin-section="users">/users</a>
-              <a href="#" data-admin-section="media">/media</a>
-              <a href="#" data-admin-section="settings">/settings</a>
-            </nav>
-          </aside>
-
-          <div class="admin-main">
-            <section class="admin-panel" data-admin-panel="dashboard">
-              <div class="am-header">
-                <div><p class="am-header-sub" id="adminIdentity"></p><div class="am-title">Dashboard</div></div>
-                <div class="admin-btn-group">
-                  <a href="{{ "admin-cms/" | relURL }}" class="admin-btn">+ New Post</a>
-                  <button type="button" class="admin-btn" data-admin-refresh="stats">刷新</button>
-                </div>
-              </div>
-              <div class="admin-stat-grid">
-                <div class="admin-stat"><span class="asc-label">Posts</span><span class="asc-value" id="adminPostCount">—</span></div>
-                <div class="admin-stat"><span class="asc-label">Comments</span><span class="asc-value" id="adminCommentCount">—</span></div>
-                <div class="admin-stat"><span class="asc-label">Users</span><span class="asc-value" id="adminUserCount">—</span></div>
-                <div class="admin-stat"><span class="asc-label">Pending</span><span class="asc-value" id="adminPendingCommentCount">—</span></div>
-              </div>
-              <div>
-                <div class="am-section-title">RECENT POSTS</div>
-                <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
-                <div class="admin-pagination-hint" id="adminPostHint"></div>
-              </div>
-            </section>
-
-            <section class="admin-panel" data-admin-panel="posts" hidden>
-              <div class="am-header">
-                <div class="am-title">Posts</div>
-                <div class="admin-btn-group">
-                  <button type="button" class="admin-btn" id="ghAuthBtn">GitHub 授权发布</button>
-                  <a href="{{ "admin-cms/" | relURL }}" class="admin-btn">+ New Post</a>
-                </div>
-              </div>
-              <div class="admin-publish-note" id="ghPublishNote">发布 = 将仓库中文章的 draft 改为 false 并提交，Cloudflare 自动重建上线。首次使用请先授权 GitHub 发布权限。</div>
-              <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPublishTable"></tbody></table></div>
-              <div class="admin-pagination-hint" id="adminPublishHint"></div>
-            </section>
-
-            <section class="admin-panel" data-admin-panel="comments" hidden>
-              <div class="am-header">
-                <div class="am-title">Comments</div>
-                <button type="button" class="admin-btn" data-admin-refresh="comments">刷新</button>
-              </div>
-              <div class="admin-filter-row"><label>状态<select id="adminCommentFilter"><option value="">全部</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已拒绝</option><option value="hidden">已隐藏</option></select></label></div>
-              <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminCommentTable"></tbody></table></div>
-            </section>
-
-            <section class="admin-panel" data-admin-panel="users" hidden>
-              <div class="am-header">
-                <div class="am-title">Users</div>
-                <button type="button" class="admin-btn" data-admin-refresh="users">刷新</button>
-              </div>
-              <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="adminUserTable"></tbody></table></div>
-            </section>
-
-            <section class="admin-panel" data-admin-panel="media" hidden>
-              <div class="am-header">
-                <div class="am-title">Media</div>
-                <button type="button" class="admin-btn" data-admin-refresh="media">刷新</button>
-              </div>
-              <div class="media-upload-row"><input type="file" id="adminMediaInput" accept="image/*,video/*,audio/*"><button type="button" class="admin-btn" id="adminMediaUpload">上传媒体</button></div>
-              <p class="auth-error" id="adminMediaError" hidden></p>
-              <div class="admin-media-grid" id="adminMediaGrid"></div>
-            </section>
-
-            <section class="admin-panel" data-admin-panel="settings" hidden>
-              <div class="am-header"><div class="am-title">Settings</div></div>
-              <div class="admin-settings-list">
-                <p>站点配置编辑仓库文件：<code>hugo.yaml</code> · <code>static/admin-cms/config.yml</code> · <code>themes/brutalism/assets/css/</code></p>
-                <p>GitHub 发布授权：<span id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></p>
-              </div>
-            </section>
-
-            <div class="auth-error" id="adminError" hidden></div>
-          </div>
+<div class="admin-wrap">
+  <div class="admin-shell" id="adminPage">
+    <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;min-height:600px;justify-content:center;"><span class="state-tag">[ LOADING ]</span><p>加载中…</p></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;min-height:600px;justify-content:center;" hidden><span class="state-tag">[ LOCKED ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
+    <div id="adminContent" hidden>
+      <aside class="admin-nav">
+        <div class="an-logo">{{ site.Title }}<span class="an-role">{{ site.Params.author }}</span></div>
+        <nav class="an-menu" aria-label="后台导航">
+          <a href="#" class="an-item active" data-admin-section="dashboard"><span class="an-dot"></span>/dashboard</a>
+          <a href="#" class="an-item" data-admin-section="posts"><span class="an-dot"></span>/posts</a>
+          <a href="#" class="an-item" data-admin-section="comments"><span class="an-dot"></span>/comments</a>
+          <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>/users</a>
+          <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>/media</a>
+          <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>/settings</a>
+        </nav>
+        <div class="an-user">
+          <img src="{{ "favicon.svg" | relURL }}" alt="" id="adminUserAvatar">
+          <div><div class="au-name" id="adminUserName">—</div><div class="au-email" id="adminUserEmail">—</div></div>
+          <button type="button" class="au-out" id="adminLogoutBtn" title="注销">↗</button>
         </div>
+      </aside>
+
+      <div class="an-content">
+        <section class="admin-panel" data-admin-panel="dashboard">
+          <div class="an-head">
+            <div><p class="an-head-sub" id="adminIdentity">CONTROL</p><h3>Dashboard</h3></div>
+            <div class="an-actions">
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary">+ New Post</a>
+              <button type="button" class="btn" data-admin-refresh="stats">刷新</button>
+            </div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><span class="st-label">Posts</span><span class="st-value" id="adminPostCount">—</span></div>
+            <div class="stat"><span class="st-label">Comments</span><span class="st-value" id="adminCommentCount">—</span></div>
+            <div class="stat"><span class="st-label">Users</span><span class="st-value" id="adminUserCount">—</span></div>
+            <div class="stat"><span class="st-label">Pending</span><span class="st-value" id="adminPendingCommentCount">—</span></div>
+          </div>
+          <div>
+            <div class="panel-title">Recent Posts</div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
+            <div class="hint" id="adminPostHint"></div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="posts" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">CONTENT</p><h3>Posts</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="ghAuthBtn">GitHub 授权发布</button>
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary">+ New Post</a>
+            </div>
+          </div>
+          <div class="note" id="ghPublishNote">发布 = 将仓库文章的 <span class="mono">draft</span> 改为 <span class="mono">false</span> 并提交，Cloudflare 自动重建上线。首次使用请先授权 GitHub 发布权限。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPublishTable"></tbody></table></div>
+          <div class="hint" id="adminPublishHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="comments" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">MODERATION</p><h3>Comments</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="comments">刷新</button></div>
+          </div>
+          <div class="filter-row"><label>状态</label><select id="adminCommentFilter"><option value="">全部</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已拒绝</option><option value="hidden">已隐藏</option></select></div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminCommentTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="users" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">ACCOUNTS</p><h3>Users</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="users">刷新</button></div>
+          </div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="adminUserTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="media" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">ASSETS</p><h3>Media</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="media">刷新</button></div>
+          </div>
+          <div class="upload-row"><input type="file" id="adminMediaInput" accept="image/*,video/*,audio/*"><button type="button" class="btn btn-primary" id="adminMediaUpload">上传媒体</button></div>
+          <p class="auth-error" id="adminMediaError" hidden></p>
+          <div class="media-grid" id="adminMediaGrid"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="settings" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">CONFIG</p><h3>Settings</h3></div>
+          </div>
+          <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></div>
+          <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
+        </section>
+
+        <div class="auth-error" id="adminError" hidden></div>
       </div>
     </div>
   </div>
-</article>
+</div>
 {{- end }}

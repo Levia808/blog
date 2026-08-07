@@ -512,6 +512,20 @@
           show(unauthorized);
           return;
         }
+        var meta = user.user_metadata || {};
+        var ghName = meta.user_name || meta.preferred_username || '';
+        var name = ghName || adminProfile.github_username || adminProfile.display_name || user.email;
+        var avatar = adminProfile.avatar_url || adminProfile.github_avatar_url || meta.avatar_url || '';
+        var nameEl = document.getElementById('adminUserName');
+        var emailEl = document.getElementById('adminUserEmail');
+        var avatarEl = document.getElementById('adminUserAvatar');
+        if (nameEl) nameEl.textContent = name;
+        if (emailEl) emailEl.textContent = user.email;
+        if (avatarEl && avatar) avatarEl.src = avatar;
+        var logoutBtn = document.getElementById('adminLogoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', function () {
+          Auth.signOut().then(function () { window.location.reload(); });
+        });
         await loadDashboard();
         updateGhAuthStatus();
       } catch (error) {
