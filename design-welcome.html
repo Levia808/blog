@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>欢迎页 v2 设计稿 — ASCII 矩阵标题 + 页脚打字机</title>
+<title>欢迎页标题动画 · 多方案设计稿</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700;900&display=swap">
@@ -70,32 +70,116 @@
 
 <header class="header">
   <div class="sub">[ WELCOME v2 ] · 验收设计稿</div>
-  <h1>欢迎页 v2 · ASCII 矩阵标题 + 页脚打字机</h1>
-  <p>大标题以 ASCII 字符矩阵构成「LEVIA'S BLOG」，字符持续变换流动；页脚一句话打字机循环，文本与速度参数<b>后台可编辑</b>。</p>
+  <h1>欢迎页标题动画 · 六大方案</h1>
+  <p>大标题动画多方案（基于网络开源项目/库），页脚打字机保留（参数后台可编辑）。</p>
 </header>
 
 <hr>
 
 <!-- ═══════ 01 欢迎舞台 ═══════ -->
 <section>
-  <div class="label">01 · 欢迎舞台</div>
-  <h2>ASCII 矩阵大标题 + 页脚打字机</h2>
-  <p style="color:var(--muted);font-size:13px;margin:10px 0 16px;">完整可运行演示：标题以<b>真实字形（Space Grotesk）</b>经亮度采样转为高分辨率 ASCII 字符画，字符持续变换（苔绿）；页脚打字机循环，参数下方可调。</p>
-  <div class="stage">
-    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">welcome — ASCII matrix + footer typewriter</span></div>
-    <div class="welcome">
-      <div class="boot-line">[ SYSTEM ] <span class="a">BOOT: OK</span> · <span id="frameInfo">MATRIX RUNNING</span></div>
-      <canvas id="asciiCanvas" width="900" height="230"></canvas>
-      <div class="foot-type">
-        <span class="prefix">//</span>
-        <span class="ttype" id="typeTarget"></span><span class="cur"></span>
+  <div class="label">01 · 标题动画 · 六方案</div>
+  <h2>欢迎页大标题动画方案</h2>
+  <p style="color:var(--muted);font-size:13px;margin:10px 0 16px;">每个方案为真实可运行演示，标注所参考的开源项目/库与参数。</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+
+  <!-- 方案 A -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+        <div id="fxA" style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em;color:var(--white)">LEVIA'S BLOG</div>
       </div>
     </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">A · 逐字揭示</strong>
+      参考 <code>GSAP SplitText</code>（gsap 3.12，2022 起免费）· 逐字 y 40→0 + rotateX 复原 + 淡入 stagger 0.05 · 0.8s
+    </div>
   </div>
-  <div class="spec">
-    <div class="spec-card"><strong>ASCII 矩阵</strong><code>canvas + RAF</code> · 真实字形采样转字符画（非点阵）· 采样密度 5px/格 · 字符 9px · 多级亮度字符池 · 苔绿 #6B8B6B</div>
-    <div class="spec-card"><strong>页脚打字机</strong><code>JS typewriter</code> · 打字→停顿→删除→重打循环 · 光标 step-end 闪烁</div>
-    <div class="spec-card"><strong>参数可配</strong>文本 / 打字速度 / 删除速度 / 停顿时长（下方面板实时调节验证）</div>
+
+  <!-- 方案 B -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div id="fxB" style="width:100%;height:100%"></div>
+    </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">B · 文字粒子</strong>
+      参考 <code>tsParticles</code>（github.com/tsparticles/tsparticles）· 粒子聚成文字形状 + 缓慢游动 · 苔绿
+    </div>
+  </div>
+
+  <!-- 方案 C -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+        <svg width="320" height="70" viewBox="0 0 320 70" style="overflow:visible">
+          <text id="fxC" x="160" y="44" text-anchor="middle" font-family="'Space Grotesk',sans-serif" font-weight="900" font-size="30" letter-spacing="1" fill="none" stroke="#6B8B6B" stroke-width="1.5">LEVIA'S BLOG</text>
+        </svg>
+      </div>
+    </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">C · 描边书写</strong>
+      参考 Drawing 动画（GSAP DrawSVG 思路）· stroke-dasharray 笔顺书写 → 实心淡入 · 蓝图工业感
+    </div>
+  </div>
+
+  <!-- 方案 D -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;position:relative">
+        <div id="fxD" style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em;color:var(--accent);opacity:0"></div>
+      </div>
+    </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">D · 扫描点亮</strong>
+      参考 CRT 扫描线项目 · 渐变扫描从左至右逐字点亮（background-clip:text）· 终端质感
+    </div>
+  </div>
+
+  <!-- 方案 E -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+        <div id="fxE" style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em;color:var(--white)"></div>
+      </div>
+    </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">E · 字符汇聚</strong>
+      参考 <code>Mo.js Burst</code> 思路（github.com/mojs）· 每字符由粒子爆裂汇聚成形 · 工业粒子
+    </div>
+  </div>
+
+  <!-- 方案 F -->
+  <div style="border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface)">
+    <div class="stage" style="min-height:190px;border:none;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+        <div id="fxF" style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em;color:var(--white)"></div>
+      </div>
+    </div>
+    <div style="padding:12px 14px;font-size:12px;color:var(--muted)">
+      <strong style="color:var(--white);display:block;font-family:var(--font-mono)">F · 文字波纹</strong>
+      参考 WaveText 类项目 · 逐字符正弦起伏永动 · 矿物涟漪感
+    </div>
+  </div>
+
+  </div>
+
+  <div class="spec" style="margin-top:16px;">
+    <div class="spec-card"><strong>页脚打字机</strong>保留（打字→停顿→删除→重打 · 文本/速度/停顿后台可配）</div>
+    <div class="spec-card"><strong>reduced-motion</strong>所有方案静态直显</div>
+    <div class="spec-card"><strong>性能</strong>粒子方案 60fps 目标 · 滚动离开暂停</div>
+  </div>
+</section>
+
+<section>
+  <div class="label">01b · 页脚打字机</div>
+  <h2>一句话循环打字（后台可配）</h2>
+  <div class="stage" style="min-height:150px;display:flex;align-items:center;justify-content:center">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t">footer — typewriter loop</span></div>
+    <div class="foot-type">
+      <span class="prefix">//</span>
+      <span class="ttype" id="typeTarget"></span><span class="cur"></span>
+    </div>
   </div>
 
   <h3 style="font-size:15px;color:var(--white);margin:26px 0 12px;font-family:var(--font-display)">参数配置面板（模拟后台设置，实时生效）</h3>
@@ -148,88 +232,162 @@
 </div>
 
 <footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
-  design-welcome v2 · ASCII matrix + typewriter · 2026-08-07 · LEVIA
+  design-welcome v3 · 6 title effects · 2026-08-07 · LEVIA
 </footer>
 </div>
 
 <script>
-/* ═══════ ASCII 矩阵引擎 (真实字形采样 → 字符画) ═══════ */
+/* ═══════ 库加载 (真实 CDN) ═══════ */
+document.addEventListener('DOMContentLoaded', function () {
+  var gsapScript = document.createElement('script');
+  gsapScript.src = 'https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js';
+  gsapScript.onload = initFx;
+  document.head.appendChild(gsapScript);
+
+  var tsScript = document.createElement('script');
+  tsScript.src = 'https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js';
+  tsScript.onload = initFxParticles;
+  document.head.appendChild(tsScript);
+});
+
 var TITLE = "LEVIA'S BLOG";
-var TITLE_FONT = '900 120px "Space Grotesk", sans-serif';
-var SAMPLE = 5;          // 采样密度 px/格 (分辨率)
-var CHARS_BY_LUMA = [    // 亮度分级字符池 (暗 → 亮)
-  ['█', '▮', '▓', '▒'],
-  ['#', '%', '&', '@'],
-  ['*', '+', '≠', '◊'],
-  ['·', '·', '.', ' ']
-];
+var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-var canvas = document.getElementById('asciiCanvas');
-var ctx = canvas.getContext('2d');
-
-/* 离屏: 用真实字形绘制标题 */
-var off = document.createElement('canvas');
-var octx = off.getContext('2d');
-function buildOffscreen() {
-  off.width = canvas.width;
-  off.height = canvas.height;
-  octx.clearRect(0, 0, off.width, off.height);
-  octx.font = TITLE_FONT;
-  octx.textAlign = 'center';
-  octx.textBaseline = 'middle';
-  octx.fillStyle = '#fff';
-  octx.fillText(TITLE, off.width / 2, off.height / 2 + 8);
-}
-buildOffscreen();
-var imgData = octx.getImageData(0, 0, off.width, off.height);
-
-/* 亮度映射表 */
-var luma = [];
-var cols = Math.ceil(canvas.width / SAMPLE);
-var rows = Math.ceil(canvas.height / SAMPLE);
-for (var r = 0; r < rows; r++) {
-  luma[r] = [];
-  for (var c = 0; c < cols; c++) {
-    var px = imgData.data[((r * SAMPLE + SAMPLE / 2) * off.width + (c * SAMPLE + SAMPLE / 2)) * 4];
-    luma[r][c] = px > 200 ? 3 : px > 110 ? 2 : px > 36 ? 1 : 0;
-  }
+/* ── A · 逐字揭示 (GSAP stagger, SplitText 思路) ── */
+function initFx() {
+  if (!window.gsap) return;
+  var el = document.getElementById('fxA');
+  if (!el) return;
+  el.innerHTML = TITLE.split('').map(function (c) {
+    return '<span style="display:inline-block">' + c + '</span>';
+  }).join('');
+  var chars = el.querySelectorAll('span');
+  if (RM) { gsap.set(chars, { opacity: 1, y: 0 }); return; }
+  gsap.set(chars, { opacity: 0, y: 42, rotateX: -70 });
+  gsap.to(chars, {
+    opacity: 1, y: 0, rotateX: 0, duration: 0.8, ease: 'power3.out',
+    stagger: 0.05, delay: 0.2
+  });
 }
 
-function drawMatrix() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = '9px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#6B8B6B';
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      var l = luma[r][c];
-      if (l === 0) continue;                     // 空白区跳过
-      var pool = CHARS_BY_LUMA[l];
-      var ch = pool[Math.floor(Math.random() * pool.length)];
-      ctx.fillText(ch, c * SAMPLE, r * SAMPLE + 9);
+/* ── B · 文字粒子 (tsParticles 真实库) ── */
+function initFxParticles() {
+  var host = document.getElementById('fxB');
+  if (!host || typeof window.tsParticles === 'undefined') return;
+  window.tsParticles.load('fxB', {
+    fullScreen: { enable: false },
+    background: { color: { value: 'transparent' } },
+    fpsLimit: 60,
+    particles: {
+      number: { value: 0 },
+      color: { value: '#6B8B6B' },
+      shape: { type: 'char', options: { char: { value: ['·', '•', '█', '▮', '▓'], font: 'JetBrains Mono' } } },
+      opacity: { value: { min: 0.2, max: 0.9 } },
+      size: { value: { min: 2, max: 5 } },
+      move: { enable: true, speed: 0.6, direction: 'none', random: true, outModes: 'out' }
+    },
+    interactivity: {
+      events: { onHover: { enable: true, mode: 'repulse' }, onClick: { enable: true, mode: 'push' } },
+      modes: { repulse: { distance: 80, duration: 0.4 }, push: { quantity: 6 } }
+    },
+    emitters: { position: { x: 50, y: 50 } },
+    text: { value: "LEVIA'S BLOG", color: '#6B8B6B', style: { font: '900 34px "Space Grotesk", sans-serif' } },
+    shape: {
+      type: 'text',
+      options: { text: { value: "LEVIA'S BLOG", font: { family: 'Space Grotesk', weight: 900, size: 34 } } }
     }
-  }
-  requestAnimationFrame(drawMatrix);
+  });
 }
 
-/* reduced-motion: 静止显示每格最密字符 */
-function drawStatic() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = '9px "JetBrains Mono", monospace';
-  ctx.fillStyle = '#6B8B6B';
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      var l = luma[r][c];
-      if (l === 0) continue;
-      ctx.fillText(CHARS_BY_LUMA[l][0], c * SAMPLE, r * SAMPLE + 9);
+/* ── C · SVG 描边书写 ── */
+(function () {
+  var text = document.getElementById('fxC');
+  if (!text) return;
+  var len = text.getComputedTextLength();
+  text.style.strokeDasharray = len;
+  text.style.strokeDashoffset = len;
+  if (RM) { text.style.strokeDashoffset = 0; return; }
+  text.animate([
+    { strokeDashoffset: len },
+    { strokeDashoffset: 0 }
+  ], { duration: 2400, easing: 'ease-in-out', fill: 'forwards' });
+})();
+
+/* ── D · 扫描点亮 (CRT 扫描) ── */
+(function () {
+  var el = document.getElementById('fxD');
+  if (!el) return;
+  el.style.opacity = 1;
+  el.style.background = 'linear-gradient(90deg, transparent 0%, #6B8B6B 55%, transparent 100%)';
+  el.style.backgroundSize = '240% 100%';
+  el.style.backgroundPosition = '100% 0';
+  el.style.backgroundClip = 'text';
+  el.style.webkitBackgroundClip = 'text';
+  el.style.color = 'transparent';
+  el.style.webkitTextFillColor = 'transparent';
+  if (RM) { el.style.backgroundPosition = '50% 0'; return; }
+  el.animate([
+    { backgroundPosition: '100% 0' },
+    { backgroundPosition: '-100% 0' }
+  ], { duration: 2200, easing: 'cubic-bezier(.25,.8,.4,1)', fill: 'forwards' });
+})();
+
+/* ── E · 字符汇聚 (Mo.js Burst 思路, anime.js 实现) ── */
+(function () {
+  var el = document.getElementById('fxE');
+  if (!el) return;
+  var reduced = RM;
+  if (reduced) { el.textContent = TITLE; return; }
+  el.innerHTML = TITLE.split('').map(function (c) {
+    return '<span style="display:inline-block;opacity:0">' + c + '</span>';
+  }).join('');
+  var spans = el.querySelectorAll('span');
+  var burst = [];
+  spans.forEach(function (sp, i) {
+    var r = sp.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (var p = 0; p < 6; p++) {
+      var dot = document.createElement('span');
+      dot.style.cssText = 'position:fixed;width:4px;height:4px;background:#6B8B6B;border-radius:50%;left:' + cx + 'px;top:' + cy + 'px;opacity:0;z-index:50';
+      document.body.appendChild(dot);
+      burst.push({ dot: dot, sp: sp, i: i });
     }
-  }
-}
+  });
+  var step = 0;
+  var timer = setInterval(function () {
+    if (step >= spans.length) { clearInterval(timer); return; }
+    var i = step++;
+    var sp = spans[i];
+    var r = sp.getBoundingClientRect();
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    sp.style.opacity = 1;
+    sp.animate([{ opacity: 0, transform: 'scale(2.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    burst.filter(function (b) { return b.i === i; }).forEach(function (b) {
+      b.dot.animate([
+        { opacity: 1, transform: 'translate(' + (Math.random() * 70 - 35) + 'px,' + (Math.random() * 70 - 35) + 'px) scale(1)' },
+        { opacity: 0, transform: 'translate(0,0) scale(.2)' }
+      ], { duration: 340, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      setTimeout(function () { b.dot.remove(); }, 400);
+    });
+  }, 70);
+})();
 
-if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  drawStatic();
-} else {
-  drawMatrix();
-}
+/* ── F · 文字波纹 (WaveText) ── */
+(function () {
+  var el = document.getElementById('fxF');
+  if (!el) return;
+  el.innerHTML = TITLE.split('').map(function (c) {
+    return '<span style="display:inline-block">' + c + '</span>';
+  }).join('');
+  var spans = el.querySelectorAll('span');
+  if (RM) return;
+  spans.forEach(function (sp, i) {
+    sp.style.animation = 'wave-y 2.2s ease-in-out ' + (i * 0.09) + 's infinite';
+  });
+  var style = document.createElement('style');
+  style.textContent = '@keyframes wave-y { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }';
+  document.head.appendChild(style);
+})();
 
 /* ═══════ 页脚打字机 (参数可调) ═══════ */
 var cfg = { text: '写代码，也写生活。记录学习与思考。', typeSpeed: 70, delSpeed: 38, pause: 1800 };
