@@ -363,20 +363,19 @@
 .profile-upload { cursor: pointer; }
 
 /* ── 管理面板 (独立壳层 · 设计稿 design-admin-panel v1) ── */
+/* 全屏应用模式: 页面无整体滚动, 仅内容区滚动 */
+body.admin-only { overflow: hidden; height: 100vh; }
 .admin-wrap {
   max-width: none;
   margin: 0;
-  padding: 16px 20px 20px;
-  height: calc(100vh - 88px);
+  padding: 0;
+  height: 100vh;
 }
 .admin-shell {
   display: grid;
   grid-template-columns: 240px 1fr;
   min-height: 0;
   height: 100%;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
   background: var(--bg);
 }
 /* 关键修复: 让 aside + an-content 参与 shell 的两列 grid 布局 */
@@ -386,7 +385,7 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
 }
 .an-logo {
   padding: 22px 20px 16px;
@@ -444,6 +443,16 @@
 }
 .au-out:hover { transform: scale(1.08); border-color: var(--danger); color: var(--danger); }
 .an-content { padding: 28px 36px; display: flex; flex-direction: column; gap: 20px; min-width: 0; overflow-y: auto; }
+/* 内容区滚动条 — 与主题同配色 (v7: 直角 · faint 滑块 · hover 变 accent) */
+.an-content::-webkit-scrollbar { width: 12px; }
+.an-content::-webkit-scrollbar-track { background: var(--bg); border-left: 1px solid var(--border); }
+.an-content::-webkit-scrollbar-thumb {
+  background: var(--faint);
+  border: 3px solid var(--bg);
+  border-radius: 0;
+}
+.an-content::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+.an-content { scrollbar-width: thin; scrollbar-color: var(--faint) var(--bg); }
 .an-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .an-head h3 { font-size: 17px; font-weight: 500; color: var(--white); font-family: var(--font-display); }
 .an-head-sub { font-family: var(--font-mono); font-size: 9px; color: var(--faint); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px; }

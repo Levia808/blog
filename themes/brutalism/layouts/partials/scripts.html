@@ -1,10 +1,12 @@
+{{- if not (eq .Layout "admin") }}
 {{ partial "search-overlay.html" . }}
+{{- end }}
 {{- if site.Params.auth }}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 {{- if fileExists "static/js/supabase.js" }}<script src="{{ "js/supabase.js" | relURL }}"></script>{{ end }}
 {{- if fileExists "static/js/auth-ui.js" }}<script src="{{ "js/auth-ui.js" | relURL }}"></script>{{ end }}
 {{- end }}
-{{- if and site.Params.comments (fileExists "static/js/comments.js") }}
+{{- if and site.Params.comments (not (eq .Layout "admin")) (fileExists "static/js/comments.js") }}
 <script src="{{ "js/comments.js" | relURL }}"></script>
 {{- end }}
 {{- if and site.Params.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}
