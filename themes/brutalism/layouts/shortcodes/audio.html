@@ -1,0 +1,14 @@
+{{- $src := .Get "src" | default "" }}
+{{- $caption := .Get "caption" | default "" }}
+{{- $class := .Get "class" | default "" }}
+{{- if $src }}
+<figure class="media-block{{ with $class }} {{ . }}{{ end }}">
+  <audio class="media-audio" controls preload="metadata">
+    <source src="{{ $src | safeURL }}" type="audio/mpeg">
+    你的浏览器不支持 HTML5 音频。
+  </audio>
+  {{- with $caption }}
+  <figcaption>{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>
+{{- end }}

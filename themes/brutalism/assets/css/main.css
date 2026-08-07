@@ -653,6 +653,9 @@ html.js [data-reveal].reveal-visible {
 .article-body img { max-width: 100%; border: 1px solid var(--border); border-radius: 6px; display: block; margin: 24px auto; }
 .article-body figure { margin: 24px 0; }
 .article-body figcaption { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: center; margin-top: 8px; }
+.article-body .media-block { border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: 6px; padding: 16px; background: var(--bg); }
+.article-body .media-video { display: block; width: 100%; max-height: 480px; background: #0A0A09; border-radius: 4px; }
+.article-body .media-audio { display: block; width: 100%; }
 .article-body hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 .article-body blockquote {
   border-left: 1px solid var(--faint);

@@ -1,5 +1,12 @@
 # yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
 
+# 媒体使用说明:
+# - 图片: 正文中直接拖入媒体库图片即可（markdown ![](/images/...))
+# - 视频/音频: 先在媒体库上传 .mp4/.mp3 等文件，然后在正文中写入:
+#     {{< video src="/images/xxx.mp4" poster="/images/xxx.jpg" caption="视频标题" >}}
+#     {{< audio src="/media/xxx.mp3" caption="音频标题" >}}
+#   （markdown 渲染器已开启 unsafe，shortcode 会被 Hugo 渲染为播放器）
+
 backend:
   name: github
   repo: Levia808/blog

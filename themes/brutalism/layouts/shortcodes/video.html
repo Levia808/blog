@@ -1,0 +1,15 @@
+{{- $src := .Get "src" | default "" }}
+{{- $poster := .Get "poster" | default "" }}
+{{- $caption := .Get "caption" | default "" }}
+{{- $class := .Get "class" | default "" }}
+{{- if $src }}
+<figure class="media-block{{ with $class }} {{ . }}{{ end }}">
+  <video class="media-video" controls preload="metadata"{{ with $poster }} poster="{{ . | safeURL }}"{{ end }}>
+    <source src="{{ $src | safeURL }}" type="video/mp4">
+    你的浏览器不支持 HTML5 视频。
+  </video>
+  {{- with $caption }}
+  <figcaption>{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>
+{{- end }}
