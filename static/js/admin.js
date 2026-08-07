@@ -34,6 +34,34 @@
     target.hidden = false;
   }
 
+  function showToast(message, type) {
+    var wrap = document.getElementById('toastWrap');
+    if (!wrap) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast is-' + (type || 'info');
+    toast.innerHTML = '<span class="toast-dot"></span><span>' + escapeHtml(message) + '</span>';
+    wrap.appendChild(toast);
+    window.requestAnimationFrame(function () { toast.classList.add('is-show'); });
+    window.setTimeout(function () {
+      toast.classList.remove('is-show');
+      window.setTimeout(function () { toast.remove(); }, 250);
+    }, 2600);
+  }
+
+  function renderSkeleton(tableId, cols, rows) {
+    var table = document.getElementById(tableId);
+    if (!table) return;
+    var html = '';
+    for (var r = 0; r < rows; r++) {
+      html += '<tr class="skel-row">';
+      for (var cIdx = 0; cIdx < cols; cIdx++) {
+        html += '<td><span class="skel ' + (cIdx === 0 ? 'w60' : cIdx === 1 ? 'w40' : '') + '"></span></td>';
+      }
+      html += '</tr>';
+    }
+    table.innerHTML = html;
+  }
+
   function clearError(targetId) {
     var target = document.getElementById(targetId || 'adminError');
     if (target) {
@@ -164,7 +192,7 @@
   function renderPostRows(posts, tableId, showActions) {
     var table = document.getElementById(tableId);
     if (!posts.length) {
-      table.innerHTML = '<tr><td colspan="4" class="admin-empty">暂无文章。点击「+ 新建文章」创建。</td></tr>';
+      table.innerHTML = '<tr><td colspan="4"><div class="empty-state"><span class="es-glyph">▤</span><span class="es-title">暂无文章</span><span class="es-desc">点击右上角「+ 新建文章」开始写作</span></div></td></tr>';
       return;
     }
     table.innerHTML = posts.map(function (post) {
@@ -220,6 +248,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: message, content: base64Encode(updated), sha: post.sha })
     });
+    showToast('已' + (published ? '发布：' : '转为草稿：') + post.title, 'success');
     await refreshPosts();
   }
 
@@ -238,10 +267,13 @@
   }
 
   function authorizeGitHub() {
+    var authBtn = document.getElementById('ghAuthBtn');
+    if (authBtn) { authBtn.classList.add('is-loading'); authBtn.disabled = true; }
     var state = Date.now().toString(36) + Math.random().toString(36).slice(2);
     var url = GH_OAUTH_URL + '/auth?provider=github&scope=repo&state=' + state;
     var popup = window.open(url, 'sveltia_oauth', 'width=560,height=720');
     if (!popup) {
+      if (authBtn) { authBtn.classList.remove('is-loading'); authBtn.disabled = false; }
       showError('浏览器拦截了授权窗口，请允许弹出窗口后重试。');
       return;
     }
@@ -264,11 +296,14 @@
     var payload = event.data.slice(event.data.indexOf('{'));
     try {
       var data = JSON.parse(payload);
+      var authBtn = document.getElementById('ghAuthBtn');
+      if (authBtn) { authBtn.classList.remove('is-loading'); authBtn.disabled = false; }
       if (state === 'success' && data.token) {
         window.__ghAuthResolve && window.__ghAuthResolve(data.token);
         showError('');
+        showToast('GitHub 授权成功', 'success');
       } else if (data.error) {
-        showError(data.error);
+        showToast(data.error, 'error');
       }
     } catch (e) {}
   });
@@ -282,7 +317,7 @@
   function renderUsers(users) {
     var table = document.getElementById('adminUserTable');
     if (!users.length) {
-      table.innerHTML = '<tr><td colspan="6" class="admin-empty">暂无用户数据</td></tr>';
+      table.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="es-glyph">👥</span><span class="es-title">暂无用户</span><span class="es-desc">用户注册后会显示在这里</span></div></td></tr>';
       return;
     }
     table.innerHTML = users.map(function (user) {
@@ -314,7 +349,7 @@
   function renderComments(comments) {
     var table = document.getElementById('adminCommentTable');
     if (!comments.length) {
-      table.innerHTML = '<tr><td colspan="6" class="admin-empty">暂无评论记录</td></tr>';
+      table.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="es-glyph">💬</span><span class="es-title">暂无评论</span><span class="es-desc">有读者评论后会显示在这里</span></div></td></tr>';
       return;
     }
     table.innerHTML = comments.map(function (comment) {
@@ -338,7 +373,7 @@
   function renderMedia(assets) {
     var grid = document.getElementById('adminMediaGrid');
     if (!assets.length) {
-      grid.innerHTML = '<div class="admin-empty">媒体库为空，点击「上传媒体」添加文件</div>';
+      grid.innerHTML = '<div class="empty-state"><span class="es-glyph">▦</span><span class="es-title">媒体库为空</span><span class="es-desc">点击「上传媒体」添加图片 / 视频 / 音频</span></div>';
       return;
     }
     grid.innerHTML = assets.map(function (asset) {
@@ -374,6 +409,9 @@
 
   async function loadDashboard() {
     clearError();
+    renderSkeleton('adminPostTable', 4, 3);
+    renderSkeleton('adminUserTable', 6, 3);
+    renderSkeleton('adminCommentTable', 6, 3);
     var results = await Promise.all([
       Admin.getStats().catch(function (error) { showError(error.message); return null; }),
       Admin.getAllUsers().catch(function (error) { showError(error.message); return []; }),
