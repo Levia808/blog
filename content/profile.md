@@ -6,33 +6,4 @@ sitemap:
   priority: 0.5
 ---
 
-<div class="profile-page" id="profilePage">
-  <div id="profileLoading" class="page-state"><p>加载中…</p></div>
-  <div id="profileLoggedOut" class="page-state" hidden>
-    <h2>需要登录</h2><p>登录后可查看和编辑你的个人主页。</p>
-    <button class="auth-btn auth-btn-primary" onclick="BlogAuth.open('login')">登录</button>
-  </div>
-  <div id="profileContent" hidden>
-    <div class="profile-header">
-      <img class="profile-avatar profile-avatar-lg" id="profileAvatar" src="" alt="">
-      <div class="profile-info">
-        <h2 id="profileDisplayName"></h2>
-        <p class="label" id="profileEmail"></p>
-        <p class="label" id="profileGithub"></p>
-        <div class="profile-meta">
-          <span class="profile-badge" id="profileRole">USER</span>
-          <span class="mono profile-meta-item">joined <span id="profileJoined">—</span></span>
-          <span class="mono profile-meta-item">status <span id="profileAccountStatus">active</span></span>
-        </div>
-      </div>
-    </div>
-    <div class="profile-form-grid">
-      <label class="profile-field" for="editUsername">用户名<small class="profile-field-hint">唯一标识，用于个人主页链接</small><input id="editUsername" placeholder="设置唯一用户名"></label>
-      <label class="profile-field" for="editDisplayName">昵称（显示名称）<small class="profile-field-hint">在导航菜单与评论中展示</small><input id="editDisplayName" placeholder="你的名称"></label>
-      <label class="profile-field profile-field-wide" for="editBio">个人简介<textarea id="editBio" placeholder="介绍一下你自己"></textarea></label>
-      <label class="profile-field profile-field-wide" for="editWebsite">网站<input id="editWebsite" placeholder="https://example.com" type="url"></label>
-    </div>
-    <div class="profile-actions"><button class="auth-btn auth-btn-primary" id="saveProfileBtn">保存</button><label class="auth-btn profile-upload">上传头像<input type="file" id="avatarUpload" accept="image/*" hidden></label><button class="auth-btn" id="syncGithubBtn">同步 GitHub 头像</button></div>
-    <p class="auth-success" id="profileSuccess" hidden>已保存。</p><p class="auth-error" id="profileError" hidden></p>
-  </div>
-</div>
+个人主页界面由主题 `layouts/_default/profile.html` 渲染。
