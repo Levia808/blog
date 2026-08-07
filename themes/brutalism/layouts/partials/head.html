@@ -18,6 +18,8 @@
 {{- if eq .Layout "moments" }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
 {{- end }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/css/glightbox.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/js/glightbox.min.js"></script>
 {{- if not (eq .Layout "admin") }}
 <script defer src="{{ "js/theme.js" | relURL }}"></script>
 {{- end }}

@@ -178,6 +178,9 @@
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
+        window.__blogLightbox.reload();
+      }
       if (window.anime && moments.length) {
         anime({
           targets: listEl.querySelectorAll('.moment-card'),

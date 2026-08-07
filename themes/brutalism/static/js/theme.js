@@ -170,6 +170,24 @@
     window.addEventListener('scroll', highlight, { passive: true });
   }
 
+  /* ── 图片点击放大 (GLightbox 开源库: 缩放/淡入淡出动效 + 触摸手势) ── */
+  var glightboxInstance = null;
+  function initLightbox() {
+    if (typeof window.GLightbox !== 'function') return;
+    try {
+      glightboxInstance = window.GLightbox({
+        selector: '.article-body img, .moment-media img',
+        touchNavigation: true,
+        loop: false,
+        zoomable: true,
+        draggable: true,
+        openEffect: 'zoom',
+        closeEffect: 'zoom'
+      });
+      window.__blogLightbox = glightboxInstance;
+    } catch (e) { /* GLightbox 未就绪时忽略 */ }
+  }
+
   /* ── 搜索 (Fuse.js + index.json) ── */
   var fuseCache = null;
   var fuseIndexData = [];
@@ -339,6 +357,7 @@
   }
 
   function boot() {
+    initLightbox();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();
