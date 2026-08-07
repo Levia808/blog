@@ -42,14 +42,34 @@
 
   /* ── 移动端组件样板 (375px) ── */
   .m-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:min(300px,84vw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:60}
+  .m-drawer .dh{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border)}
+  .m-drawer .dl{font-size:15px;font-weight:550;color:var(--white);letter-spacing:1px}
+  .m-drawer .dc{width:38px;height:38px;border:1px solid var(--border);background:none;color:var(--muted);font-size:15px}
+  .m-drawer .menu{flex:1;display:flex;flex-direction:column;background:var(--border);gap:1px;padding:8px 0;overflow-y:auto}
+  .m-drawer .menu a{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 18px;font-size:15px;font-weight:500;color:var(--muted);text-decoration:none;background:var(--surface)}
+  .m-drawer .menu a .idx{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.1em;width:20px}
+  .m-drawer .menu a .arr{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--faint)}
+  .m-drawer .menu a.active{color:var(--fg);background:#1B1B1A}
+  .m-drawer .menu a.active .idx,.m-drawer .menu a.active .arr{color:var(--accent)}
+  .m-drawer .user{border-top:1px solid var(--border);background:var(--border);gap:1px;padding:8px 0 0;display:flex;flex-direction:column}
+  .m-drawer .user a,.m-drawer .user button{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 18px;font-size:13px;font-family:var(--font-mono);color:var(--muted);text-decoration:none;background:var(--surface);border:none;text-align:left}
+  .m-drawer .foot{padding:12px 18px;font-size:9px;color:var(--faint);letter-spacing:.1em;border-top:1px solid var(--border);font-family:var(--font-mono)}
   .m-nav .logo{font-size:15px;font-weight:550;color:var(--white);letter-spacing:1px}
   .m-nav .burger{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);background:none;font-size:18px}
-  .m-menu{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--border);gap:1px}
-  .m-menu a{display:flex;gap:12px;align-items:center;padding:15px 20px;min-height:48px;font-size:15px;color:var(--muted);text-decoration:none;background:var(--surface)}
-  .m-menu a .idx{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.1em}
-  .m-menu a .arr{font-family:var(--font-mono);font-size:12px;color:var(--faint)}
-  .m-menu a.active{color:var(--fg);background:var(--surface)}
-  .m-menu a.active .arr{color:var(--accent)}
+  .m-drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:40}
+  .m-drawer{position:fixed;top:0;left:0;bottom:0;width:min(78vw,320px);background:var(--surface);border-right:1px solid var(--border);z-index:45;display:flex;flex-direction:column}
+  .m-drawer .dh{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+  .m-drawer .dh .logo{font-size:16px;font-weight:550;color:var(--white);letter-spacing:1px;font-family:var(--font-display)}
+  .m-drawer .dh .x{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);color:var(--muted);background:none;font-size:15px}
+  .m-drawer .menu{flex:1;display:flex;flex-direction:column;background:var(--border);gap:1px;overflow-y:auto;padding:8px 0}
+  .m-drawer .menu a{display:flex;gap:12px;align-items:center;padding:16px 20px;min-height:52px;font-size:16px;color:var(--muted);text-decoration:none;background:var(--surface)}
+  .m-drawer .menu a .idx{font-family:var(--font-mono);font-size:10px;color:var(--faint);letter-spacing:.1em}
+  .m-drawer .menu a .arr{font-family:var(--font-mono);font-size:12px;color:var(--faint);margin-left:auto}
+  .m-drawer .menu a.active{color:var(--fg)}
+  .m-drawer .menu a.active .idx,.m-drawer .menu a.active .arr{color:var(--accent)}
+  .m-drawer .user{padding:16px 20px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;color:var(--faint)}
+  .m-drawer .user div{padding:6px 0;display:flex;gap:8px;align-items:center;color:var(--muted)}
   .m-hero{border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:24px 18px;margin:16px;display:flex;flex-direction:column;gap:8px}
   .m-hero .t{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
   .m-hero .d{font-size:12px;color:var(--muted)}
@@ -132,19 +152,30 @@
   <div class="label">01 · 导航</div>
   <h2>汉堡菜单 → 全屏下拉</h2>
   <div class="phone-frame">
-    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>nav — mobile</span></div>
-    <div class="phone-body">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>nav — drawer (左侧滑入)</span></div>
+    <div class="phone-body" style="position:relative;min-height:420px;">
       <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><button class="burger">☰</button></div>
-      <div class="m-menu">
-        <a class="active" href="#"><span class="idx">01</span>动态<span class="arr">&gt;&gt;&gt;</span></a>
-        <a href="#"><span class="idx">02</span>归档<span class="arr">&gt;&gt;</span></a>
-        <a href="#"><span class="idx">03</span>搜索<span class="arr">&gt;&gt;</span></a>
-        <a href="#"><span class="idx">04</span>标签<span class="arr">&gt;&gt;</span></a>
-        <a href="#"><span class="idx">05</span>关于<span class="arr">&gt;&gt;</span></a>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.6);"></div>
+      <div class="m-drawer">
+        <div class="dh"><span class="dl">LEVIA'S BLOG</span><button class="dc">×</button></div>
+        <div class="menu">
+          <a class="active" href="#"><span class="idx">01</span>动态<span class="arr">›››</span></a>
+          <a href="#"><span class="idx">02</span>归档<span class="arr">››</span></a>
+          <a href="#"><span class="idx">03</span>搜索<span class="arr">››</span></a>
+          <a href="#"><span class="idx">04</span>标签<span class="arr">››</span></a>
+          <a href="#"><span class="idx">05</span>关于<span class="arr">››</span></a>
+        </div>
+        <div class="user">
+          <a href="#"><span class="idx">•</span>个人主页</a>
+          <a href="#"><span class="idx">✎</span>写文章</a>
+          <a href="#"><span class="idx">▦</span>管理后台</a>
+          <button><span class="idx">×</span>退出登录</button>
+        </div>
+        <div class="foot">build 2026 · hugo v0.164.0</div>
       </div>
     </div>
   </div>
-  <div class="phone-caption">点击 ☰ 展开/收起 · 激活项左侧苔绿条 · 登录用户额外显示 个人主页 / 写文章 / 管理后台</div>
+  <div class="phone-caption">汉堡 ☰ → 左侧 300px 抽屉滑入 (250ms ease-out) · 遮罩点击/Esc/菜单项点击关闭 · 序号+››› ASCII 装饰 · 登录用户底部用户区 (写文章/管理后台 superadmin 可见)</div>
 </section>
 
 <hr>

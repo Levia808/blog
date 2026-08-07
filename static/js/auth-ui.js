@@ -16,6 +16,8 @@
   var cmsLink = document.getElementById('cmsLink');
   var mobileAdminLink = document.getElementById('mobileAdminLink');
   var mobileCmsLink = document.getElementById('mobileCmsLink');
+  var mobileLoginBtn = document.getElementById('mobileLoginBtn');
+  var mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
   var userMenuCloseTimer = null;
 
   var panels = {
@@ -212,6 +214,11 @@
       Auth.signOut().then(function () { updateAuthUI(); });
     });
   }
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.addEventListener('click', function () {
+      Auth.signOut().then(function () { updateAuthUI(); });
+    });
+  }
 
   // ====== Auth UI Update ======
   function updateAuthUI() {
@@ -219,6 +226,8 @@
       if (user) {
         navLoginBtn && (navLoginBtn.hidden = true);
         userMenuContainer && (userMenuContainer.hidden = false);
+        mobileLoginBtn && (mobileLoginBtn.hidden = true);
+        mobileLogoutBtn && (mobileLogoutBtn.hidden = false);
         var claimPromise = window.Admin && typeof window.Admin.claimPrimarySuperadmin === 'function'
           ? window.Admin.claimPrimarySuperadmin().catch(function () { return false; })
           : Promise.resolve(false);
@@ -250,6 +259,8 @@
       } else {
         navLoginBtn && (navLoginBtn.hidden = false);
         userMenuContainer && (userMenuContainer.hidden = true);
+        mobileLoginBtn && (mobileLoginBtn.hidden = false);
+        mobileLogoutBtn && (mobileLogoutBtn.hidden = true);
         if (userDropdown) {
           userDropdown.classList.remove('is-open');
           userDropdown.hidden = true;

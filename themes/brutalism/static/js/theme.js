@@ -35,23 +35,57 @@
   }
 
   /* ── 移动端菜单 ── */
+  /* ── 移动端左侧抽屉导航 ── */
   function initMobileMenu() {
     var toggle = document.getElementById('mobileMenuToggle');
-    var menu = document.getElementById('mobileMenu');
-    var mobileLoginBtn = document.getElementById('mobileLoginBtn');
-    if (!toggle || !menu) return;
+    var drawer = document.getElementById('mobileDrawer');
+    var mask = document.getElementById('drawerMask');
+    var closeBtn = document.getElementById('drawerClose');
+    if (!toggle || !drawer) return;
+
+    function openDrawer() {
+      mask.hidden = false;
+      drawer.hidden = false;
+      drawer.setAttribute('aria-hidden', 'false');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      window.requestAnimationFrame(function () {
+        drawer.classList.add('is-open');
+        mask.classList.add('is-show');
+      });
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('is-open');
+      mask.classList.remove('is-show');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      window.setTimeout(function () {
+        if (!drawer.classList.contains('is-open')) {
+          drawer.hidden = true;
+          mask.hidden = true;
+          drawer.setAttribute('aria-hidden', 'true');
+        }
+      }, 180);
+    }
 
     toggle.addEventListener('click', function () {
-      var open = menu.hidden;
-      menu.hidden = !open;
-      toggle.setAttribute('aria-expanded', String(open));
+      if (drawer.hidden || !drawer.classList.contains('is-open')) openDrawer();
+      else closeDrawer();
     });
-    menu.addEventListener('click', function (e) {
-      if (e.target.closest('a')) menu.hidden = true;
+    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+    mask.addEventListener('click', closeDrawer);
+    drawer.addEventListener('click', function (e) {
+      if (e.target.closest('a')) closeDrawer();
     });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !drawer.hidden && drawer.classList.contains('is-open')) closeDrawer();
+    });
+
+    var mobileLoginBtn = document.getElementById('mobileLoginBtn');
     if (mobileLoginBtn) {
       mobileLoginBtn.addEventListener('click', function () {
-        menu.hidden = true;
+        closeDrawer();
         if (window.BlogAuth) window.BlogAuth.open('login');
         else if (document.getElementById('navLoginBtn')) document.getElementById('navLoginBtn').click();
       });

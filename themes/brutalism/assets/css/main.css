@@ -358,38 +358,7 @@ html.js [data-reveal].reveal-visible {
   transition: transform var(--dur-fast), color var(--dur-slow);
 }
 .nm-toggle:hover { transform: scale(1.1); color: var(--fg); }
-.nav-mobile-menu {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.nav-mobile-menu a {
-  padding: 14px 24px;
-  font-size: 16px;
-  color: var(--muted);
-  text-decoration: none;
-  border-left: 2px solid transparent;
-  transition: color var(--dur-slow), border-color var(--dur-slow);
-}
-.nav-mobile-menu a:hover, .nav-mobile-menu a.active { color: var(--fg); border-left-color: var(--accent); }
-.nm-action {
-  padding: 14px 24px;
-  font-size: 16px;
-  font-family: var(--font-mono);
-  color: var(--accent);
-  background: none;
-  border: none;
-  border-left: 2px solid transparent;
-  border-top: 1px solid var(--border);
-  text-align: left;
-  cursor: pointer;
-}
-
-/* ── 欢迎页 · 100vh 终端循环 ── */
-@keyframes term-line-in { 0%, 7% { opacity: 0; } 10%, 92% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes term-cursor-flash { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+{ 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @keyframes scroll-hint {
   0%, 100% { opacity: 0; transform: translateX(-50%) translateY(0); }
   40%, 60% { opacity: 1; transform: translateX(-50%) translateY(6px); }
@@ -910,4 +879,105 @@ html.js [data-reveal].reveal-visible {
   .comments-button:hover, .theme-toggle:hover, .nf-icon-btn:hover,
   .nav-login-btn:hover, .section-more:hover, .tag-pill:hover { transform: none; }
   .nf-link:hover, .nf-link.active { transform: none; }
+}
+
+/* ── 移动端左侧抽屉导航 (drawer) ── */
+.drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+.drawer-mask.is-show { opacity: 1; }
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(300px, 84vw);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 250ms ease-out;
+  will-change: transform;
+}
+.drawer.is-open { transform: translateX(0); }
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-logo { font-size: 16px; font-weight: 550; letter-spacing: 1px; color: var(--white); font-family: var(--font-display); }
+.drawer-close {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--border); border-radius: 2px;
+  color: var(--muted); cursor: pointer;
+  transition: transform var(--dur-fast), border-color var(--dur-slow), color var(--dur-slow);
+}
+.drawer-close:hover { transform: scale(1.08); border-color: var(--accent); color: var(--fg); }
+.drawer-menu { flex: 1; display: flex; flex-direction: column; background: var(--border); gap: 1px; overflow-y: auto; padding: 8px 0; }
+.drawer-menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 20px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--muted);
+  text-decoration: none;
+  background: var(--surface);
+  transition: color var(--dur-slow), background var(--dur-slow);
+}
+.drawer-menu a.active { color: var(--fg); background: #1B1B1A; }
+.drawer-menu a:active { background: var(--bg); }
+.dm-idx { font-family: var(--font-mono); font-size: 10px; color: var(--faint); letter-spacing: 0.1em; width: 22px; }
+.drawer-menu a.active .dm-idx { color: var(--accent); }
+.dm-arr { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--faint); }
+.drawer-menu a.active .dm-arr { color: var(--accent); }
+.drawer-user {
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--border);
+  gap: 1px;
+  padding: 8px 0 0;
+}
+.drawer-user a, .drawer-user button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-decoration: none;
+  background: var(--surface);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--dur-slow), background var(--dur-slow);
+}
+.drawer-user a:active, .drawer-user button:active { background: var(--bg); }
+.drawer-user button { color: var(--accent); }
+.drawer-user #mobileLogoutBtn { color: var(--danger); }
+.drawer-foot {
+  padding: 14px 20px;
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+  border-top: 1px solid var(--border);
+}
+@media (min-width: 769px) {
+  .drawer, .drawer-mask { display: none; }
 }

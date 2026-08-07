@@ -50,17 +50,33 @@
     <svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
   </button>
 </div>
-<div class="nav-mobile-menu" id="mobileMenu" hidden>
-  {{- range site.Menus.main }}
-  {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
-  {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
-  {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
-  <a href="{{ .URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>{{ .Name }}</a>
-  {{- end }}
+
+<div class="drawer-mask" id="drawerMask" hidden aria-hidden="true"></div>
+<aside class="drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="主导航" aria-hidden="true">
+  <div class="drawer-head">
+    <span class="drawer-logo">{{ $logo }}</span>
+    <button type="button" class="drawer-close" id="drawerClose" aria-label="关闭菜单">
+      <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
+    </button>
+  </div>
+  <nav class="drawer-menu">
+    {{- range $index, $item := site.Menus.main }}
+    {{- $menuItemURL := (cond (strings.HasSuffix $item.URL "/") $item.URL (printf "%s/" $item.URL)) -}}
+    {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
+    {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
+    <a href="{{ $item.URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>
+      <span class="dm-idx">{{ printf "%02d" (add $index 1) }}</span>{{ $item.Name }}<span class="dm-arr">›››</span>
+    </a>
+    {{- end }}
+  </nav>
   {{- if site.Params.auth }}
-  <a href="{{ "profile/" | relLangURL }}">个人主页</a>
-  <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden>写文章</a>
-  <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden>管理后台</a>
-  <button type="button" class="nm-action" id="mobileLoginBtn">登录</button>
+  <div class="drawer-user">
+    <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
+    <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>
+    <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden><span class="dm-idx">▦</span>管理后台</a>
+    <button type="button" id="mobileLoginBtn"><span class="dm-idx">›</span>登录</button>
+    <button type="button" id="mobileLogoutBtn" hidden><span class="dm-idx">×</span>退出登录</button>
+  </div>
   {{- end }}
-</div>
+  <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
+</aside>
