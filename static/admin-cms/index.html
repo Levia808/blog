@@ -39,12 +39,69 @@
         document.getElementById('cmsGate').hidden = true;
         var cms = document.createElement('script');
         cms.src = 'https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js';
+        cms.onload = function () { registerEditorComponents(); };
         document.head.appendChild(cms);
       } catch (error) {
         message.textContent = '管理员权限验证失败，请返回后台重试。';
         back.hidden = false;
       }
     })();
+
+    // 编辑器内嵌组件: 视频 / 音频 (Hugo shortcode, 支持编辑器内直接上传文件)
+    function registerEditorComponents() {
+      var CMS = window.CMS;
+      if (!CMS || typeof CMS.registerEditorComponent !== 'function') return;
+
+      CMS.registerEditorComponent({
+        id: 'video',
+        label: '视频',
+        icon: 'play_circle',
+        fields: [
+          { name: 'src', label: '视频文件', widget: 'file', required: true },
+          { name: 'poster', label: '封面图', widget: 'image', required: false },
+          { name: 'caption', label: '说明', required: false }
+        ],
+        pattern: /{{< video src="(?<src>.*?)"(?: poster="(?<poster>.*?)")?(?: caption="(?<caption>.*?)")? >}}/,
+        fromBlock: function (match) {
+          return { src: match.groups.src || '', poster: match.groups.poster || '', caption: match.groups.caption || '' };
+        },
+        toBlock: function (data) {
+          var out = '{{< video src="' + (data.src || '') + '"';
+          if (data.poster) out += ' poster="' + data.poster + '"';
+          if (data.caption) out += ' caption="' + data.caption + '"';
+          return out + ' >}}';
+        },
+        toPreview: function (data) {
+          return '<figure><video src="' + (data.src || '') + '" controls' +
+            (data.poster ? ' poster="' + data.poster + '"' : '') +
+            ' style="width:100%"></video>' +
+            (data.caption ? '<figcaption>' + data.caption + '</figcaption>' : '') + '</figure>';
+        }
+      });
+
+      CMS.registerEditorComponent({
+        id: 'audio',
+        label: '音频',
+        icon: 'music_note',
+        fields: [
+          { name: 'src', label: '音频文件', widget: 'file', required: true },
+          { name: 'caption', label: '说明', required: false }
+        ],
+        pattern: /{{< audio src="(?<src>.*?)"(?: caption="(?<caption>.*?)")? >}}/,
+        fromBlock: function (match) {
+          return { src: match.groups.src || '', caption: match.groups.caption || '' };
+        },
+        toBlock: function (data) {
+          var out = '{{< audio src="' + (data.src || '') + '"';
+          if (data.caption) out += ' caption="' + data.caption + '"';
+          return out + ' >}}';
+        },
+        toPreview: function (data) {
+          return '<figure><audio src="' + (data.src || '') + '" controls style="width:100%"></audio>' +
+            (data.caption ? '<figcaption>' + data.caption + '</figcaption>' : '') + '</figure>';
+        }
+      });
+    }
   </script>
 </body>
 </html>
