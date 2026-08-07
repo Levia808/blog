@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移动端适配设计稿 — brutalism mobile</title>
+<style>
+  :root {
+    --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
+    --fg:#E8E8E3; --muted:#7A7A75; --faint:#3E3E3C;
+    --accent:#6B8B6B; --white:#F2F2ED; --danger:#C08080;
+    --font-sans:"Inter","Noto Sans SC",system-ui,sans-serif;
+    --font-display:"Space Grotesk","Inter","Noto Sans SC",sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+  .container{max-width:1080px;margin:0 auto;padding:0 28px}
+  h1{font-size:clamp(26px,4.5vw,42px);font-weight:500;letter-spacing:-1.2px;font-family:var(--font-display)}
+  h2{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
+  .mono{font-family:var(--font-mono);font-size:11px}
+  section{padding:56px 0}
+  hr{border:none;border-top:1px solid var(--border)}
+  .header{padding:64px 0 40px;text-align:center;border-bottom:1px solid var(--border)}
+  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:3px}
+  .header p{color:var(--muted);max-width:480px;margin:14px auto 0;font-size:13px}
+  .box{background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--accent);padding:14px 20px;line-height:1.9;font-size:12px;margin:18px 0}
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin:20px 0}
+  .table th,.table td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
+  .phone-frame{
+    width:375px; max-width:100%;
+    border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    margin:20px auto 0; background:var(--bg);
+    font-size:14px;
+  }
+  .phone-bar{display:flex;align-items:center;gap:7px;padding:6px 14px;background:#101010;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--faint)}
+  .phone-dot{width:8px;height:8px;border-radius:3px;background:#555}
+  .phone-body{padding:0;background:var(--bg)}
+  .phone-caption{text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--faint);margin-top:8px}
+
+  /* ── 移动端组件样板 (375px) ── */
+  .m-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0}
+  .m-nav .logo{font-size:15px;font-weight:550;color:var(--white);letter-spacing:1px}
+  .m-nav .burger{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);background:none;font-size:18px}
+  .m-menu{display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:var(--surface)}
+  .m-menu a{padding:14px 20px;font-size:15px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;border-bottom:1px solid var(--border)}
+  .m-menu a.active{color:var(--fg);border-left-color:var(--accent)}
+  .m-hero{border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:24px 18px;margin:16px;display:flex;flex-direction:column;gap:8px}
+  .m-hero .t{font-size:20px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .m-hero .d{font-size:12px;color:var(--muted)}
+  .m-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);margin:0 16px 12px}
+  .m-card .img{height:150px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:36px;color:var(--faint)}
+  .m-card .body{padding:14px 16px 16px}
+  .m-card .date{font-family:var(--font-mono);font-size:9px;color:var(--muted);margin-bottom:6px}
+  .m-card .title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:4px}
+  .m-card .ex{font-size:11px;color:var(--muted)}
+  .m-article{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:16px;padding:20px 16px;display:flex;flex-direction:column;gap:10px}
+  .m-article .meta{font-family:var(--font-mono);font-size:9px;color:var(--muted)}
+  .m-article h1{font-size:22px;line-height:1.25}
+  .m-article .p{font-size:13px;color:var(--muted);line-height:1.8}
+  .m-toc{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:0 16px 16px;padding:14px 16px}
+  .m-toc .toc-t{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px}
+  .m-toc a{display:block;font-size:12px;color:var(--muted);text-decoration:none;padding:4px 0;border-left:1px solid var(--border);padding-left:10px}
+  .m-moment{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:0 16px 12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .m-moment .head{display:flex;gap:10px;align-items:center}
+  .m-moment .av{width:36px;height:36px;border-radius:4px;background:var(--faint)}
+  .m-moment .nm{font-size:13px;font-weight:500;color:var(--white)}
+  .m-moment .tm{font-size:9px;color:var(--faint);font-family:var(--font-mono)}
+  .m-moment .tx{font-size:13px;color:var(--fg);line-height:1.7}
+  .m-moment .media{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .m-moment .media div{height:110px;background:var(--bg);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--faint);font-family:var(--font-mono);font-size:9px}
+  .m-moment .acts{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:10px}
+  .m-moment .act{flex:1;height:38px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:var(--font-mono);font-size:11px}
+  .m-admin-nav{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--surface)}
+  .m-admin-nav a{padding:12px 16px;font-size:12px;font-family:var(--font-mono);color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+  .m-admin-nav a.active{color:var(--fg);border-bottom-color:var(--accent)}
+  .m-search{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:50}
+  .m-search .box{width:92vw}
+  .m-search .input{display:flex;gap:8px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface)}
+  .m-search .input span{font-family:var(--font-mono);color:var(--accent);font-size:14px}
+  .m-search .input input{flex:1;background:none;border:none;color:var(--fg);font-size:16px;outline:none}
+  .m-auth{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:60}
+  .m-auth .card{width:86vw;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 22px}
+  .m-auth h3{font-size:17px;font-weight:500;color:var(--white);margin-bottom:18px;font-family:var(--font-display)}
+  .m-auth .field{margin-bottom:14px}
+  .m-auth label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:6px}
+  .m-auth input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-size:15px;color:var(--fg);outline:none}
+  .m-auth .btn{width:100%;height:44px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:var(--bg);font-weight:600;margin-top:6px}
+  .m-profile{border:1px solid var(--border);border-radius:6px;background:var(--surface);margin:16px;padding:18px 16px}
+  .m-profile .head{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+  .m-profile .av{width:64px;height:64px;border-radius:6px;background:var(--faint);flex-shrink:0}
+  .m-profile .nm{font-size:16px;font-weight:500;color:var(--white)}
+  .m-profile .em{font-size:10px;color:var(--muted);font-family:var(--font-mono)}
+  .m-profile .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  .m-profile .f label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:5px}
+  .m-profile .f input,.m-profile .f textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:11px 13px;font-size:14px;color:var(--fg);outline:none}
+  .m-profile .f textarea{min-height:72px;resize:vertical}
+  .grid-spec{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
+  .spec-card{border:1px solid var(--border);border-radius:6px;padding:14px 16px;background:var(--surface);font-size:12px}
+  .spec-card strong{display:block;color:var(--white);margin-bottom:6px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header class="header">
+  <div class="sub">brutalism mobile · 移动端适配设计稿 · v1</div>
+  <h1>移动端界面设计</h1>
+  <p>375px 视口样板 · 单列布局 · 44px 触控目标 · 断点 820 / 768 / 640 / 480 / 400px</p>
+</header>
+
+<hr>
+
+<!-- ═══════════ 01 导航 ═══════════ -->
+<section>
+  <div class="label">01 · 导航</div>
+  <h2>汉堡菜单 → 全屏下拉</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>nav — mobile</span></div>
+    <div class="phone-body">
+      <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><button class="burger">☰</button></div>
+      <div class="m-menu">
+        <a class="active" href="#">动态</a><a href="#">归档</a><a href="#">搜索</a><a href="#">标签</a><a href="#">关于</a>
+      </div>
+    </div>
+  </div>
+  <div class="phone-caption">点击 ☰ 展开/收起 · 激活项左侧苔绿条 · 登录用户额外显示 个人主页 / 写文章 / 管理后台</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 02 首页 ═══════════ -->
+<section>
+  <div class="label">02 · 首页</div>
+  <h2>终端欢迎页 → 单列卡片流</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>home — mobile</span></div>
+    <div class="phone-body">
+      <div style="height:150px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;color:var(--faint);border-bottom:1px solid var(--border);">$ ssh blog.levia.dev — 终端动画 (高度压缩)</div>
+      <div class="m-hero"><span class="mono" style="font-size:9px;color:var(--muted)">2026 · 08 · 07</span><span class="t">构建现代化个人博客</span><span class="d">从 Hugo 到双线部署的完整实践。</span></div>
+      <div class="m-card"><div class="img">▦</div><div class="body"><div class="date">2026 · 08 · 07</div><div class="title">这是一个测试</div><div class="ex">这是我 Hugo 站点的第一个测试…</div></div></div>
+      <div class="m-card"><div class="img">构</div><div class="body"><div class="date">2026 · 08 · 06</div><div class="title">构建现代化个人博客</div><div class="ex">从 Hugo 到双线部署的完整实践。</div></div></div>
+      <div class="m-card"><div class="img">H</div><div class="body"><div class="date">2026 · 08 · 06</div><div class="title">Hello World</div><div class="ex">这是我的第一篇博客文章…</div></div></div>
+    </div>
+  </div>
+  <div class="phone-caption">终端欢迎页视口高度压缩至 40vh · 文章卡片单列全宽 · 3:2 封面保持</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 03 文章详情 ═══════════ -->
+<section>
+  <div class="label">03 · 文章详情</div>
+  <h2>单列正文 · TOC 折叠至底部</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>article — mobile</span></div>
+    <div class="phone-body">
+      <div class="m-article">
+        <div class="meta">2026-08-07 · 5 min read · 1234 words</div>
+        <h1>构建现代化个人博客</h1>
+        <div class="p">从 Hugo 到双线部署的完整实践。一份代码，两边构建。</div>
+        <div class="p" style="background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--accent);border-radius:4px;padding:12px;font-family:var(--font-mono);font-size:11px;">baseURL: https://blog-go3.pages.dev/</div>
+        <div class="p">部署的本质不是「放在哪里」，而是「如何让内容最快到达读者」。</div>
+      </div>
+      <div class="m-toc"><div class="toc-t">目录</div><a href="#">概述</a><a href="#">Hugo 静态站点</a><a href="#">双线部署策略</a><a href="#">内容工作流</a></div>
+    </div>
+  </div>
+  <div class="phone-caption">正文全宽单列 · 右侧 TOC 侧栏在移动端移至正文底部（非 sticky）</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 04 动态 ═══════════ -->
+<section>
+  <div class="label">04 · 动态</div>
+  <h2>朋友圈时间线 · 大按钮触控</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>moments — mobile</span></div>
+    <div class="phone-body">
+      <div class="m-moment">
+        <div class="head"><div class="av"></div><div><div class="nm">Levia</div><div class="tm">2 小时前</div></div></div>
+        <div class="tx">分享一个很棒的 B 站视频，值得一看。</div>
+        <div class="media"><div>图1</div><div>视频</div></div>
+        <div class="acts"><div class="act">♥ 点赞 12</div><div class="act">💬 评论 3</div></div>
+      </div>
+      <div class="m-moment">
+        <div class="head"><div class="av"></div><div><div class="nm">Levia</div><div class="tm">昨天</div></div></div>
+        <div class="tx">Hugo 主题重构完成 🎉</div>
+        <div class="acts"><div class="act">♥ 点赞 5</div><div class="act">💬 评论 1</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-caption">点赞/评论按钮等高 38px+ · 媒体网格 2 列 · 发布框固定可滚动</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 05 管理面板 ═══════════ -->
+<section>
+  <div class="label">05 · 管理面板</div>
+  <h2>侧栏折叠 → 顶部横向导航</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>admin — mobile</span></div>
+    <div class="phone-body">
+      <div class="m-nav"><span class="logo">LEVIA'S BLOG</span><span style="font-family:var(--font-mono);font-size:9px;color:var(--accent)">SUPERADMIN</span></div>
+      <div class="m-admin-nav"><a class="active" href="#">仪表盘</a><a href="#">文章管理</a><a href="#">内容归档</a><a href="#">评论审核</a><a href="#">用户管理</a><a href="#">媒体库</a><a href="#">设置</a></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px;">
+        <div style="border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:14px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">文章数</div><div style="font-size:24px;font-weight:500;color:var(--white)">4</div></div>
+        <div style="border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:14px;"><div style="font-family:var(--font-mono);font-size:9px;color:var(--muted)">评论数</div><div style="font-size:24px;font-weight:500;color:var(--white)">2</div></div>
+      </div>
+      <div style="margin:0 16px 16px;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--muted)">最近文章</div>
+        <div style="padding:12px;border-bottom:1px solid var(--border);font-size:12px;">这是一个测试 <span style="float:right;font-size:9px;color:var(--accent)">已发布</span></div>
+        <div style="padding:12px;font-size:12px;">构建现代化个人博客 <span style="float:right;font-size:9px;color:var(--accent)">已发布</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-caption">左侧 240px 竖向导航折叠为顶部横向滚动 · 统计卡 2 列 · 表格横向滚动</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 06 搜索 / 认证 ═══════════ -->
+<section>
+  <div class="label">06 · 搜索 / 认证</div>
+  <h2>全屏浮层适配</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px;">
+    <div class="phone-frame" style="margin:0;">
+      <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>search overlay</span></div>
+      <div class="phone-body">
+        <div class="m-search" style="position:relative;padding-top:0;background:none;display:block;">
+          <div class="box" style="margin:16px auto;">
+            <div class="input"><span>$</span><input placeholder="search posts…"></div>
+            <div style="font-family:var(--font-mono);font-size:9px;color:var(--faint);margin-top:8px;">esc 关闭 · ↑↓ 选择 · enter 跳转</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-frame" style="margin:0;">
+      <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>auth modal</span></div>
+      <div class="phone-body">
+        <div class="m-auth" style="position:relative;background:none;display:block;">
+          <div class="card" style="margin:16px auto;">
+            <h3>登录</h3>
+            <div class="field"><label>Email</label><input placeholder="you@email.com"></div>
+            <div class="field"><label>Password</label><input type="password" placeholder="········"></div>
+            <button class="btn">&gt; 登录</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-caption">搜索输入 92vw · 认证卡片 86vw · 输入/按钮高度 ≥44px 保证触控</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 07 个人主页 ═══════════ -->
+<section>
+  <div class="label">07 · 个人主页</div>
+  <h2>表单单列 · 大字段</h2>
+  <div class="phone-frame">
+    <div class="phone-bar"><div class="phone-dot"></div><div class="phone-dot"></div><div class="phone-dot"></div><span>profile — mobile</span></div>
+    <div class="phone-body">
+      <div class="m-profile">
+        <div class="head"><div class="av"></div><div><div class="nm">Levia</div><div class="em">levia@example.com</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--accent);margin-top:2px">SUPERADMIN · joined 2026-08-07</div></div></div>
+        <div class="grid">
+          <div class="f"><label>用户名</label><input value="levia"></div>
+          <div class="f"><label>昵称</label><input value="Levia"></div>
+          <div class="f"><label>个人简介</label><textarea>热爱技术与写作的程序员。</textarea></div>
+          <div class="f"><label>网站</label><input value="https://blog-go3.pages.dev"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button style="flex:1;height:44px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:var(--bg);font-weight:600">&gt; 保存</button>
+          <button style="flex:1;height:44px;border:1px solid var(--border);border-radius:4px;background:none;color:var(--fg)">上传头像</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-caption">表单网格 2 列 → 单列 · 按钮等高 44px</div>
+</section>
+
+<hr>
+
+<!-- ═══════════ 08 断点规范 ═══════════ -->
+<section>
+  <div class="label">08 · 断点规范</div>
+  <h2>响应式规则总表</h2>
+  <table class="table">
+    <thead><tr><th>断点</th><th>变化</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">≤ 900px</span></td><td>文章 TOC 侧栏移至正文底部（非 sticky）· 文章布局单列</td></tr>
+      <tr><td><span class="mono">≤ 820px</span></td><td>管理面板：左导航折叠为顶部横向滚动 · 统计 2 列 · 面板内边距收窄</td></tr>
+      <tr><td><span class="mono">≤ 768px</span></td><td>桌面导航隐藏 → 汉堡菜单 · 页脚单列居中 · 文章卡片内边距收窄 · 搜索浮层上移</td></tr>
+      <tr><td><span class="mono">≤ 640px</span></td><td>文章卡片网格 3/2 列 → 单列 · 动态媒体 2 列保持 · 归档条目换行</td></tr>
+      <tr><td><span class="mono">≤ 480px</span></td><td>统计卡 2 列 → 保持 · 终端欢迎页高度 40vh · 字号微降</td></tr>
+      <tr><td><span class="mono">全局</span></td><td>触控目标 ≥44px · 按钮间距 ≥8px · 水平溢出滚动（表格/导航）· 禁 hover 依赖（触摸）</td></tr>
+    </tbody>
+  </table>
+  <div class="grid-spec">
+    <div class="spec-card"><strong>触控目标</strong>链接/按钮/输入最小 44×44px；图标按钮 40px+</div>
+    <div class="spec-card"><strong>单列优先</strong>内容全宽，最大行宽 640px 内自然阅读</div>
+    <div class="spec-card"><strong>折叠优先</strong>TOC/表格/导航均折叠或横向滚动，不挤压内容</div>
+    <div class="spec-card"><strong>hover 降级</strong>触摸设备交互以 :active + 过渡替代 hover</div>
+  </div>
+</section>
+
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
+  design-mobile v1 · brutalism · 2026-08-07 · LEVIA
+</footer>
+</div>
+</body>
+</html>

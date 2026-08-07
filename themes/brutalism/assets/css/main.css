@@ -881,3 +881,30 @@ html.js [data-reveal].reveal-visible {
   padding: 6px 14px;
   margin-bottom: 16px;
 }
+
+/* ── 移动端补全 (设计稿 design-mobile v1) ── */
+@media (max-width: 768px) {
+  .welcome-full { min-height: 60vh; }
+}
+@media (max-width: 480px) {
+  .welcome-full { min-height: 45vh; }
+  .hero-title { font-size: 20px; }
+  .blog-hero { padding: 24px 18px; }
+  .list-title { font-size: 26px; }
+  .article-title { font-size: 22px; }
+  .moments-page, .list-page, .terms-page, .archives-page { padding: 28px 14px 64px; }
+  .article-page { padding: 14px 10px 64px; }
+  .article-main { padding: 20px 16px; }
+  .article-toc { padding: 14px 14px; }
+  .grid-3 { gap: 12px; }
+  .pc-body { padding: 14px 16px 16px; }
+  .search-box { width: 92vw; }
+}
+/* 触摸设备: hover 降级为无位移 (设计稿 08) */
+@media (hover: none) {
+  .post-card-cover:hover, .blog-hero:hover, .stat:hover, .admin-stat:hover,
+  .an-item:hover, .btn:hover, .auth-btn:hover, .admin-btn:hover,
+  .comments-button:hover, .theme-toggle:hover, .nf-icon-btn:hover,
+  .nav-login-btn:hover, .section-more:hover, .tag-pill:hover { transform: none; }
+  .nf-link:hover, .nf-link.active { transform: none; }
+}
