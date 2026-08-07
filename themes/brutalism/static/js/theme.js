@@ -350,12 +350,12 @@
       'void main() {',
       '  vec2 st = st0 + 0.5;',
       '  vec2 posMouse = mx * vec2(1., -1.) + 0.5;',
-      '  float size = u_shapeSize; float roundness = u_roundness; float borderSize = u_borderSize; float circleSize = u_circleSize; float circleEdge = u_circleEdge;',
-      '  float sdfCircle = fill(sdCircle(st, posMouse), circleSize, circleEdge);',
+      '  float size = u_shapeSize; float roundness = u_roundness; float circleSize = u_circleSize; float circleEdge = u_circleEdge;',
       '  float sdf = sdRoundRect(st, vec2(size), roundness);',
-      '  sdf = strokeAA(sdf, 0.0, borderSize, sdfCircle) * 4.0;',
+      '  float shapeMask = 1.0 - smoothstep(0.0, 0.12, sdf);',
+      '  float dissolve = fill(sdCircle(st, posMouse), circleSize, circleEdge);',
+      '  float alpha = shapeMask * dissolve;',
       '  vec3 color = vec3(0.42, 0.55, 0.42);',
-      '  float alpha = sdf;',
       '  gl_FragColor = vec4(color.rgb, alpha);',
       '}'
     ].join('\n');
@@ -444,6 +444,80 @@
       renderer.dispose();
       renderer.forceContextLoss();
     };
+  }
+
+  /* ── Sparks 火花 (鼠标点击迸发, Vue Bits ClickSpark 移植, 苔绿) ── */
+  function initClickSparks() {
+    var zone = document.getElementById('welcome');
+    if (!zone || reducedMotion) return;
+    var canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3';
+    zone.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+
+    var cfg = window.welcomeCfg || {};
+    var sparkColor = cfg.sparkColor || '#6B8B6B';
+    var sparkSize = cfg.sparkSize || 10;
+    var sparkRadius = cfg.sparkRadius || 15;
+    var sparkCount = cfg.sparkCount || 8;
+    var duration = cfg.sparkDuration || 400;
+    var extraScale = cfg.sparkExtraScale || 1.0;
+    var easing = cfg.sparkEasing || 'ease-out';
+
+    function easeOut(t) { return t * (2 - t); }
+    function easeIn(t) { return t * t; }
+    function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+    function easeFn(t) {
+      if (easing === 'linear') return t;
+      if (easing === 'ease-in') return easeIn(t);
+      if (easing === 'ease-in-out') return easeInOut(t);
+      return easeOut(t);
+    }
+
+    function resize() {
+      var r = zone.getBoundingClientRect();
+      canvas.width = r.width;
+      canvas.height = r.height;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var sparks = [];
+    var rafId;
+    function draw(timestamp) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      sparks = sparks.filter(function (spark) {
+        var elapsed = timestamp - spark.startTime;
+        if (elapsed >= duration) return false;
+        var progress = elapsed / duration;
+        var eased = easeFn(progress);
+        var dist = eased * sparkRadius * extraScale;
+        var lineLen = sparkSize * (1 - eased);
+        var x1 = spark.x + dist * Math.cos(spark.angle);
+        var y1 = spark.y + dist * Math.sin(spark.angle);
+        var x2 = spark.x + (dist + lineLen) * Math.cos(spark.angle);
+        var y2 = spark.y + (dist + lineLen) * Math.sin(spark.angle);
+        ctx.strokeStyle = sparkColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        return true;
+      });
+      rafId = requestAnimationFrame(draw);
+    }
+    rafId = requestAnimationFrame(draw);
+
+    zone.addEventListener('click', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      var now = performance.now();
+      for (var i = 0; i < sparkCount; i++) {
+        sparks.push({ x: x, y: y, angle: (2 * Math.PI * i) / sparkCount, startTime: now });
+      }
+    });
   }
 
   /* ── 搜索 (Fuse.js + index.json) ── */
@@ -618,6 +692,7 @@
     initLightbox();
     initWelcomeEffects();
     initShapeBlur();
+    initClickSparks();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();
