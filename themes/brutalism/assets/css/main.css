@@ -378,7 +378,7 @@ html.js [data-reveal].reveal-visible {
 }
 /* ScrambleText 大标题 + 页脚打字机 */
 .welcome-title {
-  font-family: var(--font-display);
+  font-family: 'Roboto Flex', 'Space Grotesk', var(--font-display);
   font-weight: 900;
   font-size: clamp(40px, 8vw, 96px);
   letter-spacing: -0.03em;

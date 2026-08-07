@@ -193,38 +193,82 @@
     var cfg = window.welcomeCfg || {};
     var reduced = reducedMotion;
 
-    /* ScrambleText: GSAP 插件版 (gsap 3.13+ 免费), 行为与组件源码一致 */
+    /* VariableProximity: 指针靠近 → 可变字体字重/opsz 插值 (与 Vue Bits 组件逻辑一致) */
     var titleEl = document.getElementById('welcomeTitle');
     if (titleEl) {
-      var radius = cfg.scrambleRadius || 100;
-      var duration = cfg.scrambleDuration || 1.2;
-      var speed = cfg.scrambleSpeed || 0.5;
-      var chars = cfg.scrambleChars || '.:';
-      var hasGsap = window.gsap && window.SplitText && window.ScrambleTextPlugin;
-      if (hasGsap && !reduced) {
-        gsap.registerPlugin(SplitText, ScrambleTextPlugin);
-        var split = new SplitText(titleEl, { type: 'chars', charsClass: 'st-char' });
-        split.chars.forEach(function (el) {
-          gsap.set(el, { attr: { 'data-content': el.innerHTML } });
+      var fromStr = cfg.titleVariationFrom || "'wght' 400, 'opsz' 9";
+      var toStr = cfg.titleVariationTo || "'wght' 1000, 'opsz' 40";
+      var radius = cfg.proximityRadius || 140;
+      var falloff = cfg.proximityFalloff || 'linear';
+
+      function parseSettings(str) {
+        var map = {};
+        String(str).split(',').forEach(function (s) {
+          var p = s.trim().split(' ');
+          if (p.length === 2) map[p[0].replace(/['"]/g, '')] = parseFloat(p[1]);
         });
-        var zone = document.getElementById('welcome');
-        zone.addEventListener('pointermove', function (e) {
-          split.chars.forEach(function (el) {
-            var r = el.getBoundingClientRect();
-            var dx = e.clientX - (r.left + r.width / 2);
-            var dy = e.clientY - (r.top + r.height / 2);
-            var dist = Math.hypot(dx, dy);
-            if (dist < radius) {
-              gsap.to(el, {
-                overwrite: true,
-                duration: duration * (1 - dist / radius),
-                scrambleText: { text: el.dataset.content || '', chars: chars, speed: speed },
-                ease: 'none'
-              });
-            }
-          });
-        });
+        return map;
       }
+      var from = parseSettings(fromStr);
+      var to = parseSettings(toStr);
+      var axes = Object.keys(from);
+
+      /* 按词拆分字符 (空格保留) */
+      var words = titleEl.textContent.split(' ');
+      titleEl.textContent = '';
+      var letters = [];
+      words.forEach(function (word, wi) {
+        var wSpan = document.createElement('span');
+        wSpan.style.display = 'inline-block';
+        wSpan.style.whiteSpace = 'nowrap';
+        word.split('').forEach(function (ch) {
+          var s = document.createElement('span');
+          s.style.display = 'inline-block';
+          s.style.fontVariationSettings = fromStr;
+          s.textContent = ch;
+          wSpan.appendChild(s);
+          letters.push(s);
+        });
+        titleEl.appendChild(wSpan);
+        if (wi < words.length - 1) titleEl.appendChild(document.createTextNode(' '));
+      });
+      if (reduced) return;
+
+      function calcFalloff(distance) {
+        var norm = Math.min(Math.max(1 - distance / radius, 0), 1);
+        if (falloff === 'exponential') return norm * norm;
+        if (falloff === 'gaussian') return Math.exp(-Math.pow(distance / (radius / 2), 2) / 2);
+        return norm;
+      }
+
+      var mx = 0, my = 0, lx = null, ly = null;
+      function loop() {
+        if (mx !== lx || my !== ly) {
+          lx = mx; ly = my;
+          letters.forEach(function (s) {
+            var r = s.getBoundingClientRect();
+            var cx = r.left + r.width / 2;
+            var cy = r.top + r.height / 2;
+            var d = Math.sqrt((mx - cx) * (mx - cx) + (my - cy) * (my - cy));
+            if (d >= radius) {
+              if (s.style.fontVariationSettings !== fromStr) s.style.fontVariationSettings = fromStr;
+              return;
+            }
+            var f = calcFalloff(d);
+            var settings = axes.map(function (a) {
+              return "'" + a + "' " + (from[a] + (to[a] - from[a]) * f);
+            }).join(', ');
+            s.style.fontVariationSettings = settings;
+          });
+        }
+        requestAnimationFrame(loop);
+      }
+      window.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
+      window.addEventListener('touchmove', function (e) {
+        var t = e.touches[0];
+        if (t) { mx = t.clientX; my = t.clientY; }
+      }, { passive: true });
+      requestAnimationFrame(loop);
     }
 
     /* 页脚打字机 (data 配置循环) */
