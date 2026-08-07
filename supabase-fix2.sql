@@ -75,6 +75,36 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 );
 
 
+-- ②b 依赖对象补建: write_audit_log 函数 + media_assets 表
+CREATE OR REPLACE FUNCTION public.write_audit_log(
+  p_action TEXT,
+  p_entity_type TEXT,
+  p_entity_id TEXT,
+  p_metadata JSONB DEFAULT '{}'::jsonb
+)
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public, pg_temp
+LANGUAGE sql
+AS $$
+  INSERT INTO public.audit_logs (actor_id, action, entity_type, entity_id, metadata)
+  VALUES (auth.uid(), p_action, p_entity_type, p_entity_id, COALESCE(p_metadata, '{}'::jsonb));
+$$;
+CREATE TABLE IF NOT EXISTS public.media_assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  storage_bucket TEXT NOT NULL DEFAULT 'media',
+  storage_path TEXT NOT NULL UNIQUE,
+  file_name TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  size_bytes BIGINT NOT NULL CHECK (size_bytes > 0),
+  public_url TEXT NOT NULL,
+  uploaded_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+);
+
+
 -- ③ 核心函数重建 (CREATE OR REPLACE, 修复结构不匹配)
 
 CREATE OR REPLACE FUNCTION public.has_any_role(required_roles TEXT[])
@@ -614,5 +644,5 @@ GRANT EXECUTE ON FUNCTION public.report_comment(BIGINT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_update_account_status(UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.superadmin_update_role(UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.register_media_asset(TEXT, TEXT, TEXT, BIGINT, TEXT, JSONB) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_delete_media(BIGINT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_delete_media(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.mark_notification_read(UUID) TO authenticated;
