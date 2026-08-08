@@ -5,6 +5,7 @@ draft: false
 tags:
   - hugo
   - cloudflare
+  - blog
   - devops
 description: 从 Hugo 到双线部署的完整实践。一份代码，两边构建。
 background: /images/wallhaven-yq2w3x.jpg
