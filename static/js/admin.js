@@ -402,7 +402,7 @@
     ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml')
       .then(function (file) {
         welcomeCfgSha = file.sha;
-        var content = atob(file.content);
+        var content = atob(String(file.content).replace(/\s/g, ''));
         var cfg = parseTomlSimple(content);
         Object.keys(CFG_FIELDS).forEach(function (key) {
           var el = document.getElementById(CFG_FIELDS[key]);
@@ -455,18 +455,26 @@
     var btn = document.getElementById('cfgSaveBtn');
     btn.disabled = true;
     btn.textContent = '保存中…';
-    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: '更新欢迎页配置', content: base64Encode(text), sha: welcomeCfgSha })
-    }).then(function () {
-      showToast('配置已保存，站点重建后生效', 'success');
-    }).catch(function (error) {
-      showError('保存失败：' + (error.message || error));
-    }).finally(function () {
-      btn.disabled = false;
-      btn.textContent = '保存配置';
-    });
+    // 保存前强制获取最新 sha, 避免过期/未加载导致 nil
+    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml')
+      .then(function (file) {
+        welcomeCfgSha = file.sha;
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '更新欢迎页配置', content: base64Encode(text), sha: welcomeCfgSha })
+        });
+      })
+      .then(function () {
+        showToast('配置已保存，站点重建后生效', 'success');
+      })
+      .catch(function (error) {
+        showError('保存失败：' + (error.message || error));
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = '保存配置';
+      });
   }
 
   var cfgSaveBtn = document.getElementById('cfgSaveBtn');
