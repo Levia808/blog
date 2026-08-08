@@ -1417,22 +1417,24 @@ html.js [data-reveal].reveal-visible {
 .fp-name { font-family: var(--font-mono); font-size: 10px; color: var(--muted); width: 130px; flex: none; line-height: 1.5; }
 .fp-sample { font-size: 22px; color: var(--fg); letter-spacing: -0.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-/* 欢迎页管理员头像: 标题后放大圆形, 与文本重合部分反相 */
-.welcome-title { mix-blend-mode: difference; }
+/* 欢迎页管理员头像: 居中放大圆形, 与文本重合部分反相, 轻微吸附鼠标 */
+.welcome-title { position: relative; z-index: 2; mix-blend-mode: difference; }
 .welcome-avatar {
   position: absolute;
-  right: 10%;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  width: clamp(96px, 14vw, 190px);
-  height: clamp(96px, 14vw, 190px);
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  width: clamp(140px, 20vw, 280px);
+  height: clamp(140px, 20vw, 280px);
   border-radius: 50%;
   background-size: cover;
   background-position: center;
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 55%, transparent), 0 18px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent), 0 24px 80px rgba(0, 0, 0, 0.5);
   animation: welcomeAvatarIn 1.2s cubic-bezier(.22,.61,.36,1) both;
+  will-change: transform;
 }
-@keyframes welcomeAvatarIn { from { opacity: 0; transform: translateY(-50%) scale(.8); } to { opacity: 1; transform: translateY(-50%) scale(1); } }
+@keyframes welcomeAvatarIn { from { opacity: 0; transform: translate(-50%, -50%) scale(.7); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 @media (max-width: 640px) {
-  .welcome-avatar { right: 6%; width: 84px; height: 84px; }
+  .welcome-avatar { width: 108px; height: 108px; }
 }

@@ -783,6 +783,55 @@
     });
   }
 
+  /* ── 欢迎页头像: Supabase 个人主页头像 (随更改更新) + 磁性吸附 ── */
+  function initWelcomeAvatar() {
+    var el = document.getElementById('welcomeAvatar');
+    if (!el) return;
+    /* 动态头像: 个人主页 (profiles) 上传的头像, 每次加载取最新 */
+    try {
+      if (window.blogSupabase) {
+        window.blogSupabase.from('profiles')
+          .select('avatar_url')
+          .eq('role', 'superadmin')
+          .limit(1)
+          .then(function (r) {
+            if (!r.error && r.data && r.data[0] && r.data[0].avatar_url) {
+              el.style.backgroundImage = "url('" + r.data[0].avatar_url + "')";
+            }
+          })
+          .catch(function () {});
+      }
+    } catch (e) {}
+
+    /* 磁性吸附: 鼠标靠近时轻微偏移跟随, 移开回中 */
+    if (reducedMotion) return;
+    var zone = document.getElementById('welcome');
+    if (!zone) return;
+    var MAX = 18;
+    var target = { x: 0, y: 0 };
+    var cur = { x: 0, y: 0 };
+    zone.addEventListener('mousemove', function (e) {
+      var r = el.getBoundingClientRect();
+      var cx = r.left + r.width / 2;
+      var cy = r.top + r.height / 2;
+      var dx = e.clientX - cx;
+      var dy = e.clientY - cy;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      var range = 300;
+      if (d > range) { target.x = 0; target.y = 0; return; }
+      var f = 1 - d / range;
+      target.x = Math.max(-MAX, Math.min(MAX, dx * 0.1 * f));
+      target.y = Math.max(-MAX, Math.min(MAX, dy * 0.1 * f));
+    });
+    zone.addEventListener('mouseleave', function () { target.x = 0; target.y = 0; });
+    (function loop() {
+      cur.x += (target.x - cur.x) * 0.12;
+      cur.y += (target.y - cur.y) * 0.12;
+      el.style.transform = 'translate(-50%, -50%) translate(' + cur.x.toFixed(1) + 'px,' + cur.y.toFixed(1) + 'px)';
+      requestAnimationFrame(loop);
+    })();
+  }
+
   /* ── 搜索 (Fuse.js + index.json) ── */
   var fuseCache = null;
   var fuseIndexData = [];
@@ -954,6 +1003,7 @@
   function boot() {
     initLightbox();
     initWelcomeEffects();
+    initWelcomeAvatar();
     initShapeBlur();
     initClickSparks();
     initScrambleHover();
