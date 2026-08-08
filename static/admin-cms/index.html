@@ -75,6 +75,15 @@
         var el = document.querySelector('[data-key-path="' + keyPath + '"] input, [data-key-path="' + keyPath + '"] textarea, [data-key-path*="' + keyPath + '"] input');
         return el ? (el.value || '').trim() : '';
       }
+      function readFileField(keyPath) {
+        var v = readField(keyPath);
+        if (v && /\.(ttf|otf|woff2?|eot)$/i.test(v)) return v;
+        var container = document.querySelector('[data-key-path="' + keyPath + '"]');
+        if (!container) return '';
+        var m = container.textContent.match(/[\w\-.\u4e00-\u9fa5]+\.(?:ttf|otf|woff2?|eot)/i);
+        if (m) return '/images/' + m[0];
+        return '';
+      }
       function ensureFontFace(filePath, name) {
         var id = 'fpLiveFace';
         if (document.getElementById(id)) return;
@@ -97,6 +106,7 @@
         var container = R('div', { ref: function (node) {
           if (node) {
             var previewEl = node.querySelector('.fp-live-preview');
+            var fileInput = node.querySelector('.fp-file-input');
             var update = function () {
               if (!previewEl) return;
               var title = readField('title');
@@ -111,15 +121,22 @@
               var font = current.font;
               var extra = current.weight ? 'font-weight:' + current.weight + ';' : '';
               if (v === 'custom') {
-                var file = readField('entry_title_font_file');
-                if (file) { ensureFontFace(file, 'fpLiveCustom'); font = "'fpLiveCustom', serif"; }
+                var file = readFileField('entry_title_font_file');
+                if (file && !fileInput.value) fileInput.value = file;
+                var useFile = fileInput.value.trim() || file;
+                if (useFile) { ensureFontFace(useFile, 'fpLiveCustom'); font = "'fpLiveCustom', serif"; }
                 else font = "Georgia, serif";
                 extra = '';
               }
+              fileInput.style.display = v === 'custom' ? 'block' : 'none';
               previewEl.style.fontFamily = font;
               previewEl.style.fontWeight = extra ? '900' : 'normal';
             };
             update();
+            if (fileInput) fileInput.addEventListener('input', function () {
+              var f = fileInput.value.trim();
+              if (f) { ensureFontFace(f, 'fpLiveCustom'); previewEl.style.fontFamily = "'fpLiveCustom', serif"; }
+            });
             timer = setInterval(update, 600);
           } else if (timer) {
             clearInterval(timer);
@@ -131,7 +148,8 @@
             onChange: function (e) { props.onChange(e.target.value); },
             style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d', boxSizing: 'border-box' }
           }, opts),
-          R('div', { className: 'fp-live-preview', style: { marginTop: '12px', padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…')
+          R('div', { className: 'fp-live-preview', style: { marginTop: '12px', padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
+          R('input', { className: 'fp-file-input', type: 'text', placeholder: '字体文件路径（如 /images/font.ttf），自动填充可修改', style: { display: 'none', marginTop: '10px', width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '13px', boxSizing: 'border-box', color: '#333' } })
         );
         return container;
       };
