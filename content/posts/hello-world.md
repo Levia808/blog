@@ -7,7 +7,7 @@ tags:
   - 随笔
 description: 你好世界
 entry_title_font: custom
-entry_title_font_file: /images/OKCOK-1.ttf
+entry_title_font_file: /images/AnJingChenYingBiXingShu-2.ttf
 entry_title_font_name: OKCOK
 entry_title_color: '#010057'
 entry_title_opacity: null
