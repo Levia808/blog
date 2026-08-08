@@ -1,5 +1,6 @@
-{{- $currentPage := . -}}
-{{- $logo := site.Params.navLogo | default (site.Params.author | default site.Title) -}}
+
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $currentPage := . -}}
+{{- $logo := $P.navLogo | default ($P.author | default site.Title) -}}
 
 <nav class="nav-full" id="siteHeader" aria-label="主导航">
   <a class="nf-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
@@ -19,7 +20,7 @@
     <button type="button" class="nf-icon-btn" id="searchTrigger" title="搜索 (Ctrl+K)" aria-label="搜索">
       <svg viewBox="0 0 256 256" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M229.7,218.3l-43.2-43.2a92.4,92.4,0,1,0-11.3,11.3l43.2,43.2A8,8,0,0,0,229.7,218.3ZM40,124a84,84,0,1,1,84,84A84.1,84.1,0,0,1,40,124Z"/></svg>
     </button>
-    {{- if site.Params.auth }}
+    {{- if $P.auth }}
     <button type="button" class="nav-login-btn" id="navLoginBtn">登录</button>
     <div class="dropdown" id="userMenuContainer" hidden>
       <button type="button" class="nf-avatar" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
@@ -69,7 +70,7 @@
     </a>
     {{- end }}
   </nav>
-  {{- if site.Params.auth }}
+  {{- if $P.auth }}
   <div class="drawer-user">
     <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
     <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>

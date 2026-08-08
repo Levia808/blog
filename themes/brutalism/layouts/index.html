@@ -1,5 +1,7 @@
+
 {{- define "title" }}{{ site.Title }}{{ end }}
 {{- define "main" }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
 {{- with site.Data.welcome }}
 <script>window.welcomeCfg = {{ . | jsonify | safeJS }};</script>
 {{- end }}
@@ -8,7 +10,7 @@
 {{- $featured := index $posts 0 }}
 
 <section class="welcome-full" id="welcome" aria-label="欢迎">
-  <h1 class="welcome-title" id="welcomeTitle" aria-label="Levia's Blog">{{ site.Params.navLogo | default site.Title }}</h1>
+  <h1 class="welcome-title" id="welcomeTitle" aria-label="Levia's Blog">{{ $P.navLogo | default site.Title }}</h1>
   <div class="shape-blur" id="shapeBlur" aria-hidden="true"></div>
   <div class="welcome-foot">
     <span class="mono welcome-prefix">//</span>
@@ -44,9 +46,9 @@
       <a class="section-more" href="{{ "about/" | relLangURL }}">更多 →</a>
     </div>
     <div class="about-strip" data-reveal>
-      <p>{{ site.Params.description }}</p>
+      <p>{{ $P.description }}</p>
       <div class="mono about-tags">
-        {{- range site.Params.keywords }}
+        {{- range $P.keywords }}
         <span class="pc-tag">{{ . }}</span>
         {{- end }}
       </div>

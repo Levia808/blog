@@ -27,6 +27,59 @@ display_url: https://blog-go3.pages.dev/
 logo_url: https://blog-go3.pages.dev/favicon.svg
 
 collections:
+  - label: 站点设置
+    name: siteconfig
+    format: yaml
+    files:
+      - label: 站点设置
+        name: siteconfig
+        file: data/site.yaml
+        fields:
+          - { label: 作者, name: author, widget: string }
+          - { label: 导航 Logo 文字, name: navLogo, widget: string }
+          - { label: 站点描述, name: description, widget: text }
+          - label: 关键词
+            name: keywords
+            widget: list
+            required: false
+          - label: 功能开关
+            name: toggles
+            widget: object
+            collapsed: true
+            fields:
+              - { label: 登录/个人中心, name: auth, widget: boolean, default: true }
+              - { label: 评论区, name: comments, widget: boolean, default: true }
+              - { label: 文章目录, name: ShowToc, widget: boolean, default: true }
+              - { label: 阅读时间, name: ShowReadingTime, widget: boolean, default: true }
+              - { label: 字数统计, name: ShowWordCount, widget: boolean, default: true }
+              - { label: 面包屑, name: ShowBreadCrumbs, widget: boolean, default: true }
+              - { label: 上一篇/下一篇, name: ShowPostNavLinks, widget: boolean, default: true }
+          - label: 社交图标
+            name: socialIcons
+            widget: list
+            required: false
+            collapsed: true
+            summary: "{{fields.name}}"
+            fields:
+              - { label: 平台, name: name, widget: string }
+              - { label: 链接, name: url, widget: string }
+  - label: 卡片样式
+    name: cardstyle
+    format: yaml
+    files:
+      - label: 卡片样式
+        name: cardstyle
+        file: data/cards.yaml
+        fields:
+          - label: 卡片样式
+            name: style
+            widget: select
+            default: fullscreen
+            options:
+              - { label: "全屏杂志封面（占满整页）", value: fullscreen }
+              - { label: "网格", value: grid }
+              - { label: "横向长条", value: horizontal }
+            hint: "保存后自动部署, 主站首页卡片样式立即更新"
   - label: 欢迎页配置
     name: welcome
     format: yaml

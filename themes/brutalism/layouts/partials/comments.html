@@ -1,4 +1,5 @@
-{{- if site.Params.comments }}
+
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- if $P.comments }}
 <section class="native-comments" id="comments" data-post-path="{{ .RelPermalink }}" aria-labelledby="comments-title">
   <div class="comments-heading">
     <div>

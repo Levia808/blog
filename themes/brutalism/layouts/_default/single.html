@@ -1,5 +1,7 @@
+
 {{- define "main" }}
-{{- $showToc := and (default site.Params.ShowToc .Params.ShowToc) .TableOfContents }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
+{{- $showToc := and (default $P.ShowToc .Params.ShowToc) .TableOfContents }}
 {{- $tocHTML := .TableOfContents }}
 {{- $bg := "" }}
 {{- $bgRel := strings.TrimPrefix "/" (urls.Parse .Params.background).Path }}
@@ -13,14 +15,14 @@
   {{- end }}
   <div class="article-layout">
     <div class="article-main" data-reveal>
-      {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
+      {{- if $P.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
       <header class="article-header">
         {{- if .Params.archived }}
         <div class="article-archived"><span class="status-dot status-draft"></span>此文章已归档，仅保留原文链接</div>
         {{- end }}
         <div class="mono article-meta">
-          {{- if site.Params.ShowReadingTime }}<span>{{ .ReadingTime }} min read</span>{{ end }}
-          {{- if site.Params.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}
+          {{- if $P.ShowReadingTime }}<span>{{ .ReadingTime }} min read</span>{{ end }}
+          {{- if $P.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}
           {{- if .Date }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
         </div>
         <h1 class="article-title">{{ .Title }}</h1>
@@ -53,7 +55,7 @@
     {{- end }}
   </div>
 
-  {{- if site.Params.ShowPostNavLinks }}
+  {{- if $P.ShowPostNavLinks }}
   <nav class="post-nav" aria-label="上一条/下一条">
     {{- with .PrevInSection }}
     <a class="pn-card prev" href="{{ .RelPermalink }}">

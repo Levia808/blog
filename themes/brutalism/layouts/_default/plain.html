@@ -1,7 +1,9 @@
+
 {{- define "main" }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
 <article class="container article-page article-page--plain">
   <div class="article-main article-main--plain" data-reveal>
-    {{- if site.Params.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
+    {{- if $P.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
     <header class="article-header">
       <div class="mono article-meta"><span>PAGE</span></div>
       <h1 class="article-title">{{ .Title }}</h1>

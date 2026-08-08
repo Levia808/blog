@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}<!DOCTYPE html>
 <html lang="{{ site.Language.Locale | default "zh-cn" }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
@@ -16,7 +17,7 @@
   </main>
   {{- if not (eq .Layout "admin") }}
   {{ partial "footer.html" . }}
-  {{- if site.Params.auth }}
+  {{- if $P.auth }}
   {{ partial "auth-modal.html" . }}
   {{- end }}
   {{- end }}

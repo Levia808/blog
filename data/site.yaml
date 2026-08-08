@@ -1,0 +1,22 @@
+# 站点设置 (管理面板「站点设置」可编辑) — 主题优先读取此文件, 缺失回退 hugo.yaml
+author: "Levia"
+navLogo: "Levia's blog"
+description: "个人技术博客 — 记录学习、思考与技术分享。"
+keywords:
+  - 博客
+  - 技术
+  - 编程
+  - 学习
+
+# 功能开关
+auth: true
+comments: true
+ShowToc: true
+ShowReadingTime: true
+ShowWordCount: true
+ShowBreadCrumbs: true
+ShowPostNavLinks: true
+
+socialIcons:
+  - name: github
+    url: https://github.com/Levia808

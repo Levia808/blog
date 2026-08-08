@@ -1,4 +1,5 @@
 {{ define "main" }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
 <div class="login-page" id="loginPage">
   <section class="login-form-col">
     <div class="login-form-wrap">
@@ -94,13 +95,13 @@
 
   <section class="login-hero-col" aria-hidden="true">
     <div class="login-hero-bg"></div>
-    <div class="login-hero-word" id="loginHeroWord">{{ site.Params.navLogo | default site.Title }}</div>
+    <div class="login-hero-word" id="loginHeroWord">{{ $P.navLogo | default site.Title }}</div>
     <div class="login-testimonials">
       <div class="testimonial-card animate-testimonial animate-delay-1000">
-        <span class="t-avatar mono">{{ substr (site.Params.author | default "L") 0 1 }}</span>
+        <span class="t-avatar mono">{{ substr ($P.author | default "L") 0 1 }}</span>
         <div>
-          <p class="t-name">{{ site.Params.author | default "Levia" }}</p>
-          <p class="t-handle mono">@{{ site.Params.author | default "levia" }}</p>
+          <p class="t-name">{{ $P.author | default "Levia" }}</p>
+          <p class="t-handle mono">@{{ $P.author | default "levia" }}</p>
           <p class="t-text">写代码，也写生活。记录学习与思考。</p>
         </div>
       </div>
