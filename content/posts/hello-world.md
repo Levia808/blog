@@ -12,7 +12,7 @@ entry_title_font_name: OKCOK
 entry_scramble: true
 entry_align: center-center
 cover:
-  image: /images/pexels-jakub-zerdzicki-34212916.jpg
+  image: /images/pexels-ömerhan-datlar-5382283.jpg
 ---
 
 ## 欢迎
