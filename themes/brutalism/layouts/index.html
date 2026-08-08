@@ -17,36 +17,6 @@
   <div class="scroll-hint"><div>scroll</div><div class="sh-arrow"></div></div>
 </section>
 
-{{- if $featured }}
-{{- $fBg := "" }}
-{{- with $featured.Params.background }}
-{{- $fBg = (. | relURL) }}
-{{- with resources.Get (strings.TrimPrefix "/" (urls.Parse .).Path) }}
-{{- $fBg = .RelPermalink }}
-{{- end }}
-{{- end }}
-{{- with $featured.Params.cover.image }}
-{{- if not $fBg }}{{ $fBg = (. | relURL) }}{{ end }}
-{{- end }}
-<section class="post-card-fullscreen welcome-featured{{ if $fBg }} has-bg{{ end }}" data-reveal{{ if $fBg }} style="background-image:url('{{ $fBg }}')"{{ end }}>
-  <a class="pcf-link" href="{{ $featured.RelPermalink }}">
-    <div class="pcf-inner">
-      <div class="pcf-date mono">{{ $featured.Date.Format "2006 · 01 · 02" }} · {{ $featured.ReadingTime }} min</div>
-      <h2 class="pcf-title">{{ $featured.Title }}</h2>
-      {{- with $featured.Description }}
-      <p class="pcf-quote">{{ . }}</p>
-      {{- else }}
-      <p class="pcf-quote">{{ $featured.Summary | plainify | truncate 120 }}</p>
-      {{- end }}
-      {{- with $featured.Params.tags }}
-      <div class="pcf-tags">{{ range . }}<span class="pcf-tag">{{ . }}</span>{{ end }}</div>
-      {{- end }}
-      <div class="pcf-cta mono">阅读全文 →</div>
-    </div>
-  </a>
-</section>
-{{- end }}
-
 <section class="container blog-home">
   <section class="blog-section" aria-labelledby="latest-posts">
     <div class="blog-section__head" data-reveal>

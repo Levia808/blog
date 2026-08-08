@@ -1132,7 +1132,6 @@ html.js [data-reveal].reveal-visible {
 
 /* ── 全屏杂志封面入口 (第三种卡片样式) ── */
 .card-list--fullscreen { max-width: 1280px; gap: 20px; }
-.welcome-featured { margin-top: 100vh; }
 .pcf-cta {
   display: inline-block;
   margin-top: 6px;
@@ -1145,7 +1144,7 @@ html.js [data-reveal].reveal-visible {
   align-self: flex-start;
   transition: transform var(--dur-fast), background-color var(--dur-slow), color var(--dur-slow);
 }
-.welcome-featured:hover .pcf-cta { background: var(--accent); color: var(--bg); transform: translateX(2px); }
+.post-card-fullscreen:hover .pcf-cta { background: var(--accent); color: var(--bg); transform: translateX(2px); }
 
 /* 全屏卡片标题位置 (CMS 可配) */
 .pcf-align-lc .pcf-link { align-items: center; }
@@ -1231,3 +1230,21 @@ html.js [data-reveal].reveal-visible {
   .post-card-fullscreen { min-height: 55vh; }
   .pcf-quote { font-size: 13px; }
 }
+
+/* ── 全屏入口标题字体 / 隐藏 ── */
+.pcf-font-grotesk .pcf-title { font-family: 'Space Grotesk', var(--font-display); }
+.pcf-font-mono .pcf-title { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.pcf-font-inter .pcf-title { font-family: 'Inter', var(--font-sans); }
+.pcf-hide-title .pcf-title { display: none; }
+
+/* ── 卡片封面: hover 放大 + 鼠标跟随 ── */
+.pc-img img { transition: transform 320ms cubic-bezier(.22,.61,.36,1); will-change: transform; }
+@media (hover: none) {
+  .pc-img img { transition: none; }
+}
+
+/* 全屏标题字体变体 (CMS 可配) */
+.pcf-font-display .pcf-title { font-family: 'Playfair Display', Georgia, serif; }
+.pcf-font-grotesk .pcf-title { font-family: var(--font-display); }
+.pcf-font-mono .pcf-title { font-family: var(--font-mono); font-weight: 700; }
+.pcf-font-serif .pcf-title { font-family: Georgia, 'Times New Roman', serif; }
