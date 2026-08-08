@@ -10,9 +10,9 @@ tags:
 description: 从 Hugo 到双线部署的完整实践。一份代码，两边构建。
 background: /images/wallhaven-yq2w3x.jpg
 entry_title_font: custom
-entry_title_font_file: /images/AnJingChenYingBiXingShu-2.ttf
-entry_title_font_name: ''
-entry_title_color: '#2432ff'
+entry_title_font_file: /images/HYPixel11pxU-2.ttf
+entry_title_font_name: HYPixel11
+entry_title_color: ''
 entry_title_opacity: 75
 entry_scramble: false
 entry_align: center-center
