@@ -328,12 +328,14 @@
                   for (var fi = 0; fi < fonts.length; fi++) {
                     var fam = 'fpLib' + fi;
                     if (fonts[fi].url) ensureFontFace(fonts[fi].url, fam, true);
-                    html += '<div class="fp-lib-item" data-url="' + (fonts[fi].url || '') + '" style="padding:10px 14px;border-bottom:1px solid #edf0ed;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between" onmouseover="this.style.background='#eef4ee'" onmouseout="this.style.background='transparent'">' +
+                    html += '<div class="fp-lib-item" data-url="' + (fonts[fi].url || '') + '" style="padding:10px 14px;border-bottom:1px solid #edf0ed;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between" data-hover="1">' +
                       '<span style="font-family:' + (fonts[fi].url ? "'" + fam + "', serif" : 'Georgia, serif') + ';font-size:18px;color:#18211d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">标题示例｜构建现代化博客</span>' +
                       '<small style="flex:none;font-size:11px;color:#7a8a80">' + (fonts[fi].name.replace(/</g, '&lt;')) + '</small></div>';
                   }
                   libPanel.innerHTML = html;
                   libPanel.querySelectorAll('.fp-lib-item').forEach(function (item) {
+                    item.addEventListener('mouseover', function () { item.style.background = '#eef4ee'; });
+                    item.addEventListener('mouseout', function () { item.style.background = 'transparent'; });
                     item.addEventListener('click', function () {
                       var url = item.getAttribute('data-url');
                       if (!url) return;
