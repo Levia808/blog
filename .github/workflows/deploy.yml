@@ -29,6 +29,9 @@ jobs:
           hugo-version: latest
           extended: true
 
+      - name: 生成字体库清单 (自动收录媒体库字体)
+        run: python3 .github/gen-fonts.py
+
       - name: 视频自动重编码 (任何编码 → H.264)
         run: |
           ffmpeg -version >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y ffmpeg

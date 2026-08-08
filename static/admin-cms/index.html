@@ -117,13 +117,31 @@
           if (matches && matches.length) return '/images/' + matches[matches.length - 1].trim();
           return '';
         }
+        var libraryFonts = null;
         function buildOptions() {
           var list = [];
           for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
+          if (libraryFonts) {
+            for (var li = 0; li < libraryFonts.length; li++) {
+              if (list.indexOf(libraryFonts[li]) < 0) list.push(libraryFonts[li]);
+            }
+          }
           var saved = readSavedFontFile();
-          if (saved) list.push(saved);
+          if (saved && list.indexOf(saved) < 0) list.push(saved);
           if (value && list.indexOf(value) < 0) list.push(value);
           return list;
+        }
+        function loadLibraryFonts(cb) {
+          if (libraryFonts) { if (cb) cb(); return; }
+          fetch('/fonts.json', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (list) {
+              if (Array.isArray(list)) libraryFonts = list.filter(function (f) {
+                return /\\.(ttf|otf|woff2?|eot)$/i.test(f);
+              });
+              if (cb) cb();
+            })
+            .catch(function () { if (cb) cb(); });
         }
         function labelOf(v) {
           if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) {
@@ -174,6 +192,9 @@
               }
             };
             update();
+            loadLibraryFonts(function () {
+              if (selEl) rebuildOptions();
+            });
             var titleInput = null;
             var watch = setInterval(function () {
               var t = document.querySelector('[data-key-path="title"] input');
@@ -226,7 +247,7 @@
             if (refreshBtn) refreshBtn.addEventListener('click', function () {
               var saved = readSavedFontFile();
               if (saved) ensureFontFace(saved, 'fpLiveCustom', true);
-              rebuildOptions();
+              loadLibraryFonts(function () { rebuildOptions(); });
               update();
             });
             function rebuildOptions() {
