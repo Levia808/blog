@@ -8,10 +8,10 @@ tags:
 description: 你好世界
 entry_title_font: custom
 entry_title_font_file: /images/AnJingChenYingBiXingShu-2.ttf
-entry_title_font_name: OKCOK
+entry_title_font_name: ''
 entry_title_color: '#010057'
 entry_title_opacity: null
-entry_scramble: true
+entry_scramble: false
 entry_align: center-center
 cover:
   image: /images/pexels-ömerhan-datlar-5382283.jpg
