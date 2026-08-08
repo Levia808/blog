@@ -387,11 +387,10 @@
   }
 
   function tomlQuote(value) {
-    var str = String(value);
-    if (str.indexOf('"') >= 0 || str.indexOf("'") >= 0 || str.indexOf(' ') >= 0) {
-      return '"' + str.replace(/"/g, '\\"') + '"';
-    }
-    return str;
+    var str = String(value == null ? '' : value).trim();
+    if (str === 'true' || str === 'false') return str;
+    if (str !== '' && !isNaN(Number(str))) return str;
+    return '"' + str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
   }
 
   function loadWelcomeConfig() {
@@ -420,10 +419,18 @@
       showError('请先授权 GitHub 后再保存配置。');
       return;
     }
+    var CFG_DEFAULTS = {
+      typewriterText: '写代码，也写生活。记录学习与思考。',
+      typeSpeed: 70, deleteSpeed: 38, pause: 1800,
+      titleVariationFrom: "'wght' 400", titleVariationTo: "'wght' 900",
+      proximityRadius: 140, proximityFalloff: 'linear'
+    };
     var values = {};
     Object.keys(CFG_FIELDS).forEach(function (key) {
       var el = document.getElementById(CFG_FIELDS[key]);
-      if (el) values[key] = el.value;
+      var raw = el ? el.value : '';
+      if (raw === '' || raw == null) raw = CFG_DEFAULTS[key];
+      values[key] = raw;
     });
     var text = [
       '# 欢迎页配置 (管理面板「系统设置」可编辑)',
