@@ -133,6 +133,51 @@
               previewEl.style.fontWeight = extra ? '900' : 'normal';
             };
             update();
+            var refreshBtn = node.querySelector('.fp-refresh');
+            var progress = node.querySelector('.fp-progress');
+            var progressFill = node.querySelector('.fp-progress-fill');
+            var showProgress = function () {
+              if (!progress) return;
+              progress.style.display = 'block';
+              var p = 0;
+              var iv = setInterval(function () {
+                p = Math.min(95, p + Math.random() * 18);
+                if (progressFill) progressFill.style.width = p.toFixed(0) + '%';
+              }, 140);
+              return iv;
+            };
+            var hideProgress = function (iv) {
+              clearInterval(iv);
+              if (progressFill) progressFill.style.width = '100%';
+              setTimeout(function () { if (progress) progress.style.display = 'none'; }, 250);
+            };
+            var refreshPreview = function () {
+              var st = document.getElementById('fpLiveFace');
+              if (st) st.remove();
+              var file = fileInput ? fileInput.value.trim() : '';
+              var sel = node.querySelector('select');
+              var v = sel ? sel.value : 'display';
+              var timer = showProgress();
+              var family = null;
+              if (v === 'custom' && file) {
+                ensureFontFace(file, 'fpLiveCustom');
+                family = 'fpLiveCustom';
+              } else {
+                for (var fi = 0; fi < FONT_OPTIONS.length; fi++) {
+                  if (FONT_OPTIONS[fi].value === v) { family = FONT_OPTIONS[fi].font; break; }
+                }
+              }
+              var finish = function () {
+                hideProgress(timer);
+                update();
+              };
+              if (family && document.fonts && document.fonts.load) {
+                Promise.resolve(document.fonts.load('26px ' + family, '预览')).then(finish).catch(finish);
+              } else {
+                setTimeout(finish, 500);
+              }
+            };
+            if (refreshBtn) refreshBtn.addEventListener('click', refreshPreview);
             var titleInput = null;
             var watch = setInterval(function () {
               var t = document.querySelector('[data-key-path="title"] input');
@@ -158,7 +203,13 @@
             onChange: function (e) { props.onChange(e.target.value); },
             style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d', boxSizing: 'border-box' }
           }, opts),
-          R('div', { className: 'fp-live-preview', style: { marginTop: '12px', padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
+          R('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' } },
+            R('div', { className: 'fp-live-preview', style: { flex: 1, padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
+            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
+          ),
+          R('div', { className: 'fp-progress', style: { display: 'none', marginTop: '8px', height: '4px', borderRadius: '99px', background: '#e5e9e6', overflow: 'hidden' } },
+            R('div', { className: 'fp-progress-fill', style: { height: '100%', width: '0%', background: '#6b8b6b', borderRadius: '99px', transition: 'width .15s ease-out' } })
+          ),
           R('input', { className: 'fp-file-input', type: 'text', placeholder: '字体文件路径（如 /images/font.ttf），自动填充可修改', style: { display: 'none', marginTop: '10px', width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '13px', boxSizing: 'border-box', color: '#333' } })
         );
         return container;
