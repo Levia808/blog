@@ -327,8 +327,8 @@ var Admin = window.Admin = {
   async uploadMedia(file, onProgress) {
     var user = await Auth.user();
     if (!user) throw new Error('请先登录');
-    if (!file || !/^((image|video|audio)\/)/i.test(file.type)) {
-      throw new Error('仅支持图片、视频或音频文件');
+    if (!file || !(/^((image|video|audio|font)\/)/i.test(file.type) || /\.(ttf|otf|woff2?|eot)$/i.test(file.name))) {
+      throw new Error('仅支持图片、视频、音频或字体文件（ttf/otf/woff/woff2）');
     }
     if (file.size > 100 * 1024 * 1024) {
       throw new Error('媒体文件不能超过 100 MB');
