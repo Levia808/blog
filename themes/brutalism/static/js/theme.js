@@ -748,25 +748,36 @@
     if (saved) { signInForm.querySelector('[name="email"]').value = saved; signInForm.querySelector('[name="rememberMe"]').checked = true; }
   }
 
-  /* ── 文章右侧目录: 随滚动浮动 (同速跟随 + 视口夹取, 不固定顶部) ── */
+  /* ── 文章右侧目录: 固定于文章容器右侧, 滚动时弹性惯性偏移, 减速后回弹原位 ── */
   function initTocFloat() {
     var toc = document.querySelector('.article-toc--side');
-    if (!toc) return;
-    var MIN_TOP = 96, GAP = 24;
+    if (!toc || reducedMotion) return;
     var baseTop = 96;
     var layoutEl = document.querySelector('.article-layout');
     if (layoutEl) baseTop = layoutEl.getBoundingClientRect().top + 8;
     toc.style.top = baseTop + 'px';
 
-    function onScroll() {
-      var target = baseTop + window.scrollY;
-      var maxTop = window.innerHeight - toc.offsetHeight - GAP;
-      target = Math.max(MIN_TOP, Math.min(target, maxTop));
-      toc.style.top = target + 'px';
+    var current = 0, target = 0, lastY = window.scrollY;
+    var raf = null;
+    function frame() {
+      current += (target - current) * 0.16;
+      target *= 0.86;
+      toc.style.top = (baseTop + current) + 'px';
+      if (Math.abs(current) < 0.1 && Math.abs(target) < 0.1 && Math.abs(window.scrollY - lastY) < 0.5) {
+        toc.style.top = baseTop + 'px';
+        raf = null;
+        return;
+      }
+      raf = requestAnimationFrame(frame);
     }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    onScroll();
+    function kick() {
+      var dy = window.scrollY - lastY;
+      lastY = window.scrollY;
+      var speed = Math.max(-1, Math.min(1, dy / 10));
+      target = Math.max(-26, Math.min(26, speed * 26));
+      if (!raf) raf = requestAnimationFrame(frame);
+    }
+    window.addEventListener('scroll', kick, { passive: true });
   }
 
   /* ── 搜索 (Fuse.js + index.json) ── */
