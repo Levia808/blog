@@ -136,329 +136,47 @@
         });
       }
       var latestUploadRaw = null;
+      /* 全局辅助函数 (控件渲染 + 全局逻辑共用) */
+      function readSavedFontFile() {
+        var container = document.querySelector('[data-key-path="entry_title_font_file"]');
+        if (!container) return '';
+        var v = container.querySelector('input');
+        if (v && v.value && /\.(ttf|otf|woff2?|eot)$/i.test(v.value)) return v.value.trim();
+        var matches = container.textContent.match(/[^\s\"'()]+?\.(?:ttf|otf|woff2?|eot)/gi);
+        if (matches && matches.length) return '/images/' + matches[matches.length - 1].trim();
+        return '';
+      }
+      function buildOptions() {
+        var list = [];
+        for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
+        var saved = readSavedFontFile();
+        if (saved && list.indexOf(saved) < 0) list.push(saved);
+        return list;
+      }
+      function labelOf(v) {
+        if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) return '自定义字体: ' + v.split('/').pop();
+        for (var i = 0; i < FONT_OPTIONS.length; i++) {
+          if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i].label;
+        }
+        return v;
+      }
+      function fontOf(v) {
+        if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) return 'path';
+        for (var i = 0; i < FONT_OPTIONS.length; i++) {
+          if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i];
+        }
+        return null;
+      }
       var FontSelectControl = function (props) {
         var R = window.createElement;
         var value = props.value || 'display';
-
-        /* 动态字体选项: 内置 9 项 + 当前文章已上传字体文件 (值=路径) */
-        function readSavedFontFile() {
-          var container = document.querySelector('[data-key-path="entry_title_font_file"]');
-          if (!container) return '';
-          var v = container.querySelector('input');
-          if (v && v.value && /\.(ttf|otf|woff2?|eot)$/i.test(v.value)) return v.value.trim();
-          var matches = container.textContent.match(/[^\s\"'()]+?\.(?:ttf|otf|woff2?|eot)/gi);
-          if (matches && matches.length) return '/images/' + matches[matches.length - 1].trim();
-          return '';
-        }
-        var libraryFonts = null;
-        var librarySupabase = null;
-        function listMediaFonts() {
-          if (librarySupabase) return Promise.resolve(librarySupabase);
-          if (!window.blogSupabase || !window.blogSupabase.storage) return Promise.resolve([]);
-          var out = [];
-          function walk(folder, depth) {
-            if (depth > 4) return Promise.resolve();
-            return window.blogSupabase.storage.from('media').list(folder || '', { limit: 200 })
-              .then(function (r) {
-                if (r.error || !Array.isArray(r.data)) return;
-                var tasks = [];
-                r.data.forEach(function (item) {
-                  var path = (folder ? folder + '/' : '') + item.name;
-                  if (item.id && /\.(ttf|otf|woff2?|eot)$/i.test(item.name)) {
-                    out.push(path);
-                  } else if (!item.id && depth < 4) {
-                    tasks.push(walk(path, depth + 1));
-                  }
-                });
-                return Promise.all(tasks);
-              })
-              .catch(function () {});
-          }
-          return walk('', 0).then(function () {
-            librarySupabase = out.map(function (p) {
-              try {
-                return window.blogSupabase.storage.from('media').getPublicUrl(p).data.publicUrl;
-              } catch (e) { return ''; }
-            }).filter(Boolean);
-            return librarySupabase;
-          });
-        }
-        function buildOptions() {
-          var list = [];
-          for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
-          if (libraryFonts) {
-            for (var li = 0; li < libraryFonts.length; li++) {
-              if (list.indexOf(libraryFonts[li]) < 0) list.push(libraryFonts[li]);
-            }
-          }
-          if (librarySupabase) {
-            for (var si = 0; si < librarySupabase.length; si++) {
-              if (list.indexOf(librarySupabase[si]) < 0) list.push(librarySupabase[si]);
-            }
-          }
-          var saved = readSavedFontFile();
-          if (saved && list.indexOf(saved) < 0) list.push(saved);
-          if (value && list.indexOf(value) < 0) list.push(value);
-          return list;
-        }
-        function loadLibraryFonts(cb) {
-          if (libraryFonts) { if (cb) cb(); return; }
-          fetch('/fonts.json', { cache: 'no-store' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (list) {
-              if (Array.isArray(list)) libraryFonts = list.filter(function (f) {
-                return /\\.(ttf|otf|woff2?|eot)$/i.test(f);
-              });
-              if (cb) cb();
-            })
-            .catch(function () { if (cb) cb(); });
-        }
-        function labelOf(v) {
-          if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) {
-            var name = v.split('/').pop() || v;
-            return '自定义字体: ' + name;
-          }
-          for (var i = 0; i < FONT_OPTIONS.length; i++) {
-            if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i].label;
-          }
-          return v;
-        }
-        function fontOf(v) {
-          if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) return 'path';
-          for (var i = 0; i < FONT_OPTIONS.length; i++) {
-            if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i];
-          }
-          return null;
-        }
-
-        var timer = null;
         var opts = [];
         var optValues = buildOptions();
         for (var oi = 0; oi < optValues.length; oi++) {
           opts.push(R('option', { key: optValues[oi], value: optValues[oi] }, labelOf(optValues[oi])));
         }
-
-        var container = R('div', { ref: function (node) {
-          if (node) {
-            var previewEl = node.querySelector('.fp-live-preview');
-            var update = function () {
-              if (!previewEl) return;
-              var titleEl = document.querySelector('[data-key-path="title"] input');
-              var title = titleEl ? (titleEl.value || '').trim() : '';
-              previewEl.textContent = title || '（未设置标题）';
-              var sel = node.querySelector('select');
-              var v = sel ? sel.value : 'display';
-              var f = fontOf(v);
-              if (f === 'path') {
-                ensureFontFace(v, 'fpLiveCustom', true);
-                previewEl.style.fontFamily = "'fpLiveCustom', serif";
-                previewEl.style.fontWeight = 'normal';
-              } else if (f) {
-                previewEl.style.fontFamily = f.font;
-                previewEl.style.fontWeight = f.weight ? '900' : 'normal';
-              } else {
-                previewEl.style.fontFamily = 'Georgia, serif';
-                previewEl.style.fontWeight = 'normal';
-              }
-            };
-            update();
-            loadLibraryFonts(function () {
-              listMediaFonts().then(function () {
-                if (selEl) rebuildOptions();
-              });
-            });
-            var titleInput = null;
-            var watch = setInterval(function () {
-              var t = document.querySelector('[data-key-path="title"] input');
-              if (t !== titleInput) {
-                if (titleInput) titleInput.removeEventListener('input', update);
-                titleInput = t;
-                if (titleInput) titleInput.addEventListener('input', update);
-              }
-              update();
-            }, 150);
-            var selEl = node.querySelector('select');
-            if (selEl) selEl.addEventListener('change', update);
-            /* 已保存字体文件变化 → 进度条 + 上传完成校验 → 刷新选项与预览 */
-            var fc = document.querySelector('[data-key-path="entry_title_font_file"]');
-            var optTimer = null;
-            var progIv = null;
-            var progress = node.querySelector('.fp-progress');
-            var progressFill = node.querySelector('.fp-progress-fill');
-            if (fc && window.MutationObserver) {
-              new MutationObserver(function () {
-                if (!progIv) {
-                  if (progress) progress.style.display = 'block';
-                  var p = 8;
-                  progIv = setInterval(function () {
-                    p = Math.min(90, p + 14);
-                    if (progressFill) progressFill.style.width = p + '%';
-                  }, 180);
-                }
-                clearTimeout(optTimer);
-                optTimer = setTimeout(function () {
-                  var saved = readSavedFontFile();
-                  if (saved) {
-                    clearInterval(progIv);
-                    progIv = null;
-                    if (progressFill) progressFill.style.width = '100%';
-                    setTimeout(function () {
-                      if (progress) progress.style.display = 'none';
-                      if (progressFill) progressFill.style.width = '0%';
-                    }, 300);
-                    rebuildOptions();
-                    update();
-                  } else {
-                    optTimer = setTimeout(arguments.callee, 900);
-                  }
-                }, 900);
-              }).observe(fc, { childList: true, subtree: true, characterData: true });
-            }
-            /* 刷新按钮: 强制重建字体 + 重建选项 + 刷新预览 */
-            var uploadInput = node.querySelector('.fp-upload');
-            var progress = node.querySelector('.fp-progress');
-            var progressFill = node.querySelector('.fp-progress-fill');
-            var note = node.querySelector('.fp-lib-note');
-            if (uploadInput) uploadInput.addEventListener('change', function (e) {
-              var f = e.target.files[0];
-              if (!f) return;
-              if (progress) progress.style.display = 'block';
-              if (progressFill) progressFill.style.width = '0%';
-              uploadFontToGitHub(f, function (pct) {
-                if (progressFill) progressFill.style.width = Math.round(pct * 100) + '%';
-              }).then(function (path) {
-                if (progressFill) progressFill.style.width = '100%';
-                setTimeout(function () { if (progress) progress.style.display = 'none'; }, 300);
-                props.onChange(path);
-                latestUploadRaw = 'https://raw.githubusercontent.com/Levia808/blog/main/assets/images/' + encodeURIComponent(f.name);
-                ensureFontFace(latestUploadRaw, 'fpLiveCustom', true);
-                previewEl.style.fontFamily = "'fpLiveCustom', serif";
-                if (note) {
-                  note.style.display = 'block';
-                  note.textContent = '字体已上传并应用：' + f.name + '（保存后封面生效）';
-                }
-                update();
-              }).catch(function (err) {
-                if (progress) progress.style.display = 'none';
-                if (note) {
-                  note.style.display = 'block';
-                  note.textContent = '上传失败：' + (err && err.message || err);
-                }
-              });
-            });
-            var libBtn = node.querySelector('.fp-lib-btn');
-            var libPanel = node.querySelector('.fp-lib-panel');
-            var libNote = node.querySelector('.fp-lib-note');
-            var libOpen = false;
-            if (libBtn) libBtn.addEventListener('click', function () {
-              if (libOpen) {
-                libOpen = false;
-                libPanel.style.display = 'none';
-                libNote.style.display = 'none';
-                return;
-              }
-              libOpen = true;
-              libPanel.style.display = 'block';
-              libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
-              libNote.style.display = 'none';
-              var loadLib = function () {
-                /* 数据源合并: GitHub 字体库 (/fonts.json) + Supabase 媒体库 */
-                var ghTask = fetch('/fonts.json', { cache: 'no-store' })
-                  .then(function (r) { return r.ok ? r.json() : []; })
-                  .catch(function () { return []; });
-                var sbTask = (window.blogSupabase && window.blogSupabase.rpc)
-                  ? window.blogSupabase.rpc('admin_list_media')
-                      .then(function (r) {
-                        if (r.error) return [];
-                        return (r.data || []).map(function (m) {
-                          var url = m.public_url || '';
-                          if (!url && m.storage_path) {
-                            try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {}
-                          }
-                          return { name: m.file_name || m.name || '', url: url, mime: m.mime_type || '' };
-                        });
-                      })
-                      .catch(function () { return []; })
-                  : Promise.resolve([]);
-                Promise.all([ghTask, sbTask]).then(function (results) {
-                  var fonts = [];
-                  var seen = {};
-                  (results[0] || []).forEach(function (f) {
-                    if (typeof f === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(f)) {
-                      fonts.push({ name: f.split('/').pop() || f, url: f });
-                    }
-                  });
-                  (results[1] || []).forEach(function (m) {
-                    if (!/\\.(ttf|otf|woff2?|eot)$/i.test(m.name) && !/font/i.test(m.mime)) return;
-                    if (!m.url) return;
-                    if (!seen[m.url]) fonts.push({ name: m.name, url: m.url });
-                  });
-                  for (var si = 0; si < fonts.length; si++) if (seen[fonts[si].url]) fonts.splice(si--, 1); else seen[fonts[si].url] = true;
-                  if (!fonts.length) {
-                    libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">资源库暂无字体文件（.ttf/.otf/.woff/.woff2）</div>';
-                    return;
-                  }
-                  var html = '';
-                  for (var fi = 0; fi < fonts.length; fi++) {
-                    var fam = 'fpLib' + fi;
-                    if (fonts[fi].url) ensureFontFace(fonts[fi].url, fam, true);
-                    html += '<div class="fp-lib-item" data-url="' + (fonts[fi].url || '') + '" style="padding:10px 14px;border-bottom:1px solid #edf0ed;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between" data-hover="1">' +
-                      '<span style="font-family:' + (fonts[fi].url ? "'" + fam + "', serif" : 'Georgia, serif') + ';font-size:18px;color:#18211d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">标题示例｜构建现代化博客</span>' +
-                      '<small style="flex:none;font-size:11px;color:#7a8a80">' + (fonts[fi].name.replace(/</g, '&lt;')) + '</small></div>';
-                  }
-                  libPanel.innerHTML = html;
-                  libPanel.querySelectorAll('.fp-lib-item').forEach(function (item) {
-                    item.addEventListener('mouseover', function () { item.style.background = '#eef4ee'; });
-                    item.addEventListener('mouseout', function () { item.style.background = 'transparent'; });
-                    item.addEventListener('click', function () {
-                      var url = item.getAttribute('data-url');
-                      if (!url) return;
-                      props.onChange(url);
-                      ensureFontFace(url, 'fpLiveCustom', true);
-                      previewEl.style.fontFamily = "'fpLiveCustom', serif";
-                      update();
-                      libOpen = false;
-                      libPanel.style.display = 'none';
-                      if (libNote) {
-                        libNote.style.display = 'block';
-                        libNote.textContent = '已选择资源库字体：' + (item.querySelector('small') ? item.querySelector('small').textContent : url);
-                      }
-                    });
-                  });
-                });
-              };
-              loadLib();
-            });
-            var refreshBtn = node.querySelector('.fp-refresh');
-            if (refreshBtn) refreshBtn.addEventListener('click', function () {
-              var saved = readSavedFontFile();
-              if (saved) ensureFontFace(saved, 'fpLiveCustom', true);
-              loadLibraryFonts(function () {
-                listMediaFonts().then(function () { rebuildOptions(); });
-              });
-              update();
-            });
-            function rebuildOptions() {
-              if (!selEl) return;
-              var cur = selEl.value;
-              var list = buildOptions();
-              var keep = '';
-              for (var i = 0; i < list.length; i++) if (list[i] === cur) keep = cur;
-              selEl.innerHTML = '';
-              for (var i = 0; i < list.length; i++) {
-                var o = document.createElement('option');
-                o.value = list[i];
-                o.textContent = labelOf(list[i]);
-                selEl.appendChild(o);
-              }
-              selEl.value = keep || value;
-              update();
-            }
-          } else if (timer) {
-            clearInterval(timer);
-            timer = null;
-          }
-        } },
+        return R('div', { className: 'fp-root', 'data-fp-value': value, style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+          R('div', { style: { fontSize: '12px', fontWeight: 600, color: '#4a5b51', letterSpacing: '0.5px' } }, '选择字体'),
           R('select', {
             value: value,
             onChange: function (e) { props.onChange(e.target.value); },
@@ -469,8 +187,8 @@
               '上传自定义字体',
               R('input', { className: 'fp-upload', type: 'file', accept: '.ttf,.otf,.woff,.woff2', style: { display: 'none' } })
             ),
-            R('button', { className: 'fp-lib-btn', type: 'button', title: '从资源库选择字体', style: { flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#2c4a33', fontSize: '13px', cursor: 'pointer' } }, '资源库字体'),
-            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
+            R('button', { className: 'fp-lib-btn', type: 'button', style: { flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#2c4a33', fontSize: '13px', cursor: 'pointer' } }, '资源库字体'),
+            R('button', { className: 'fp-refresh', type: 'button', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
           ),
           R('div', { className: 'fp-lib-panel', style: { display: 'none', border: '1px solid #cbd5ce', borderRadius: '10px', background: '#fafbfa', maxHeight: '220px', overflowY: 'auto' } }),
           R('div', { className: 'fp-lib-note', style: { display: 'none', fontSize: '12px', color: '#7a8a80' } }),
@@ -480,7 +198,6 @@
           R('div', { style: { borderTop: '1px dashed #dbe3dd', paddingTop: '10px', fontSize: '12px', fontWeight: 600, color: '#4a5b51', letterSpacing: '0.5px' } }, '预览效果'),
           R('div', { className: 'fp-live-preview', style: { padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…')
         );
-        return container;
       };
       var FontSelectPreview = function (props) {
         return R('span', null, props.value || 'display');
@@ -490,6 +207,152 @@
       } catch (error) {
         console.error('字体预览 widget 注册失败:', error);
       }
+      initFontPreviewGlobal();
+    }
+
+    /* 全局字体预览逻辑: 轮询绑定 + DOM 委托 — Sveltia 重渲染控件
+       只重建 UI, 逻辑由本层持续驱动, 组件不会因重渲染失效 */
+    function initFontPreviewGlobal() {
+      if (window.__fpGlobal) return;
+      window.__fpGlobal = true;
+
+      function findRoot() {
+        var roots = document.querySelectorAll('.fp-root');
+        return roots.length ? roots[roots.length - 1] : null;
+      }
+      function update(root) {
+        if (!root) return;
+        var previewEl = root.querySelector('.fp-live-preview');
+        var sel = root.querySelector('select');
+        if (!previewEl || !sel) return;
+        var titleEl = document.querySelector('[data-key-path="title"] input');
+        var title = titleEl ? (titleEl.value || '').trim() : '';
+        previewEl.textContent = title || '（未设置标题）';
+        var v = sel.value;
+        var f = fontOf(v);
+        if (f === 'path') {
+          var raw = latestUploadRaw || null;
+          var src = (raw && sel.value === '/images/' + raw.split('/').pop()) ? raw : sel.value;
+          ensureFontFace(src, 'fpLiveCustom', true);
+          previewEl.style.fontFamily = "'fpLiveCustom', serif";
+          previewEl.style.fontWeight = 'normal';
+        } else if (f) {
+          previewEl.style.fontFamily = f.font;
+          previewEl.style.fontWeight = f.weight ? '900' : 'normal';
+        } else {
+          previewEl.style.fontFamily = 'Georgia, serif';
+          previewEl.style.fontWeight = 'normal';
+        }
+      }
+      function loadLib(root) {
+        if (!root) return;
+        var libPanel = root.querySelector('.fp-lib-panel');
+        if (!libPanel) return;
+        libPanel.style.display = 'block';
+        libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
+        var ghTask = fetch('/fonts.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; });
+        var sbTask = (window.blogSupabase && window.blogSupabase.rpc)
+          ? window.blogSupabase.rpc('admin_list_media').then(function (r) {
+              if (r.error) return [];
+              return (r.data || []).map(function (m) {
+                var url = m.public_url || '';
+                if (!url && m.storage_path) { try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {} }
+                return { name: m.file_name || m.name || '', url: url, mime: m.mime_type || '' };
+              });
+            }).catch(function () { return []; })
+          : Promise.resolve([]);
+        Promise.all([ghTask, sbTask]).then(function (results) {
+          var fonts = [];
+          var seen = {};
+          (results[0] || []).forEach(function (f) {
+            if (typeof f === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(f)) fonts.push({ name: f.split('/').pop() || f, url: f });
+          });
+          (results[1] || []).forEach(function (m) {
+            if (!/\.(ttf|otf|woff2?|eot)$/i.test(m.name) && !/font/i.test(m.mime)) return;
+            if (m.url && !seen[m.url]) { fonts.push({ name: m.name, url: m.url }); seen[m.url] = true; }
+          });
+          for (var si = 0; si < fonts.length; si++) if (seen[fonts[si].url]) fonts.splice(si--, 1); else seen[fonts[si].url] = true;
+          if (!fonts.length) {
+            libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">资源库暂无字体文件（.ttf/.otf/.woff/.woff2）</div>';
+            return;
+          }
+          var html = '';
+          for (var fi = 0; fi < fonts.length; fi++) {
+            var fam = 'fpLib' + fi;
+            if (fonts[fi].url) ensureFontFace(fonts[fi].url, fam, true);
+            html += '<div class="fp-lib-item" data-url="' + (fonts[fi].url || '') + '" style="padding:10px 14px;border-bottom:1px solid #edf0ed;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between">' +
+              '<span style="font-family:' + (fonts[fi].url ? "'" + fam + "', serif" : 'Georgia, serif') + ';font-size:18px;color:#18211d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">标题示例｜构建现代化博客</span>' +
+              '<small style="flex:none;font-size:11px;color:#7a8a80">' + (fonts[fi].name.replace(/</g, '&lt;')) + '</small></div>';
+          }
+          libPanel.innerHTML = html;
+          Array.prototype.forEach.call(libPanel.querySelectorAll('.fp-lib-item'), function (item) {
+            item.addEventListener('mouseover', function () { item.style.background = '#eef4ee'; });
+            item.addEventListener('mouseout', function () { item.style.background = 'transparent'; });
+            item.addEventListener('click', function () {
+              var url = item.getAttribute('data-url');
+              if (!url) return;
+              var root2 = findRoot();
+              var sel2 = root2 ? root2.querySelector('select') : null;
+              if (sel2) {
+                sel2.value = url;
+                sel2.dispatchEvent(new Event('change'));
+              }
+              libPanel.style.display = 'none';
+              var note = root2 ? root2.querySelector('.fp-lib-note') : null;
+              if (note) { note.style.display = 'block'; note.textContent = '已选择资源库字体：' + (item.querySelector('small') ? item.querySelector('small').textContent : url); }
+            });
+          });
+        });
+      }
+
+      /* 轮询: 绑定事件 (幂等标记) + 持续更新预览 */
+      setInterval(function () {
+        var root = findRoot();
+        if (!root) return;
+        if (!root.dataset.fpBound) {
+          root.dataset.fpBound = '1';
+          var sel = root.querySelector('select');
+          var uploadInput = root.querySelector('.fp-upload');
+          var libBtn = root.querySelector('.fp-lib-btn');
+          var refreshBtn = root.querySelector('.fp-refresh');
+          var libPanel = root.querySelector('.fp-lib-panel');
+          var note = root.querySelector('.fp-lib-note');
+          var progress = root.querySelector('.fp-progress');
+          var progressFill = root.querySelector('.fp-progress-fill');
+          var previewEl = root.querySelector('.fp-live-preview');
+          if (sel) sel.addEventListener('change', function () { update(root); });
+          if (uploadInput) uploadInput.addEventListener('change', function (e) {
+            var f = e.target.files[0];
+            if (!f) return;
+            if (progress) progress.style.display = 'block';
+            if (progressFill) progressFill.style.width = '0%';
+            uploadFontToGitHub(f, function (pct) {
+              if (progressFill) progressFill.style.width = Math.round(pct * 100) + '%';
+            }).then(function (path) {
+              if (progressFill) progressFill.style.width = '100%';
+              setTimeout(function () { if (progress) progress.style.display = 'none'; }, 300);
+              if (sel) { sel.value = path; sel.dispatchEvent(new Event('change')); }
+              latestUploadRaw = 'https://raw.githubusercontent.com/Levia808/blog/main/assets/images/' + encodeURIComponent(f.name);
+              if (note) { note.style.display = 'block'; note.textContent = '字体已上传并应用：' + f.name + '（保存后封面生效）'; }
+            }).catch(function (err) {
+              if (progress) progress.style.display = 'none';
+              if (note) { note.style.display = 'block'; note.textContent = '上传失败：' + (err && err.message || err); }
+            });
+          });
+          if (libBtn) libBtn.addEventListener('click', function () {
+            if (libPanel.style.display === 'block') { libPanel.style.display = 'none'; return; }
+            loadLib(root);
+          });
+          if (refreshBtn) refreshBtn.addEventListener('click', function () { update(root); });
+        }
+        update(root);
+      }, 200);
+
+      /* 标题字段变化 → 更新预览文本 */
+      setInterval(function () {
+        var root = findRoot();
+        if (root) update(root);
+      }, 400);
     }
 
     // 编辑器内嵌组件: 视频 / 音频 (Hugo shortcode, 支持编辑器内直接上传文件)
