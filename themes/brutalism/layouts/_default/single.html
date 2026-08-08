@@ -7,7 +7,7 @@
 {{- $bgRel := strings.TrimPrefix "/" (urls.Parse .Params.background).Path }}
 {{- $bgRes := resources.Get $bgRel }}
 {{- if $bgRes }}
-{{- $bg = $bgRes.Resize "2560x q80" }}
+{{- $bg = $bgRes.Resize "2560x webp q70" }}
 {{- end }}
 <article class="container article-page">
   {{- with .Params.background }}

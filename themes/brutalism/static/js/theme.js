@@ -588,6 +588,26 @@
     });
   }
 
+  /* ── 全屏卡背景图懒加载 (首卡立即, 其余进入视口 200px 内加载) ── */
+  function initBgLazy() {
+    var cards = document.querySelectorAll('.post-card-fullscreen[data-bg]');
+    if (!cards.length) return;
+    cards.forEach(function (card, i) {
+      var set = function () {
+        card.style.backgroundImage = "url('" + card.dataset.bg + "')";
+        card.dataset.loaded = '1';
+      };
+      if (i === 0) { set(); return; }
+      if (!('IntersectionObserver' in window)) { set(); return; }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { set(); io.disconnect(); }
+        });
+      }, { rootMargin: '200px 0px' });
+      io.observe(card);
+    });
+  }
+
   /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
   function initLoginPage() {
     var page = document.getElementById('loginPage');
@@ -840,6 +860,7 @@
     initScrambleHover();
     initCoverParallax();
     initLoginPage();
+    initBgLazy();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();

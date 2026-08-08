@@ -1327,3 +1327,7 @@ html.js [data-reveal].reveal-visible {
 @keyframes testimonialSlide { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 .animate-testimonial { opacity: 0; animation: testimonialSlide .9s cubic-bezier(.22,.61,.36,1) forwards; }
 .animate-delay-1000 { animation-delay: 1s; } .animate-delay-1200 { animation-delay: 1.2s; }
+
+/* 全屏卡背景懒加载: 占位底色 */
+.post-card-fullscreen.has-bg { background-color: #1d1d1a; background-image: linear-gradient(180deg, rgba(28,28,25,.55), rgba(20,20,18,.9)); }
+.post-card-fullscreen.has-bg[data-loaded="1"] { background-image: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)); }
