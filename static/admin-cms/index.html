@@ -37,15 +37,56 @@
           return;
         }
         document.getElementById('cmsGate').hidden = true;
+        var react = document.createElement('script');
+        react.src = 'https://unpkg.com/react@18/umd/react.production.min.js';
         var cms = document.createElement('script');
         cms.src = 'https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js';
-        cms.onload = function () { registerEditorComponents(); };
+        cms.onload = function () { registerEditorComponents(); registerFontPreviewWidget(); };
+        document.head.appendChild(react);
         document.head.appendChild(cms);
       } catch (error) {
         message.textContent = '管理员权限验证失败，请返回后台重试。';
         back.hidden = false;
       }
     })();
+
+    // 标题字体选择器 + 实时预览 (自定义 widget)
+    var FONT_OPTIONS = [
+      { value: 'display', label: 'Playfair Display（杂志衬线·默认）', font: "'Playfair Display', Georgia, serif" },
+      { value: 'grotesk', label: 'Space Grotesk（几何无衬线）', font: "'Space Grotesk', sans-serif" },
+      { value: 'mono', label: 'JetBrains Mono（等宽）', font: "'JetBrains Mono', monospace" },
+      { value: 'serif', label: 'Georgia 衬线', font: "Georgia, 'Times New Roman', serif" },
+      { value: 'sans', label: '系统无衬线（苹方/雅黑）', font: "system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif" },
+      { value: 'song', label: '宋体（Songti/SimSun）', font: "'Songti SC', 'Noto Serif SC', 'SimSun', serif" },
+      { value: 'kai', label: '楷体（Kaiti/KaiTi）', font: "'Kaiti SC', 'KaiTi', 'STKaiti', serif" },
+      { value: 'black', label: '特粗黑体（900）', font: "'Space Grotesk', sans-serif" },
+      { value: 'custom', label: '自定义字体（上传文件）', font: "Georgia, serif" }
+    ];
+    function registerFontPreviewWidget() {
+      var CMS = window.CMS;
+      var R = window.React;
+      if (!CMS || typeof CMS.registerWidget !== 'function' || !R) return;
+      var FontSelectControl = function (props) {
+        var value = props.value || 'display';
+        var current = FONT_OPTIONS.filter(function (f) { return f.value === value; })[0] || FONT_OPTIONS[0];
+        return R.createElement('div', null,
+          R.createElement('select', {
+            value: value,
+            onChange: function (e) { props.onChange(e.target.value); },
+            style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d' }
+          }, FONT_OPTIONS.map(function (f) {
+            return R.createElement('option', { key: f.value, value: f.value }, f.label);
+          })),
+          R.createElement('div', {
+            style: { marginTop: '12px', padding: '16px 14px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontFamily: current.font, fontSize: '24px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3 }
+          }, '标题示例：构建现代化博客 | Hello World')
+        );
+      };
+      var FontSelectPreview = function (props) {
+        return R.createElement('span', null, props.value || 'display');
+      };
+      CMS.registerWidget('fontPreviewSelect', FontSelectControl, FontSelectPreview);
+    }
 
     // 编辑器内嵌组件: 视频 / 音频 (Hugo shortcode, 支持编辑器内直接上传文件)
     function registerEditorComponents() {
