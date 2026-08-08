@@ -182,6 +182,19 @@ collections:
         widget: string
         required: false
         hint: "@font-face 字体名，随意命名（如 MyFont），仅自定义字体时生效"
+      - label: 全屏标题颜色
+        name: entry_title_color
+        widget: color
+        required: false
+        hint: "留空使用默认白色"
+      - label: 全屏标题不透明度
+        name: entry_title_opacity
+        widget: number
+        required: false
+        default: 100
+        min: 0
+        max: 100
+        hint: "0-100，留空默认 100%"
       - label: 不在封面显示标题
         name: entry_hide_title
         widget: boolean
