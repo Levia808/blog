@@ -1357,3 +1357,9 @@ html.js [data-reveal].reveal-visible {
 .pcf-link { z-index: 1; }
 .pcf-video-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255,255,255,.18); z-index: 2; }
 .pcf-video-bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }
+
+/* 媒体上传进度条 */
+.upload-progress { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.upload-progress-track { flex: 1; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.upload-progress-fill { height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .15s ease-out; }
+.upload-progress-text { font-family: var(--font-mono); font-size: 11px; color: var(--muted); min-width: 36px; text-align: right; }

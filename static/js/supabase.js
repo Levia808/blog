@@ -311,7 +311,7 @@ var Admin = window.Admin = {
     return Boolean(data);
   },
 
-  async uploadMedia(file) {
+  async uploadMedia(file, onProgress) {
     var user = await Auth.user();
     if (!user) throw new Error('请先登录');
     if (!file || !/^((image|video|audio)\/)/i.test(file.type)) {
@@ -325,7 +325,8 @@ var Admin = window.Admin = {
     var upload = await blogSupabase.storage.from('media').upload(filePath, file, {
       upsert: false,
       contentType: file.type,
-      cacheControl: '3600'
+      cacheControl: '3600',
+      onUploadProgress: onProgress || undefined
     });
     if (upload.error) throw upload.error;
     var publicUrl = blogSupabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;

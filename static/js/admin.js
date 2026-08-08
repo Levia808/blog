@@ -1005,10 +1005,25 @@
     try {
       uploadButton.disabled = true;
       uploadButton.textContent = '上传中…';
-      await Admin.uploadMedia(file);
+      var progressEl = document.getElementById('adminUploadProgress');
+      var progressFill = document.getElementById('adminUploadProgressFill');
+      var progressText = document.getElementById('adminUploadProgressText');
+      if (progressEl) progressEl.hidden = false;
+      await Admin.uploadMedia(file, function (event) {
+        if (!progressFill || !progressText || !event) return;
+        var pct = 0;
+        if (event.total > 0) pct = Math.min(100, Math.round((event.loaded / event.total) * 100));
+        else if (typeof event.progress === 'number') pct = Math.min(100, Math.round(event.progress * 100));
+        progressFill.style.width = pct + '%';
+        progressText.textContent = pct + '%';
+      });
+      if (progressEl) progressEl.hidden = true;
+      if (progressFill) progressFill.style.width = '0%';
       input.value = '';
       await loadMedia();
     } catch (error) {
+      var progressEl = document.getElementById('adminUploadProgress');
+      if (progressEl) progressEl.hidden = true;
       showError(error.message, 'adminMediaError');
     } finally {
       uploadButton.disabled = false;
