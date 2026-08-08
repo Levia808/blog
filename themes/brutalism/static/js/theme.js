@@ -520,80 +520,6 @@
     });
   }
 
-  /* ── 文本悬停乱码转化 (韩/日/英 → 原标题, 参考 noartmusic) ── */
-  function initHoverScramble() {
-    var POOL = ('가나다라마바사아자카타あいうえおかきくけこ' +
-      'abcdefghijklmnopqrstuvwxyz#$%&*+0123456789').split('');
-    var selector = '.nf-link, .pcf-title, .pc-title, .list-title, .archive-link, .section-more, .pc-excerpt';
-    var targets = document.querySelectorAll(selector);
-    if (!targets.length || reducedMotion) return;
-
-    targets.forEach(function (el) {
-      var original = el.textContent;
-      el.dataset.orig = original;
-      var timer = null;
-      var stopped = true;
-
-      function scrambleFrame() {
-        if (stopped) return;
-        var out = '';
-        var d = el.dataset.scramblePhase ? parseInt(el.dataset.scramblePhase, 10) : 0;
-        el.dataset.scramblePhase = String(d + 1);
-        // 前 3 帧全乱码保持, 然后逐字符恢复 (短文本效果也明显)
-        var restore = Math.min(Math.max(d - 3, 0), original.length);
-        for (var i = 0; i < original.length; i++) {
-          var ch = original[i];
-          if (ch === ' ' || ch === '·' || ch === '—') { out += ch; continue; }
-          if (i < restore) out += ch;
-          else out += POOL[Math.floor(Math.random() * POOL.length)];
-        }
-        el.textContent = out;
-        if (restore < original.length) timer = setTimeout(scrambleFrame, 26);
-        else {
-          el.textContent = original;
-          delete el.dataset.scramblePhase;
-        }
-      }
-
-      el.addEventListener('mouseenter', function () {
-        stopped = false;
-        el.dataset.scramblePhase = '0';
-        clearTimeout(timer);
-        scrambleFrame();
-      });
-      el.addEventListener('mouseleave', function () {
-        stopped = true;
-        clearTimeout(timer);
-        el.textContent = el.dataset.orig || original;
-        delete el.dataset.scramblePhase;
-      });
-    });
-  }
-
-  /* ── 卡片封面: hover 放大 + 跟随鼠标 (parallax) ── */
-  function initCoverParallax() {
-    var imgs = document.querySelectorAll('.post-card-cover .pc-img img');
-    if (!imgs.length || reducedMotion) return;
-    imgs.forEach(function (img) {
-      var card = img.closest('.post-card-cover');
-      if (!card) return;
-      var raf = null;
-      card.addEventListener('mousemove', function (e) {
-        if (raf) return;
-        raf = requestAnimationFrame(function () {
-          raf = null;
-          var r = card.getBoundingClientRect();
-          var dx = (e.clientX - r.left) / r.width - 0.5;
-          var dy = (e.clientY - r.top) / r.height - 0.5;
-          img.style.transform = 'scale(1.08) translate(' + (dx * 10).toFixed(2) + 'px,' + (dy * 8).toFixed(2) + 'px)';
-        });
-      });
-      card.addEventListener('mouseleave', function () {
-        img.style.transform = '';
-      });
-    });
-  }
-
   /* ── 文本乱码转化 hover (韩/日/西里尔字符池 → 原标题, 参考 noartmusic.com) ── */
   function initScrambleHover() {
     if (reducedMotion) return;
@@ -660,6 +586,82 @@
         settleTimer = setTimeout(function () { img.style.transform = ''; }, 340);
       });
     });
+  }
+
+  /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
+  function initLoginPage() {
+    var page = document.getElementById('loginPage');
+    if (!page) return;
+    var signInForm = document.getElementById('signInForm');
+    var signUpForm = document.getElementById('signUpForm');
+
+    function toast(msg) {
+      var t = document.getElementById('loginToast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 2600);
+    }
+
+    /* 密码可见切换 */
+    page.querySelectorAll('.pw-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var wrap = btn.closest('.password-wrap');
+        var input = wrap.querySelector('.pw-input');
+        var showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        wrap.classList.toggle('pw-visible', !showing);
+      });
+    });
+
+    /* 登录/注册切换 */
+    page.querySelectorAll('[data-action="signup"], [data-action="signin"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var up = a.dataset.action === 'signup';
+        signInForm.classList.toggle('is-hidden', up);
+        signUpForm.classList.toggle('is-hidden', !up);
+        page.querySelectorAll('[data-mode]').forEach(function (s) {
+          s.classList.toggle('is-hidden', s.dataset.mode === (up ? 'signin' : 'signup'));
+        });
+        var t = document.querySelector(up ? '.login-title' : '.login-title');
+        if (up) t.innerHTML = 'Join<span class="login-dot">.</span>';
+        else t.innerHTML = 'Welcome<span class="login-dot">.</span>';
+      });
+    });
+
+    /* 重置密码 (演示) */
+    page.querySelectorAll('[data-action="reset"]').forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); toast('重置链接已发送到你的邮箱（演示）'); });
+    });
+
+    /* 记住我 + 提交 */
+    signInForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = signInForm.querySelector('[name="email"]').value.trim();
+      var remember = signInForm.querySelector('[name="rememberMe"]').checked;
+      if (!email || !signInForm.querySelector('[name="password"]').value) { toast('请填写邮箱和密码'); return; }
+      if (remember) localStorage.setItem('blog_login_email', email);
+      toast('登录成功，欢迎回来！');
+      setTimeout(function () { window.location.href = '/'; }, 1200);
+    });
+
+    signUpForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = signUpForm.querySelector('[name="email"]').value.trim();
+      var pw = signUpForm.querySelector('[name="password"]').value;
+      if (!signUpForm.querySelector('[name="username"]').value.trim() || !email || !pw) { toast('请填写完整信息'); return; }
+      if (pw.length < 6) { toast('密码至少 6 位'); return; }
+      toast('账户创建成功！');
+      setTimeout(function () { window.location.href = '/'; }, 1200);
+    });
+
+    /* Google (演示) */
+    var g = document.getElementById('googleSignIn');
+    if (g) g.addEventListener('click', function () { toast('Google 登录（演示）'); });
+
+    /* 记住我预填 */
+    var saved = localStorage.getItem('blog_login_email');
+    if (saved) { signInForm.querySelector('[name="email"]').value = saved; signInForm.querySelector('[name="rememberMe"]').checked = true; }
   }
 
   /* ── 搜索 (Fuse.js + index.json) ── */
@@ -837,8 +839,7 @@
     initClickSparks();
     initScrambleHover();
     initCoverParallax();
-    initHoverScramble();
-    initCoverParallax();
+    initLoginPage();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();

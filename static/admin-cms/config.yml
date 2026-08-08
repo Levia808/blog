@@ -135,22 +135,6 @@ collections:
           - { label: 正中, value: center-center }
           - { label: 右下, value: right-bottom }
         hint: "仅「全屏杂志封面入口」卡片样式生效"
-      - label: 全屏入口标题字体
-        name: entry_title_font
-        widget: select
-        required: false
-        default: playfair
-        options:
-          - { label: Playfair Display（杂志衬线）, value: playfair }
-          - { label: Space Grotesk（几何无衬线）, value: grotesk }
-          - { label: JetBrains Mono（等宽）, value: mono }
-          - { label: Inter（无衬线）, value: inter }
-      - label: 封面不显示标题（引文替代）
-        name: entry_hide_title
-        widget: boolean
-        default: false
-        required: false
-        hint: "勾选后全屏入口以引文样式展示标题"
       - label: 卡片封面图（首页/列表卡片）
         name: cover
         widget: object

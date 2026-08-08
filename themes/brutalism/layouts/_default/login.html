@@ -1,0 +1,120 @@
+{{ define "main" }}
+<div class="login-page" id="loginPage">
+  <section class="login-form-col">
+    <div class="login-form-wrap">
+      <a class="login-back mono" href="{{ "" | relLangURL }}">← 返回主页</a>
+      <div class="login-form-inner">
+        <h1 class="login-title animate-element animate-delay-100">Welcome<span class="login-dot">.</span></h1>
+        <p class="login-desc animate-element animate-delay-200">访问你的账户，继续你的旅程</p>
+
+        <!-- 登录表单 -->
+        <form class="login-form" id="signInForm" autocomplete="off">
+          <div class="animate-element animate-delay-300">
+            <label class="login-label">Email Address</label>
+            <div class="glass-input">
+              <input name="email" type="email" placeholder="输入你的邮箱地址" />
+            </div>
+          </div>
+
+          <div class="animate-element animate-delay-400">
+            <label class="login-label">Password</label>
+            <div class="glass-input">
+              <div class="password-wrap">
+                <input name="password" type="password" placeholder="输入你的密码" class="pw-input" />
+                <button type="button" class="pw-toggle" data-toggle-pw aria-label="显示密码">
+                  <svg class="icon-eye" viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M247.3,124.8c-.3-.8-8.8-19.6-27.6-38.5C194.6,61.3,162.9,48,128,48S61.4,61.3,36.3,86.3C17.5,105.2,9,124,8.7,124.8a8.2,8.2,0,0,0,0,6.4c.3.8,8.8,19.6,27.6,38.5C61.4,194.7,93.1,208,128,208s66.6-13.3,91.7-38.3c18.8-18.9,27.3-37.7,27.6-38.5A8.2,8.2,0,0,0,247.3,124.8ZM128,192c-30.8,0-57.7-11.2-79.2-32.9A140.3,140.3,0,0,1,34,128c5.9-9.9,20.8-29.6,52.2-41.9A104,104,0,0,1,128,80c30.8,0,57.7,11.2,79.2,32.9A140.3,140.3,0,0,1,222,128c-5.9,9.9-20.8,29.6-52.2,41.9A104,104,0,0,1,128,192Zm0-80a16,16,0,1,0,16,16A16,16,0,0,0,128,112Z"/></svg>
+                  <svg class="icon-eye-off" viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M53.9,34.6A8,8,0,0,0,42.1,45.4l36.6,40.1C48.9,101.8,31,122.7,27.6,126.4a8,8,0,0,0,0,11.2c.3.4,9.9,11.5,29.2,23.6C79.4,177.2,104.6,192,128,192a132.7,132.7,0,0,0,43.5-7.8l30.6,33.6a8,8,0,0,0,11.8-10.8ZM128,176c-21.2,0-45.8-12.9-66-30.4a163.4,163.4,0,0,1-27.8-33.6A176.6,176.6,0,0,1,74,83.7L90.9,102A32,32,0,0,0,116,128.8l18.8,20.6C137.5,156.9,132.8,176,128,176Zm0-16a16,16,0,0,0,16-16A15.8,15.8,0,0,0,142.5,141L140.9,139.3C136.8,139.7,132.4,140,128,140a16.1,16.1,0,0,0-16,16Zm128-22.4c-4.1-7.1-19.4-28.1-57.4-48.6C176.2,63.3,150.9,48,128,48a128.9,128.9,0,0,0-43.4,7.7l16.7,18.3A112.6,112.6,0,0,1,128,64c21.2,0,45.8,12.9,66,30.4a163.4,163.4,0,0,1,27.8,33.6A176.6,176.6,0,0,1,182,172.3l18.7,20.5C216.5,183.9,229.5,169.9,239.9,152.4A8,8,0,0,0,256,129.6ZM127.4,96.2A16,16,0,0,1,143.2,113l11.3,12.4a15.9,15.9,0,0,0,.2-5.5c0-15.5-11.9-27.4-27.3-27.4a16.4,16.4,0,0,0-5.4,3.5Z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="animate-element animate-delay-500 login-row">
+            <label class="login-remember">
+              <input type="checkbox" name="rememberMe" class="custom-checkbox" />
+              <span>记住我</span>
+            </label>
+            <a href="#" class="login-link" data-action="reset">重置密码</a>
+          </div>
+
+          <button type="submit" class="login-submit animate-element animate-delay-600">登录</button>
+        </form>
+
+        <!-- 注册表单 -->
+        <form class="login-form is-hidden" id="signUpForm" autocomplete="off">
+          <div class="animate-element animate-delay-300">
+            <label class="login-label">用户名</label>
+            <div class="glass-input">
+              <input name="username" type="text" placeholder="输入用户名" />
+            </div>
+          </div>
+          <div class="animate-element animate-delay-400">
+            <label class="login-label">Email Address</label>
+            <div class="glass-input">
+              <input name="email" type="email" placeholder="输入你的邮箱地址" />
+            </div>
+          </div>
+          <div class="animate-element animate-delay-500">
+            <label class="login-label">Password</label>
+            <div class="glass-input">
+              <div class="password-wrap">
+                <input name="password" type="password" placeholder="设置密码" class="pw-input" />
+                <button type="button" class="pw-toggle" data-toggle-pw aria-label="显示密码">
+                  <svg class="icon-eye" viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M247.3,124.8c-.3-.8-8.8-19.6-27.6-38.5C194.6,61.3,162.9,48,128,48S61.4,61.3,36.3,86.3C17.5,105.2,9,124,8.7,124.8a8.2,8.2,0,0,0,0,6.4c.3.8,8.8,19.6,27.6,38.5C61.4,194.7,93.1,208,128,208s66.6-13.3,91.7-38.3c18.8-18.9,27.3-37.7,27.6-38.5A8.2,8.2,0,0,0,247.3,124.8ZM128,192c-30.8,0-57.7-11.2-79.2-32.9A140.3,140.3,0,0,1,34,128c5.9-9.9,20.8-29.6,52.2-41.9A104,104,0,0,1,128,80c30.8,0,57.7,11.2,79.2,32.9A140.3,140.3,0,0,1,222,128c-5.9,9.9-20.8,29.6-52.2,41.9A104,104,0,0,1,128,192Zm0-80a16,16,0,1,0,16,16A16,16,0,0,0,128,112Z"/></svg>
+                  <svg class="icon-eye-off" viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M53.9,34.6A8,8,0,0,0,42.1,45.4l36.6,40.1C48.9,101.8,31,122.7,27.6,126.4a8,8,0,0,0,0,11.2c.3.4,9.9,11.5,29.2,23.6C79.4,177.2,104.6,192,128,192a132.7,132.7,0,0,0,43.5-7.8l30.6,33.6a8,8,0,0,0,11.8-10.8ZM128,176c-21.2,0-45.8-12.9-66-30.4a163.4,163.4,0,0,1-27.8-33.6A176.6,176.6,0,0,1,74,83.7L90.9,102A32,32,0,0,0,116,128.8l18.8,20.6C137.5,156.9,132.8,176,128,176Zm0-16a16,16,0,0,0,16-16A15.8,15.8,0,0,0,142.5,141L140.9,139.3C136.8,139.7,132.4,140,128,140a16.1,16.1,0,0,0-16,16Zm128-22.4c-4.1-7.1-19.4-28.1-57.4-48.6C176.2,63.3,150.9,48,128,48a128.9,128.9,0,0,0-43.4,7.7l16.7,18.3A112.6,112.6,0,0,1,128,64c21.2,0,45.8,12.9,66,30.4a163.4,163.4,0,0,1,27.8,33.6A176.6,176.6,0,0,1,182,172.3l18.7,20.5C216.5,183.9,229.5,169.9,239.9,152.4A8,8,0,0,0,256,129.6ZM127.4,96.2A16,16,0,0,1,143.2,113l11.3,12.4a15.9,15.9,0,0,0,.2-5.5c0-15.5-11.9-27.4-27.3-27.4a16.4,16.4,0,0,0-5.4,3.5Z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="login-submit animate-element animate-delay-600">创建账户</button>
+        </form>
+
+        <div class="animate-element animate-delay-700 login-divider">
+          <span></span><em>Or continue with</em><span></span>
+        </div>
+
+        <button class="login-google animate-element animate-delay-800" id="googleSignIn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s12-5.373 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.743z"/>
+            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.026 44 30.038 44 24c0-2.641-.21-5.236-.611-7.743z"/>
+          </svg>
+          使用 Google 继续
+        </button>
+
+        <p class="login-switch animate-element animate-delay-900">
+          <span data-mode="signin">没有账户？<a href="#" class="login-link" data-action="signup">创建账户</a></span>
+          <span data-mode="signup" class="is-hidden">已有账户？<a href="#" class="login-link" data-action="signin">直接登录</a></span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="login-hero-col" aria-hidden="true">
+    <div class="login-hero-bg"></div>
+    <div class="login-hero-word" id="loginHeroWord">{{ site.Params.navLogo | default site.Title }}</div>
+    <div class="login-testimonials">
+      <div class="testimonial-card animate-testimonial animate-delay-1000">
+        <span class="t-avatar mono">{{ substr (site.Params.author | default "L") 0 1 }}</span>
+        <div>
+          <p class="t-name">{{ site.Params.author | default "Levia" }}</p>
+          <p class="t-handle mono">@{{ site.Params.author | default "levia" }}</p>
+          <p class="t-text">写代码，也写生活。记录学习与思考。</p>
+        </div>
+      </div>
+      <div class="testimonial-card animate-testimonial animate-delay-1200">
+        <span class="t-avatar mono">B</span>
+        <div>
+          <p class="t-name">访客</p>
+          <p class="t-handle mono">@reader</p>
+          <p class="t-text">这个博客的杂志卡片和乱码动画太酷了。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="login-toast" id="loginToast" role="status"></div>
+</div>
+{{ end }}
