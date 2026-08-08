@@ -1019,3 +1019,24 @@ html.js [data-reveal].reveal-visible {
   z-index: 2;
   pointer-events: none;
 }
+
+/* ── 横向长条卡片 (后台可选样式) ── */
+.card-list { display: flex; flex-direction: column; gap: 16px; max-width: 760px; margin: 0 auto; }
+.post-card-cover.horizontal { flex-direction: row; }
+.post-card-cover.horizontal .pc-link { flex-direction: row; }
+.post-card-cover.horizontal .pc-img {
+  width: 300px;
+  flex-shrink: 0;
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 100%;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+}
+.post-card-cover.horizontal .pc-body { padding: 18px 22px; }
+.post-card-cover.horizontal .pc-excerpt { -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
+@media (max-width: 640px) {
+  .post-card-cover.horizontal .pc-img { width: 120px; }
+  .post-card-cover.horizontal .pc-body { padding: 12px 14px; }
+  .post-card-cover.horizontal .pc-excerpt { display: none; }
+}

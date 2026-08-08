@@ -6,7 +6,7 @@
     <h1 class="list-title">{{ .Title }}</h1>
     <p class="mono list-count">{{ len $pages }} items</p>
   </header>
-  <div class="grid-3">
+  <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else }}grid-3{{ end }}">
     {{- range $pages }}
     {{ partial "post-card.html" . }}
     {{- end }}

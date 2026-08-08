@@ -148,6 +148,20 @@
             <p class="auth-error" id="cfgError" hidden></p>
           </div>
 
+          <div class="panel-title">文章卡片样式</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>卡片布局</span>
+              <select id="cfgCardStyle">
+                <option value="grid">当前样式（3:2 封面网格）</option>
+                <option value="horizontal">横向长条卡片（封面在左）</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgCardSaveBtn">保存卡片样式</button>
+            </div>
+            <p class="auth-error" id="cfgCardError" hidden></p>
+          </div>
+
           <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
         </section>
 

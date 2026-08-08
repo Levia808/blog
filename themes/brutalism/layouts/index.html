@@ -36,7 +36,7 @@
       <a class="section-more" href="{{ "archives/" | relLangURL }}">全部 →</a>
     </div>
 
-    <div class="grid-3">
+    <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else }}grid-3{{ end }}">
       {{- range $latest }}
       {{ partial "post-card.html" . }}
       {{- else }}

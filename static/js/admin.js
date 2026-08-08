@@ -484,6 +484,50 @@
       });
   }
 
+  /* ── 文章卡片样式 (data/cards.toml 读写) ── */
+  var cardsSha = null;
+  function loadCardStyle() {
+    var select = document.getElementById('cfgCardStyle');
+    if (!select || !getGhToken()) return;
+    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml')
+      .then(function (file) {
+        cardsSha = file.sha;
+        var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*=\s*["']?([\w]+)["']?/m);
+        if (m && ['grid', 'horizontal'].includes(m[1])) select.value = m[1];
+      })
+      .catch(function () { /* 文件缺失时保持默认 */ });
+  }
+
+  var cardSaveBtn = document.getElementById('cfgCardSaveBtn');
+  if (cardSaveBtn) cardSaveBtn.addEventListener('click', function () {
+    var select = document.getElementById('cfgCardStyle');
+    var style = select ? select.value : 'grid';
+    var content = '# 文章卡片样式 (管理面板「系统设置」可编辑)\n# grid = 当前样式 (3:2 封面网格) / horizontal = 横向长条卡片\nstyle = "' + style + '"\n';
+    var btn = cardSaveBtn;
+    btn.disabled = true;
+    btn.textContent = '保存中…';
+    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml')
+      .then(function (file) {
+        cardsSha = file.sha;
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '更新卡片样式: ' + style, content: base64Encode(content), sha: cardsSha })
+        });
+      })
+      .then(function () {
+        showToast('卡片样式已保存：' + (style === 'horizontal' ? '横向长条' : '当前网格'), 'success');
+      })
+      .catch(function (error) {
+        var errEl = document.getElementById('cfgCardError');
+        if (errEl) { errEl.textContent = error.message || '保存失败'; errEl.hidden = false; }
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = '保存卡片样式';
+      });
+  });
+
   var cfgSaveBtn = document.getElementById('cfgSaveBtn');
   if (cfgSaveBtn) cfgSaveBtn.addEventListener('click', saveWelcomeConfig);
   var cfgReloadBtn = document.getElementById('cfgReloadBtn');

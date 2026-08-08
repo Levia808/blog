@@ -16,7 +16,8 @@
 {{- $img = printf "/%s" $rel }}
 {{- end }}
 {{- end }}
-<article class="post-card-cover" data-reveal>
+{{- $h := and site.Data.cards (eq site.Data.cards.style "horizontal") }}
+<article class="post-card-cover{{ if $h }} horizontal{{ end }}" data-reveal>
   <a class="pc-link" href="{{ .RelPermalink }}">
     <div class="pc-img">
       {{- if $img }}
