@@ -20,19 +20,7 @@
 {{- $f := and site.Data.cards (eq site.Data.cards.style "fullscreen") }}
 {{- if $f }}
 {{- $bgImg := "" }}
-{{- with .Params.background }}
-{{- $bgImg = (. | relURL) }}
-{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
-{{- with resources.Get $bgRel }}
-{{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $bgRel | lower) }}
-{{- $bgImg = (.Process "webp q70").RelPermalink }}
-{{- else }}
-{{- $bgImg = .RelPermalink }}
-{{- end }}
-{{- end }}
-{{- end }}
 {{- with $cover }}
-{{- if not $bgImg }}
 {{- $cvRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
 {{- with resources.Get $cvRel }}
 {{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $cvRel | lower) }}
@@ -42,6 +30,18 @@
 {{- end }}
 {{- else }}
 {{- $bgImg = (. | relURL) }}
+{{- end }}
+{{- end }}
+{{- with .Params.background }}
+{{- if not $bgImg }}
+{{- $bgImg = (. | relURL) }}
+{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+{{- with resources.Get $bgRel }}
+{{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $bgRel | lower) }}
+{{- $bgImg = (.Process "webp q70").RelPermalink }}
+{{- else }}
+{{- $bgImg = .RelPermalink }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

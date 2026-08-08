@@ -546,7 +546,7 @@ html.js [data-reveal].reveal-visible {
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
-.pc-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pc-img img { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; }
 .pc-img-placeholder {
   font-family: var(--font-mono);
   font-size: 40px;
@@ -592,7 +592,7 @@ html.js [data-reveal].reveal-visible {
   position: fixed;
   inset: 0;
   background-size: cover;
-  background-position: bottom center;
+  background-position: center center;
   background-repeat: no-repeat;
   opacity: var(--bg-opacity);
   z-index: 0;
@@ -1114,6 +1114,7 @@ html.js [data-reveal].reveal-visible {
 .post-card-cover.horizontal { flex-direction: row; }
 .post-card-cover.horizontal .pc-link { flex-direction: row; }
 .post-card-cover.horizontal .pc-img {
+  position: relative;
   width: 300px;
   flex-shrink: 0;
   aspect-ratio: auto;
@@ -1121,6 +1122,21 @@ html.js [data-reveal].reveal-visible {
   min-height: 100%;
   border-bottom: none;
   border-right: 1px solid var(--border);
+}
+.post-card-cover.horizontal .pc-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+.post-card-cover.horizontal .pc-img .pc-img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .post-card-cover.horizontal .pc-body { padding: 18px 22px; }
 .post-card-cover.horizontal .pc-excerpt { -webkit-line-clamp: 2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; }
