@@ -7,7 +7,9 @@
   <title>文章编辑器 - Levia's blog</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400..800&family=Noto+Sans+SC:wght@300..900&family=Noto+Serif+SC:wght@400..900&display=swap" rel="stylesheet">
+  <link href="../fonts/Playfair_Display.css" rel="stylesheet">
+  <link href="../fonts/Space_Grotesk.css" rel="stylesheet">
+  <link href="../fonts/JetBrains_Mono.css" rel="stylesheet">
   <style>
     html, body { margin: 0; min-height: 100%; font-family: system-ui, sans-serif; }
     .cms-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; color: #18211d; background: #eef1ed; }
@@ -99,14 +101,16 @@
               if (!previewEl) return;
               var title = readField('title');
               previewEl.textContent = title || '（未设置标题）';
+              var sel = node.querySelector('select');
+              var v = sel ? sel.value : 'display';
               var current = null;
               for (var fi = 0; fi < FONT_OPTIONS.length; fi++) {
-                if (FONT_OPTIONS[fi].value === value) { current = FONT_OPTIONS[fi]; break; }
+                if (FONT_OPTIONS[fi].value === v) { current = FONT_OPTIONS[fi]; break; }
               }
               current = current || FONT_OPTIONS[0];
               var font = current.font;
               var extra = current.weight ? 'font-weight:' + current.weight + ';' : '';
-              if (value === 'custom') {
+              if (v === 'custom') {
                 var file = readField('entry_title_font_file');
                 if (file) { ensureFontFace(file, 'fpLiveCustom'); font = "'fpLiveCustom', serif"; }
                 else font = "Georgia, serif";
