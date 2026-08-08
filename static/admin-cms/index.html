@@ -80,8 +80,12 @@
         if (v && /\.(ttf|otf|woff2?|eot)$/i.test(v)) return v;
         var container = document.querySelector('[data-key-path="' + keyPath + '"]');
         if (!container) return '';
-        var m = container.textContent.match(/[\w\-.\u4e00-\u9fa5]+\.(?:ttf|otf|woff2?|eot)/i);
-        if (m) return '/images/' + m[0];
+        /* 取最后一个文件名匹配 (避免匹配到按钮文字/旧名残留), 支持中文/空格 */
+        var matches = container.textContent.match(/[^\s\"'()]+?\.(?:ttf|otf|woff2?|eot)/gi);
+        if (matches && matches.length) {
+          var last = matches[matches.length - 1].trim();
+          if (last) return '/images/' + last;
+        }
         return '';
       }
       function ensureFontFace(filePath, name, force) {
@@ -125,7 +129,7 @@
               var extra = current.weight ? 'font-weight:' + current.weight + ';' : '';
               if (v === 'custom') {
                 var file = readFileField('entry_title_font_file');
-                if (file && !fileInput.value) fileInput.value = file;
+                if (file && fileInput.value !== file) fileInput.value = file;
                 var useFile = fileInput.value.trim() || file;
                 if (useFile) { ensureFontFace(useFile, 'fpLiveCustom'); font = "'fpLiveCustom', serif"; }
                 else font = "Georgia, serif";
