@@ -1006,3 +1006,31 @@ body.admin-only { overflow: hidden; height: 100vh; }
 @media (max-width: 640px) {
   .settings-form { grid-template-columns: 1fr; }
 }
+
+/* ── 卡片样式预览 ── */
+.card-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+  padding: 16px;
+}
+.cp-col { border: 1px solid var(--border); border-radius: 2px; padding: 12px; background: var(--surface); opacity: .55; transition: opacity var(--dur-slow), border-color var(--dur-slow); }
+.cp-col.is-selected { opacity: 1; border-color: var(--accent); }
+.cp-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-bottom: 10px; letter-spacing: 1px; }
+.cp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.cp-grid .cp-card { border: 1px solid var(--border); border-radius: 2px; background: var(--bg); overflow: hidden; }
+.cp-grid .cp-card .cp-thumb { height: 48px; background: var(--faint); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 16px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.cp-grid .cp-card .cp-title { font-size: 10px; color: var(--white); padding: 6px 7px 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-grid .cp-card .cp-date { font-size: 8px; color: var(--faint); padding: 0 7px 6px; font-family: var(--font-mono); }
+.cp-hlist { display: flex; flex-direction: column; gap: 8px; }
+.cp-hlist .cp-hcard { display: flex; border: 1px solid var(--border); border-radius: 2px; background: var(--bg); overflow: hidden; min-height: 54px; }
+.cp-hlist .cp-hcard .cp-thumb { width: 72px; flex-shrink: 0; background: var(--faint); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 16px; color: var(--muted); border-right: 1px solid var(--border); }
+.cp-hlist .cp-hcard .cp-body { padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; justify-content: center; min-width: 0; }
+.cp-hlist .cp-hcard .cp-title { font-size: 11px; color: var(--white); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-hlist .cp-hcard .cp-date { font-size: 8px; color: var(--faint); font-family: var(--font-mono); }
+@media (max-width: 820px) {
+  .card-preview { grid-template-columns: 1fr; }
+}

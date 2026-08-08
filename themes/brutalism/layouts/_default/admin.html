@@ -158,8 +158,21 @@
             </label>
             <div class="sf-actions">
               <button type="button" class="btn btn-primary" id="cfgCardSaveBtn">保存卡片样式</button>
+              <span class="hint" id="cfgCardHint" style="margin:0;align-self:center;"></span>
             </div>
             <p class="auth-error" id="cfgCardError" hidden></p>
+          </div>
+
+          <div class="panel-title">样式预览</div>
+          <div class="card-preview">
+            <div class="cp-col" data-cp="grid">
+              <div class="cp-label">[ 当前样式 · 网格 ]</div>
+              <div class="cp-grid" id="cpGridPreview"></div>
+            </div>
+            <div class="cp-col" data-cp="horizontal">
+              <div class="cp-label">[ 横向长条 ]</div>
+              <div class="cp-hlist" id="cpHListPreview"></div>
+            </div>
           </div>
 
           <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>

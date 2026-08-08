@@ -324,6 +324,7 @@
     document.getElementById('adminPostHint').textContent = '共 ' + posts.length + ' 篇文章 · 显示最近 ' + Math.min(8, posts.length) + ' 篇';
     renderPostRows(posts, 'adminPublishTable', true);
     document.getElementById('adminPublishHint').textContent = '共 ' + posts.length + ' 篇文章';
+    renderCardPreview();
     var archived = posts.filter(function (p) { return p.archived; });
     renderPostRows(archived, 'adminArchiveTable', true);
     document.getElementById('adminArchiveHint').textContent = '已归档 ' + archived.length + ' 篇 · 归档后从首页与列表隐藏';
@@ -494,9 +495,49 @@
         cardsSha = file.sha;
         var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*=\s*["']?([\w]+)["']?/m);
         if (m && ['grid', 'horizontal'].includes(m[1])) select.value = m[1];
+        syncCardPreviewSelect();
+        renderCardPreview();
       })
       .catch(function () { /* 文件缺失时保持默认 */ });
   }
+
+  function renderCardPreview() {
+    var posts = ghPostsCache.slice(0, 3);
+    if (!posts.length) {
+      posts = [
+        { title: '构建现代化个人博客', date: '2026-08-06' },
+        { title: 'Rust 所有权模型', date: '2025-06-15' },
+        { title: 'Container Queries 指南', date: '2025-04-10' }
+      ];
+    }
+    var glyphs = ['构', 'R', 'C'];
+    var gridEl = document.getElementById('cpGridPreview');
+    var listEl = document.getElementById('cpHListPreview');
+    if (gridEl) {
+      gridEl.innerHTML = posts.map(function (p, i) {
+        return '<div class="cp-card"><div class="cp-thumb">' + (glyphs[i] || '▦') + '</div>' +
+          '<div class="cp-title">' + escapeHtml(p.title) + '</div>' +
+          '<div class="cp-date">' + escapeHtml(String(p.date || p.created_at || '').slice(0, 10)) + '</div></div>';
+      }).join('');
+    }
+    if (listEl) {
+      listEl.innerHTML = posts.map(function (p, i) {
+        return '<div class="cp-hcard"><div class="cp-thumb">' + (glyphs[i] || '▦') + '</div>' +
+          '<div class="cp-body"><div class="cp-title">' + escapeHtml(p.title) + '</div>' +
+          '<div class="cp-date">' + escapeHtml(String(p.date || p.created_at || '').slice(0, 10)) + ' · 5 min read</div></div></div>';
+      }).join('');
+    }
+  }
+
+  function syncCardPreviewSelect() {
+    var select = document.getElementById('cfgCardStyle');
+    var selected = select ? select.value : 'grid';
+    document.querySelectorAll('.cp-col').forEach(function (col) {
+      col.classList.toggle('is-selected', col.dataset.cp === selected);
+    });
+  }
+  var cardStyleSelect = document.getElementById('cfgCardStyle');
+  if (cardStyleSelect) cardStyleSelect.addEventListener('change', syncCardPreviewSelect);
 
   var cardSaveBtn = document.getElementById('cfgCardSaveBtn');
   if (cardSaveBtn) cardSaveBtn.addEventListener('click', function () {
@@ -516,7 +557,9 @@
         });
       })
       .then(function () {
-        showToast('卡片样式已保存：' + (style === 'horizontal' ? '横向长条' : '当前网格'), 'success');
+        showToast('卡片样式已保存：' + (style === 'horizontal' ? '横向长条' : '当前网格') + '，站点约 1 分钟重建生效', 'success');
+        var hint = document.getElementById('cfgCardHint');
+        if (hint) hint.textContent = '已提交，Cloudflare 重建中…';
       })
       .catch(function (error) {
         var errEl = document.getElementById('cfgCardError');
