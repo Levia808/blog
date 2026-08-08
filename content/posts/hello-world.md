@@ -1,8 +1,15 @@
 ---
-date: '2026-08-06T15:27:00+08:00'
+title: Hello World
+date: 2026-08-06T15:27:00+08:00
 draft: false
-title: 'Hello World'
-tags: [博客, 随笔]
+tags:
+  - 博客
+  - 随笔
+description: 你好世界
+entry_scramble: true
+entry_align: center-bottom
+cover:
+  image: /images/pexels-jakub-zerdzicki-34212916.jpg
 ---
 
 ## 欢迎
