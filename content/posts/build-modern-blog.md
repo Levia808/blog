@@ -1,14 +1,14 @@
 ---
 title: 构建现代化个人博客
-date: 2026-08-06T16:00:00+08:00
+date: 2026-08-08T13:13:00+08:00
 draft: false
 tags:
   - hugo
   - cloudflare
   - devops
 description: 从 Hugo 到双线部署的完整实践。一份代码，两边构建。
-background: ''
-entry_title_font: mono
+background: /images/wallhaven-yq2w3x.jpg
+entry_title_font: grotesk
 entry_scramble: true
 entry_align: center-center
 cover:
