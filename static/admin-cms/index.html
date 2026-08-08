@@ -106,19 +106,53 @@
       var FontSelectControl = function (props) {
         var R = window.createElement;
         var value = props.value || 'display';
-        var opts = [];
-        for (var oi = 0; oi < FONT_OPTIONS.length; oi++) {
-          opts.push(R('option', { key: FONT_OPTIONS[oi].value, value: FONT_OPTIONS[oi].value }, FONT_OPTIONS[oi].label));
+
+        /* 动态字体选项: 内置 9 项 + 当前文章已上传字体文件 (值=路径) */
+        function readSavedFontFile() {
+          var container = document.querySelector('[data-key-path="entry_title_font_file"]');
+          if (!container) return '';
+          var v = container.querySelector('input');
+          if (v && v.value && /\.(ttf|otf|woff2?|eot)$/i.test(v.value)) return v.value.trim();
+          var matches = container.textContent.match(/[^\s\"'()]+?\.(?:ttf|otf|woff2?|eot)/gi);
+          if (matches && matches.length) return '/images/' + matches[matches.length - 1].trim();
+          return '';
         }
+        function buildOptions() {
+          var list = [];
+          for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
+          var saved = readSavedFontFile();
+          if (saved) list.push(saved);
+          if (value && list.indexOf(value) < 0) list.push(value);
+          return list;
+        }
+        function labelOf(v) {
+          if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) {
+            var name = v.split('/').pop() || v;
+            return '自定义字体: ' + name;
+          }
+          for (var i = 0; i < FONT_OPTIONS.length; i++) {
+            if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i].label;
+          }
+          return v;
+        }
+        function fontOf(v) {
+          if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) return 'path';
+          for (var i = 0; i < FONT_OPTIONS.length; i++) {
+            if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i];
+          }
+          return null;
+        }
+
         var timer = null;
-        var blobUrl = null;
+        var opts = [];
+        var optValues = buildOptions();
+        for (var oi = 0; oi < optValues.length; oi++) {
+          opts.push(R('option', { key: optValues[oi], value: optValues[oi] }, labelOf(optValues[oi])));
+        }
+
         var container = R('div', { ref: function (node) {
           if (node) {
             var previewEl = node.querySelector('.fp-live-preview');
-            var fileRow = node.querySelector('.fp-file-row');
-            var fileNote = node.querySelector('.fp-file-note');
-            var fileSel = node.querySelector('.fp-file-sel');
-            var fileInput = node.querySelector('.fp-file-input');
             var update = function () {
               if (!previewEl) return;
               var titleEl = document.querySelector('[data-key-path="title"] input');
@@ -126,47 +160,19 @@
               previewEl.textContent = title || '（未设置标题）';
               var sel = node.querySelector('select');
               var v = sel ? sel.value : 'display';
-              var current = null;
-              for (var fi = 0; fi < FONT_OPTIONS.length; fi++) {
-                if (FONT_OPTIONS[fi].value === v) { current = FONT_OPTIONS[fi]; break; }
+              var f = fontOf(v);
+              if (f === 'path') {
+                ensureFontFace(v, 'fpLiveCustom', true);
+                previewEl.style.fontFamily = "'fpLiveCustom', serif";
+                previewEl.style.fontWeight = 'normal';
+              } else if (f) {
+                previewEl.style.fontFamily = f.font;
+                previewEl.style.fontWeight = f.weight ? '900' : 'normal';
+              } else {
+                previewEl.style.fontFamily = 'Georgia, serif';
+                previewEl.style.fontWeight = 'normal';
               }
-              current = current || FONT_OPTIONS[0];
-              var font = current.font;
-              var extra = current.weight ? 'font-weight:' + current.weight + ';' : '';
-              if (v === 'custom') {
-                var file = readFileField('entry_title_font_file');
-                if (file && fileInput.value !== file) fileInput.value = file;
-                var useFile = fileInput.value.trim() || file;
-                var fFamily = blobUrl ? 'fpBlobFont' : (useFile ? 'fpLiveCustom' : '');
-                if (blobUrl) {
-                  font = "'fpBlobFont', serif";
-                } else if (useFile) {
-                  ensureFontFace(useFile, 'fpLiveCustom', true);
-                  font = "'fpLiveCustom', serif";
-                } else {
-                  font = "Georgia, serif";
-                }
-                extra = '';
-              }
-              fileRow.style.display = v === 'custom' ? 'flex' : 'none';
-              previewEl.style.fontFamily = font;
-              previewEl.style.fontWeight = extra ? '900' : 'normal';
             };
-            /* 本地文件即时预览 (blob, 零网络零字段依赖) */
-            if (fileSel) fileSel.addEventListener('change', function (e) {
-              var f = e.target.files[0];
-              if (!f) return;
-              if (blobUrl) URL.revokeObjectURL(blobUrl);
-              blobUrl = URL.createObjectURL(f);
-              ensureFontFace(blobUrl, 'fpBlobFont', true);
-              previewEl.style.fontFamily = "'fpBlobFont', serif";
-              previewEl.style.opacity = '0.3';
-              Promise.resolve(document.fonts ? document.fonts.load("26px 'fpBlobFont'", previewEl.textContent) : null)
-                .then(function () { previewEl.style.opacity = '1'; update(); })
-                .catch(function () { previewEl.style.opacity = '1'; update(); });
-              if (fileNote) fileNote.textContent = '本地即时预览: ' + f.name + '（保存持久化请同步在「自定义标题字体文件」字段上传同一文件）';
-              if (fileInput) fileInput.value = '';
-            });
             update();
             var titleInput = null;
             var watch = setInterval(function () {
@@ -177,31 +183,34 @@
                 if (titleInput) titleInput.addEventListener('input', update);
               }
               update();
-            }, 120);
-            /* 文件字段变化 (已保存字体) → 强制重建预览 */
-            var fileContainer = document.querySelector('[data-key-path="entry_title_font_file"]');
-            var rebuildTimer = null;
-            if (fileContainer && window.MutationObserver) {
-              var mo = new MutationObserver(function () {
-                clearTimeout(rebuildTimer);
-                rebuildTimer = setTimeout(function () {
-                  if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
-                  update();
-                }, 900);
-              });
-              mo.observe(fileContainer, { childList: true, subtree: true, characterData: true });
+            }, 150);
+            var selEl = node.querySelector('select');
+            if (selEl) selEl.addEventListener('change', update);
+            /* 已保存字体文件变化 → 选项更新 */
+            var fc = document.querySelector('[data-key-path="entry_title_font_file"]');
+            var optTimer = null;
+            if (fc && window.MutationObserver) {
+              new MutationObserver(function () {
+                clearTimeout(optTimer);
+                optTimer = setTimeout(function () { rebuildOptions(); }, 800);
+              }).observe(fc, { childList: true, subtree: true, characterData: true });
             }
-            var fileButtons = document.querySelectorAll('[data-key-path="entry_title_font_file"] button');
-            for (var bi = 0; bi < fileButtons.length; bi++) {
-              fileButtons[bi].addEventListener('click', function () {
-                clearTimeout(rebuildTimer);
-                rebuildTimer = setTimeout(function () {
-                  if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
-                  update();
-                }, 1500);
-              });
+            function rebuildOptions() {
+              if (!selEl) return;
+              var cur = selEl.value;
+              var list = buildOptions();
+              var keep = '';
+              for (var i = 0; i < list.length; i++) if (list[i] === cur) keep = cur;
+              selEl.innerHTML = '';
+              for (var i = 0; i < list.length; i++) {
+                var o = document.createElement('option');
+                o.value = list[i];
+                o.textContent = labelOf(list[i]);
+                selEl.appendChild(o);
+              }
+              selEl.value = keep || value;
+              update();
             }
-            timer = watch;
           } else if (timer) {
             clearInterval(timer);
             timer = null;
@@ -212,18 +221,8 @@
             onChange: function (e) { props.onChange(e.target.value); },
             style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d', boxSizing: 'border-box' }
           }, opts),
-          R('div', { className: 'fp-file-row', style: { display: 'none', alignItems: 'center', gap: '10px', marginTop: '10px', flexWrap: 'wrap' } },
-            R('label', { style: { padding: '8px 14px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#333' } },
-              '选择本地字体文件',
-              R('input', { className: 'fp-file-sel', type: 'file', accept: '.ttf,.otf,.woff,.woff2', style: { display: 'none' } })
-            ),
-            R('input', { className: 'fp-file-input', type: 'text', placeholder: '已保存字体路径（自动读取）', style: { flex: 1, minWidth: '160px', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '13px', boxSizing: 'border-box', color: '#333' } })
-          ),
-          R('div', { className: 'fp-file-note', style: { display: 'none', marginTop: '8px', fontSize: '12px', color: '#7a8a80' } }),
-          R('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' } },
-            R('div', { className: 'fp-live-preview', style: { flex: 1, padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
-            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
-          )
+          R('div', { className: 'fp-live-preview', style: { marginTop: '12px', padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
+          R('div', { style: { marginTop: '8px', fontSize: '12px', color: '#7a8a80' } }, '上传字体后下拉自动出现「自定义字体: 文件名」选项；也可在上方「自定义标题字体文件」字段上传')
         );
         return container;
       };

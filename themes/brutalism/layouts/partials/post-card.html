@@ -53,8 +53,10 @@
 {{- $bgImg = "" }}
 {{- end }}
 {{- $fontCustom := "" }}
-{{- if eq (.Params.entry_title_font | default "display") "custom" }}
-{{- $fontCustom = .Params.entry_title_font_file }}
+{{- $fontVal := .Params.entry_title_font | default "display" }}
+{{- $fontIsPath := findRE "\\.(ttf|otf|woff2?|eot)$" $fontVal }}
+{{- if or (eq $fontVal "custom") $fontIsPath }}
+{{- if $fontIsPath }}{{ $fontCustom = $fontVal }}{{ else }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
 {{- with $fontCustom }}
 {{- $fcRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
 {{- with resources.Get $fcRel }}{{ $fontCustom = .RelPermalink }}{{ end }}
