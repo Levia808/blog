@@ -29,7 +29,17 @@
 {{- with $cover }}
 {{- if not $bgImg }}{{ $bgImg = (. | relURL) }}{{ end }}
 {{- end }}
-<article class="post-card-fullscreen pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "playfair" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} style="background-image:url('{{ $bgImg }}')"{{ end }}>
+{{- $fontCustom := "" }}
+{{- if eq (.Params.entry_title_font | default "display") "custom" }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
+{{- if $fontCustom }}
+{{- $fontName := .Params.entry_title_font_name | default "Custom Title" }}
+{{- $fontFormat := "woff2" }}{{ if strings.HasSuffix $fontCustom ".ttf" }}{{ $fontFormat = "truetype" }}{{ else if strings.HasSuffix $fontCustom ".otf" }}{{ $fontFormat = "opentype" }}{{ else if strings.HasSuffix $fontCustom ".woff" }}{{ $fontFormat = "woff" }}{{ end }}
+<style>
+@font-face { font-family: '{{ $fontName }}'; src: url('{{ $fontCustom | relURL }}') format('{{ $fontFormat }}'); font-display: swap; }
+.post-card-fullscreen .pcf-title { font-family: '{{ $fontName }}', Georgia, serif; }
+</style>
+{{- end }}
+<article class="post-card-fullscreen pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} style="background-image:url('{{ $bgImg }}')"{{ end }}>
   <a class="pcf-link" href="{{ .RelPermalink }}">
     <div class="pcf-inner">
       <div class="pcf-date mono">{{ .Date.Format "2006 · 01 · 02" }} · {{ .ReadingTime }} min</div>

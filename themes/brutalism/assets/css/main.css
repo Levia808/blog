@@ -1147,17 +1147,17 @@ html.js [data-reveal].reveal-visible {
 .post-card-fullscreen:hover .pcf-cta { background: var(--accent); color: var(--bg); transform: translateX(2px); }
 
 /* 全屏卡片标题位置 (CMS 可配) */
-.pcf-align-lc .pcf-link { align-items: center; }
-.pcf-align-cb .pcf-link { justify-content: center; }
-.pcf-align-cb .pcf-inner, .pcf-align-cc .pcf-inner { align-items: center; text-align: center; }
-.pcf-align-cb .pcf-quote, .pcf-align-cc .pcf-quote { border-left: none; padding-left: 0; }
-.pcf-align-cb .pcf-tags, .pcf-align-cc .pcf-tags, .pcf-align-cb .pcf-cta, .pcf-align-cc .pcf-cta { justify-content: center; align-self: center; }
-.pcf-align-cc .pcf-link { align-items: center; justify-content: center; }
-.pcf-align-rb .pcf-link { justify-content: flex-end; }
-.pcf-align-rb .pcf-inner { align-items: flex-end; text-align: right; }
-.pcf-align-rb .pcf-quote { border-left: none; border-right: 2px solid var(--accent); padding-left: 0; padding-right: 16px; }
-.pcf-align-rb .pcf-tags { justify-content: flex-end; }
-.pcf-align-rb .pcf-cta { align-self: flex-end; }
+.pcf-align-left-center .pcf-link { align-items: center; }
+.pcf-align-center-bottom .pcf-link { justify-content: center; }
+.pcf-align-center-bottom .pcf-inner, .pcf-align-center-center .pcf-inner { align-items: center; text-align: center; }
+.pcf-align-center-bottom .pcf-quote, .pcf-align-center-center .pcf-quote { border-left: none; padding-left: 0; }
+.pcf-align-center-bottom .pcf-tags, .pcf-align-center-center .pcf-tags, .pcf-align-center-bottom .pcf-cta, .pcf-align-center-center .pcf-cta { justify-content: center; align-self: center; }
+.pcf-align-center-center .pcf-link { align-items: center; justify-content: center; }
+.pcf-align-right-bottom .pcf-link { justify-content: flex-end; }
+.pcf-align-right-bottom .pcf-inner { align-items: flex-end; text-align: right; }
+.pcf-align-right-bottom .pcf-quote { border-left: none; border-right: 2px solid var(--accent); padding-left: 0; padding-right: 16px; }
+.pcf-align-right-bottom .pcf-tags { justify-content: flex-end; }
+.pcf-align-right-bottom .pcf-cta { align-self: flex-end; }
 .post-card-fullscreen {
   position: relative;
   min-height: 100vh;
@@ -1247,7 +1247,11 @@ html.js [data-reveal].reveal-visible {
 .pcf-font-display .pcf-title { font-family: 'Playfair Display', Georgia, serif; }
 .pcf-font-grotesk .pcf-title { font-family: var(--font-display); }
 .pcf-font-mono .pcf-title { font-family: var(--font-mono); font-weight: 700; }
-.pcf-font-serif .pcf-title { font-family: Georgia, 'Times New Roman', serif; }
+.pcf-font-serif .pcf-title { font-family: Georgia, 'Times New Roman', 'Songti SC', serif; }
+.pcf-font-sans .pcf-title { font-family: var(--font-body), system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+.pcf-font-song .pcf-title { font-family: 'Songti SC', 'Noto Serif SC', 'SimSun', 'STSong', serif; }
+.pcf-font-kai .pcf-title { font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', '楷体', serif; }
+.pcf-font-black .pcf-title { font-family: var(--font-display); font-weight: 900; letter-spacing: -0.5px; }
 
 /* ══ 登录 / 注册页 ══ */
 .login-page { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); }

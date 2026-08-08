@@ -159,11 +159,28 @@ collections:
         required: false
         default: display
         options:
-          - { label: "Playfair Display（默认）", value: display }
-          - { label: "Space Grotesk", value: grotesk }
-          - { label: "JetBrains Mono", value: mono }
-          - { label: "衬线（Georgia）", value: serif }
+          - { label: "Playfair Display（杂志衬线·默认）", value: display }
+          - { label: "Space Grotesk（几何无衬线）", value: grotesk }
+          - { label: "JetBrains Mono（等宽）", value: mono }
+          - { label: "Georgia 衬线", value: serif }
+          - { label: "系统无衬线（苹方/微软雅黑）", value: sans }
+          - { label: "宋体（Songti/SimSun）", value: song }
+          - { label: "楷体（Kaiti/KaiTi）", value: kai }
+          - { label: "特粗黑体（900）", value: black }
+          - { label: "自定义字体（上传文件）", value: custom }
         hint: "仅「全屏杂志封面入口」卡片样式生效"
+      - label: 自定义标题字体文件
+        name: entry_title_font_file
+        widget: file
+        required: false
+        choose_url: false
+        accept: [".woff2", ".woff", ".ttf", ".otf"]
+        hint: "选择「自定义字体」后上传字体文件（推荐 .woff2，最大 2MB）"
+      - label: 自定义字体名称
+        name: entry_title_font_name
+        widget: string
+        required: false
+        hint: "@font-face 字体名，随意命名（如 MyFont），仅自定义字体时生效"
       - label: 不在封面显示标题
         name: entry_hide_title
         widget: boolean
