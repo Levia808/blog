@@ -796,7 +796,9 @@
           .limit(1)
           .then(function (r) {
             if (!r.error && r.data && r.data[0] && r.data[0].avatar_url) {
-              el.style.backgroundImage = "url('" + r.data[0].avatar_url + "')";
+              var av = r.data[0].avatar_url;
+              av += (av.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now();
+              el.style.backgroundImage = "url('" + av + "')";
             }
           })
           .catch(function () {});

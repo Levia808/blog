@@ -79,7 +79,10 @@
     if (!file) return;
     Auth.user().then(function (user) {
       Profile.uploadAvatar(user.id, file).then(function (url) {
-        document.getElementById('profileAvatar').src = url;
+        var img = document.getElementById('profileAvatar');
+        img.src = url;
+        img.style.opacity = '0.3';
+        img.onload = function () { img.style.opacity = '1'; };
         document.getElementById('profileAvatar').onerror = function () {
           var letter = document.createElement('div');
           letter.className = 'profile-avatar profile-avatar-lg profile-avatar-fallback';

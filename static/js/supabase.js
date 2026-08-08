@@ -169,8 +169,10 @@ var Profile = window.Profile = {
       .from('avatars')
       .getPublicUrl(filePath);
 
-    const updated = await this.update(userId, { avatar_url: publicUrl });
-    return publicUrl;
+    /* 同名文件覆盖上传, URL 不变 → 浏览器缓存旧图 → 加时间戳强制刷新 */
+    const bustUrl = publicUrl + (publicUrl.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now();
+    await this.update(userId, { avatar_url: bustUrl });
+    return bustUrl;
   },
 
   async fetchGitHubAvatar(username) {
