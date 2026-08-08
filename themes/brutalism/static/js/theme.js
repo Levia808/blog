@@ -655,7 +655,11 @@
       video.addEventListener('loadstart', show);
       video.addEventListener('canplay', hide);
       video.addEventListener('error', hide);
+      video.addEventListener('stalled', hide);
+      video.addEventListener('suspend', hide);
       if (video.readyState >= 3) hide();
+      /* 8 秒未就绪兜底隐藏, 防止加载层常驻 */
+      setTimeout(function () { hide(); }, 8000);
     });
     /* 内嵌视频: 点击视频本体切换播放 (控件栏区域交给原生控件) */
     document.querySelectorAll('video.media-video').forEach(function (video) {

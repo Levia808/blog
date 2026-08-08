@@ -1365,8 +1365,8 @@ html.js [data-reveal].reveal-visible {
 .upload-progress-text { font-family: var(--font-mono); font-size: 11px; color: var(--muted); min-width: 36px; text-align: right; }
 
 /* 视频加载动效: 首帧透出 + 旋转动效占位 */
-.video-loading { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, rgba(22,22,21,.28), rgba(22,22,21,.55)); transition: opacity .35s ease; }
+ .video-loading { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, rgba(22,22,21,.28), rgba(22,22,21,.55)); transition: opacity .35s ease; pointer-events: none; }
 .video-loading.hide { opacity: 0; pointer-events: none; }
 .video-loading--bg { background: linear-gradient(180deg, rgba(22,22,21,.35), rgba(22,22,21,.6)); }
 .video-spinner { width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.22); border-top-color: var(--accent);
