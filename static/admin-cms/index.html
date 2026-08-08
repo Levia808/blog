@@ -103,6 +103,39 @@
         st.textContent = "@font-face { font-family: '" + name + "'; src: url('" + filePath + bust + "') format('" + format + "'); font-display: swap; }";
         document.head.appendChild(st);
       }
+      /* 上传字体到 GitHub (复用后台 GitHub 授权) */
+      function uploadFontToGitHub(file, onProgress) {
+        var token = null;
+        try { token = window.localStorage.getItem('blog_gh_publish_token') || null; } catch (e) {}
+        if (!token) return Promise.reject(new Error('未找到 GitHub 授权，请先在管理后台完成 GitHub 授权'));
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var b64 = String(reader.result).split(',')[1];
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', 'https://api.github.com/repos/Levia808/blog/contents/assets/images/' + encodeURIComponent(file.name));
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.upload.onprogress = function (e) {
+              if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+            };
+            xhr.onload = function () {
+              if (xhr.status === 200 || xhr.status === 201) {
+                resolve('/images/' + file.name);
+              } else {
+                var msg = '上传失败 ' + xhr.status;
+                try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+                reject(new Error(msg));
+              }
+            };
+            xhr.onerror = function () { reject(new Error('网络错误，上传失败')); };
+            xhr.send(JSON.stringify({ message: '上传字体: ' + file.name, content: b64 }));
+          };
+          reader.onerror = function () { reject(new Error('读取文件失败')); };
+          reader.readAsDataURL(file);
+        });
+      }
+      var latestUploadRaw = null;
       var FontSelectControl = function (props) {
         var R = window.createElement;
         var value = props.value || 'display';
@@ -282,6 +315,37 @@
               }).observe(fc, { childList: true, subtree: true, characterData: true });
             }
             /* 刷新按钮: 强制重建字体 + 重建选项 + 刷新预览 */
+            var uploadInput = node.querySelector('.fp-upload');
+            var progress = node.querySelector('.fp-progress');
+            var progressFill = node.querySelector('.fp-progress-fill');
+            var note = node.querySelector('.fp-lib-note');
+            if (uploadInput) uploadInput.addEventListener('change', function (e) {
+              var f = e.target.files[0];
+              if (!f) return;
+              if (progress) progress.style.display = 'block';
+              if (progressFill) progressFill.style.width = '0%';
+              uploadFontToGitHub(f, function (pct) {
+                if (progressFill) progressFill.style.width = Math.round(pct * 100) + '%';
+              }).then(function (path) {
+                if (progressFill) progressFill.style.width = '100%';
+                setTimeout(function () { if (progress) progress.style.display = 'none'; }, 300);
+                props.onChange(path);
+                latestUploadRaw = 'https://raw.githubusercontent.com/Levia808/blog/main/assets/images/' + encodeURIComponent(f.name);
+                ensureFontFace(latestUploadRaw, 'fpLiveCustom', true);
+                previewEl.style.fontFamily = "'fpLiveCustom', serif";
+                if (note) {
+                  note.style.display = 'block';
+                  note.textContent = '字体已上传并应用：' + f.name + '（保存后封面生效）';
+                }
+                update();
+              }).catch(function (err) {
+                if (progress) progress.style.display = 'none';
+                if (note) {
+                  note.style.display = 'block';
+                  note.textContent = '上传失败：' + (err && err.message || err);
+                }
+              });
+            });
             var libBtn = node.querySelector('.fp-lib-btn');
             var libPanel = node.querySelector('.fp-lib-panel');
             var libNote = node.querySelector('.fp-lib-note');
@@ -400,17 +464,21 @@
             onChange: function (e) { props.onChange(e.target.value); },
             style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d', boxSizing: 'border-box' }
           }, opts),
-          R('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' } },
-            R('button', { className: 'fp-lib-btn', type: 'button', title: '从资源库选择字体', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #6b8b6b', background: '#eef4ee', color: '#2c4a33', fontSize: '13px', cursor: 'pointer' } }, '更换字体（资源库）'),
-            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新'),
-            R('div', { className: 'fp-live-preview', style: { flex: 1, padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…')
+          R('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+            R('label', { style: { flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #6b8b6b', background: '#eef4ee', color: '#2c4a33', fontSize: '13px', cursor: 'pointer', textAlign: 'center' } },
+              '上传自定义字体',
+              R('input', { className: 'fp-upload', type: 'file', accept: '.ttf,.otf,.woff,.woff2', style: { display: 'none' } })
+            ),
+            R('button', { className: 'fp-lib-btn', type: 'button', title: '从资源库选择字体', style: { flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#2c4a33', fontSize: '13px', cursor: 'pointer' } }, '资源库字体'),
+            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
           ),
-          R('div', { className: 'fp-lib-panel', style: { display: 'none', marginTop: '10px', border: '1px solid #cbd5ce', borderRadius: '10px', background: '#fafbfa', maxHeight: '240px', overflowY: 'auto' } }),
-          R('div', { className: 'fp-lib-note', style: { display: 'none', marginTop: '8px', fontSize: '12px', color: '#7a8a80' } }),
-          R('div', { className: 'fp-progress', style: { display: 'none', marginTop: '8px', height: '4px', borderRadius: '99px', background: '#e5e9e6', overflow: 'hidden' } },
+          R('div', { className: 'fp-lib-panel', style: { display: 'none', border: '1px solid #cbd5ce', borderRadius: '10px', background: '#fafbfa', maxHeight: '220px', overflowY: 'auto' } }),
+          R('div', { className: 'fp-lib-note', style: { display: 'none', fontSize: '12px', color: '#7a8a80' } }),
+          R('div', { className: 'fp-progress', style: { display: 'none', height: '4px', borderRadius: '99px', background: '#e5e9e6', overflow: 'hidden' } },
             R('div', { className: 'fp-progress-fill', style: { height: '100%', width: '0%', background: '#6b8b6b', borderRadius: '99px', transition: 'width .15s ease-out' } })
           ),
-          R('div', { style: { marginTop: '8px', fontSize: '12px', color: '#7a8a80' } }, '上传字体后下拉自动出现「自定义字体: 文件名」选项；也可在上方「自定义标题字体文件」字段上传')
+          R('div', { style: { borderTop: '1px dashed #dbe3dd', paddingTop: '10px', fontSize: '12px', fontWeight: 600, color: '#4a5b51', letterSpacing: '0.5px' } }, '预览效果'),
+          R('div', { className: 'fp-live-preview', style: { padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…')
         );
         return container;
       };
