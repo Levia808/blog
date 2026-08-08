@@ -635,11 +635,12 @@ html.js [data-reveal].reveal-visible {
   .article-layout { grid-template-columns: 1fr 260px; gap: 36px; align-items: start; }
   .article-toc--side {
     display: block;
-    position: sticky;
-    top: 88px;
+    position: fixed;
+    top: 96px;
     margin-bottom: 0;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    will-change: top;
   }
   .article-toc--inline { display: none; }
 }

@@ -748,6 +748,27 @@
     if (saved) { signInForm.querySelector('[name="email"]').value = saved; signInForm.querySelector('[name="rememberMe"]').checked = true; }
   }
 
+  /* ── 文章右侧目录: 随滚动浮动 (同速跟随 + 视口夹取, 不固定顶部) ── */
+  function initTocFloat() {
+    var toc = document.querySelector('.article-toc--side');
+    if (!toc) return;
+    var MIN_TOP = 96, GAP = 24;
+    var baseTop = 96;
+    var layoutEl = document.querySelector('.article-layout');
+    if (layoutEl) baseTop = layoutEl.getBoundingClientRect().top + 8;
+    toc.style.top = baseTop + 'px';
+
+    function onScroll() {
+      var target = baseTop + window.scrollY;
+      var maxTop = window.innerHeight - toc.offsetHeight - GAP;
+      target = Math.max(MIN_TOP, Math.min(target, maxTop));
+      toc.style.top = target + 'px';
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+  }
+
   /* ── 搜索 (Fuse.js + index.json) ── */
   var fuseCache = null;
   var fuseIndexData = [];
@@ -932,6 +953,7 @@
     initThemeToggle();
     initReveal();
     initTocScrollspy();
+    initTocFloat();
     initSearchOverlay();
     initSearchPage();
   }
