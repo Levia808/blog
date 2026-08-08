@@ -753,7 +753,7 @@
     var toc = document.querySelector('.article-toc--side');
     if (!toc || reducedMotion) return;
     var layoutEl = document.querySelector('.article-layout');
-    var baseTop = layoutEl ? Math.max(96, (window.innerHeight - toc.offsetHeight) / 2) : 96;
+    var baseTop = layoutEl ? layoutEl.getBoundingClientRect().top : 96;
     toc.style.top = baseTop + 'px';
 
     var current = 0, target = 0, lastY = window.scrollY;
@@ -779,7 +779,7 @@
     window.addEventListener('scroll', kick, { passive: true });
     window.addEventListener('resize', function () {
       var layoutEl = document.querySelector('.article-layout');
-      baseTop = layoutEl ? Math.max(96, (window.innerHeight - toc.offsetHeight) / 2) : 96;
+      baseTop = layoutEl ? layoutEl.getBoundingClientRect().top : 96;
     });
   }
 

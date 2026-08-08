@@ -642,6 +642,7 @@ html.js [data-reveal].reveal-visible {
     position: fixed;
     right: 24px;
     width: 300px;
+    z-index: 40;
     margin-bottom: 0;
     max-height: min(640px, calc(100vh - 120px));
     overflow-y: auto;
