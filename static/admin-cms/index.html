@@ -133,11 +133,21 @@
               previewEl.style.fontWeight = extra ? '900' : 'normal';
             };
             update();
+            var titleInput = null;
+            var watch = setInterval(function () {
+              var t = document.querySelector('[data-key-path="title"] input');
+              if (t !== titleInput) {
+                if (titleInput) titleInput.removeEventListener('input', update);
+                titleInput = t;
+                if (titleInput) titleInput.addEventListener('input', update);
+              }
+              update();
+            }, 150);
             if (fileInput) fileInput.addEventListener('input', function () {
               var f = fileInput.value.trim();
               if (f) { ensureFontFace(f, 'fpLiveCustom'); previewEl.style.fontFamily = "'fpLiveCustom', serif"; }
             });
-            timer = setInterval(update, 600);
+            timer = watch;
           } else if (timer) {
             clearInterval(timer);
             timer = null;

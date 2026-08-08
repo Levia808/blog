@@ -60,13 +60,14 @@
 {{- with resources.Get $fcRel }}{{ $fontCustom = .RelPermalink }}{{ end }}
 {{- end }}
 {{- end }}
+{{- $tStyle := "" }}
 {{- if $fontCustom }}
 {{- $fontName := .Params.entry_title_font_name | default "Custom Title" }}
 {{- $fontFormat := "woff2" }}{{ if strings.HasSuffix $fontCustom ".ttf" }}{{ $fontFormat = "truetype" }}{{ else if strings.HasSuffix $fontCustom ".otf" }}{{ $fontFormat = "opentype" }}{{ else if strings.HasSuffix $fontCustom ".woff" }}{{ $fontFormat = "woff" }}{{ end }}
 <style>
 @font-face { font-family: '{{ $fontName }}'; src: url('{{ $fontCustom | relURL }}') format('{{ $fontFormat }}'); font-display: swap; }
-.post-card-fullscreen .pcf-title { font-family: '{{ $fontName }}', Georgia, serif; }
 </style>
+{{- $tStyle = printf "font-family:'%s', Georgia, serif;" $fontName }}
 {{- end }}
 <article class="post-card-fullscreen{{ if $pcfVideo }} pcf-video-card{{ end }} pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
   {{- if $pcfVideo }}
@@ -80,11 +81,13 @@
       {{- $tColor := .Params.entry_title_color }}
       {{- $tOpacity := .Params.entry_title_opacity }}
       {{- $title := .Title | replaceRE "\\|" "<br>" | replaceRE "<br/?>" "<br>" }}
+      {{- if $tColor }}{{ $tStyle = printf "%s color:%s;" $tStyle $tColor }}{{ end }}
+      {{- if $tOpacity }}{{ $tStyle = printf "%s opacity:%s;" $tStyle (div (float $tOpacity) 100) }}{{ end }}
       {{- if not .Params.entry_hide_title }}
-      <h2 class="pcf-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}"{{ if or $tColor $tOpacity }} style="{{ if $tColor }}color:{{ $tColor }};{{ end }}{{ if $tOpacity }}opacity:{{ div (float $tOpacity) 100 }};{{ end }}"{{ end }}>{{ $title | safeHTML }}</h2>
+      <h2 class="pcf-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}"{{ if $tStyle }} style="{{ $tStyle | safeCSS }}"{{ end }}>{{ $title | safeHTML }}</h2>
       {{- end }}
       {{- if .Params.entry_hide_title }}
-      <p class="pcf-quote" style="border-left:none;padding-left:0;font-size:20px;font-weight:500;font-style:normal;">{{ $title | safeHTML }}</p>
+      <p class="pcf-quote" style="border-left:none;padding-left:0;font-size:20px;font-weight:500;font-style:normal;{{ $tStyle | safeCSS }}">{{ $title | safeHTML }}</p>
       {{- end }}
       {{- with .Description }}
       <p class="pcf-quote">{{ . }}</p>
