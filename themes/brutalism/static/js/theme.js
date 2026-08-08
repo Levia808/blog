@@ -598,7 +598,7 @@
   function initScrambleHover() {
     if (reducedMotion) return;
     var SCRAMBLE_POOL = '가나다라마바사아자차카타파하あいうえおかきこさしすせそАБВГДЕЖЗИКЛМНОПР×÷±§#%&$@';
-    var targets = document.querySelectorAll('.pc-title, .pcf-title, .archive-link, .nf-link, .nm-menu a, .article-title');
+    var targets = document.querySelectorAll('.pc-title[data-scramble="1"], .pcf-title[data-scramble="1"], .archive-link, .nf-link, .nm-menu a, .article-title');
     if (!targets.length) return;
 
     function scrambleTo(el, original) {
@@ -646,7 +646,7 @@
         var r = wrap.getBoundingClientRect();
         var dx = ((e.clientX - r.left) / r.width - 0.5) * 2;
         var dy = ((e.clientY - r.top) / r.height - 0.5) * 2;
-        img.style.transform = 'scale(1.08) translate(' + (dx * 9).toFixed(1) + 'px,' + (dy * 7).toFixed(1) + 'px)';
+        img.style.transform = 'scale(1.16) translate(' + (dx * 18).toFixed(1) + 'px,' + (dy * 14).toFixed(1) + 'px)';
       });
       wrap.addEventListener('mouseleave', function () {
         clearTimeout(settleTimer);

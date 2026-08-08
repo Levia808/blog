@@ -1131,7 +1131,7 @@ html.js [data-reveal].reveal-visible {
 }
 
 /* ── 全屏杂志封面入口 (第三种卡片样式) ── */
-.card-list--fullscreen { max-width: 1280px; gap: 20px; }
+.card-list--fullscreen { max-width: none; width: 100vw; margin-left: calc(50% - 50vw); gap: 0; }
 .pcf-cta {
   display: inline-block;
   margin-top: 6px;

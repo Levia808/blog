@@ -89,6 +89,12 @@ collections:
         default: false
         required: false
         hint: "勾选后全屏封面只显示引文/标签，隐藏标题"
+      - label: 标题悬停乱码转化
+        name: entry_scramble
+        widget: boolean
+        default: true
+        required: false
+        hint: "悬停标题时文本由乱码逐字还原为原标题（韩/日/西里尔乱码池）"
       - label: 全屏入口标题位置
         name: entry_align
         widget: select

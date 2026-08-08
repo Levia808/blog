@@ -34,7 +34,7 @@
     <div class="pcf-inner">
       <div class="pcf-date mono">{{ .Date.Format "2006 · 01 · 02" }} · {{ .ReadingTime }} min</div>
       {{- if not .Params.entry_hide_title }}
-      <h2 class="pcf-title">{{ .Title }}</h2>
+      <h2 class="pcf-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}">{{ .Title }}</h2>
       {{- end }}
       {{- if .Params.entry_hide_title }}
       <p class="pcf-quote" style="border-left:none;padding-left:0;font-size:20px;font-weight:500;font-style:normal;">{{ .Title }}</p>
@@ -64,7 +64,7 @@
     </div>
     <div class="pc-body">
       <div class="pc-date">{{ .Date.Format "2006 · 01 · 02" }}</div>
-      <h3 class="pc-title">{{ .Title }}</h3>
+      <h3 class="pc-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}">{{ .Title }}</h3>
       <p class="pc-excerpt">{{ .Summary | plainify | truncate 96 }}</p>
       {{- with .Params.tags }}
       <div class="pc-tags">{{ range . }}<span class="pc-tag">{{ . }}</span>{{ end }}</div>
