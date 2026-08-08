@@ -282,6 +282,79 @@
               }).observe(fc, { childList: true, subtree: true, characterData: true });
             }
             /* 刷新按钮: 强制重建字体 + 重建选项 + 刷新预览 */
+            var libBtn = node.querySelector('.fp-lib-btn');
+            var libPanel = node.querySelector('.fp-lib-panel');
+            var libNote = node.querySelector('.fp-lib-note');
+            var libOpen = false;
+            if (libBtn) libBtn.addEventListener('click', function () {
+              if (libOpen) {
+                libOpen = false;
+                libPanel.style.display = 'none';
+                libNote.style.display = 'none';
+                return;
+              }
+              libOpen = true;
+              libPanel.style.display = 'block';
+              libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
+              libNote.style.display = 'none';
+              var loadLib = function () {
+                if (!window.blogSupabase || !window.blogSupabase.rpc) {
+                  libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">资源库不可用（未连接）</div>';
+                  return;
+                }
+                window.blogSupabase.rpc('admin_list_media').then(function (r) {
+                  if (r.error) {
+                    libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">读取失败：' + (r.error.message || r.error) + '</div>';
+                    return;
+                  }
+                  var all = r.data || [];
+                  var fonts = [];
+                  for (var i = 0; i < all.length; i++) {
+                    var m = all[i];
+                    var name = m.file_name || m.name || '';
+                    var url = m.public_url || '';
+                    if (!url && m.storage_path) {
+                      try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {}
+                    }
+                    if (/\.(ttf|otf|woff2?|eot)$/i.test(name) || /font/i.test(m.mime_type || '')) {
+                      fonts.push({ name: name, url: url });
+                    }
+                  }
+                  if (!fonts.length) {
+                    libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">资源库暂无字体文件（.ttf/.otf/.woff/.woff2）</div>';
+                    return;
+                  }
+                  var html = '';
+                  for (var fi = 0; fi < fonts.length; fi++) {
+                    var fam = 'fpLib' + fi;
+                    if (fonts[fi].url) ensureFontFace(fonts[fi].url, fam, true);
+                    html += '<div class="fp-lib-item" data-url="' + (fonts[fi].url || '') + '" style="padding:10px 14px;border-bottom:1px solid #edf0ed;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between" onmouseover="this.style.background='#eef4ee'" onmouseout="this.style.background='transparent'">' +
+                      '<span style="font-family:' + (fonts[fi].url ? "'" + fam + "', serif" : 'Georgia, serif') + ';font-size:18px;color:#18211d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">标题示例｜构建现代化博客</span>' +
+                      '<small style="flex:none;font-size:11px;color:#7a8a80">' + (fonts[fi].name.replace(/</g, '&lt;')) + '</small></div>';
+                  }
+                  libPanel.innerHTML = html;
+                  libPanel.querySelectorAll('.fp-lib-item').forEach(function (item) {
+                    item.addEventListener('click', function () {
+                      var url = item.getAttribute('data-url');
+                      if (!url) return;
+                      props.onChange(url);
+                      ensureFontFace(url, 'fpLiveCustom', true);
+                      previewEl.style.fontFamily = "'fpLiveCustom', serif";
+                      update();
+                      libOpen = false;
+                      libPanel.style.display = 'none';
+                      if (libNote) {
+                        libNote.style.display = 'block';
+                        libNote.textContent = '已选择资源库字体：' + (item.querySelector('small') ? item.querySelector('small').textContent : url);
+                      }
+                    });
+                  });
+                }).catch(function (e) {
+                  libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">读取失败：' + (e && e.message || e) + '</div>';
+                });
+              };
+              loadLib();
+            });
             var refreshBtn = node.querySelector('.fp-refresh');
             if (refreshBtn) refreshBtn.addEventListener('click', function () {
               var saved = readSavedFontFile();
@@ -318,9 +391,12 @@
             style: { width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', fontSize: '14px', background: '#fff', color: '#18211d', boxSizing: 'border-box' }
           }, opts),
           R('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' } },
-            R('div', { className: 'fp-live-preview', style: { flex: 1, padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…'),
-            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新')
+            R('button', { className: 'fp-lib-btn', type: 'button', title: '从资源库选择字体', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #6b8b6b', background: '#eef4ee', color: '#2c4a33', fontSize: '13px', cursor: 'pointer' } }, '更换字体（资源库）'),
+            R('button', { className: 'fp-refresh', type: 'button', title: '刷新字体预览', style: { flex: 'none', padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5ce', background: '#fff', color: '#333', fontSize: '13px', cursor: 'pointer' } }, '⟳ 刷新'),
+            R('div', { className: 'fp-live-preview', style: { flex: 1, padding: '18px 16px', border: '1px dashed #cbd5ce', borderRadius: '10px', background: '#f6f8f6', fontSize: '26px', color: '#111', letterSpacing: '-0.01em', lineHeight: 1.3, minHeight: '52px' } }, '加载中…')
           ),
+          R('div', { className: 'fp-lib-panel', style: { display: 'none', marginTop: '10px', border: '1px solid #cbd5ce', borderRadius: '10px', background: '#fafbfa', maxHeight: '240px', overflowY: 'auto' } }),
+          R('div', { className: 'fp-lib-note', style: { display: 'none', marginTop: '8px', fontSize: '12px', color: '#7a8a80' } }),
           R('div', { className: 'fp-progress', style: { display: 'none', marginTop: '8px', height: '4px', borderRadius: '99px', background: '#e5e9e6', overflow: 'hidden' } },
             R('div', { className: 'fp-progress-fill', style: { height: '100%', width: '0%', background: '#6b8b6b', borderRadius: '99px', transition: 'width .15s ease-out' } })
           ),
