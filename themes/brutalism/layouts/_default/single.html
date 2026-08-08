@@ -29,7 +29,7 @@
         {{- end }}
       </header>
       {{- if $showToc }}
-      <aside class="article-toc" aria-label="目录">
+      <aside class="article-toc article-toc--inline" aria-label="目录">
         <div class="toc-t">[ 目录 ]</div>
         {{ $tocHTML }}
       </aside>
@@ -45,7 +45,12 @@
       </footer>
       {{- end }}
     </div>
-
+    {{- if $showToc }}
+    <aside class="article-toc article-toc--side" aria-label="目录">
+      <div class="toc-t">[ 目录 ]</div>
+      {{ $tocHTML }}
+    </aside>
+    {{- end }}
   </div>
 
   {{- if site.Params.ShowPostNavLinks }}

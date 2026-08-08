@@ -139,31 +139,37 @@
 
   /* ── TOC 滚动高亮 ── */
   function initTocScrollspy() {
-    var toc = document.querySelector('.article-toc nav');
-    if (!toc || reducedMotion) return;
-    var links = toc.querySelectorAll('a');
-    if (!links.length) return;
-
-    var targets = Array.prototype.map.call(links, function (link) {
-      var id = decodeURIComponent((link.getAttribute('href') || '').replace(/^#/, ''));
-      return id ? document.getElementById(id) : null;
+    var tocs = document.querySelectorAll('.article-toc nav');
+    if (!tocs.length || reducedMotion) return;
+    var entries = [];
+    tocs.forEach(function (toc) {
+      var links = toc.querySelectorAll('a');
+      if (!links.length) return;
+      var targets = Array.prototype.map.call(links, function (link) {
+        var id = decodeURIComponent((link.getAttribute('href') || '').replace(/^#/, ''));
+        return id ? document.getElementById(id) : null;
+      });
+      entries.push({ links: links, targets: targets, toc: toc });
     });
+    if (!entries.length) return;
 
     function highlight() {
-      var current = null;
-      targets.forEach(function (target, index) {
-        if (!target) return;
-        var rect = target.getBoundingClientRect();
-        if (rect.top <= 90) current = links[index];
-      });
-      links.forEach(function (link) { link.classList.toggle('active', link === current); });
-      if (current && 'scrollIntoView' in current.parentElement) {
-        var container = toc.parentElement;
-        var linkTop = current.getBoundingClientRect().top - container.getBoundingClientRect().top;
-        if (linkTop < 0 || linkTop > container.clientHeight - 32) {
-          container.scrollTop += linkTop - container.clientHeight / 2;
+      entries.forEach(function (entry) {
+        var current = null;
+        entry.targets.forEach(function (target, index) {
+          if (!target) return;
+          var rect = target.getBoundingClientRect();
+          if (rect.top <= 90) current = entry.links[index];
+        });
+        entry.links.forEach(function (link) { link.classList.toggle('active', link === current); });
+        if (current && 'scrollIntoView' in current.parentElement) {
+          var container = entry.toc.parentElement;
+          var linkTop = current.getBoundingClientRect().top - container.getBoundingClientRect().top;
+          if (linkTop < 0 || linkTop > container.clientHeight - 32) {
+            container.scrollTop += linkTop - container.clientHeight / 2;
+          }
         }
-      }
+      });
     }
 
     highlight();

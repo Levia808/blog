@@ -571,7 +571,12 @@ html.js [data-reveal].reveal-visible {
 
 /* ── 文章页 ── */
 .article-page { max-width: 1240px; margin: 0 auto; padding: 32px 32px 96px; }
-.article-layout { max-width: 920px; margin: 0 auto; }
+.article-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 920px;
+  margin: 0 auto;
+}
 .article-main {
   position: relative;
   overflow: hidden;
@@ -622,6 +627,20 @@ html.js [data-reveal].reveal-visible {
   padding: 14px 18px;
   margin-bottom: 28px;
   background: var(--bg);
+}
+/* 桌面端: 右侧 sticky 侧栏 (与正文分离) */
+.article-toc--side { display: none; }
+@media (min-width: 901px) {
+  .article-layout { grid-template-columns: 1fr 260px; gap: 36px; align-items: start; }
+  .article-toc--side {
+    display: block;
+    position: sticky;
+    top: 88px;
+    margin-bottom: 0;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  .article-toc--inline { display: none; }
 }
 .toc-t { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }
 .article-toc nav > ul { list-style: none; }
