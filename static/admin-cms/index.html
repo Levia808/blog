@@ -195,6 +195,26 @@
               var f = fileInput.value.trim();
               if (f) { ensureFontFace(f, 'fpLiveCustom', true); previewEl.style.fontFamily = "'fpLiveCustom', serif"; }
             });
+            /* 上传按钮点击 → 同名覆盖上传后强制重建 (路径不变时 MutationObserver 捕获不到) */
+            var fileButtons = document.querySelectorAll('[data-key-path="entry_title_font_file"] button');
+            var uploadTimer = null;
+            for (var bi = 0; bi < fileButtons.length; bi++) {
+              fileButtons[bi].addEventListener('click', function () {
+                clearTimeout(uploadTimer);
+                uploadTimer = setTimeout(function () {
+                  var f = fileInput ? fileInput.value.trim() : '';
+                  if (!f) f = readFileField('entry_title_font_file');
+                  if (f) {
+                    ensureFontFace(f, 'fpLiveCustom', true);
+                    previewEl.style.fontFamily = "'fpLiveCustom', serif";
+                    previewEl.style.opacity = '0.3';
+                    Promise.resolve(document.fonts ? document.fonts.load("26px 'fpLiveCustom'", previewEl.textContent) : null)
+                      .then(function () { previewEl.style.opacity = '1'; update(); })
+                      .catch(function () { previewEl.style.opacity = '1'; update(); });
+                  }
+                }, 1500);
+              });
+            }
             /* 文件字段变化 (重新上传/更换文件) → 上传完成后强制重建字体预览 */
             var fileContainer = document.querySelector('[data-key-path="entry_title_font_file"]');
             var rebuildTimer = null;
