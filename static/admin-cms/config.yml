@@ -175,9 +175,7 @@ collections:
         name: entry_title_font_file
         widget: file
         required: false
-        choose_url: false
-        accept: [".woff2", ".woff", ".ttf", ".otf"]
-        hint: "选择「自定义字体」后上传字体文件（推荐 .woff2，最大 2MB）"
+        hint: "选择「自定义字体」后上传字体文件（推荐 .woff2/.ttf）"
       - label: 自定义字体名称
         name: entry_title_font_name
         widget: string

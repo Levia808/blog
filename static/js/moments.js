@@ -501,7 +501,12 @@
             delete input.dataset.replyMode;
           }
         }).catch(function (error) {
-          flashNotice('评论失败：' + (error.message || error));
+          var msg = (error && error.message) || String(error);
+          if (/permission|permission denied|RLS|policy|row.?level|not allowed/i.test(msg)) {
+            flashNotice('评论失败：评论权限未配置（数据库 RLS），请联系管理员执行修复 SQL');
+          } else {
+            flashNotice('评论失败：' + msg);
+          }
         }).finally(function () {
           submitBtn.disabled = false;
         });

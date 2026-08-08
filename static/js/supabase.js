@@ -306,6 +306,19 @@ var Admin = window.Admin = {
   },
 
   async deleteMedia(mediaId) {
+    // 1. 查记录取 storage 路径
+    const { data: rec, error: e1 } = await blogSupabase
+      .from('media')
+      .select('id, storage_path')
+      .eq('id', mediaId)
+      .maybeSingle();
+    if (e1) throw e1;
+    // 2. 用 Storage API 删除文件 (禁止直接删 storage 表)
+    if (rec && rec.storage_path) {
+      const { error: e2 } = await blogSupabase.storage.from('media').remove([rec.storage_path]);
+      if (e2) throw e2;
+    }
+    // 3. 删除媒体记录 (storage 文件已删, RPC 无副作用)
     const { data, error } = await blogSupabase.rpc('admin_delete_media', { p_media_id: mediaId });
     if (error) throw error;
     return Boolean(data);
