@@ -40,7 +40,8 @@
           {{- if $P.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}
           {{- if .Date }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
         </div>
-        <h1 class="article-title pcf-font-{{ .Params.entry_title_font | default "display" }}"{{ if or .Params.entry_title_color .Params.entry_title_opacity }} style="{{ if .Params.entry_title_color }}color:{{ .Params.entry_title_color }};{{ end }}{{ if .Params.entry_title_opacity }}opacity:{{ div (float .Params.entry_title_opacity) 100 }};{{ end }}"{{ end }}>{{ .Title }}</h1>
+        {{- $title := .Title | replaceRE "\\|" "<br>" | replaceRE "<br/?>" "<br>" }}
+      <h1 class="article-title pcf-font-{{ .Params.entry_title_font | default "display" }}"{{ if or .Params.entry_title_color .Params.entry_title_opacity }} style="{{ if .Params.entry_title_color }}color:{{ .Params.entry_title_color }};{{ end }}{{ if .Params.entry_title_opacity }}opacity:{{ div (float .Params.entry_title_opacity) 100 }};{{ end }}"{{ end }}>{{ $title | safeHTML }}</h1>
         {{- with .Description }}
         <p class="article-description">{{ . }}</p>
         {{- end }}
