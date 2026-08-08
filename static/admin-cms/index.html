@@ -44,6 +44,7 @@
         cms.onload = function () { registerEditorComponents(); registerFontPreviewWidget(); };
         document.head.appendChild(react);
         document.head.appendChild(cms);
+        window.__reactReady = true;
       } catch (error) {
         message.textContent = '管理员权限验证失败，请返回后台重试。';
         back.hidden = false;
@@ -65,7 +66,10 @@
     function registerFontPreviewWidget() {
       var CMS = window.CMS;
       var R = window.React;
-      if (!CMS || typeof CMS.registerWidget !== 'function' || !R) return;
+      if (!CMS || typeof CMS.registerWidget !== 'function' || !R) {
+        setTimeout(registerFontPreviewWidget, 200);
+        return;
+      }
       var FontSelectControl = function (props) {
         var value = props.value || 'display';
         var current = FONT_OPTIONS.filter(function (f) { return f.value === value; })[0] || FONT_OPTIONS[0];
