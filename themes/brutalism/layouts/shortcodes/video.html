@@ -24,10 +24,13 @@
 {{- end }}
 {{- if $src }}
 <figure class="media-block{{ with $class }} {{ . }}{{ end }}">
-  <video class="media-video" controls preload="metadata"{{ with $posterResolved }} poster="{{ . | safeURL }}"{{ end }}>
-    <source src="{{ $resolved | safeURL }}" type="video/mp4">
-    你的浏览器不支持 HTML5 视频。
-  </video>
+  <div class="media-video-wrap">
+    <video class="media-video" controls preload="metadata"{{ with $posterResolved }} poster="{{ . | safeURL }}"{{ end }}>
+      <source src="{{ $resolved | safeURL }}" type="video/mp4">
+      你的浏览器不支持 HTML5 视频。
+    </video>
+    <div class="video-loading" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>
+  </div>
   {{- with $caption }}
   <figcaption>{{ . | markdownify }}</figcaption>
   {{- end }}

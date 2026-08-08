@@ -20,7 +20,8 @@
   {{- with .Params.background }}
   {{- if $bgVideo }}
   <div class="article-bg article-bg--video">
-    <video class="article-bg-video" src="{{ $bgVideo }}" muted playsinline loop autoplay aria-hidden="true"></video>
+    <video class="article-bg-video" src="{{ $bgVideo }}" muted playsinline loop autoplay preload="metadata" aria-hidden="true"></video>
+    <div class="video-loading video-loading--bg" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>
     <div class="article-bg-bar" aria-hidden="true"><div class="article-bg-bar-fill"></div></div>
   </div>
   {{- else }}

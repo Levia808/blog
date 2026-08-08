@@ -645,6 +645,29 @@
     });
   }
 
+  /* ── 视频加载动效: 首帧透出 + spinner, canplay 后隐藏 ── */
+  function initVideoLoading() {
+    document.querySelectorAll('video[data-video-loading], video.pcf-video, video.media-video, video.article-bg-video').forEach(function (video) {
+      var loading = video.parentElement.querySelector('[data-video-loading]');
+      if (!loading) return;
+      var show = function () { loading.classList.remove('hide'); };
+      var hide = function () { loading.classList.add('hide'); };
+      video.addEventListener('loadstart', show);
+      video.addEventListener('canplay', hide);
+      video.addEventListener('error', hide);
+      if (video.readyState >= 3) hide();
+    });
+    /* 内嵌视频: 点击视频本体切换播放 (控件栏区域交给原生控件) */
+    document.querySelectorAll('video.media-video').forEach(function (video) {
+      video.addEventListener('click', function (e) {
+        var r = video.getBoundingClientRect();
+        if (r.bottom - e.clientY < 44) return;
+        if (video.paused) { var pr = video.play(); if (pr) pr.catch(function () {}); }
+        else video.pause();
+      });
+    });
+  }
+
   /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
   function initLoginPage() {
     var page = document.getElementById('loginPage');
@@ -899,6 +922,7 @@
     initLoginPage();
     initBgLazy();
     initPcfVideo();
+    initVideoLoading();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();

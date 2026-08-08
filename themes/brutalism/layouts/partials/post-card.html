@@ -65,6 +65,7 @@
 <article class="post-card-fullscreen{{ if $pcfVideo }} pcf-video-card{{ end }} pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
   {{- if $pcfVideo }}
   <video class="pcf-video" src="{{ $pcfVideo }}" muted playsinline loop preload="metadata" aria-hidden="true"></video>
+  <div class="video-loading" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>
   <div class="pcf-video-bar" aria-hidden="true"><div class="pcf-video-bar-fill"></div></div>
   {{- end }}
   <a class="pcf-link" href="{{ .RelPermalink }}">
