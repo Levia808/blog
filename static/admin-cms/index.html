@@ -118,12 +118,49 @@
           return '';
         }
         var libraryFonts = null;
+        var librarySupabase = null;
+        function listMediaFonts() {
+          if (librarySupabase) return Promise.resolve(librarySupabase);
+          if (!window.blogSupabase || !window.blogSupabase.storage) return Promise.resolve([]);
+          var out = [];
+          function walk(folder, depth) {
+            if (depth > 4) return Promise.resolve();
+            return window.blogSupabase.storage.from('media').list(folder || '', { limit: 200 })
+              .then(function (r) {
+                if (r.error || !Array.isArray(r.data)) return;
+                var tasks = [];
+                r.data.forEach(function (item) {
+                  var path = (folder ? folder + '/' : '') + item.name;
+                  if (item.id && /\.(ttf|otf|woff2?|eot)$/i.test(item.name)) {
+                    out.push(path);
+                  } else if (!item.id && depth < 4) {
+                    tasks.push(walk(path, depth + 1));
+                  }
+                });
+                return Promise.all(tasks);
+              })
+              .catch(function () {});
+          }
+          return walk('', 0).then(function () {
+            librarySupabase = out.map(function (p) {
+              try {
+                return window.blogSupabase.storage.from('media').getPublicUrl(p).data.publicUrl;
+              } catch (e) { return ''; }
+            }).filter(Boolean);
+            return librarySupabase;
+          });
+        }
         function buildOptions() {
           var list = [];
           for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
           if (libraryFonts) {
             for (var li = 0; li < libraryFonts.length; li++) {
               if (list.indexOf(libraryFonts[li]) < 0) list.push(libraryFonts[li]);
+            }
+          }
+          if (librarySupabase) {
+            for (var si = 0; si < librarySupabase.length; si++) {
+              if (list.indexOf(librarySupabase[si]) < 0) list.push(librarySupabase[si]);
             }
           }
           var saved = readSavedFontFile();
@@ -193,7 +230,9 @@
             };
             update();
             loadLibraryFonts(function () {
-              if (selEl) rebuildOptions();
+              listMediaFonts().then(function () {
+                if (selEl) rebuildOptions();
+              });
             });
             var titleInput = null;
             var watch = setInterval(function () {
@@ -247,7 +286,9 @@
             if (refreshBtn) refreshBtn.addEventListener('click', function () {
               var saved = readSavedFontFile();
               if (saved) ensureFontFace(saved, 'fpLiveCustom', true);
-              loadLibraryFonts(function () { rebuildOptions(); });
+              loadLibraryFonts(function () {
+                listMediaFonts().then(function () { rebuildOptions(); });
+              });
               update();
             });
             function rebuildOptions() {
