@@ -86,14 +86,17 @@
       }
       function ensureFontFace(filePath, name) {
         var id = 'fpLiveFace';
-        if (document.getElementById(id)) return;
+        var st0 = document.getElementById(id);
+        if (st0 && st0.textContent.indexOf(filePath) >= 0) return;
+        if (st0) st0.remove();
         var format = 'truetype';
         if (/\.woff2$/i.test(filePath)) format = 'woff2';
         else if (/\.woff$/i.test(filePath)) format = 'woff';
         else if (/\.otf$/i.test(filePath)) format = 'opentype';
+        var bust = '?v=' + Date.now();
         var st = document.createElement('style');
         st.id = id;
-        st.textContent = "@font-face { font-family: '" + name + "'; src: url('" + filePath + "') format('" + format + "'); font-display: swap; }";
+        st.textContent = "@font-face { font-family: '" + name + "'; src: url('" + filePath + bust + "') format('" + format + "'); font-display: swap; }";
         document.head.appendChild(st);
       }
       var FontSelectControl = function (props) {

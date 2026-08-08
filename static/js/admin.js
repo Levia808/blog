@@ -570,7 +570,7 @@
       if (/\.woff2$/i.test(customFont)) format = 'woff2';
       else if (/\.woff$/i.test(customFont)) format = 'woff';
       else if (/\.otf$/i.test(customFont)) format = 'opentype';
-      customFontCss = "@font-face { font-family: '" + customFontName + "'; src: url('" + customFont + "') format('" + format + "'); font-display: swap; }";
+      customFontCss = "@font-face { font-family: '" + customFontName + "'; src: url('" + customFont + "?v=" + Date.now() + "') format('" + format + "'); font-display: swap; }";
       var st = document.createElement('style');
       st.id = 'fontPreviewCustomFace';
       st.textContent = customFontCss;
