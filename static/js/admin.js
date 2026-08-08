@@ -355,7 +355,7 @@
       (archived ? '归档: ' : '取消归档: ') + name);
   }
 
-  /* ── 欢迎页配置 (data/welcome.toml 读写) ── */
+  /* ── 欢迎页配置 (data/welcome.yaml 读写) ── */
   var welcomeCfgSha = null;
   var CFG_FIELDS = {
     typewriterText: 'cfgTypewriterText',
@@ -368,10 +368,10 @@
     proximityFalloff: 'cfgFalloff'
   };
 
-  function parseTomlSimple(text) {
+  function parseDataSimple(text) {
     var out = {};
     String(text).split(/\r?\n/).forEach(function (line) {
-      var m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      var m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*[:=]\s*(.*)$/);
       if (!m) return;
       var key = m[1];
       var raw = m[2].trim();
@@ -399,11 +399,11 @@
       showError('请先授权 GitHub 后再编辑欢迎页配置。');
       return;
     }
-    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml')
+    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.yaml')
       .then(function (file) {
         welcomeCfgSha = file.sha;
         var content = atob(String(file.content).replace(/\s/g, ''));
-        var cfg = parseTomlSimple(content);
+        var cfg = parseDataSimple(content);
         Object.keys(CFG_FIELDS).forEach(function (key) {
           var el = document.getElementById(CFG_FIELDS[key]);
           if (el && cfg[key] != null) el.value = cfg[key];
@@ -434,40 +434,40 @@
       values[key] = raw;
     });
     var text = [
-      '# 欢迎页配置 (管理面板「系统设置」可编辑)',
-      'typewriterText = ' + tomlQuote(values.typewriterText),
-      'typeSpeed = ' + Number(values.typeSpeed),
-      'deleteSpeed = ' + Number(values.deleteSpeed),
-      'pause = ' + Number(values.pause),
+      '# 欢迎页配置 (管理面板「欢迎页配置」可编辑)',
+      'typewriterText: "' + String(values.typewriterText).replace(/"/g, '\\"') + '"',
+      'typeSpeed: ' + Number(values.typeSpeed),
+      'deleteSpeed: ' + Number(values.deleteSpeed),
+      'pause: ' + Number(values.pause),
       '# VariableProximity 大标题 (可变字体字重插值)',
-      'titleVariationFrom = ' + tomlQuote(values.titleVariationFrom),
-      'titleVariationTo = ' + tomlQuote(values.titleVariationTo),
-      'proximityRadius = ' + Number(values.proximityRadius),
-      'proximityFalloff = ' + tomlQuote(values.proximityFalloff),
+      "titleVariationFrom: '" + values.titleVariationFrom + "'",
+      "titleVariationTo: '" + values.titleVariationTo + "'",
+      'proximityRadius: ' + Number(values.proximityRadius),
+      'proximityFalloff: ' + tomlQuote(values.proximityFalloff),
       '# ShapeBlur 叠加效果',
-      'shapeSize = 1.2',
-      'roundness = 0.4',
-      'borderSize = 0.05',
-      'circleSize = 0.55',
-      'circleEdge = 0.35',
+      'shapeSize: 1.2',
+      'roundness: 0.4',
+      'borderSize: 0.05',
+      'circleSize: 0.55',
+      'circleEdge: 0.35',
       '# Sparks 火花',
-      'sparkColor = "#6B8B6B"',
-      'sparkSize = 10',
-      'sparkRadius = 15',
-      'sparkCount = 8',
-      'sparkDuration = 400',
-      'sparkEasing = "ease-out"',
-      'sparkExtraScale = 1.0'
+      'sparkColor: "#6B8B6B"',
+      'sparkSize: 10',
+      'sparkRadius: 15',
+      'sparkCount: 8',
+      'sparkDuration: 400',
+      'sparkEasing: "ease-out"',
+      'sparkExtraScale: 1.0'
     ].join('\n') + '\n';
 
     var btn = document.getElementById('cfgSaveBtn');
     btn.disabled = true;
     btn.textContent = '保存中…';
     // 保存前强制获取最新 sha, 避免过期/未加载导致 nil
-    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml')
+    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.yaml')
       .then(function (file) {
         welcomeCfgSha = file.sha;
-        return ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml', {
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.yaml', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: '更新欢迎页配置', content: base64Encode(text), sha: welcomeCfgSha })
@@ -485,15 +485,15 @@
       });
   }
 
-  /* ── 文章卡片样式 (data/cards.toml 读写) ── */
+  /* ── 文章卡片样式 (data/cards.yaml 读写) ── */
   var cardsSha = null;
   function loadCardStyle() {
     var select = document.getElementById('cfgCardStyle');
     if (!select || !getGhToken()) return;
-    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml')
+    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.yaml')
       .then(function (file) {
         cardsSha = file.sha;
-        var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*=\s*["']?([\w]+)["']?/m);
+        var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*[:=]\s*["']?([\w]+)["']?/m);
         if (m && ['grid', 'horizontal', 'fullscreen'].includes(m[1])) select.value = m[1];
         syncCardPreviewSelect();
         renderCardPreview();
@@ -543,14 +543,14 @@
   if (cardSaveBtn) cardSaveBtn.addEventListener('click', function () {
     var select = document.getElementById('cfgCardStyle');
     var style = select ? select.value : 'grid';
-    var content = '# 文章卡片样式 (管理面板「系统设置」可编辑)\n# grid = 当前样式 (3:2 封面网格) / horizontal = 横向长条卡片\nstyle = "' + style + '"\n';
+    var content = '# 卡片样式 (管理面板「卡片样式」可编辑)\n# grid = 网格 | horizontal = 横向长条 | fullscreen = 全屏杂志封面\nstyle: "' + style + '"\n';
     var btn = cardSaveBtn;
     btn.disabled = true;
     btn.textContent = '保存中…';
-    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml')
+    ghFetch('/repos/' + GH_REPO + '/contents/data/cards.yaml')
       .then(function (file) {
         cardsSha = file.sha;
-        return ghFetch('/repos/' + GH_REPO + '/contents/data/cards.toml', {
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/cards.yaml', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: '更新卡片样式: ' + style, content: base64Encode(content), sha: cardsSha })
