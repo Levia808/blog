@@ -1,13 +1,13 @@
 # 欢迎页配置 (管理面板「系统设置」可编辑)
-typewriterText = "写代码，也写生活。记录学习与思考。"
-typeSpeed = 70
-deleteSpeed = 38
-pause = 1800
+typewriterText = 行至水穷处，坐看云起时。
+typeSpeed = 0
+deleteSpeed = 0
+pause = 0
 # VariableProximity 大标题 (可变字体字重插值)
-titleVariationFrom = "'wght' 400"
-titleVariationTo = "'wght' 900"
-proximityRadius = 140
-proximityFalloff = "linear"
+titleVariationFrom = 
+titleVariationTo = 
+proximityRadius = 0
+proximityFalloff = linear
 # ShapeBlur 叠加效果
 shapeSize = 1.2
 roundness = 0.4
