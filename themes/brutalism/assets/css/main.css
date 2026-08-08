@@ -615,9 +615,13 @@ html.js [data-reveal].reveal-visible {
   font-size: 32px;
   font-weight: 500;
   letter-spacing: -1px;
-  line-height: 1.2;
+  line-height: 1.25;
   color: var(--white);
   font-family: var(--font-display);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .article-description { color: var(--muted); font-size: 13px; line-height: 1.7; margin-top: 16px; max-width: 520px; }.article-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
 
@@ -1255,15 +1259,15 @@ html.js [data-reveal].reveal-visible {
   .pcf-quote { font-size: 13px; }
 }
 
-/* ── 全屏入口标题字体 / 隐藏 ── */
-.pcf-font-display .pcf-title { font-family: 'Playfair Display', Georgia, serif; }
-.pcf-font-grotesk .pcf-title { font-family: 'Space Grotesk', var(--font-display); }
-.pcf-font-mono .pcf-title { font-family: var(--font-mono); letter-spacing: -0.01em; }
-.pcf-font-serif .pcf-title { font-family: Georgia, 'Times New Roman', 'Songti SC', serif; }
-.pcf-font-sans .pcf-title { font-family: var(--font-body), system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-.pcf-font-song .pcf-title { font-family: 'Songti SC', 'Noto Serif SC', 'SimSun', 'STSong', serif; }
-.pcf-font-kai .pcf-title { font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', '楷体', serif; }
-.pcf-font-black .pcf-title { font-family: 'Space Grotesk', var(--font-display); font-weight: 900; letter-spacing: -0.02em; }
+/* ── 全屏入口标题字体 / 隐藏 (同时作用于文章页标题) ── */
+.pcf-font-display .pcf-title, .pcf-font-display.article-title, .article-title.pcf-font-display { font-family: 'Playfair Display', Georgia, serif; }
+.pcf-font-grotesk .pcf-title, .article-title.pcf-font-grotesk { font-family: 'Space Grotesk', var(--font-display); }
+.pcf-font-mono .pcf-title, .article-title.pcf-font-mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.pcf-font-serif .pcf-title, .article-title.pcf-font-serif { font-family: Georgia, 'Times New Roman', 'Songti SC', serif; }
+.pcf-font-sans .pcf-title, .article-title.pcf-font-sans { font-family: var(--font-body), system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+.pcf-font-song .pcf-title, .article-title.pcf-font-song { font-family: 'Songti SC', 'Noto Serif SC', 'SimSun', 'STSong', serif; }
+.pcf-font-kai .pcf-title, .article-title.pcf-font-kai { font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', '楷体', serif; }
+.pcf-font-black .pcf-title, .article-title.pcf-font-black { font-family: 'Space Grotesk', var(--font-display); font-weight: 900; letter-spacing: -0.02em; }
 .pcf-hide-title .pcf-title { display: none; }
 
 /* ── 卡片封面: hover 放大 + 鼠标跟随 ── */
