@@ -130,6 +130,24 @@
             <div><p class="an-head-sub">系统配置</p><h3>设置</h3></div>
           </div>
           <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></div>
+
+          <div class="panel-title">欢迎页配置（打字机 + 动效参数）</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>打字机文本</span><textarea id="cfgTypewriterText" rows="2" placeholder="写代码，也写生活。记录学习与思考。"></textarea></label>
+            <label class="sf-field"><span>打字速度 (ms/字)</span><input type="number" id="cfgTypeSpeed" min="20" max="400"></label>
+            <label class="sf-field"><span>删除速度 (ms/字)</span><input type="number" id="cfgDeleteSpeed" min="10" max="300"></label>
+            <label class="sf-field"><span>停顿时长 (ms)</span><input type="number" id="cfgPause" min="200" max="10000" step="100"></label>
+            <label class="sf-field"><span>字重范围 (from)</span><input type="text" id="cfgVariationFrom" placeholder="'wght' 400"></label>
+            <label class="sf-field"><span>字重范围 (to)</span><input type="text" id="cfgVariationTo" placeholder="'wght' 900"></label>
+            <label class="sf-field"><span>指针半径</span><input type="number" id="cfgRadius" min="40" max="400"></label>
+            <label class="sf-field"><span>衰减方式</span><select id="cfgFalloff"><option value="linear">linear</option><option value="exponential">exponential</option><option value="gaussian">gaussian</option></select></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgSaveBtn">保存配置</button>
+              <button type="button" class="btn" id="cfgReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgError" hidden></p>
+          </div>
+
           <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
         </section>
 

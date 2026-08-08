@@ -975,3 +975,34 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .mcc-act.is-danger:hover { color: var(--danger); }
 .mcc-act .ma-count { color: var(--faint); }
 .mcc-act.is-liked .ma-count { color: var(--accent); }
+
+/* ── 欢迎页配置表单 ── */
+.settings-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+  padding: 18px;
+}
+.sf-field { display: flex; flex-direction: column; gap: 6px; }
+.sf-wide { grid-column: 1 / -1; }
+.sf-field span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: .08em; }
+.sf-field input, .sf-field textarea, .sf-field select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--fg);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+.sf-field textarea { resize: vertical; line-height: 1.6; }
+.sf-field input:focus, .sf-field textarea:focus, .sf-field select:focus { border-color: var(--accent); }
+.sf-actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .settings-form { grid-template-columns: 1fr; }
+}

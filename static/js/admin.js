@@ -354,6 +354,126 @@
       (archived ? '归档: ' : '取消归档: ') + name);
   }
 
+  /* ── 欢迎页配置 (data/welcome.toml 读写) ── */
+  var welcomeCfgSha = null;
+  var CFG_FIELDS = {
+    typewriterText: 'cfgTypewriterText',
+    typeSpeed: 'cfgTypeSpeed',
+    deleteSpeed: 'cfgDeleteSpeed',
+    pause: 'cfgPause',
+    titleVariationFrom: 'cfgVariationFrom',
+    titleVariationTo: 'cfgVariationTo',
+    proximityRadius: 'cfgRadius',
+    proximityFalloff: 'cfgFalloff'
+  };
+
+  function parseTomlSimple(text) {
+    var out = {};
+    String(text).split(/\r?\n/).forEach(function (line) {
+      var m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      if (!m) return;
+      var key = m[1];
+      var raw = m[2].trim();
+      if ((raw[0] === '"' && raw[raw.length - 1] === '"') || (raw[0] === "'" && raw[raw.length - 1] === "'")) {
+        out[key] = raw.slice(1, -1);
+      } else if (raw === 'true' || raw === 'false') {
+        out[key] = raw === 'true';
+      } else {
+        out[key] = Number(raw);
+        if (Number.isNaN(out[key])) out[key] = raw;
+      }
+    });
+    return out;
+  }
+
+  function tomlQuote(value) {
+    var str = String(value);
+    if (str.indexOf('"') >= 0 || str.indexOf("'") >= 0 || str.indexOf(' ') >= 0) {
+      return '"' + str.replace(/"/g, '\\"') + '"';
+    }
+    return str;
+  }
+
+  function loadWelcomeConfig() {
+    if (!getGhToken()) {
+      showError('请先授权 GitHub 后再编辑欢迎页配置。');
+      return;
+    }
+    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml')
+      .then(function (file) {
+        welcomeCfgSha = file.sha;
+        var content = atob(file.content);
+        var cfg = parseTomlSimple(content);
+        Object.keys(CFG_FIELDS).forEach(function (key) {
+          var el = document.getElementById(CFG_FIELDS[key]);
+          if (el && cfg[key] != null) el.value = cfg[key];
+        });
+        showToast('欢迎页配置已加载', 'success');
+      })
+      .catch(function (error) {
+        showError('配置加载失败：' + (error.message || error));
+      });
+  }
+
+  function saveWelcomeConfig() {
+    if (!getGhToken()) {
+      showError('请先授权 GitHub 后再保存配置。');
+      return;
+    }
+    var values = {};
+    Object.keys(CFG_FIELDS).forEach(function (key) {
+      var el = document.getElementById(CFG_FIELDS[key]);
+      if (el) values[key] = el.value;
+    });
+    var text = [
+      '# 欢迎页配置 (管理面板「系统设置」可编辑)',
+      'typewriterText = ' + tomlQuote(values.typewriterText),
+      'typeSpeed = ' + Number(values.typeSpeed),
+      'deleteSpeed = ' + Number(values.deleteSpeed),
+      'pause = ' + Number(values.pause),
+      '# VariableProximity 大标题 (可变字体字重插值)',
+      'titleVariationFrom = ' + tomlQuote(values.titleVariationFrom),
+      'titleVariationTo = ' + tomlQuote(values.titleVariationTo),
+      'proximityRadius = ' + Number(values.proximityRadius),
+      'proximityFalloff = ' + tomlQuote(values.proximityFalloff),
+      '# ShapeBlur 叠加效果',
+      'shapeSize = 1.2',
+      'roundness = 0.4',
+      'borderSize = 0.05',
+      'circleSize = 0.55',
+      'circleEdge = 0.35',
+      '# Sparks 火花',
+      'sparkColor = "#6B8B6B"',
+      'sparkSize = 10',
+      'sparkRadius = 15',
+      'sparkCount = 8',
+      'sparkDuration = 400',
+      'sparkEasing = "ease-out"',
+      'sparkExtraScale = 1.0'
+    ].join('\n') + '\n';
+
+    var btn = document.getElementById('cfgSaveBtn');
+    btn.disabled = true;
+    btn.textContent = '保存中…';
+    ghFetch('/repos/' + GH_REPO + '/contents/data/welcome.toml', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '更新欢迎页配置', content: base64Encode(text), sha: welcomeCfgSha })
+    }).then(function () {
+      showToast('配置已保存，站点重建后生效', 'success');
+    }).catch(function (error) {
+      showError('保存失败：' + (error.message || error));
+    }).finally(function () {
+      btn.disabled = false;
+      btn.textContent = '保存配置';
+    });
+  }
+
+  var cfgSaveBtn = document.getElementById('cfgSaveBtn');
+  if (cfgSaveBtn) cfgSaveBtn.addEventListener('click', saveWelcomeConfig);
+  var cfgReloadBtn = document.getElementById('cfgReloadBtn');
+  if (cfgReloadBtn) cfgReloadBtn.addEventListener('click', loadWelcomeConfig);
+
   function updateGhAuthStatus() {
     var authorized = Boolean(getGhToken());
     var statusEl = document.getElementById('ghAuthStatus');
