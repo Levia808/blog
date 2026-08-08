@@ -157,20 +157,10 @@ collections:
         required: false
       - label: 全屏标题字体
         name: entry_title_font
-        widget: select
+        widget: fontPreviewSelect
         required: false
         default: display
-        options:
-          - { label: "Playfair Display（杂志衬线·默认）", value: display }
-          - { label: "Space Grotesk（几何无衬线）", value: grotesk }
-          - { label: "JetBrains Mono（等宽）", value: mono }
-          - { label: "Georgia 衬线", value: serif }
-          - { label: "系统无衬线（苹方/微软雅黑）", value: sans }
-          - { label: "宋体（Songti/SimSun）", value: song }
-          - { label: "楷体（Kaiti/KaiTi）", value: kai }
-          - { label: "特粗黑体（900）", value: black }
-          - { label: "自定义字体（上传文件）", value: custom }
-        hint: "字体效果预览见后台「系统设置 → 标题字体预览」；仅「全屏杂志封面入口」卡片样式生效"
+        hint: "下拉选择后下方预览窗格即时显示字体渲染效果；仅「全屏杂志封面入口」卡片样式生效"
       - label: 自定义标题字体文件
         name: entry_title_font_file
         widget: file
