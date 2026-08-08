@@ -638,18 +638,88 @@ html.js [data-reveal].reveal-visible {
 .article-toc a:hover, .article-toc a.active { color: var(--accent); transform: translateX(3px); }
 .article-toc nav > ul > li > ul { padding-left: 16px; }
 
+/* 上一条/下一条 — 方案 A 双卡 + 丝滑连贯动效链 */
 .post-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 28px;
+}
+.pn-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 14px 20px;
-  margin-top: 16px;
+  border-radius: 2px;
+  padding: 16px 18px;
+  background: var(--surface);
+  text-decoration: none;
+  overflow: hidden;
+  transform: translateY(0);
+  transition: transform 280ms cubic-bezier(.22,.61,.36,1), border-color 280ms ease-out;
+  will-change: transform;
 }
-.post-nav-label { font-size: 9px; color: var(--faint); letter-spacing: 2px; }
-.post-nav a { font-size: 14px; color: var(--fg); text-decoration: none; transition: color var(--dur-slow); }
-.post-nav a:hover { color: var(--accent); }
+/* 左侧苔绿线滑入 (机械感) */
+.pn-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 360ms cubic-bezier(.22,.61,.36,1);
+}
+.pn-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.pn-card:hover::before { transform: scaleY(1); }
+.pn-card:hover .pn-arrow { animation: pn-slide-right 900ms ease-in-out infinite; }
+.pn-card.prev:hover .pn-arrow { animation-name: pn-slide-left; }
+.pn-card:hover .pn-title { transform: translateX(3px); }
+.pn-card.prev:hover .pn-title { transform: translateX(-3px); }
+.pn-card:hover .pn-meta { opacity: 1; letter-spacing: .1em; }
+/* 移出快退: 可打断 */
+.pn-card:not(:hover) { transition-duration: 150ms; transition-timing-function: cubic-bezier(.4,0,.6,1); }
+.pn-card:not(:hover) .pn-arrow { animation: none; }
+.pn-card:not(:hover) .pn-title { transition-duration: 150ms; }
+.pn-card:not(:hover) .pn-meta { transition-duration: 150ms; }
+/* 触控设备禁用 hover 效果 */
+@media (hover: none) {
+  .pn-card:hover { transform: none; }
+  .pn-card:hover::before { transform: scaleY(0); }
+  .pn-card:hover .pn-arrow { animation: none; }
+  .pn-card:hover .pn-title { transform: none; }
+  .pn-card:hover .pn-meta { opacity: 0.65; letter-spacing: 0; }
+}
+.pn-dir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 2px;
+}
+.pn-arrow { display: inline-block; font-size: 12px; color: var(--muted); }
+.pn-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+  line-height: 1.4;
+  transition: transform 280ms cubic-bezier(.22,.61,.36,1);
+}
+.pn-meta {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--faint);
+  opacity: 0.65;
+  transition: opacity 280ms ease-out, letter-spacing 280ms ease-out;
+}
+@keyframes pn-slide-left { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+@keyframes pn-slide-right { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@media (max-width: 640px) {
+  .post-nav { grid-template-columns: 1fr; }
+}
 
 /* ── 正文排版 ── */
 .article-body { font-size: 15px; line-height: 1.9; color: var(--body-text); font-weight: 400; }

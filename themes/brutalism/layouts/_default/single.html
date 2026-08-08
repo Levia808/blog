@@ -49,12 +49,22 @@
   </div>
 
   {{- if site.Params.ShowPostNavLinks }}
-  {{- with .PrevInSection }}
-  <nav class="post-nav prev"><span class="mono post-nav-label">PREV</span><a href="{{ .RelPermalink }}">{{ .Title }}</a></nav>
-  {{- end }}
-  {{- with .NextInSection }}
-  <nav class="post-nav next"><span class="mono post-nav-label">NEXT</span><a href="{{ .RelPermalink }}">{{ .Title }}</a></nav>
-  {{- end }}
+  <nav class="post-nav" aria-label="上一条/下一条">
+    {{- with .PrevInSection }}
+    <a class="pn-card prev" href="{{ .RelPermalink }}">
+      <span class="pn-dir"><span class="pn-arrow" aria-hidden="true">←</span> 上一篇</span>
+      <span class="pn-title">{{ .Title }}</span>
+      <span class="pn-meta">{{ with .Date }}{{ .Format "2006 · 01 · 02" }} · {{ end }}{{ .ReadingTime }} min</span>
+    </a>
+    {{- end }}
+    {{- with .NextInSection }}
+    <a class="pn-card next" href="{{ .RelPermalink }}">
+      <span class="pn-dir">下一篇 <span class="pn-arrow" aria-hidden="true">→</span></span>
+      <span class="pn-title">{{ .Title }}</span>
+      <span class="pn-meta">{{ with .Date }}{{ .Format "2006 · 01 · 02" }} · {{ end }}{{ .ReadingTime }} min</span>
+    </a>
+    {{- end }}
+  </nav>
   {{- end }}
 
   {{ partial "comments.html" . }}
