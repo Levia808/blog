@@ -574,7 +574,7 @@ html.js [data-reveal].reveal-visible {
 .article-layout {
   display: grid;
   grid-template-columns: 1fr;
-  max-width: 920px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 .article-main {
@@ -1131,10 +1131,37 @@ html.js [data-reveal].reveal-visible {
 }
 
 /* ── 全屏杂志封面入口 (第三种卡片样式) ── */
-.card-list--fullscreen { max-width: 1100px; gap: 20px; }
+.card-list--fullscreen { max-width: 1280px; gap: 20px; }
+.welcome-featured { margin-top: 100vh; }
+.pcf-cta {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  padding: 6px 16px;
+  align-self: flex-start;
+  transition: transform var(--dur-fast), background-color var(--dur-slow), color var(--dur-slow);
+}
+.welcome-featured:hover .pcf-cta { background: var(--accent); color: var(--bg); transform: translateX(2px); }
+
+/* 全屏卡片标题位置 (CMS 可配) */
+.pcf-align-lc .pcf-link { align-items: center; }
+.pcf-align-cb .pcf-link { justify-content: center; }
+.pcf-align-cb .pcf-inner, .pcf-align-cc .pcf-inner { align-items: center; text-align: center; }
+.pcf-align-cb .pcf-quote, .pcf-align-cc .pcf-quote { border-left: none; padding-left: 0; }
+.pcf-align-cb .pcf-tags, .pcf-align-cc .pcf-tags, .pcf-align-cb .pcf-cta, .pcf-align-cc .pcf-cta { justify-content: center; align-self: center; }
+.pcf-align-cc .pcf-link { align-items: center; justify-content: center; }
+.pcf-align-rb .pcf-link { justify-content: flex-end; }
+.pcf-align-rb .pcf-inner { align-items: flex-end; text-align: right; }
+.pcf-align-rb .pcf-quote { border-left: none; border-right: 2px solid var(--accent); padding-left: 0; padding-right: 16px; }
+.pcf-align-rb .pcf-tags { justify-content: flex-end; }
+.pcf-align-rb .pcf-cta { align-self: flex-end; }
 .post-card-fullscreen {
   position: relative;
-  min-height: 70vh;
+  min-height: 100vh;
   border: 1px solid var(--border);
   border-radius: 2px;
   overflow: hidden;
@@ -1155,8 +1182,8 @@ html.js [data-reveal].reveal-visible {
 .post-card-fullscreen:hover::before { opacity: 0.4; }
 .pcf-link {
   position: relative;
-  display: block;
-  min-height: 70vh;
+  display: flex;
+  min-height: 100vh;
   padding: 64px;
   text-decoration: none;
   display: flex;

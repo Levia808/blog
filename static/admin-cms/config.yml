@@ -72,6 +72,18 @@ collections:
         widget: image
         choose_url: true
         required: false
+      - label: 全屏入口标题位置
+        name: entry_align
+        widget: select
+        required: false
+        default: left-bottom
+        options:
+          - { label: 左下, value: left-bottom }
+          - { label: 左中, value: left-center }
+          - { label: 中下, value: center-bottom }
+          - { label: 正中, value: center-center }
+          - { label: 右下, value: right-bottom }
+        hint: "仅「全屏杂志封面入口」卡片样式生效"
       - label: 卡片封面图（首页/列表卡片）
         name: cover
         widget: object
