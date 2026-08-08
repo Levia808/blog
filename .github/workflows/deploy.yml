@@ -29,6 +29,11 @@ jobs:
           hugo-version: latest
           extended: true
 
+      - name: 视频自动重编码 (任何编码 → H.264)
+        run: |
+          ffmpeg -version >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y ffmpeg
+          python3 .github/transcode.py
+
       - name: Build
         run: hugo --minify --baseURL https://levia808.github.io/blog/
 
