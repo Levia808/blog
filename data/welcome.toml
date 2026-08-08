@@ -1,7 +1,7 @@
 # 欢迎页配置 (管理面板「系统设置」可编辑)
 typewriterText = "行至水穷处，坐看云起时。"
 typeSpeed = 50
-deleteSpeed = 30
+deleteSpeed = 20
 pause = 1800
 # VariableProximity 大标题 (可变字体字重插值)
 titleVariationFrom = "'wght' 400"
