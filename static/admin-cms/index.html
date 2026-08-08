@@ -146,11 +146,12 @@
         if (matches && matches.length) return '/images/' + matches[matches.length - 1].trim();
         return '';
       }
-      function buildOptions() {
+      function buildOptions(value) {
         var list = [];
         for (var i = 0; i < FONT_OPTIONS.length; i++) list.push(FONT_OPTIONS[i].value);
         var saved = readSavedFontFile();
         if (saved && list.indexOf(saved) < 0) list.push(saved);
+        if (value && list.indexOf(value) < 0) list.push(value);
         return list;
       }
       function labelOf(v) {
@@ -159,6 +160,16 @@
           if (FONT_OPTIONS[i].value === v) return FONT_OPTIONS[i].label;
         }
         return v;
+      }
+      function ensureOption(sel, v) {
+        if (!sel) return;
+        for (var i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === v) return;
+        }
+        var o = document.createElement('option');
+        o.value = v;
+        o.textContent = '自定义字体: ' + String(v).split('/').pop();
+        sel.appendChild(o);
       }
       function fontOf(v) {
         if (/\.(ttf|otf|woff2?|eot)$/i.test(v)) return 'path';
@@ -171,7 +182,7 @@
         var R = window.createElement;
         var value = props.value || 'display';
         var opts = [];
-        var optValues = buildOptions();
+        var optValues = buildOptions(value);
         for (var oi = 0; oi < optValues.length; oi++) {
           opts.push(R('option', { key: optValues[oi], value: optValues[oi] }, labelOf(optValues[oi])));
         }
@@ -294,8 +305,9 @@
               var root2 = findRoot();
               var sel2 = root2 ? root2.querySelector('select') : null;
               if (sel2) {
+                ensureOption(sel2, url);
                 sel2.value = url;
-                sel2.dispatchEvent(new Event('change'));
+                sel2.dispatchEvent(new Event('change', { bubbles: true }));
               }
               libPanel.style.display = 'none';
               var note = root2 ? root2.querySelector('.fp-lib-note') : null;
@@ -331,7 +343,8 @@
             }).then(function (path) {
               if (progressFill) progressFill.style.width = '100%';
               setTimeout(function () { if (progress) progress.style.display = 'none'; }, 300);
-              if (sel) { sel.value = path; sel.dispatchEvent(new Event('change')); }
+              ensureOption(sel, path);
+              if (sel) { sel.value = path; sel.dispatchEvent(new Event('change', { bubbles: true })); }
               latestUploadRaw = 'https://raw.githubusercontent.com/Levia808/blog/main/assets/images/' + encodeURIComponent(f.name);
               if (note) { note.style.display = 'block'; note.textContent = '字体已上传并应用：' + f.name + '（保存后封面生效）'; }
             }).catch(function (err) {
