@@ -623,14 +623,21 @@
     targets.forEach(function (el) {
       if (el.dataset.original != null) return;
       el.dataset.original = el.textContent;
-      el.addEventListener('mouseenter', function () {
+      /* 判定区域扩大: 标题绑定到整个卡片, 导航/归档链接绑定到父容器 */
+      var zone = el.closest('.post-card-cover, .post-card-fullscreen, .blog-section__head, .pagination, .article-toc');
+      if (!zone || zone === el) zone = el.parentElement || el;
+      function zoneEnter() {
         if (el.dataset.iv) { clearInterval(Number(el.dataset.iv)); el.dataset.iv = ''; }
         el.dataset.iv = String(scrambleTo(el, el.dataset.original));
-      });
-      el.addEventListener('mouseleave', function () {
+      }
+      function zoneLeave() {
         if (el.dataset.iv) { clearInterval(Number(el.dataset.iv)); el.dataset.iv = ''; }
         el.textContent = el.dataset.original;
-      });
+      }
+      zone.addEventListener('mouseenter', zoneEnter);
+      zone.addEventListener('mouseleave', zoneLeave);
+      el.addEventListener('mouseenter', zoneEnter);
+      el.addEventListener('mouseleave', zoneLeave);
     });
   }
 

@@ -27,6 +27,34 @@ display_url: https://blog-go3.pages.dev/
 logo_url: https://blog-go3.pages.dev/favicon.svg
 
 collections:
+  - label: 欢迎页配置
+    name: welcome
+    format: yaml
+    files:
+      - label: 欢迎页配置
+        name: welcome
+        file: data/welcome.yaml
+        fields:
+          - { label: 打字机文本, name: typewriterText, widget: text, default: "写代码，也写生活。" }
+          - { label: 打字速度(ms), name: typeSpeed, widget: number, default: 70 }
+          - { label: 删除速度(ms), name: deleteSpeed, widget: number, default: 38 }
+          - { label: 停顿(ms), name: pause, widget: number, default: 1800 }
+          - { label: 标题字重起始, name: titleVariationFrom, widget: string, default: "'wght' 400" }
+          - { label: 标题字重峰值, name: titleVariationTo, widget: string, default: "'wght' 900" }
+          - { label: 指针感应半径, name: proximityRadius, widget: number, default: 140 }
+          - { label: 字重衰减曲线, name: proximityFalloff, widget: select, default: linear, options: [linear, exponential, gaussian] }
+          - { label: 模糊形状尺寸, name: shapeSize, widget: number, default: 1.2 }
+          - { label: 圆角, name: roundness, widget: number, default: 0.4 }
+          - { label: 边框粗细, name: borderSize, widget: number, default: 0.05 }
+          - { label: 圆环大小, name: circleSize, widget: number, default: 0.55 }
+          - { label: 圆环边缘, name: circleEdge, widget: number, default: 0.35 }
+          - { label: 火花颜色, name: sparkColor, widget: color, default: "#6B8B6B" }
+          - { label: 火花大小, name: sparkSize, widget: number, default: 10 }
+          - { label: 火花半径, name: sparkRadius, widget: number, default: 15 }
+          - { label: 火花数量, name: sparkCount, widget: number, default: 8 }
+          - { label: 火花时长(ms), name: sparkDuration, widget: number, default: 400 }
+          - { label: 火花缓动, name: sparkEasing, widget: string, default: ease-out }
+          - { label: 火花额外缩放, name: sparkExtraScale, widget: number, default: 1.0 }
   - name: posts
     label: 文章
     label_singular: 文章
