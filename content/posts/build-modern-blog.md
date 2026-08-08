@@ -16,7 +16,8 @@ entry_title_opacity: null
 entry_scramble: true
 entry_align: center-center
 cover:
-  image: /images/pexels-anna-shvets-4312861.jpg
+  image: ''
+  video: /images/brand new day. inspired by spider-man..mp4
 ShowToc: true
 ---
 
