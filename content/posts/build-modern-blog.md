@@ -1,9 +1,18 @@
 ---
-date: '2026-08-06T16:00:00+08:00'
+title: 构建现代化个人博客
+date: 2026-08-06T16:00:00+08:00
 draft: false
-title: '构建现代化个人博客'
-description: '从 Hugo 到双线部署的完整实践。一份代码，两边构建。'
-tags: [hugo, cloudflare, devops]
+tags:
+  - hugo
+  - cloudflare
+  - devops
+description: 从 Hugo 到双线部署的完整实践。一份代码，两边构建。
+background: ''
+entry_title_font: mono
+entry_scramble: true
+entry_align: center-center
+cover:
+  image: /images/pexels-anna-shvets-4312861.jpg
 ShowToc: true
 ---
 
