@@ -524,7 +524,7 @@
   function initScrambleHover() {
     if (reducedMotion) return;
     var SCRAMBLE_POOL = '가나다라마바사아자차카타파하あいうえおかきこさしすせそАБВГДЕЖЗИКЛМНОПР×÷±§#%&$@';
-    var targets = document.querySelectorAll('.pc-title[data-scramble="1"], .pcf-title[data-scramble="1"], .archive-link, .nf-link, .nm-menu a, .article-title');
+    var targets = document.querySelectorAll('.pc-title[data-scramble="1"], .pcf-title[data-scramble="1"], .article-title[data-scramble="1"], .archive-link, .nf-link, .nm-menu a');
     if (!targets.length) return;
 
     function scrambleTo(el, original) {
@@ -752,9 +752,8 @@
   function initTocFloat() {
     var toc = document.querySelector('.article-toc--side');
     if (!toc || reducedMotion) return;
-    var baseTop = 96;
     var layoutEl = document.querySelector('.article-layout');
-    if (layoutEl) baseTop = layoutEl.getBoundingClientRect().top + 8;
+    var baseTop = layoutEl ? Math.max(96, (window.innerHeight - toc.offsetHeight) / 2) : 96;
     toc.style.top = baseTop + 'px';
 
     var current = 0, target = 0, lastY = window.scrollY;
@@ -778,6 +777,10 @@
       if (!raf) raf = requestAnimationFrame(frame);
     }
     window.addEventListener('scroll', kick, { passive: true });
+    window.addEventListener('resize', function () {
+      var layoutEl = document.querySelector('.article-layout');
+      baseTop = layoutEl ? Math.max(96, (window.innerHeight - toc.offsetHeight) / 2) : 96;
+    });
   }
 
   /* ── 搜索 (Fuse.js + index.json) ── */

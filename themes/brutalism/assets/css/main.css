@@ -633,19 +633,37 @@ html.js [data-reveal].reveal-visible {
   margin-bottom: 28px;
   background: var(--bg);
 }
-/* 桌面端: 右侧 sticky 侧栏 (与正文分离) */
+/* 桌面端: 右侧悬浮目录 (玻璃卡片, 视口垂直居中) */
 .article-toc--side { display: none; }
 @media (min-width: 901px) {
-  .article-layout { grid-template-columns: 1fr 260px; gap: 36px; align-items: start; }
+  .article-layout { grid-template-columns: 1fr 320px; gap: 36px; align-items: start; }
   .article-toc--side {
     display: block;
     position: fixed;
-    top: 96px;
+    right: 24px;
+    width: 300px;
     margin-bottom: 0;
-    max-height: calc(100vh - 120px);
+    max-height: min(640px, calc(100vh - 120px));
     overflow-y: auto;
     will-change: top;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   }
+  .article-toc--side .toc-t { font-size: 12px; margin-bottom: 14px; letter-spacing: 3px; }
+  .article-toc--side nav a {
+    display: block;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 7px 10px;
+    border-radius: 8px;
+    transition: color var(--dur-slow), transform var(--dur-fast), background-color var(--dur-slow);
+  }
+  .article-toc--side nav a:hover, .article-toc--side nav a.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); transform: translateX(4px); }
+  .article-toc--side nav > ul > li > ul { padding-left: 18px; }
   .article-toc--inline { display: none; }
 }
 .toc-t { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 2px; }
@@ -1388,3 +1406,12 @@ html.js [data-reveal].reveal-visible {
 @keyframes videoSpin { to { transform: rotate(360deg); } }
 .media-video-wrap { position: relative; }
 .media-video-wrap .video-loading { border-radius: 8px; }
+
+/* 后台字体预览 */
+.font-preview-panel { margin: 24px 0 32px; padding: 20px; border: 1px solid var(--border); border-radius: 14px; background: color-mix(in srgb, var(--fg) 3%, transparent); }
+.fp-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.fp-desc { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.font-preview-list { display: grid; gap: 10px; }
+.fp-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+.fp-name { font-family: var(--font-mono); font-size: 10px; color: var(--muted); width: 130px; flex: none; line-height: 1.5; }
+.fp-sample { font-size: 22px; color: var(--fg); letter-spacing: -0.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

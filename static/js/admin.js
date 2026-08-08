@@ -497,6 +497,7 @@
         if (m && ['grid', 'horizontal', 'fullscreen'].includes(m[1])) select.value = m[1];
         syncCardPreviewSelect();
         renderCardPreview();
+      renderFontPreview();
       })
       .catch(function () { /* 文件缺失时保持默认 */ });
   }
@@ -536,6 +537,28 @@
       col.classList.toggle('is-selected', col.dataset.cp === selected);
     });
   }
+  /* ── 标题字体预览 (设置面板) ── */
+  var FONT_PREVIEWS = [
+    { value: 'display', label: 'Playfair Display（杂志衬线·默认）', font: "'Playfair Display', Georgia, serif" },
+    { value: 'grotesk', label: 'Space Grotesk（几何无衬线）', font: "'Space Grotesk', sans-serif" },
+    { value: 'mono', label: 'JetBrains Mono（等宽）', font: "'JetBrains Mono', monospace" },
+    { value: 'serif', label: 'Georgia 衬线', font: "Georgia, 'Times New Roman', serif" },
+    { value: 'sans', label: '系统无衬线（苹方/雅黑）', font: "system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif" },
+    { value: 'song', label: '宋体（Songti/SimSun）', font: "'Songti SC', 'Noto Serif SC', 'SimSun', serif" },
+    { value: 'kai', label: '楷体（Kaiti/KaiTi）', font: "'Kaiti SC', 'KaiTi', 'STKaiti', serif" },
+    { value: 'black', label: '特粗黑体（900）', font: "'Space Grotesk', sans-serif", weight: 900 },
+    { value: 'custom', label: '自定义字体（上传文件）', font: "serif", custom: true }
+  ];
+  function renderFontPreview() {
+    var list = document.getElementById('fontPreviewList');
+    if (!list) return;
+    list.innerHTML = FONT_PREVIEWS.map(function (f) {
+      var weight = f.weight ? 'font-weight:' + f.weight + ';' : '';
+      return '<div class="fp-item"><span class="fp-name">' + f.label + '</span>' +
+        '<span class="fp-sample" style="font-family:' + f.font + ';' + weight + '">构建现代化博客｜Hello World</span></div>';
+    }).join('');
+  }
+
   var cardStyleSelect = document.getElementById('cfgCardStyle');
   if (cardStyleSelect) cardStyleSelect.addEventListener('change', syncCardPreviewSelect);
 
