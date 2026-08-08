@@ -27,9 +27,26 @@ display_url: https://blog-go3.pages.dev/
 logo_url: https://blog-go3.pages.dev/favicon.svg
 
 collections:
+  - label: 卡片样式
+    name: cardstyle
+    files:
+      - label: 卡片样式
+        name: cardstyle
+        file: data/cards.yaml
+        fields:
+          - label: 卡片样式
+            name: style
+            widget: select
+            required: true
+            default: fullscreen
+            options:
+              - { label: "全屏杂志封面（占满整页）", value: fullscreen }
+              - { label: "网格", value: grid }
+              - { label: "横向长条", value: horizontal }
+            hint: "保存后自动部署，主站首页卡片样式立即更新"
+
   - label: 站点设置
     name: siteconfig
-    format: yaml
     files:
       - label: 站点设置
         name: siteconfig
@@ -63,26 +80,9 @@ collections:
             fields:
               - { label: 平台, name: name, widget: string }
               - { label: 链接, name: url, widget: string }
-  - label: 卡片样式
-    name: cardstyle
-    format: yaml
-    files:
-      - label: 卡片样式
-        name: cardstyle
-        file: data/cards.yaml
-        fields:
-          - label: 卡片样式
-            name: style
-            widget: select
-            default: fullscreen
-            options:
-              - { label: "全屏杂志封面（占满整页）", value: fullscreen }
-              - { label: "网格", value: grid }
-              - { label: "横向长条", value: horizontal }
-            hint: "保存后自动部署, 主站首页卡片样式立即更新"
+
   - label: 欢迎页配置
     name: welcome
-    format: yaml
     files:
       - label: 欢迎页配置
         name: welcome
@@ -108,6 +108,7 @@ collections:
           - { label: 火花时长(ms), name: sparkDuration, widget: number, default: 400 }
           - { label: 火花缓动, name: sparkEasing, widget: string, default: ease-out }
           - { label: 火花额外缩放, name: sparkExtraScale, widget: number, default: 1.0 }
+
   - name: posts
     label: 文章
     label_singular: 文章
