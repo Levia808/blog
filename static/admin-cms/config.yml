@@ -206,7 +206,7 @@ collections:
           - { label: 正中, value: center-center }
           - { label: 右下, value: right-bottom }
         hint: "仅「全屏杂志封面入口」卡片样式生效"
-      - label: 卡片封面图（首页/列表卡片）
+      - label: 卡片封面（首页/列表卡片）
         name: cover
         widget: object
         required: false
@@ -217,6 +217,13 @@ collections:
             widget: image
             choose_url: true
             required: false
+          - label: 封面视频（全屏样式生效）
+            name: video
+            widget: file
+            choose_url: true
+            required: false
+            accept: [".mp4", ".webm", ".mov"]
+            hint: "设置后全屏卡片封面播放视频（静音循环自动播放，无控件，底部细进度条）；视频优先于封面图片"
       - label: 正文
         name: body
         widget: markdown

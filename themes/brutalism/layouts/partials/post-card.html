@@ -45,6 +45,20 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- $pcfVideo := "" }}
+{{- with .Params.cover.video }}
+{{- $pcfVideo = (. | relURL) }}
+{{- $cvRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+{{- with resources.Get $cvRel }}{{ $pcfVideo = .RelPermalink }}{{ end }}
+{{- $bgImg = "" }}
+{{- else }}
+{{- if $bgImg }}
+{{- if or (strings.HasSuffix $bgImg ".mp4") (strings.HasSuffix $bgImg ".webm") (strings.HasSuffix $bgImg ".mov") }}
+{{- $pcfVideo = $bgImg }}
+{{- $bgImg = "" }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- $fontCustom := "" }}
 {{- if eq (.Params.entry_title_font | default "display") "custom" }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
 {{- if $fontCustom }}
@@ -55,7 +69,11 @@
 .post-card-fullscreen .pcf-title { font-family: '{{ $fontName }}', Georgia, serif; }
 </style>
 {{- end }}
-<article class="post-card-fullscreen pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
+<article class="post-card-fullscreen{{ if $pcfVideo }} pcf-video-card{{ end }} pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
+  {{- if $pcfVideo }}
+  <video class="pcf-video" src="{{ $pcfVideo }}" muted playsinline loop preload="metadata" aria-hidden="true"></video>
+  <div class="pcf-video-bar" aria-hidden="true"><div class="pcf-video-bar-fill"></div></div>
+  {{- end }}
   <a class="pcf-link" href="{{ .RelPermalink }}">
     <div class="pcf-inner">
       <div class="pcf-date mono">{{ .Date.Format "2006 · 01 · 02" }} · {{ .ReadingTime }} min</div>

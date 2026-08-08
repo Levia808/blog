@@ -4,14 +4,28 @@
 {{- $showToc := and (default $P.ShowToc .Params.ShowToc) .TableOfContents }}
 {{- $tocHTML := .TableOfContents }}
 {{- $bg := "" }}
-{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .Params.background).Path }}
+{{- $bgVideo := "" }}
+{{- with .Params.background }}
+{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
 {{- $bgRes := resources.Get $bgRel }}
 {{- if $bgRes }}
+{{- if or (strings.HasSuffix $bgRel ".mp4") (strings.HasSuffix $bgRel ".webm") (strings.HasSuffix $bgRel ".mov") }}
+{{- $bgVideo = $bgRes.RelPermalink }}
+{{- else }}
 {{- $bg = $bgRes.Resize "2560x webp q70" }}
+{{- end }}
+{{- end }}
 {{- end }}
 <article class="container article-page">
   {{- with .Params.background }}
+  {{- if $bgVideo }}
+  <div class="article-bg article-bg--video">
+    <video class="article-bg-video" src="{{ $bgVideo }}" muted playsinline loop autoplay aria-hidden="true"></video>
+    <div class="article-bg-bar" aria-hidden="true"><div class="article-bg-bar-fill"></div></div>
+  </div>
+  {{- else }}
   <div class="article-bg" role="img" aria-label="{{ $.Title }} 底图" style="background-image:url('{{ if $bg }}{{ $bg.RelPermalink }}{{ else }}{{ . | relURL }}{{ end }}')"></div>
+  {{- end }}
   {{- end }}
   <div class="article-layout">
     <div class="article-main" data-reveal>

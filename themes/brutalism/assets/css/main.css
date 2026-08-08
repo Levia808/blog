@@ -51,7 +51,8 @@
 *::before,
 *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { overflow-x: hidden; }
 
 body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -791,7 +792,9 @@ html.js [data-reveal].reveal-visible {
   border-radius: 6px;
   padding: 16px 20px;
   margin: 16px 0;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: hidden;
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.8;
@@ -1347,3 +1350,10 @@ html.js [data-reveal].reveal-visible {
 /* 全屏卡背景懒加载: 占位底色 */
 .post-card-fullscreen.has-bg { background-color: #1d1d1a; background-image: linear-gradient(180deg, rgba(28,28,25,.55), rgba(20,20,18,.9)); }
 .post-card-fullscreen.has-bg[data-loaded="1"] { background-image: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55)); }
+
+/* 视频全屏封面: 铺满卡片, 无原生控件, 细直线进度条 */
+.post-card-fullscreen.pcf-video-card { background: #161615; }
+.pcf-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.pcf-link { z-index: 1; }
+.pcf-video-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255,255,255,.18); z-index: 2; }
+.pcf-video-bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .12s linear; }

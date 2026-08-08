@@ -608,6 +608,43 @@
     });
   }
 
+  /* ── 视频全屏封面: 自动播放判定 + 细进度条 ── */
+  function initPcfVideo() {
+    var videos = document.querySelectorAll('.post-card-fullscreen.pcf-video-card video.pcf-video');
+    if (!videos.length) return;
+    videos.forEach(function (video, i) {
+      var bar = video.parentElement.querySelector('.pcf-video-bar-fill');
+      if (bar) {
+        video.addEventListener('timeupdate', function () {
+          if (video.duration && !isNaN(video.duration)) {
+            bar.style.width = ((video.currentTime / video.duration) * 100).toFixed(2) + '%';
+          }
+        });
+      }
+      var tryPlay = function () {
+        if (reducedMotion) return;
+        var pr = video.play();
+        if (pr) pr.catch(function () { /* 自动播放被策略拦截时静默 */ });
+      };
+      var tryPause = function () {
+        if (!video.paused) video.pause();
+      };
+      if (i === 0) {
+        tryPlay();
+      } else if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { tryPlay(); } else { tryPause(); }
+          });
+        }, { rootMargin: '200px 0px' });
+        io.observe(video);
+      }
+      video.addEventListener('loadeddata', function () {
+        if (i === 0 || video.dataset.inView === '1') tryPlay();
+      });
+    });
+  }
+
   /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
   function initLoginPage() {
     var page = document.getElementById('loginPage');
@@ -861,6 +898,7 @@
     initCoverParallax();
     initLoginPage();
     initBgLazy();
+    initPcfVideo();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();
