@@ -1,13 +1,16 @@
 ---
-title: Hello World
-date: 2026-08-06T15:27:00+08:00
+title: Hello World！This is my new blog!
+date: 2026-08-08T17:19:00+08:00
 draft: false
 tags:
   - 博客
   - 随笔
 description: 你好世界
+entry_title_font: custom
+entry_title_font_file: /images/OKCOK-1.ttf
+entry_title_font_name: OKCOK
 entry_scramble: true
-entry_align: center-bottom
+entry_align: center-center
 cover:
   image: /images/pexels-jakub-zerdzicki-34212916.jpg
 ---
