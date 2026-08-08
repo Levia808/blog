@@ -298,28 +298,38 @@
               libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
               libNote.style.display = 'none';
               var loadLib = function () {
-                if (!window.blogSupabase || !window.blogSupabase.rpc) {
-                  libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">资源库不可用（未连接）</div>';
-                  return;
-                }
-                window.blogSupabase.rpc('admin_list_media').then(function (r) {
-                  if (r.error) {
-                    libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">读取失败：' + (r.error.message || r.error) + '</div>';
-                    return;
-                  }
-                  var all = r.data || [];
+                /* 数据源合并: GitHub 字体库 (/fonts.json) + Supabase 媒体库 */
+                var ghTask = fetch('/fonts.json', { cache: 'no-store' })
+                  .then(function (r) { return r.ok ? r.json() : []; })
+                  .catch(function () { return []; });
+                var sbTask = (window.blogSupabase && window.blogSupabase.rpc)
+                  ? window.blogSupabase.rpc('admin_list_media')
+                      .then(function (r) {
+                        if (r.error) return [];
+                        return (r.data || []).map(function (m) {
+                          var url = m.public_url || '';
+                          if (!url && m.storage_path) {
+                            try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {}
+                          }
+                          return { name: m.file_name || m.name || '', url: url, mime: m.mime_type || '' };
+                        });
+                      })
+                      .catch(function () { return []; })
+                  : Promise.resolve([]);
+                Promise.all([ghTask, sbTask]).then(function (results) {
                   var fonts = [];
-                  for (var i = 0; i < all.length; i++) {
-                    var m = all[i];
-                    var name = m.file_name || m.name || '';
-                    var url = m.public_url || '';
-                    if (!url && m.storage_path) {
-                      try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {}
+                  var seen = {};
+                  (results[0] || []).forEach(function (f) {
+                    if (typeof f === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(f)) {
+                      fonts.push({ name: f.split('/').pop() || f, url: f });
                     }
-                    if (/\.(ttf|otf|woff2?|eot)$/i.test(name) || /font/i.test(m.mime_type || '')) {
-                      fonts.push({ name: name, url: url });
-                    }
-                  }
+                  });
+                  (results[1] || []).forEach(function (m) {
+                    if (!/\\.(ttf|otf|woff2?|eot)$/i.test(m.name) && !/font/i.test(m.mime)) return;
+                    if (!m.url) return;
+                    if (!seen[m.url]) fonts.push({ name: m.name, url: m.url });
+                  });
+                  for (var si = 0; si < fonts.length; si++) if (seen[fonts[si].url]) fonts.splice(si--, 1); else seen[fonts[si].url] = true;
                   if (!fonts.length) {
                     libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">资源库暂无字体文件（.ttf/.otf/.woff/.woff2）</div>';
                     return;
@@ -351,8 +361,6 @@
                       }
                     });
                   });
-                }).catch(function (e) {
-                  libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#b3593f">读取失败：' + (e && e.message || e) + '</div>';
                 });
               };
               loadLib();
