@@ -80,6 +80,13 @@
     Auth.user().then(function (user) {
       Profile.uploadAvatar(user.id, file).then(function (url) {
         document.getElementById('profileAvatar').src = url;
+        document.getElementById('profileAvatar').onerror = function () {
+          var letter = document.createElement('div');
+          letter.className = 'profile-avatar profile-avatar-lg profile-avatar-fallback';
+          letter.textContent = (url || '?').charAt(0);
+          var img = this;
+          img.parentNode.replaceChild(letter, img);
+        };
       }).catch(function (err) {
         var el = document.getElementById('profileError');
         el.textContent = err.message;

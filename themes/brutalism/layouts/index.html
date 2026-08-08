@@ -11,6 +11,9 @@
 
 <section class="welcome-full" id="welcome" aria-label="欢迎">
   <h1 class="welcome-title" id="welcomeTitle" aria-label="Levia's Blog">{{ $P.navLogo | default site.Title }}</h1>
+  {{- with $P.avatarUrl }}
+  <div class="welcome-avatar" id="welcomeAvatar" aria-hidden="true" style="background-image:url('{{ . }}')"></div>
+  {{- end }}
   <div class="shape-blur" id="shapeBlur" aria-hidden="true"></div>
   <div class="welcome-foot">
     <span class="mono welcome-prefix">//</span>

@@ -145,20 +145,31 @@ var Profile = window.Profile = {
   },
 
   async uploadAvatar(userId, file) {
-    const fileExt = file.name.split('.').pop();
+    if (!file || !/^image\//i.test(file.type)) {
+      throw new Error('请选择图片文件（jpg/png/webp 等）');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('头像图片不能超过 5 MB');
+    }
+    const fileExt = file.name.split('.').pop() || 'png';
     const filePath = `${userId}/avatar.${fileExt}`;
 
     const { error: uploadError } = await blogSupabase.storage
       .from('avatars')
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, file, { upsert: true, contentType: file.type });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      if (/permission|policy|RLS|row.?level|not allowed/i.test(uploadError.message || '')) {
+        throw new Error('头像上传被拒绝：avatars 存储桶缺少上传权限（RLS），请联系管理员配置');
+      }
+      throw uploadError;
+    }
 
     const { data: { publicUrl } } = blogSupabase.storage
       .from('avatars')
       .getPublicUrl(filePath);
 
-    await this.update(userId, { avatar_url: publicUrl });
+    const updated = await this.update(userId, { avatar_url: publicUrl });
     return publicUrl;
   },
 
