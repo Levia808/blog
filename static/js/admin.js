@@ -219,6 +219,9 @@
       else if (key === 'draft') meta.draft = value !== 'false';
       else if (key === 'archived') meta.archived = value === 'true';
       else if (key === 'date') meta.date = value.replace(/^['"]|['"]$/g, '');
+      else if (key === 'entry_title_font') meta.entryTitleFont = value.replace(/^['"]|['"]$/g, '');
+      else if (key === 'entry_title_font_file') meta.entryTitleFontFile = value.replace(/^['"]|['"]$/g, '');
+      else if (key === 'entry_title_font_name') meta.entryTitleFontName = value.replace(/^['"]|['"]$/g, '');
     });
     return meta;
   }
@@ -258,7 +261,7 @@
       try {
         var raw = await fetch(file.download_url).then(function (r) { return r.text(); });
         var meta = parseFrontMatter(raw);
-        posts.push({ name: file.name, sha: file.sha, title: meta.title || file.name, draft: meta.draft, archived: meta.archived, date: meta.date });
+        posts.push({ name: file.name, sha: file.sha, title: meta.title || file.name, draft: meta.draft, archived: meta.archived, date: meta.date, entryTitleFont: meta.entryTitleFont, entryTitleFontFile: meta.entryTitleFontFile, entryTitleFontName: meta.entryTitleFontName });
       } catch (e) {
         posts.push({ name: file.name, sha: file.sha, title: file.name, draft: true, date: '' });
       }
@@ -325,6 +328,7 @@
     renderPostRows(posts, 'adminPublishTable', true);
     document.getElementById('adminPublishHint').textContent = '共 ' + posts.length + ' 篇文章';
     renderCardPreview();
+    renderFontPreview();
     var archived = posts.filter(function (p) { return p.archived; });
     renderPostRows(archived, 'adminArchiveTable', true);
     document.getElementById('adminArchiveHint').textContent = '已归档 ' + archived.length + ' 篇 · 归档后从首页与列表隐藏';
@@ -552,10 +556,35 @@
   function renderFontPreview() {
     var list = document.getElementById('fontPreviewList');
     if (!list) return;
+    /* 自定义字体: 从文章 front matter 提取真实字体文件动态加载 */
+    var customFont = null;
+    var customFontName = 'CustomFontPreview';
+    var i;
+    for (i = 0; i < (ghPostsCache || []).length; i++) {
+      var p = ghPostsCache[i];
+      if (p.entryTitleFont === 'custom' && p.entryTitleFontFile) { customFont = p.entryTitleFontFile; customFontName = p.entryTitleFontName || customFontName; break; }
+    }
+    var customFontCss = '';
+    if (customFont) {
+      var format = 'truetype';
+      if (/\.woff2$/i.test(customFont)) format = 'woff2';
+      else if (/\.woff$/i.test(customFont)) format = 'woff';
+      else if (/\.otf$/i.test(customFont)) format = 'opentype';
+      customFontCss = "@font-face { font-family: '" + customFontName + "'; src: url('" + customFont + "') format('" + format + "'); font-display: swap; }";
+      var st = document.createElement('style');
+      st.id = 'fontPreviewCustomFace';
+      st.textContent = customFontCss;
+      var old = document.getElementById('fontPreviewCustomFace');
+      if (old) old.remove();
+      document.head.appendChild(st);
+    }
     list.innerHTML = FONT_PREVIEWS.map(function (f) {
       var weight = f.weight ? 'font-weight:' + f.weight + ';' : '';
-      return '<div class="fp-item"><span class="fp-name">' + f.label + '</span>' +
-        '<span class="fp-sample" style="font-family:' + f.font + ';' + weight + '">构建现代化博客｜Hello World</span></div>';
+      var font = f.font;
+      if (f.custom && customFont) font = "'" + customFontName + "', serif";
+      var note = (f.custom && customFont) ? '（' + customFont.split('/').pop() + '）' : '';
+      return '<div class="fp-item"><span class="fp-name">' + f.label + note + '</span>' +
+        '<span class="fp-sample" style="font-family:' + font + ';' + weight + '">构建现代化博客｜Hello World</span></div>';
     }).join('');
   }
 
@@ -594,6 +623,7 @@
       });
   });
 
+  renderFontPreview();
   var cfgSaveBtn = document.getElementById('cfgSaveBtn');
   if (cfgSaveBtn) cfgSaveBtn.addEventListener('click', saveWelcomeConfig);
   var cfgReloadBtn = document.getElementById('cfgReloadBtn');
