@@ -51,13 +51,6 @@
 {{- $cvRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
 {{- with resources.Get $cvRel }}{{ $pcfVideo = .RelPermalink }}{{ end }}
 {{- $bgImg = "" }}
-{{- else }}
-{{- if $bgImg }}
-{{- if or (strings.HasSuffix $bgImg ".mp4") (strings.HasSuffix $bgImg ".webm") (strings.HasSuffix $bgImg ".mov") }}
-{{- $pcfVideo = $bgImg }}
-{{- $bgImg = "" }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- $fontCustom := "" }}
 {{- if eq (.Params.entry_title_font | default "display") "custom" }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
