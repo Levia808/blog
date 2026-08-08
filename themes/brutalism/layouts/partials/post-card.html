@@ -17,6 +17,35 @@
 {{- end }}
 {{- end }}
 {{- $h := and site.Data.cards (eq site.Data.cards.style "horizontal") }}
+{{- $f := and site.Data.cards (eq site.Data.cards.style "fullscreen") }}
+{{- if $f }}
+{{- $bgImg := "" }}
+{{- with .Params.background }}
+{{- $bgImg = (. | relURL) }}
+{{- with resources.Get (strings.TrimPrefix "/" (urls.Parse .).Path) }}
+{{- $bgImg = .RelPermalink }}
+{{- end }}
+{{- end }}
+{{- with $cover }}
+{{- if not $bgImg }}{{ $bgImg = (. | relURL) }}{{ end }}
+{{- end }}
+<article class="post-card-fullscreen{{ if $bgImg }} has-bg{{ end }}" data-reveal{{ if $bgImg }} style="background-image:url('{{ $bgImg }}')"{{ end }}>
+  <a class="pcf-link" href="{{ .RelPermalink }}">
+    <div class="pcf-inner">
+      <div class="pcf-date mono">{{ .Date.Format "2006 · 01 · 02" }} · {{ .ReadingTime }} min</div>
+      <h2 class="pcf-title">{{ .Title }}</h2>
+      {{- with .Description }}
+      <p class="pcf-quote">{{ . }}</p>
+      {{- else }}
+      <p class="pcf-quote">{{ .Summary | plainify | truncate 120 }}</p>
+      {{- end }}
+      {{- with .Params.tags }}
+      <div class="pcf-tags">{{ range . }}<span class="pcf-tag">{{ . }}</span>{{ end }}</div>
+      {{- end }}
+    </div>
+  </a>
+</article>
+{{- else }}
 <article class="post-card-cover{{ if $h }} horizontal{{ end }}" data-reveal>
   <a class="pc-link" href="{{ .RelPermalink }}">
     <div class="pc-img">
@@ -38,3 +67,4 @@
     </div>
   </a>
 </article>
+{{- end }}

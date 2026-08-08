@@ -1129,3 +1129,78 @@ html.js [data-reveal].reveal-visible {
   .post-card-cover.horizontal .pc-body { padding: 12px 14px; }
   .post-card-cover.horizontal .pc-excerpt { display: none; }
 }
+
+/* ── 全屏杂志封面入口 (第三种卡片样式) ── */
+.card-list--fullscreen { max-width: 1100px; gap: 20px; }
+.post-card-fullscreen {
+  position: relative;
+  min-height: 70vh;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--surface);
+  background-size: cover;
+  background-position: center;
+  transition: border-color 350ms ease-out;
+}
+.post-card-fullscreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0.55;
+  transition: opacity 350ms ease-out;
+}
+.post-card-fullscreen:hover { border-color: var(--accent); }
+.post-card-fullscreen:hover::before { opacity: 0.4; }
+.pcf-link {
+  position: relative;
+  display: block;
+  min-height: 70vh;
+  padding: 64px;
+  text-decoration: none;
+  display: flex;
+  align-items: flex-end;
+}
+.pcf-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+}
+.pcf-date { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; }
+.pcf-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(34px, 5vw, 60px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--white);
+  transition: transform 300ms cubic-bezier(.22,.61,.36,1);
+}
+.post-card-fullscreen:hover .pcf-title { transform: translateX(6px); }
+.pcf-quote {
+  font-size: 15px;
+  color: var(--fg);
+  font-style: italic;
+  line-height: 1.7;
+  max-width: 560px;
+  border-left: 2px solid var(--accent);
+  padding-left: 16px;
+}
+.pcf-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.pcf-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 3px 12px;
+  transition: color var(--dur-slow), border-color var(--dur-slow);
+}
+.post-card-fullscreen:hover .pcf-tag { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 640px) {
+  .pcf-link { padding: 32px 22px; min-height: 55vh; }
+  .post-card-fullscreen { min-height: 55vh; }
+  .pcf-quote { font-size: 13px; }
+}

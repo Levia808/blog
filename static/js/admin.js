@@ -494,7 +494,7 @@
       .then(function (file) {
         cardsSha = file.sha;
         var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*=\s*["']?([\w]+)["']?/m);
-        if (m && ['grid', 'horizontal'].includes(m[1])) select.value = m[1];
+        if (m && ['grid', 'horizontal', 'fullscreen'].includes(m[1])) select.value = m[1];
         syncCardPreviewSelect();
         renderCardPreview();
       })
