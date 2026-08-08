@@ -6,7 +6,7 @@ tags:
   - 博客
   - 随笔
 description: 你好世界
-background: /images/pexels-francesco-ungaro-27597007.jpg
+background: /images/pexels-tigran-manukyan-33097708.jpg
 entry_title_font: custom
 entry_title_font_file: /images/Cube-Font-1.ttf
 entry_title_font_name: ''
