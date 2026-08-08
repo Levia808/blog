@@ -1046,6 +1046,47 @@
     }
   });
 
+  async function syncFontToGitHub(file) {
+    var dataUrl = await new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result)); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    var b64 = dataUrl.split(',')[1] || '';
+    var fileName = file.name;
+    var fontPath = '/repos/' + GH_REPO + '/contents/assets/images/' + encodeURIComponent(fileName);
+    var ghHeaders = { 'Content-Type': 'application/json' };
+    try {
+      await ghFetch(fontPath, {
+        method: 'PUT', headers: ghHeaders,
+        body: JSON.stringify({ message: '上传字体: ' + fileName, content: b64 })
+      });
+    } catch (error) {
+      throw new Error('字体同步仓库失败（确认已授权 GitHub）：' + (error.message || error));
+    }
+    var list = [];
+    var fs = null;
+    try {
+      fs = await ghFetch('/repos/' + GH_REPO + '/contents/static/fonts.json');
+      list = JSON.parse(atob(String(fs.content).replace(/\s/g, '')));
+    } catch (error) { /* 首次创建 */ }
+    var entry = '/images/' + fileName;
+    if (list.indexOf(entry) < 0) list.push(entry);
+    try {
+      await ghFetch('/repos/' + GH_REPO + '/contents/static/fonts.json', {
+        method: 'PUT', headers: ghHeaders,
+        body: JSON.stringify({
+          message: '字体库更新: ' + fileName,
+          content: base64Encode(JSON.stringify(list)),
+          sha: fs ? fs.sha : undefined
+        })
+      });
+    } catch (error) {
+      throw new Error('字体清单更新失败：' + (error.message || error));
+    }
+  }
+
   var uploadButton = document.getElementById('adminMediaUpload');
   if (uploadButton) uploadButton.addEventListener('click', async function () {
     var input = document.getElementById('adminMediaInput');
@@ -1058,6 +1099,14 @@
     try {
       uploadButton.disabled = true;
       uploadButton.textContent = '上传中…';
+      var isFont = /^\.(ttf|otf|woff2?|eot)$/i.test('.' + (file.name.split('.').pop() || ''));
+      if (isFont && getGhToken()) {
+        await syncFontToGitHub(file);
+        uploadButton.disabled = false;
+        uploadButton.textContent = '上传媒体';
+        showToast('字体已同步仓库，构建部署后编辑器下拉自动收录（约1分钟）', 'success');
+        return;
+      }
       var progressEl = document.getElementById('adminUploadProgress');
       var progressFill = document.getElementById('adminUploadProgressFill');
       var progressText = document.getElementById('adminUploadProgressText');
