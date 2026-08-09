@@ -84,7 +84,7 @@
     });
 
     var mobileLoginBtn = document.getElementById('mobileLoginBtn');
-    if (mobileLoginBtn) {
+    if (mobileLoginBtn && mobileLoginBtn.tagName !== 'A') {
       mobileLoginBtn.addEventListener('click', function () {
         closeDrawer();
         if (window.BlogAuth) window.BlogAuth.open('login');
@@ -135,6 +135,175 @@
     elements.forEach(function (el, index) {
       el.style.setProperty('--reveal-delay', Math.min(index * 50, 300) + 'ms');
       observer.observe(el);
+    });
+  }
+
+  /* Fullscreen card paging + title entrance effects */
+  function initFullscreenCards() {
+    var list = document.querySelector('.card-list--fullscreen');
+    if (!list) return;
+
+    var cards = Array.prototype.slice.call(list.querySelectorAll('.post-card-fullscreen'));
+    if (!cards.length) return;
+    document.documentElement.classList.add('fullscreen-snap-enabled');
+
+    function wrapTitleUnits(title) {
+      if (!title || title.dataset.unitsReady === '1') return;
+      var textNodes = [];
+      var walker = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
+      var node;
+      while ((node = walker.nextNode())) textNodes.push(node);
+
+      var index = 0;
+      textNodes.forEach(function (textNode) {
+        var text = textNode.nodeValue || '';
+        if (!text.trim()) return;
+        var fragment = document.createDocumentFragment();
+        text.split(/(\s+)/).forEach(function (part) {
+          if (!part) return;
+          if (/^\s+$/.test(part)) {
+            fragment.appendChild(document.createTextNode(part));
+            return;
+          }
+          var units = /[\u3400-\u9fff]/.test(part) ? Array.from(part) : [part];
+          units.forEach(function (unit) {
+            var span = document.createElement('span');
+            span.className = 'pcf-title-unit';
+            span.style.setProperty('--pcf-title-index', String(index++));
+            span.textContent = unit;
+            fragment.appendChild(span);
+          });
+        });
+        textNode.parentNode.replaceChild(fragment, textNode);
+      });
+      title.dataset.unitsReady = '1';
+    }
+
+    cards.forEach(function (card) {
+      var title = card.querySelector('.pcf-title[data-title-effect]');
+      if (title) wrapTitleUnits(title);
+    });
+
+    var activeIndex = 0;
+    var locked = false;
+    var shufflePool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function runShuffle(title) {
+      if (!title || title.dataset.shufflePlayed === '1' || reducedMotion) return;
+      var units = title.querySelectorAll('.pcf-title-unit');
+      if (!units.length) return;
+      title.dataset.shufflePlayed = '1';
+      var originals = Array.prototype.map.call(units, function (unit) { return unit.textContent; });
+      var frame = 0;
+      var total = 14;
+      var interval = window.setInterval(function () {
+        frame++;
+        units.forEach(function (unit, index) {
+          var revealAt = Math.floor((index / Math.max(units.length, 1)) * total);
+          if (frame >= revealAt + 3 || frame >= total) {
+            unit.textContent = originals[index];
+          } else {
+            unit.textContent = shufflePool[Math.floor(Math.random() * shufflePool.length)];
+          }
+        });
+        if (frame >= total) window.clearInterval(interval);
+      }, 34);
+    }
+
+    function setActive(index) {
+      if (index < 0 || index >= cards.length) return;
+      activeIndex = index;
+      cards.forEach(function (card, cardIndex) {
+        var active = cardIndex === index;
+        card.classList.toggle('is-card-active', active);
+        if (!active) {
+          var inactiveTitle = card.querySelector('.pcf-title[data-title-effect="shuffle"]');
+          if (inactiveTitle) inactiveTitle.dataset.shufflePlayed = '';
+        }
+      });
+      var title = cards[index].querySelector('.pcf-title[data-title-effect="shuffle"]');
+      runShuffle(title);
+    }
+
+    setActive(0);
+
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        var best = null;
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && (!best || entry.intersectionRatio > best.intersectionRatio)) best = entry;
+        });
+        if (best) {
+          var index = cards.indexOf(best.target);
+          if (index >= 0) setActive(index);
+        }
+      }, { threshold: [0.25, 0.55, 0.75], rootMargin: '-8% 0px -8% 0px' });
+      cards.forEach(function (card) { observer.observe(card); });
+    }
+
+    function inCardViewport() {
+      var rect = list.getBoundingClientRect();
+      return rect.bottom > 0 && rect.top < window.innerHeight;
+    }
+
+    function nearestCardIndex() {
+      var bestIndex = activeIndex;
+      var bestDistance = Infinity;
+      cards.forEach(function (card, index) {
+        var distance = Math.abs(card.getBoundingClientRect().top);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = index;
+        }
+      });
+      return bestIndex;
+    }
+
+    function moveCard(direction) {
+      var current = nearestCardIndex();
+      var next = Math.max(0, Math.min(cards.length - 1, current + direction));
+      if (next === current) return false;
+      cards[next].scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+      locked = true;
+      window.setTimeout(function () { locked = false; }, reducedMotion ? 80 : 680);
+      return true;
+    }
+
+    list.addEventListener('wheel', function (event) {
+      if (Math.abs(event.deltaY) < 18 || Math.abs(event.deltaY) < Math.abs(event.deltaX) || !inCardViewport()) return;
+      var direction = event.deltaY > 0 ? 1 : -1;
+      var current = nearestCardIndex();
+      var atBoundary = (current === 0 && direction < 0) || (current === cards.length - 1 && direction > 0);
+      if (atBoundary) return;
+      event.preventDefault();
+      if (!locked) moveCard(direction);
+    }, { passive: false });
+
+    var touchStartY = null;
+    list.addEventListener('touchstart', function (event) {
+      if (event.touches[0]) touchStartY = event.touches[0].clientY;
+    }, { passive: true });
+    list.addEventListener('touchend', function (event) {
+      if (touchStartY == null || !event.changedTouches[0] || !inCardViewport()) return;
+      var delta = touchStartY - event.changedTouches[0].clientY;
+      touchStartY = null;
+      if (Math.abs(delta) < 42) return;
+      var direction = delta > 0 ? 1 : -1;
+      var current = nearestCardIndex();
+      var atBoundary = (current === 0 && direction < 0) || (current === cards.length - 1 && direction > 0);
+      if (!atBoundary && !locked) moveCard(direction);
+    }, { passive: true });
+
+    document.addEventListener('keydown', function (event) {
+      if (!inCardViewport() || event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      var direction = event.key === 'ArrowDown' || event.key === 'PageDown' ? 1
+        : event.key === 'ArrowUp' || event.key === 'PageUp' ? -1 : 0;
+      if (!direction) return;
+      var current = nearestCardIndex();
+      var atBoundary = (current === 0 && direction < 0) || (current === cards.length - 1 && direction > 0);
+      if (atBoundary) return;
+      event.preventDefault();
+      if (!locked) moveCard(direction);
     });
   }
 
@@ -1009,6 +1178,7 @@
     initWelcomeAvatar();
     initShapeBlur();
     initClickSparks();
+    initFullscreenCards();
     initScrambleHover();
     initCoverParallax();
     initLoginPage();

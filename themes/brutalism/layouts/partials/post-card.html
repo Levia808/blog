@@ -54,6 +54,10 @@
 {{- end }}
 {{- $fontCustom := "" }}
 {{- $fontVal := .Params.entry_title_font | default "display" }}
+{{- $titleSize := .Params.entry_title_size | default 100 }}
+{{- $titleScale := div (float $titleSize) 100 }}
+{{- $titleEffect := .Params.entry_title_effect | default "none" }}
+{{- if not (in (slice "none" "blur" "reveal" "shiny" "shuffle") $titleEffect) }}{{ $titleEffect = "none" }}{{ end }}
 {{- $fontIsPath := findRE "\\.(ttf|otf|woff2?|eot)$" $fontVal }}
 {{- if or (eq $fontVal "custom") $fontIsPath }}
 {{- if $fontIsPath }}{{ $fontCustom = $fontVal }}{{ else }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
@@ -71,7 +75,7 @@
 </style>
 {{- $tStyle = printf "font-family:'%s', Georgia, serif;" $fontName }}
 {{- end }}
-<article class="post-card-fullscreen{{ if $pcfVideo }} pcf-video-card{{ end }} pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-component="clickable-card" data-variant="fullscreen" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
+<article class="post-card-fullscreen{{ if $pcfVideo }} pcf-video-card{{ end }} pcf-align-{{ .Params.entry_align | default "left-bottom" }} pcf-font-{{ .Params.entry_title_font | default "display" }}{{ if .Params.entry_hide_title }} pcf-hide-title{{ end }}{{ if $bgImg }} has-bg{{ end }}" data-component="clickable-card" data-variant="fullscreen" data-title-effect="{{ $titleEffect }}" data-reveal{{ if $bgImg }} data-bg="{{ $bgImg }}"{{ end }}>
   {{- if $pcfVideo }}
   <video class="pcf-video" src="{{ $pcfVideo }}" muted playsinline loop preload="metadata" aria-hidden="true"></video>
   <div class="video-loading" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>
@@ -84,9 +88,10 @@
       {{- $tOpacity := .Params.entry_title_opacity }}
       {{- $title := .Title | replaceRE "\\|" "<br>" | replaceRE "<br/?>" "<br>" }}
       {{- if $tColor }}{{ $tStyle = printf "%s color:%s;" $tStyle $tColor }}{{ end }}
-      {{- if $tOpacity }}{{ $tStyle = printf "%s opacity:%s;" $tStyle (div (float $tOpacity) 100) }}{{ end }}
+      {{- if $tOpacity }}{{ $tStyle = printf "%s opacity:%.2f;" $tStyle (div (float $tOpacity) 100) }}{{ end }}
+      {{- $tStyle = printf "%s --pcf-title-scale:%.2f;" $tStyle $titleScale }}
       {{- if not .Params.entry_hide_title }}
-      <h2 class="pcf-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}"{{ if $tStyle }} style="{{ $tStyle | safeCSS }}"{{ end }}>{{ $title | safeHTML }}</h2>
+      <h2 class="pcf-title" data-scramble="{{ if (default true .Params.entry_scramble) }}1{{ else }}0{{ end }}" data-title-effect="{{ $titleEffect }}"{{ if $tStyle }} style="{{ $tStyle | safeCSS }}"{{ end }}>{{ $title | safeHTML }}</h2>
       {{- end }}
       {{- if .Params.entry_hide_title }}
       <p class="pcf-quote" style="border-left:none;padding-left:0;font-size:20px;font-weight:500;font-style:normal;{{ $tStyle | safeCSS }}">{{ $title | safeHTML }}</p>

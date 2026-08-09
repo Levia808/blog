@@ -7,9 +7,12 @@
   <div class="nf-links">
     {{- range site.Menus.main }}
     {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
+    {{- $isLoginItem := in (lower .URL) "login" -}}
+    {{- if not $isLoginItem }}
     {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
     {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
     <a class="nf-link{{ if $isActive }} active{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{- end }}
     {{- end }}
   </div>
   <div class="nf-actions">
@@ -21,7 +24,7 @@
       <svg viewBox="0 0 256 256" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M229.7,218.3l-43.2-43.2a92.4,92.4,0,1,0-11.3,11.3l43.2,43.2A8,8,0,0,0,229.7,218.3ZM40,124a84,84,0,1,1,84,84A84.1,84.1,0,0,1,40,124Z"/></svg>
     </button>
     {{- if $P.auth }}
-    <button type="button" class="nav-login-btn" id="navLoginBtn">登录</button>
+    <a class="nav-login-btn" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
     <div class="dropdown" id="userMenuContainer" hidden>
       <button type="button" class="nf-avatar" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
         <img class="nf-avatar-img" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
@@ -63,11 +66,14 @@
   <nav class="drawer-menu">
     {{- range $index, $item := site.Menus.main }}
     {{- $menuItemURL := (cond (strings.HasSuffix $item.URL "/") $item.URL (printf "%s/" $item.URL)) -}}
+    {{- $isLoginItem := in (lower $item.URL) "login" -}}
+    {{- if not $isLoginItem }}
     {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
     {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
     <a href="{{ $item.URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>
       <span class="dm-idx">{{ printf "%02d" (add $index 1) }}</span>{{ $item.Name }}<span class="dm-arr">›››</span>
     </a>
+    {{- end }}
     {{- end }}
   </nav>
   {{- if $P.auth }}
@@ -75,7 +81,7 @@
     <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
     <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>
     <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden><span class="dm-idx">▦</span>管理后台</a>
-    <button type="button" id="mobileLoginBtn"><span class="dm-idx">›</span>登录</button>
+    <a href="{{ "login/" | relLangURL }}" id="mobileLoginBtn" data-smooth-login><span class="dm-idx">›</span>登录</a>
     <button type="button" id="mobileLogoutBtn" hidden><span class="dm-idx">×</span>退出登录</button>
   </div>
   {{- end }}

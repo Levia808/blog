@@ -155,16 +155,20 @@
 
   /* ── 统计 (设计稿 4 卡) ── */
   function renderStats(stats) {
-    document.getElementById('adminPostCount').textContent = stats.posts;
-    document.getElementById('adminCommentCount').textContent = stats.comments;
-    document.getElementById('adminUserCount').textContent = stats.users;
-    document.getElementById('adminPendingCommentCount').textContent = stats.pending;
+    stats = stats || {};
+    document.getElementById('adminPostCount').textContent = stats.posts == null ? '—' : stats.posts;
+    var homeCardCount = document.getElementById('adminHomeCardCount');
+    if (homeCardCount) homeCardCount.textContent = stats.homeCards == null ? '—' : stats.homeCards;
+    document.getElementById('adminCommentCount').textContent = stats.comments == null ? '—' : stats.comments;
+    document.getElementById('adminUserCount').textContent = stats.users == null ? '—' : stats.users;
+    document.getElementById('adminPendingCommentCount').textContent = stats.pending == null ? '—' : stats.pending;
   }
 
   async function loadStats() {
     var stats = await Admin.getStats();
     renderStats({
       posts: document.getElementById('adminPostCount').textContent,
+      homeCards: document.getElementById('adminHomeCardCount') ? document.getElementById('adminHomeCardCount').textContent : '—',
       comments: stats.totalComments,
       users: stats.totalUsers,
       pending: stats.pendingComments
@@ -271,6 +275,12 @@
     return posts;
   }
 
+  function homeCardPosts(posts) {
+    return posts.filter(function (post) {
+      return !post.archived && post.draft === false;
+    }).slice(0, 6);
+  }
+
   function renderPostRows(posts, tableId, showActions) {
     var table = document.getElementById(tableId);
     if (!posts.length) {
@@ -313,7 +323,9 @@
       var hint = document.getElementById('adminPublishHint');
       var note = document.getElementById('ghPublishNote');
       var postCountEl = document.getElementById('adminPostCount');
+      var homeCardCountEl = document.getElementById('adminHomeCardCount');
       if (postCountEl) postCountEl.textContent = '—';
+      if (homeCardCountEl) homeCardCountEl.textContent = '—';
       renderPostRows([], 'adminPostTable', true);
       renderPostRows([], 'adminPublishTable', true);
       if (hint) hint.textContent = '';
@@ -322,7 +334,9 @@
     }
     var posts = await loadGhPosts();
     var postCountEl = document.getElementById('adminPostCount');
+    var homeCardCountEl = document.getElementById('adminHomeCardCount');
     if (postCountEl) postCountEl.textContent = posts.length;
+    if (homeCardCountEl) homeCardCountEl.textContent = homeCardPosts(posts).length;
     renderPostRows(posts.slice(0, 8), 'adminPostTable', true);
     document.getElementById('adminPostHint').textContent = '共 ' + posts.length + ' 篇文章 · 显示最近 ' + Math.min(8, posts.length) + ' 篇';
     renderPostRows(posts, 'adminPublishTable', true);

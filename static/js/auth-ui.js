@@ -58,6 +58,21 @@
     document.body.style.overflow = '';
   }
 
+  function smoothNavigate(href) {
+    if (!href || window.location.href === href) return;
+    if (document.startViewTransition) {
+      document.startViewTransition(function () {
+        window.location.href = href;
+      });
+      return;
+    }
+    document.documentElement.classList.add('page-transitioning');
+    document.body.classList.add('page-leave');
+    window.setTimeout(function () {
+      window.location.href = href;
+    }, 180);
+  }
+
   function openUserMenu() {
     if (!userMenuContainer || !userDropdown) return;
     clearTimeout(userMenuCloseTimer);
@@ -86,7 +101,12 @@
 
   if (closeBtn) closeBtn.addEventListener('click', closeAuth);
   if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) closeAuth(); });
-  if (navLoginBtn) navLoginBtn.addEventListener('click', function () { openAuth('login'); });
+  if (navLoginBtn) {
+    navLoginBtn.addEventListener('click', function (event) {
+      event.preventDefault();
+      smoothNavigate(navLoginBtn.href || navLoginBtn.getAttribute('href'));
+    });
+  }
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !overlay.hidden) closeAuth();

@@ -187,6 +187,13 @@
     return Math.max(0, Math.min(100, number)) / 100;
   }
 
+  function clampTitleSize(value) {
+    if (value === '') return 100;
+    var number = Number(value);
+    if (!isFinite(number)) return 100;
+    return Math.max(60, Math.min(180, number));
+  }
+
   function setState(root, tone, text) {
     var pill = root && root.querySelector('.fp-state');
     if (!pill) return;
@@ -238,8 +245,10 @@
 
     var value = select.value || 'display';
     var path = selectedPath(value);
-    var color = readField('entry_title_color') || '#f2f5f1';
+    var color = readField('entry_title_color') || '#18211d';
     var opacity = clampOpacity(readField('entry_title_opacity'));
+    var titleSize = clampTitleSize(readField('entry_title_size'));
+    var titleEffect = readField('entry_title_effect') || 'none';
     var align = readField('entry_align') || 'left-bottom';
     var hiddenTitle = readBool('entry_hide_title');
     var description = readField('description');
@@ -247,10 +256,14 @@
 
     stage.dataset.align = align;
     stage.dataset.titleHidden = hiddenTitle ? 'true' : 'false';
-    stage.classList.remove('is-error', 'is-loading');
+    stage.dataset.effect = titleEffect;
+    stage.classList.remove('is-error', 'is-loading', 'is-effecting');
+    void stage.offsetWidth;
+    if (titleEffect !== 'none') stage.classList.add('is-effecting');
     preview.textContent = titleText();
     preview.style.color = color;
     preview.style.opacity = opacity;
+    preview.style.setProperty('--fp-title-scale', String(titleSize / 100));
     if (date) {
       date.textContent = formatDate(readField('date'));
       date.hidden = !date.textContent;
@@ -590,7 +603,7 @@
     ['input', 'change'].forEach(function (eventName) {
       document.addEventListener(eventName, function (event) {
         if (event.target.closest('.fp-root')) return;
-        if (event.target.closest('[data-key-path="title"], [data-key-path="description"], [data-key-path="date"], [data-key-path="entry_title_color"], [data-key-path="entry_title_opacity"], [data-key-path="entry_align"], [data-key-path="entry_hide_title"], [data-key-path="entry_title_font_file"], [data-key-path="entry_title_font_name"]')) {
+        if (event.target.closest('[data-key-path="title"], [data-key-path="description"], [data-key-path="date"], [data-key-path="entry_title_color"], [data-key-path="entry_title_opacity"], [data-key-path="entry_title_size"], [data-key-path="entry_title_effect"], [data-key-path="entry_align"], [data-key-path="entry_hide_title"], [data-key-path="entry_title_font_file"], [data-key-path="entry_title_font_name"]')) {
           scheduleUpdate();
         }
       }, true);

@@ -186,6 +186,27 @@ collections:
         min: 0
         max: 100
         hint: "0-100，留空默认 100%"
+      - label: 标题字号
+        name: entry_title_size
+        widget: number
+        required: false
+        default: 100
+        min: 60
+        max: 180
+        step: 5
+        hint: "以默认字号为基准调整，100% 为默认，范围 60%-180%"
+      - label: 标题进场效果
+        name: entry_title_effect
+        widget: select
+        required: false
+        default: none
+        options:
+          - { label: 无效果, value: none }
+          - { label: BlurText 模糊逐词, value: blur }
+          - { label: ScrollReveal 滚动揭示, value: reveal }
+          - { label: ShinyText 光泽扫过, value: shiny }
+          - { label: Shuffle 字符洗牌, value: shuffle }
+        hint: "全屏文章卡片进入视口时播放，编辑器下方预览会同步更新"
       - label: 不在封面显示标题
         name: entry_hide_title
         widget: boolean

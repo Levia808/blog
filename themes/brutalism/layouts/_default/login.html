@@ -1,3 +1,4 @@
+{{- define "body-class" }}login-only{{ end }}
 {{ define "main" }}
 {{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
 <div class="login-page" id="loginPage">
