@@ -909,9 +909,21 @@
       setTimeout(function () { window.location.href = '/'; }, 1200);
     });
 
-    /* Google (演示) */
-    var g = document.getElementById('googleSignIn');
-    if (g) g.addEventListener('click', function () { toast('Google 登录（演示）'); });
+    /* GitHub 登录 (OAuth) */
+    var g = document.getElementById('githubSignIn');
+    if (g) g.addEventListener('click', function () {
+      if (window.Auth && typeof window.Auth.signInWithGitHub === 'function') {
+        g.disabled = true;
+        g.textContent = '跳转中…';
+        window.Auth.signInWithGitHub().catch(function (e) {
+          g.disabled = false;
+          g.textContent = '使用 GitHub 继续';
+          toast('GitHub 登录失败：' + ((e && e.message) || e));
+        });
+      } else {
+        toast('登录服务未就绪，请稍后重试');
+      }
+    });
 
     /* 记住我预填 */
     var saved = localStorage.getItem('blog_login_email');
