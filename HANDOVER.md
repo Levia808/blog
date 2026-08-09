@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-09 · Levia808 · HEAD `733ef20`
+> 最后更新：2026-08-09 · Codex · 基线 `3d606e5`
 
 ---
 
@@ -22,7 +22,7 @@
 
 **git 凭证**：`~/.git-credentials`（token，python 可提取用于 GitHub API）。
 **代理**：github 等需 `http://127.0.0.1:7897`（仓库级 git 代理已配；unpkg/google fonts 直连）。
-**Docker**（Windows 开发）：`Dockerfile` + `docker-compose.yml`（`klakegg/hugo:0.164.0-ext-alpine`，`docker compose up` → :1313）。
+**Docker**（Windows 开发）：`Dockerfile` + `docker-compose.yml`（`ghcr.io/gohugoio/hugo:v0.164.0`，`docker compose up` → :1313，Windows bind mount 使用 `--noTimes`）。
 
 ---
 
@@ -88,9 +88,9 @@ push main
 - 字体自托管（无 Google CDN 依赖）、登录/注册页、搜索、深/浅主题
 
 ### 编辑器字体控件（复杂度最高，勿回退到旧架构）
-- 架构：**全局逻辑层 + DOM 委托**（`initFontPreviewGlobal` 200ms 轮询幂等绑定）——Sveltia 重渲染控件只重建 UI，逻辑不丢失
-- 能力：内置 9 字体下拉 / **上传自定义字体**(XHR PUT GitHub + 进度条 + raw URL 即时预览 + `updateFontList` 增量更新 fonts.json) / 资源库面板(读 fonts.json, session 缓存) / 实时预览(文章标题)
-- 关键函数：`uploadFontToGitHub` / `updateFontList` / `ensureOption` / `buildOptions(value)` / `ensureFontFace(path, name, force)`
+- 架构：**独立 `font-preview.js` + `font-preview.css` + DOM 委托**（MutationObserver 发现 Sveltia 重渲染，requestAnimationFrame 批量刷新）——控件 UI 可重建，逻辑和字体缓存不丢失
+- 能力：内置 9 字体下拉 / **上传自定义字体**（本地 blob 立即预览 + GitHub Contents API PUT + 进度条 + `updateFontList` 增量更新 fonts.json）/ 资源库面板（读 fonts.json, session 缓存）/ 实时预览（标题、日期、摘要、颜色、透明度、对齐、隐藏标题）
+- 关键函数：`uploadFontToGitHub` / `updateFontList` / `ensureSelectOption` / `optionValues(value)` / `ensureFontFace(path, family, version)`
 - **陷阱**：`dispatchEvent` 必须 `bubbles: true`（React onChange）；select 赋值前 `ensureOption`；模板 `$fontCustom` 判定支持「值=路径」(`findRE` 扩展名)；style 需 `safeCSS`（否则 ZgotmplZ）
 
 ### 媒体/上传
@@ -172,7 +172,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-09 | `733ef20` | Docker 开发/构建环境（Windows 支持） |
+| 08-09 | `本次提交` | 重构全屏封面字体控件：独立 JS/CSS、低延迟本地预览、自定义字体上传渲染验收、Docker server --noTimes |`r`n| 08-09 | `733ef20` | Docker 开发/构建环境（Windows 支持） |
 | 08-08 | `69590c0` | 优化全屏封面字体预览 |
 | 08-08 | `5278e12` | 字体列表持久化：fonts.json 单一权威，上传增量更新，零重复扫描 |
 | 08-08 | `b9d0f6c` | 字体链路修复：dispatchEvent bubbles、ensureOption、buildOptions(value)（9/9 模拟通过） |
