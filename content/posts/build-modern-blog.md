@@ -9,6 +9,7 @@ tags:
   - devops
 description: 从 Hugo 到双线部署的完整实践。一份代码，两边构建。
 background: /images/wallhaven-yq2w3x.jpg
+article_effect_type: ''
 entry_title_font: /images/南西油墨宋.ttf
 entry_title_font_file: /images/HYPixel11pxU-2.ttf
 entry_title_font_name: HYPixel11
