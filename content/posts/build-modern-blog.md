@@ -15,6 +15,7 @@ entry_title_font_name: HYPixel11
 entry_title_color: ''
 entry_title_opacity: 75
 entry_title_size: null
+entry_title_effect: blur
 entry_scramble: false
 entry_align: center-center
 cover:
