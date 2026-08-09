@@ -604,6 +604,18 @@ html.js [data-reveal].reveal-visible {
 .article-page .article-toc { background: rgba(22, 22, 21, 0.92); }
 [data-theme="light"] .article-page .article-main,
 [data-theme="light"] .article-page .article-toc { background: rgba(255, 255, 255, 0.92); }
+.canvasui-article-source,
+.canvasui-article-output {
+  pointer-events: none;
+}
+.canvasui-article-output {
+  opacity: .96;
+  mix-blend-mode: normal;
+}
+.canvasui-article-output--droplets,
+.canvasui-article-output--particle-scroll {
+  mix-blend-mode: screen;
+}
 .article-header { margin-bottom: 32px; }
 .article-meta {
   display: flex; gap: 14px; flex-wrap: wrap;

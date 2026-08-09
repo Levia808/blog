@@ -5,6 +5,9 @@
 {{- $tocHTML := .TableOfContents }}
 {{- $bg := "" }}
 {{- $bgVideo := "" }}
+{{- $articleEffectEnabled := .Params.article_effect_enabled | default false }}
+{{- $articleEffectType := .Params.article_effect_type | default "none" }}
+{{- if not $articleEffectEnabled }}{{ $articleEffectType = "none" }}{{ end }}
 {{- with .Params.background }}
 {{- $bgRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
 {{- $bgRes := resources.Get $bgRel }}
@@ -16,7 +19,7 @@
 {{- end }}
 {{- end }}
 {{- end }}
-<article class="container article-page">
+<article class="container article-page{{ if $articleEffectEnabled }} article-page--effect{{ end }}" data-article-effect-enabled="{{ if $articleEffectEnabled }}true{{ else }}false{{ end }}" data-article-effect-type="{{ $articleEffectType }}">
   {{- with .Params.background }}
   {{- if $bgVideo }}
   <div class="article-bg article-bg--video">

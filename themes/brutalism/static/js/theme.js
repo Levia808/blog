@@ -2,6 +2,7 @@
   'use strict';
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   document.documentElement.classList.add('js');
 
   /* ── 导航：下滑隐藏 / 上滑显示 ── */
@@ -672,6 +673,40 @@
     });
   }
 
+  /* ── 文章页特殊效果: Canvas UI 官方 vanilla 源码打包版 ── */
+  var articleEffectsPromise = null;
+  function loadArticleEffectsBundle() {
+    if (window.BlogCanvasUIArticleEffects) return Promise.resolve(window.BlogCanvasUIArticleEffects);
+    if (articleEffectsPromise) return articleEffectsPromise;
+    articleEffectsPromise = new Promise(function (resolve) {
+      var script = document.createElement('script');
+      script.src = themeScriptSrc ? new URL('canvasui-article-effects.js', themeScriptSrc).toString() : '/js/canvasui-article-effects.js';
+      script.onload = function () { resolve(window.BlogCanvasUIArticleEffects || null); };
+      script.onerror = function () { resolve(null); };
+      document.head.appendChild(script);
+    });
+    return articleEffectsPromise;
+  }
+
+  function initArticleEffects() {
+    var page = document.querySelector('.article-page[data-article-effect-enabled="true"]');
+    if (!page || reducedMotion) return;
+    var type = page.dataset.articleEffectType || 'none';
+    if (!type || type === 'none') return;
+    loadArticleEffectsBundle().then(function (api) {
+      if (!api || typeof api.mount !== 'function') {
+        page.dataset.canvasuiSupported = 'false';
+        return;
+      }
+      try {
+        api.mount(page, type);
+      } catch (error) {
+        page.dataset.canvasuiSupported = 'false';
+        console.error('Canvas UI article effect failed:', error);
+      }
+    });
+  }
+
   /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
   function initLoginPage() {
     var page = document.getElementById('loginPage');
@@ -1014,6 +1049,7 @@
     initBgLazy();
     initPcfVideo();
     initVideoLoading();
+    initArticleEffects();
     initNavScroll();
     initMobileMenu();
     initThemeToggle();
