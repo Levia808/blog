@@ -157,23 +157,6 @@ collections:
         widget: image
         choose_url: true
         required: false
-      - label: 文章页特殊效果
-        name: article_effect_enabled
-        widget: boolean
-        default: false
-        required: false
-        hint: "仅文章详情页生效，关闭后不加载任何特殊效果"
-      - label: 文章页特殊效果类型
-        name: article_effect_type
-        widget: select
-        required: false
-        default: decrypt-reveal
-        options:
-          - { label: "Decrypt Reveal（文字解密入场）", value: decrypt-reveal }
-          - { label: "Droplets（水滴涟漪）", value: droplets }
-          - { label: "Particle Scroll（滚动粒子）", value: particle-scroll }
-          - { label: "Retro Dither（复古抖动网点）", value: retro-dither }
-        hint: "先打开上方开关，再选择具体效果"
       - label: 全屏标题字体
         name: entry_title_font
         widget: fontPreviewSelect

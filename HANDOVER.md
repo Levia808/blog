@@ -36,7 +36,7 @@
 │   ├─ Fuse.js 搜索 (Ctrl+K) · 深/浅主题 · 乱码转化 hover · 封面视差
 │   └─ 字体: Playfair/Grotesk/Mono 已自托管 (static/fonts, 零 Google 依赖)
 ├─ CMS: /admin-cms/ Sveltia CMS (Supabase 门禁 + GitHub OAuth 经 Worker)
-│   └─ 文章编辑器: 自定义字体控件(上传/资源库/预览) + 文章页特殊效果(Canvas UI) + 视频/音频组件
+│   └─ 文章编辑器: 自定义字体控件(上传/资源库/预览) + 视频/音频组件
 ├─ 后台: /admin/ 自定义面板 (Supabase RPC + GitHub API)
 │   └─ 仪表盘/文章管理/媒体库(含上传进度条)/系统设置(字体预览)/GitHub 发布
 ├─ 后端: Supabase (Auth/DB/Storage + RPC: admin_*, get_my_profile 等)
@@ -112,15 +112,11 @@ themes/brutalism/
 ├─ layouts/partials/post-card.html   卡片三样式+视频封面+标题字体/颜色/换行
 ├─ layouts/shortcodes/video.html     内嵌视频(加载动效+点击播放兜底)
 ├─ assets/css/main.css         全部样式(bundle 构建)
-└─ static/js/theme.js          全站动效(欢迎页/乱码/视差/目录回弹/视频/文章页 Canvas UI 效果懒加载)
-assets/
-├─ js/canvasui-article-effects-entry.ts  Canvas UI 官方 vanilla 源码打包入口
-└─ vendor/canvas-ui/                    Canvas UI 官方 vanilla TS 源码 + LICENSE
+└─ static/js/theme.js          全站动效(欢迎页/乱码/视差/目录回弹/视频)
 static/
 ├─ admin-cms/index.html        Sveltia CMS 门禁+注册(字体控件/视频组件)
 ├─ admin-cms/config.yml        Sveltia 集合(文章/页面/站点设置/卡片样式/欢迎页)
 ├─ js/admin.js                 自定义后台(GitHub 发布/媒体库/字体同步)
-├─ js/canvasui-article-effects.js  Canvas UI 官方源码构建出的文章页特效 bundle
 ├─ js/supabase.js              Supabase 服务层(Profile/Admin/Comments/媒体)
 ├─ fonts/ + fonts.json         自托管字体 + 字体清单(权威)
 └─ images/                     字体副本(构建发布)
@@ -176,7 +172,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-09 | `本次提交` | 文章编辑器新增文章页特殊效果开关/类型选择；接入 Canvas UI 官方 vanilla 源码并打包文章页 effects bundle |
+| 08-09 | `本次提交` | 移除文章页特殊效果：删除编辑器开关/类型字段、文章模板标记、懒加载逻辑、样式与特效 bundle |
 | 08-09 | `da89df5` | 重构全屏封面字体控件：独立 JS/CSS、低延迟本地预览、自定义字体上传渲染验收、Docker server --noTimes |
 | 08-09 | `733ef20` | Docker 开发/构建环境（Windows 支持） |
 | 08-08 | `69590c0` | 优化全屏封面字体预览 |
