@@ -9,6 +9,7 @@
   {{ partial "head.html" . }}
 </head>
 <body class="{{ block "body-class" . }}{{ end }}">
+  <a class="skip-link" href="#main">Skip to content</a>
   {{- if not (eq .Layout "admin") }}
   {{ partial "header.html" . }}
   {{- end }}

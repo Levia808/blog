@@ -2,7 +2,7 @@
 {{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $currentPage := . -}}
 {{- $logo := $P.navLogo | default ($P.author | default site.Title) -}}
 
-<nav class="nav-full" id="siteHeader" aria-label="主导航">
+<nav class="nav-full" id="siteHeader" aria-label="主导航" data-component="top-nav">
   <a class="nf-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
   <div class="nf-links">
     {{- range site.Menus.main }}
@@ -45,7 +45,7 @@
   </div>
 </nav>
 
-<div class="nav-mobile" id="siteHeaderMobile" aria-label="主导航">
+<div class="nav-mobile" id="siteHeaderMobile" aria-label="主导航" data-component="mobile-nav">
   <a class="nm-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
   <button type="button" class="nm-toggle" id="mobileMenuToggle" aria-label="打开菜单" aria-expanded="false">
     <svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
@@ -53,7 +53,7 @@
 </div>
 
 <div class="drawer-mask" id="drawerMask" hidden aria-hidden="true"></div>
-<aside class="drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="主导航" aria-hidden="true">
+<aside class="drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="主导航" aria-hidden="true" data-component="side-nav">
   <div class="drawer-head">
     <span class="drawer-logo">{{ $logo }}</span>
     <button type="button" class="drawer-close" id="drawerClose" aria-label="关闭菜单">
