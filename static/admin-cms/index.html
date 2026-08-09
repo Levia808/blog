@@ -121,6 +121,8 @@
             };
             xhr.onload = function () {
               if (xhr.status === 200 || xhr.status === 201) {
+                /* 同步更新字体清单 (fonts.json 权威列表, 有新字体才更新) */
+                updateFontList('/images/' + file.name, token);
                 resolve('/images/' + file.name);
               } else {
                 var msg = '上传失败 ' + xhr.status;
@@ -134,6 +136,28 @@
           reader.onerror = function () { reject(new Error('读取文件失败')); };
           reader.readAsDataURL(file);
         });
+      }
+      /* 更新 fonts.json: 追加新字体路径 (UTF-8 安全 base64) */
+      function updateFontList(entry, token) {
+        fetch('/fonts.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .catch(function () { return []; })
+          .then(function (list) {
+            if (!Array.isArray(list)) list = [];
+            if (list.indexOf(entry) < 0) list.push(entry);
+            return fetch('https://api.github.com/repos/Levia808/blog/contents/static/fonts.json', {
+              headers: { 'Authorization': 'Bearer ' + token }
+            }).then(function (r) { return r.ok ? r.json() : null; }).then(function (meta) {
+              var body = { message: '字体库更新: ' + entry.split('/').pop(), content: btoa(unescape(encodeURIComponent(JSON.stringify(list)))) };
+              if (meta && meta.sha) body.sha = meta.sha;
+              return fetch('https://api.github.com/repos/Levia808/blog/contents/static/fonts.json', {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+              });
+            });
+          })
+          .catch(function () { /* 清单更新失败不阻塞上传流程 */ });
       }
       var latestUploadRaw = null;
       /* 全局辅助函数 (控件渲染 + 全局逻辑共用) */
@@ -255,34 +279,13 @@
           previewEl.style.fontWeight = 'normal';
         }
       }
+      var libCache = null;
       function loadLib(root) {
         if (!root) return;
         var libPanel = root.querySelector('.fp-lib-panel');
         if (!libPanel) return;
         libPanel.style.display = 'block';
-        libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
-        var ghTask = fetch('/fonts.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; });
-        var sbTask = (window.blogSupabase && window.blogSupabase.rpc)
-          ? window.blogSupabase.rpc('admin_list_media').then(function (r) {
-              if (r.error) return [];
-              return (r.data || []).map(function (m) {
-                var url = m.public_url || '';
-                if (!url && m.storage_path) { try { url = window.blogSupabase.storage.from('media').getPublicUrl(m.storage_path).data.publicUrl; } catch (e) {} }
-                return { name: m.file_name || m.name || '', url: url, mime: m.mime_type || '' };
-              });
-            }).catch(function () { return []; })
-          : Promise.resolve([]);
-        Promise.all([ghTask, sbTask]).then(function (results) {
-          var fonts = [];
-          var seen = {};
-          (results[0] || []).forEach(function (f) {
-            if (typeof f === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(f)) fonts.push({ name: f.split('/').pop() || f, url: f });
-          });
-          (results[1] || []).forEach(function (m) {
-            if (!/\.(ttf|otf|woff2?|eot)$/i.test(m.name) && !/font/i.test(m.mime)) return;
-            if (m.url && !seen[m.url]) { fonts.push({ name: m.name, url: m.url }); seen[m.url] = true; }
-          });
-          for (var si = 0; si < fonts.length; si++) if (seen[fonts[si].url]) fonts.splice(si--, 1); else seen[fonts[si].url] = true;
+        var render = function (fonts) {
           if (!fonts.length) {
             libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">资源库暂无字体文件（.ttf/.otf/.woff/.woff2）</div>';
             return;
@@ -314,7 +317,28 @@
               if (note) { note.style.display = 'block'; note.textContent = '已选择资源库字体：' + (item.querySelector('small') ? item.querySelector('small').textContent : url); }
             });
           });
-        });
+        };
+        if (libCache) {
+          render(libCache);
+          return;
+        }
+        libPanel.innerHTML = '<div style="padding:14px;font-size:13px;color:#7a8a80">正在读取资源库字体…</div>';
+        /* 单一权威列表: fonts.json (构建时生成 + 上传时增量更新), 不再每次扫描 */
+        fetch('/fonts.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .catch(function () { return []; })
+          .then(function (list) {
+            var fonts = [];
+            if (Array.isArray(list)) {
+              for (var i = 0; i < list.length; i++) {
+                if (typeof list[i] === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(list[i])) {
+                  fonts.push({ name: list[i].split('/').pop() || list[i], url: list[i] });
+                }
+              }
+            }
+            libCache = fonts;
+            render(fonts);
+          });
       }
 
       /* 轮询: 绑定事件 (幂等标记) + 持续更新预览 */
@@ -323,6 +347,21 @@
         if (!root) return;
         if (!root.dataset.fpBound) {
           root.dataset.fpBound = '1';
+          /* 字体清单补充下拉选项 (fonts.json 权威列表) */
+          fetch('/fonts.json', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .catch(function () { return []; })
+            .then(function (list) {
+              var selx = root.querySelector('select');
+              if (!selx || !Array.isArray(list)) return;
+              var selv = selx.value;
+              for (var i = 0; i < list.length; i++) {
+                if (typeof list[i] === 'string' && /\.(ttf|otf|woff2?|eot)$/i.test(list[i])) {
+                  ensureOption(selx, list[i]);
+                }
+              }
+              selx.value = selv;
+            });
           var sel = root.querySelector('select');
           var uploadInput = root.querySelector('.fp-upload');
           var libBtn = root.querySelector('.fp-lib-btn');
