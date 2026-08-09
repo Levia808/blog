@@ -1,0 +1,10 @@
+services:
+  hugo:
+    build: .
+    image: blog-hugo
+    container_name: blog-hugo
+    volumes:
+      - .:/src
+    ports:
+      - "1313:1313"
+    # 预览环境: hugo server (内容修改自动刷新)
