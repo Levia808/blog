@@ -469,6 +469,11 @@
           // 本地追加评论 DOM + 评论数字 +1, 不重渲染
           var comment = result.data;
           var panel = listEl.querySelector('[data-moment-comments="' + momentId2 + '"]');
+          if (!panel) {
+            /* 容器缺失 (UI 重构/未渲染) → 重载列表兜底 */
+            loadMoments();
+            return;
+          }
           if (panel) {
             var p = comment.profiles || {};
             var name = p.display_name || p.username || '读者';
