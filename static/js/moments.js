@@ -139,11 +139,11 @@
       extra = media.length - 9;
     }
     var items = displayMedia.map(function (url, i) {
-      var ext = String(url).split('.').pop().toLowerCase();
-      var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
+      var ext = String(url).split('?')[0].split('#')[0].split('.').pop().toLowerCase();
+      var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
       var item = isVideo
         ? '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
-        : '<img data-gallery="moment-' + momentId + '" src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+        : '<img data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(url) + '" alt="" decoding="async">';
       if (extra > 0 && i === displayMedia.length - 1) {
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
@@ -399,6 +399,7 @@
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
       markLongImages();
+      lazyLoadImages();
       lazyLoadMedia();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
@@ -630,7 +631,7 @@
       if (isVideoUrl(url)) {
         return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
-      return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+      return '<img data-gallery="moment-' + card.dataset.momentId + '" data-src="' + escapeHtml(url) + '" alt="" decoding="async">';
     }).join('');
     wrap.insertAdjacentHTML('beforeend', extraHtml);
     var more = wrap.querySelector('.moment-media-more');
@@ -639,6 +640,7 @@
       if (badge) badge.remove();
     }
     markLongImages();
+    lazyLoadImages();
     lazyLoadMedia();
     flashNotice('已展开全部图片', 'success');
     return true;
@@ -650,7 +652,7 @@
     var allMedia = momentMediaCache[card.dataset.momentId] || [];
     var images = allMedia.filter(function (url) { return !isVideoUrl(url); });
     if (!images.length) return false;
-    var startAt = Math.max(0, images.indexOf(img.getAttribute('src')));
+    var startAt = Math.max(0, images.indexOf(img.getAttribute('src') || img.getAttribute('data-src')));
     var lb = getMomentsLightbox();
     if (lb) {
       lb.setElements(images.map(function (url) {
@@ -1040,6 +1042,54 @@
     setTimeout(function () {
       animated.forEach(function (c) { c.style.transitionDelay = ''; });
     }, 1200);
+  }
+
+  /* ── 图片分批懒加载: 同一卡片多图串行下载 (最多 2 张并发)
+     避免 9 张大图同时下载+解码导致滚动卡顿 */
+  var imageQueue = [];
+  var imageLoadingCount = 0;
+  var imageIO = null;
+  var MAX_CONCURRENT_IMAGES = 2;
+
+  function pumpImageQueue() {
+    while (imageLoadingCount < MAX_CONCURRENT_IMAGES && imageQueue.length) {
+      var img = imageQueue.shift();
+      if (!img.dataset.src || img.src) continue;
+      imageLoadingCount++;
+      img.src = img.dataset.src;
+      img.addEventListener('load', function () {
+        imageLoadingCount--;
+        markLongImages();
+        pumpImageQueue();
+      }, { once: true });
+      img.addEventListener('error', function () {
+        imageLoadingCount--;
+        pumpImageQueue();
+      }, { once: true });
+    }
+  }
+
+  function lazyLoadImages() {
+    imageQueue = [];
+    if (imageIO) { imageIO.disconnect(); imageIO = null; }
+    var imgs = listEl.querySelectorAll('.moment-media img[data-src]');
+    if (!imgs.length) return;
+    if (!('IntersectionObserver' in window)) {
+      imgs.forEach(function (img) { if (img.dataset.src) img.src = img.dataset.src; });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var img = en.target;
+        io.unobserve(img);
+        if (!img.dataset.src || img.src) return;
+        imageQueue.push(img);
+        pumpImageQueue();
+      });
+    }, { rootMargin: '400px 0px' });
+    imageIO = io;
+    imgs.forEach(function (img) { io.observe(img); });
   }
 
   /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */
