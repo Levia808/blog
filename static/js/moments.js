@@ -1078,7 +1078,29 @@
     videos.forEach(function (v) { obs.observe(v); });
   }
 
-  /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
+  /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标
+     滚动性能: 滚动中加载完成的图不立即 wrap (布局跳动→卡顿), 滚动停止 150ms 后统一处理 */
+  var pendingLongImages = [];
+  var scrollIdleTimer = null;
+
+  function wrapLongImage(img) {
+    var wrap = document.createElement('div');
+    wrap.className = 'moment-media-long';
+    var tag = document.createElement('span');
+    tag.className = 'moment-media-long-tag';
+    tag.textContent = '长图';
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+    wrap.appendChild(tag);
+  }
+
+  function flushPendingLongImages() {
+    if (!pendingLongImages.length) return;
+    var imgs = pendingLongImages;
+    pendingLongImages = [];
+    imgs.forEach(wrapLongImage);
+  }
+
   function markLongImages() {
     listEl.querySelectorAll('.moment-media img').forEach(function (img) {
       /* 多图正方形网格不处理长图; 已包裹/已检查跳过 */
@@ -1087,19 +1109,21 @@
         if (!img.naturalWidth) return;
         img.dataset.longChecked = '1';
         if (img.naturalHeight / img.naturalWidth <= 2.35) return;
-        var wrap = document.createElement('div');
-        wrap.className = 'moment-media-long';
-        var tag = document.createElement('span');
-        tag.className = 'moment-media-long-tag';
-        tag.textContent = '长图';
-        img.parentNode.insertBefore(wrap, img);
-        wrap.appendChild(img);
-        wrap.appendChild(tag);
+        if (scrollIdleTimer) pendingLongImages.push(img);
+        else wrapLongImage(img);
       }
       if (img.complete) check();
       else img.addEventListener('load', check);
     });
   }
+
+  window.addEventListener('scroll', function () {
+    clearTimeout(scrollIdleTimer);
+    scrollIdleTimer = setTimeout(function () {
+      scrollIdleTimer = null;
+      flushPendingLongImages();
+    }, 150);
+  }, { passive: true });
 
   /* ── 评论实时同步: Supabase Realtime (postgres_changes) ──
      其他访客发布/删除评论时, 评论实时出现在对应动态下方 */
