@@ -219,19 +219,19 @@
       ? '<video src="' + escapeHtml(url) + '" muted playsinline preload="metadata"></video>'
       : '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
     return '<div class="mem-item" data-url="' + escapeHtml(url) + '">' +
-      '<div class="mem-preview">' + preview + '</div>' +
+      '<div class="mem-preview">' + preview +
+      '<button type="button" class="mem-remove" data-edit-media-remove title="删除">×</button>' +
+      '</div>' +
       '<div class="mem-tools">' +
-      '<button type="button" class="mem-tool" data-edit-media-up title="前移">↑</button>' +
-      '<button type="button" class="mem-tool" data-edit-media-down title="后移">↓</button>' +
-      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺' +
+      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺ 替换' +
       '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
-      '<button type="button" class="mem-tool is-danger" data-edit-media-remove title="删除">×</button>' +
       '</div></div>';
   }
 
   function renderEditMedia(moment) {
     var media = moment.media || [];
-    return '<div class="mem-list" data-edit-media-list>' +
+    return '<div class="mem-hint mono">拖动缩略图调整顺序 · 右上角 × 删除</div>' +
+      '<div class="mem-list" data-edit-media-list>' +
       media.map(editMediaItemHtml).join('') +
       '</div>' +
       '<label class="mem-add">+ 添加图片 / 视频' +
@@ -250,13 +250,12 @@
     editMediaFiles[uid] = file;
     var url = URL.createObjectURL(file);
     var html = '<div class="mem-item is-new" data-file-uid="' + uid + '">' +
-      '<div class="mem-preview">' + editMediaPreviewHtml(file, url) + '</div>' +
+      '<div class="mem-preview">' + editMediaPreviewHtml(file, url) +
+      '<button type="button" class="mem-remove" data-edit-media-remove title="删除">×</button>' +
+      '</div>' +
       '<div class="mem-tools">' +
-      '<button type="button" class="mem-tool" data-edit-media-up title="前移">↑</button>' +
-      '<button type="button" class="mem-tool" data-edit-media-down title="后移">↓</button>' +
-      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺' +
+      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺ 替换' +
       '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
-      '<button type="button" class="mem-tool is-danger" data-edit-media-remove title="删除">×</button>' +
       '</div></div>';
     listEl.insertAdjacentHTML('beforeend', html);
   }
@@ -283,6 +282,66 @@
   function resetEditMediaState() {
     editMediaFiles = {};
     editMediaSeq = 0;
+  }
+
+  /* ── 拖拽排序: SortableJS 按需加载 (仅打开编辑面板时, 省带宽) ── */
+  var sortableLibPromise = null;
+  var activeSortables = {};
+
+  function loadSortableLib() {
+    if (window.Sortable) return Promise.resolve(window.Sortable);
+    if (sortableLibPromise) return sortableLibPromise;
+    sortableLibPromise = new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js';
+      s.onload = function () { resolve(window.Sortable); };
+      s.onerror = function () { resolve(null); };
+      document.head.appendChild(s);
+    });
+    return sortableLibPromise;
+  }
+
+  function destroyEditSortable(momentId) {
+    var inst = activeSortables[momentId];
+    if (inst) {
+      inst.destroy();
+      delete activeSortables[momentId];
+    }
+  }
+
+  function destroyAllSortables() {
+    Object.keys(activeSortables).forEach(function (k) { activeSortables[k].destroy(); });
+    activeSortables = {};
+  }
+
+  function refreshEditSortable(panel) {
+    var card = panel && panel.closest('.moment-card');
+    var inst = card && activeSortables[card.dataset.momentId];
+    if (inst) inst.refresh();
+  }
+
+  function initEditSortable(panel) {
+    var memList = panel && panel.querySelector('[data-edit-media-list]');
+    if (!memList) return;
+    var card = panel.closest('.moment-card');
+    var momentId = card && card.dataset.momentId;
+    if (!momentId) return;
+    loadSortableLib().then(function (Sortable) {
+      if (!Sortable || !panel.isConnected) return;
+      destroyEditSortable(momentId);
+      activeSortables[momentId] = Sortable.create(memList, {
+        animation: 150,
+        easing: 'cubic-bezier(.22, .61, .36, 1)',
+        ghostClass: 'mem-item-ghost',
+        chosenClass: 'mem-item-chosen',
+        dragClass: 'mem-item-drag',
+        delay: 100,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 5,
+        filter: 'button, label, input',
+        preventOnFilter: true
+      });
+    });
   }
 
   function renderMoment(moment) {
@@ -339,6 +398,7 @@
 
   async function loadMoments() {
     showMomentsLoading(true);
+    destroyAllSortables();
     try {
       var result = null;
       var lastError = null;
@@ -530,7 +590,9 @@
         /* 同时只允许一个编辑面板 (全局 editMediaFiles 状态一致) */
         listEl.querySelectorAll('.moment-edit-panel:not([hidden])').forEach(function (p) {
           if (p !== editPanel) {
-            revokeEditMediaBlobs(p.closest('.moment-card'));
+            var closedCard = p.closest('.moment-card');
+            if (closedCard) destroyEditSortable(closedCard.dataset.momentId);
+            revokeEditMediaBlobs(closedCard);
             p.hidden = true;
           }
         });
@@ -540,27 +602,12 @@
         editCard.querySelectorAll('.mem-item.is-new').forEach(function (item) { item.remove(); });
         editPanel.hidden = false;
         editInput.focus();
+        initEditSortable(editPanel);
       }
       return;
     }
 
-    /* 编辑媒体: 排序 / 删除 */
-    var mediaUpBtn = e.target.closest('[data-edit-media-up]');
-    if (mediaUpBtn) {
-      var upItem = mediaUpBtn.closest('.mem-item');
-      if (upItem && upItem.previousElementSibling) {
-        upItem.parentNode.insertBefore(upItem, upItem.previousElementSibling);
-      }
-      return;
-    }
-    var mediaDownBtn = e.target.closest('[data-edit-media-down]');
-    if (mediaDownBtn) {
-      var downItem = mediaDownBtn.closest('.mem-item');
-      if (downItem && downItem.nextElementSibling) {
-        downItem.parentNode.insertBefore(downItem.nextElementSibling, downItem);
-      }
-      return;
-    }
+    /* 编辑媒体: 删除 (右上角圆形 ×) */
     var mediaRemoveBtn = e.target.closest('[data-edit-media-remove]');
     if (mediaRemoveBtn) {
       var removeItem = mediaRemoveBtn.closest('.mem-item');
@@ -570,6 +617,7 @@
           if (blobEl && blobEl.src && blobEl.src.indexOf('blob:') === 0) URL.revokeObjectURL(blobEl.src);
         }
         removeItem.remove();
+        refreshEditSortable(mediaRemoveBtn.closest('.moment-edit-panel'));
       }
       return;
     }
@@ -580,6 +628,7 @@
       var cancelCard = listEl.querySelector('[data-moment-id="' + cancelId + '"]');
       var cancelPanel = cancelCard && cancelCard.querySelector('[data-moment-edit-panel="' + cancelId + '"]');
       var cancelError = cancelCard && cancelCard.querySelector('[data-moment-edit-error="' + cancelId + '"]');
+      destroyEditSortable(cancelId);
       revokeEditMediaBlobs(cancelCard);
       resetEditMediaState();
       if (cancelPanel) cancelPanel.hidden = true;
@@ -851,6 +900,7 @@
       var listWrap = addList && addList.querySelector('[data-edit-media-list]');
       if (listWrap) {
         files.forEach(function (file) { appendEditMediaItem(listWrap, file); });
+        refreshEditSortable(addList);
       }
       input.value = '';
       return;

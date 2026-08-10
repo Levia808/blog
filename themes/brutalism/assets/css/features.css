@@ -1030,8 +1030,9 @@ body.admin-only { overflow: hidden; height: 100vh; }
   background: rgba(12, 12, 11, .42);
   pointer-events: none;
 }
-/* 收起的多余图片: 隐藏但保留在 lightbox 画廊组内 */
-.moment-media-hidden { display: none; }
+/* 收起的多余图片: 隐藏但保留在 lightbox 画廊组内
+   !important 压过 .moment-media img 的 display:block (特异性更高) */
+.moment-media .moment-media-hidden { display: none !important; }
 
 /* ── 编辑面板媒体编辑 ── */
 .mem-list {
@@ -1039,13 +1040,25 @@ body.admin-only { overflow: hidden; height: 100vh; }
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
+.mem-hint {
+  font-size: 10px;
+  color: var(--faint);
+  letter-spacing: .08em;
+  margin-bottom: 8px;
+}
 .mem-item {
   border: 1px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
   background: var(--bg);
+  cursor: grab;
 }
+.mem-item:active { cursor: grabbing; }
 .mem-item.is-new { border-color: var(--accent); }
+/* Sortable 拖拽状态 */
+.mem-item-ghost { opacity: .35; }
+.mem-item-chosen { border-color: var(--accent); }
+.mem-item-drag { opacity: .95; }
 .mem-preview { position: relative; }
 .mem-preview img, .mem-preview video {
   width: 100%;
@@ -1053,6 +1066,27 @@ body.admin-only { overflow: hidden; height: 100vh; }
   object-fit: cover;
   display: block;
 }
+/* 右上角圆形 × 删除按钮 */
+.mem-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 245, 241, .35);
+  background: rgba(12, 12, 11, .72);
+  color: #F6F5F1;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.mem-remove:hover { background: var(--danger); border-color: var(--danger); }
 .mem-tools {
   display: flex;
   gap: 4px;
@@ -1074,7 +1108,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .mem-tool-label { position: relative; overflow: hidden; }
 .mem-tool:hover { border-color: var(--accent); color: var(--accent); }
-.mem-tool.is-danger:hover { border-color: var(--danger); color: var(--danger); }
 .mem-add {
   display: flex;
   align-items: center;
