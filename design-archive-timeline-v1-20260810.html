@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>归档页时间线卡片设计稿 v1 20260810</title>
+  <style>
+    :root {
+      --bg: #f7f8f4;
+      --surface: rgba(255, 255, 255, 0.92);
+      --soft: #eef1ea;
+      --ink: #11130f;
+      --text: #252a22;
+      --muted: #687064;
+      --faint: #9aa196;
+      --line: rgba(17, 19, 15, 0.15);
+      --line-strong: rgba(17, 19, 15, 0.36);
+      --moss: #2f4a37;
+      --moss-soft: #dce5d8;
+      --moss-veil: rgba(47, 74, 55, 0.1);
+      --page: min(1420px, calc(100vw - 48px));
+      --radius: 4px;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --shadow: 0 22px 56px rgba(47, 74, 55, 0.1);
+      --display: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.055) 0) 0 0 / calc(100% / 12) 100%,
+        var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .mock-nav {
+      position: sticky;
+      top: 18px;
+      z-index: 20;
+      width: var(--page);
+      height: 64px;
+      margin: 18px auto 0;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 32px;
+      padding: 0 18px 0 22px;
+      border: 1px solid rgba(17, 19, 15, 0.14);
+      background: rgba(247, 248, 244, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .mock-logo {
+      color: var(--ink);
+      font-size: clamp(22px, 2vw, 32px);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .mock-nav-items {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+      gap: clamp(20px, 3vw, 48px);
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 560;
+    }
+
+    .mock-avatar {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, var(--moss), rgba(47, 74, 55, 0.36)),
+        var(--soft);
+    }
+
+    .archive-shell {
+      width: var(--page);
+      margin: 0 auto;
+      padding: clamp(72px, 8vw, 118px) 0 clamp(96px, 12vw, 160px);
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: minmax(120px, 2fr) minmax(0, 8fr) minmax(120px, 2fr);
+      align-items: end;
+      gap: 24px;
+      border-bottom: 1px solid var(--line-strong);
+      padding-bottom: 18px;
+      margin-bottom: clamp(34px, 5vw, 62px);
+    }
+
+    .label,
+    .mono {
+      font-family: var(--mono);
+    }
+
+    .label {
+      color: var(--moss);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .list-title {
+      grid-column: 2;
+      color: var(--ink);
+      font-size: clamp(42px, 6vw, 86px);
+      font-weight: 680;
+      line-height: 1.03;
+    }
+
+    .list-count {
+      grid-column: 3;
+      justify-self: end;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .archive-intro {
+      display: grid;
+      grid-template-columns: minmax(160px, 2fr) minmax(0, 10fr);
+      gap: clamp(24px, 4vw, 52px);
+      margin-bottom: clamp(34px, 5vw, 58px);
+    }
+
+    .archive-intro__text {
+      max-width: 54ch;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .archive-layout {
+      display: grid;
+      grid-template-columns: minmax(170px, 2fr) minmax(0, 10fr);
+      gap: clamp(24px, 4vw, 52px);
+      align-items: start;
+    }
+
+    .timeline {
+      position: sticky;
+      top: 110px;
+      min-height: 520px;
+      padding: 6px 0 24px;
+      color: var(--muted);
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 0;
+      left: 10px;
+      width: 1px;
+      background: var(--line-strong);
+    }
+
+    .timeline-group {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      padding-left: 34px;
+      margin-bottom: 34px;
+    }
+
+    .timeline-group::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 5px;
+      width: 11px;
+      height: 11px;
+      border: 1px solid var(--moss);
+      background: var(--bg);
+      transform: rotate(45deg);
+      transition:
+        background-color 320ms var(--ease),
+        transform 320ms var(--ease);
+    }
+
+    .timeline-group.is-active::before {
+      background: var(--moss);
+      transform: rotate(45deg) scale(1.16);
+    }
+
+    .timeline-year {
+      color: var(--ink);
+      font-size: 28px;
+      font-weight: 680;
+      line-height: 1;
+    }
+
+    .timeline-meta {
+      color: var(--faint);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .timeline-months {
+      display: grid;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .timeline-months a {
+      width: fit-content;
+      color: var(--muted);
+      border-bottom: 1px solid transparent;
+      transition:
+        color 260ms var(--ease),
+        border-color 260ms var(--ease),
+        transform 260ms var(--ease);
+    }
+
+    .timeline-months a:hover,
+    .timeline-months a.is-active {
+      color: var(--moss);
+      border-color: var(--moss-soft);
+      transform: translateX(4px);
+    }
+
+    .archive-stack {
+      display: grid;
+      gap: clamp(18px, 2.3vw, 26px);
+    }
+
+    .year-band {
+      display: grid;
+      grid-template-columns: minmax(72px, 1fr) minmax(0, 11fr);
+      gap: 20px;
+      align-items: center;
+      margin: 0 0 4px;
+      color: var(--moss);
+      scroll-margin-top: 112px;
+    }
+
+    .year-band span {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .year-band::after {
+      content: "";
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    .archive-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      transform: translateY(14px);
+      opacity: 0;
+      transition:
+        opacity 520ms var(--ease),
+        transform 520ms var(--ease),
+        border-color 320ms var(--ease),
+        background-color 320ms var(--ease),
+        box-shadow 320ms var(--ease);
+    }
+
+    .archive-card.is-visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .archive-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      z-index: 2;
+      width: 4px;
+      background: var(--moss);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 360ms var(--ease);
+    }
+
+    .archive-card:hover {
+      border-color: var(--moss);
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      transform: translate3d(0, -5px, 0);
+    }
+
+    .archive-card:hover::before {
+      transform: scaleY(1);
+    }
+
+    .archive-card__link {
+      display: grid;
+      grid-template-columns: minmax(230px, 3.2fr) minmax(0, 6.8fr);
+      min-height: 246px;
+      color: inherit;
+    }
+
+    .archive-cover {
+      position: relative;
+      min-height: 246px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(47, 74, 55, 0.18), rgba(238, 241, 234, 0.92)),
+        var(--soft);
+    }
+
+    .archive-cover img {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      object-fit: cover;
+      display: block;
+      filter: saturate(0.82) contrast(1.05);
+      transition: transform 520ms var(--ease), filter 520ms var(--ease);
+    }
+
+    .archive-card:hover .archive-cover img {
+      transform: scale(1.035);
+      filter: saturate(0.94) contrast(1.06);
+    }
+
+    .archive-cover__placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(47, 74, 55, 0.2);
+      font-size: clamp(74px, 10vw, 148px);
+      font-weight: 740;
+      line-height: 1;
+    }
+
+    .archive-cover__type {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      padding: 7px 9px;
+      border: 1px solid rgba(247, 248, 244, 0.44);
+      border-radius: var(--radius);
+      background: rgba(17, 19, 15, 0.36);
+      color: #ffffff;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .archive-card__body {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 16px;
+      padding: clamp(22px, 3vw, 34px);
+    }
+
+    .archive-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .archive-title {
+      max-width: 18ch;
+      color: var(--ink);
+      font-size: clamp(25px, 3.2vw, 48px);
+      font-weight: 680;
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .archive-summary {
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.85;
+    }
+
+    .archive-bottom {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .archive-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .archive-arrow {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      font-size: 18px;
+      transition:
+        color 260ms var(--ease),
+        border-color 260ms var(--ease),
+        background-color 260ms var(--ease),
+        transform 260ms var(--ease);
+    }
+
+    .archive-card:hover .archive-arrow {
+      color: #ffffff;
+      border-color: var(--moss);
+      background: var(--moss);
+      transform: translateX(3px);
+    }
+
+    .archive-empty-cover {
+      background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.08) 0) 0 0 / 28px 28px,
+        var(--soft);
+    }
+
+    .implementation-notes {
+      display: grid;
+      grid-template-columns: minmax(160px, 2fr) minmax(0, 10fr);
+      gap: clamp(24px, 4vw, 52px);
+      margin-top: clamp(56px, 8vw, 92px);
+      padding-top: 20px;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .implementation-notes ul {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .implementation-notes li {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .mock-nav {
+        top: 10px;
+        width: min(100vw - 28px, 100%);
+        grid-template-columns: 1fr auto;
+        height: 58px;
+      }
+
+      .mock-nav-items {
+        display: none;
+      }
+
+      .list-header,
+      .archive-intro,
+      .archive-layout,
+      .implementation-notes {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .list-title,
+      .list-count {
+        grid-column: 1;
+        justify-self: start;
+      }
+
+      .timeline {
+        position: relative;
+        top: auto;
+        min-height: 0;
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 4px 0 10px;
+        scrollbar-width: thin;
+      }
+
+      .timeline::before {
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        width: auto;
+        height: 1px;
+      }
+
+      .timeline-group {
+        min-width: 154px;
+        margin: 0;
+      }
+
+      .archive-card__link {
+        grid-template-columns: 1fr;
+      }
+
+      .archive-cover {
+        min-height: auto;
+        aspect-ratio: 16 / 9;
+      }
+
+      .archive-title {
+        max-width: 22ch;
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --page: min(100vw - 28px, 100%);
+      }
+
+      .archive-shell {
+        padding-top: 52px;
+      }
+
+      .archive-card__body {
+        padding: 20px;
+      }
+
+      .archive-bottom {
+        grid-template-columns: 1fr;
+      }
+
+      .archive-arrow {
+        justify-self: start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 1ms !important;
+        animation-duration: 1ms !important;
+      }
+
+      .archive-card {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="mock-nav" aria-label="全局导航预览">
+    <a class="mock-logo" href="#">Astryx</a>
+    <div class="mock-nav-items" aria-hidden="true">
+      <span>首页</span>
+      <span>文章</span>
+      <span>归档</span>
+      <span>标签</span>
+      <span>动态</span>
+      <span>关于</span>
+    </div>
+    <div class="mock-avatar" aria-label="头像入口"></div>
+  </nav>
+
+  <main class="archive-shell">
+    <header class="list-header">
+      <div class="label">ARCHIVE</div>
+      <h1 class="list-title">归档</h1>
+      <p class="mono list-count">40 posts</p>
+    </header>
+
+    <section class="archive-intro" aria-label="归档说明">
+      <div class="label">INDEX</div>
+      <p class="archive-intro__text">
+        归档页用于快速回看站点全部文章。左侧保留年份与月份的定位能力，右侧卡片展示封面、摘要和标签，让时间索引和内容判断同时成立。
+      </p>
+    </section>
+
+    <section class="archive-layout" aria-label="归档时间线方案">
+      <aside class="timeline" aria-label="年份时间线">
+        <section class="timeline-group is-active">
+          <h2 class="timeline-year">2026</h2>
+          <p class="timeline-meta">31 entries</p>
+          <nav class="timeline-months" aria-label="2026 月份">
+            <a class="is-active" href="#y2026-08" data-month-link="y2026-08">08 月</a>
+            <a href="#y2026-07" data-month-link="y2026-07">07 月</a>
+            <a href="#y2026-06" data-month-link="y2026-06">06 月</a>
+          </nav>
+        </section>
+        <section class="timeline-group">
+          <h2 class="timeline-year">2025</h2>
+          <p class="timeline-meta">7 entries</p>
+          <nav class="timeline-months" aria-label="2025 月份">
+            <a href="#y2025-12" data-month-link="y2025-12">12 月</a>
+            <a href="#y2025-10" data-month-link="y2025-10">10 月</a>
+          </nav>
+        </section>
+        <section class="timeline-group">
+          <h2 class="timeline-year">2024</h2>
+          <p class="timeline-meta">2 entries</p>
+          <nav class="timeline-months" aria-label="2024 月份">
+            <a href="#y2024-09" data-month-link="y2024-09">09 月</a>
+          </nav>
+        </section>
+      </aside>
+
+      <div class="archive-stack">
+        <div class="year-band" id="y2026-08"><span>2026 · 08</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover">
+              <img src="static/images/wallhaven-ly22v2.png" alt="文章封面预览">
+              <span class="archive-cover__type">IMAGE</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-08-08">2026 · 08 · 08</time>
+                <span>3 min read</span>
+              </div>
+              <h2 class="archive-title">Hello World!<br>This is my new blog!</h2>
+              <p class="archive-summary">
+                这是博客启动后的第一篇记录，包含站点主题、写作方向和后续内容计划。摘要区域优先读取 description，没有 description 时使用正文 Summary。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">博客</span>
+                  <span class="tag">随笔</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover">
+              <img src="static/images/kaws-companion-kaws-3840x2160-9353.jpg" alt="视频文章封面预览">
+              <span class="archive-cover__type">VIDEO</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-08-08">2026 · 08 · 08</time>
+                <span>2 min read</span>
+              </div>
+              <h2 class="archive-title">视频功能测试<br>全屏视频封面和内嵌视频</h2>
+              <p class="archive-summary">
+                测试文章封面视频、正文视频短代码和不同媒体状态下的展示效果。视频类文章在归档里用封面图或首帧海报承接视觉位置。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">media</span>
+                  <span class="tag">test</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover archive-empty-cover">
+              <span class="archive-cover__placeholder">构</span>
+              <span class="archive-cover__type">NO COVER</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-08-08">2026 · 08 · 08</time>
+                <span>5 min read</span>
+              </div>
+              <h2 class="archive-title">构建现代化个人博客 #1</h2>
+              <p class="archive-summary">
+                从 Hugo 到双线部署的完整实践。一份代码，两边构建。没有封面时使用标题首字生成占位图，保持卡片比例稳定。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">hugo</span>
+                  <span class="tag">cloudflare</span>
+                  <span class="tag">devops</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <div class="year-band" id="y2026-07"><span>2026 · 07</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover">
+              <img src="static/images/bg-demo.svg" alt="文章封面预览">
+              <span class="archive-cover__type">IMAGE</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-07-21">2026 · 07 · 21</time>
+                <span>4 min read</span>
+              </div>
+              <h2 class="archive-title">搜索体验与标签索引</h2>
+              <p class="archive-summary">
+                记录搜索页、标签页的信息分层和视觉节奏。归档页沿用同一套极简语言，但将扫描重点切换到时间和文章预览。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">design</span>
+                  <span class="tag">search</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover archive-empty-cover">
+              <span class="archive-cover__placeholder">关</span>
+              <span class="archive-cover__type">NO COVER</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-07-10">2026 · 07 · 10</time>
+                <span>1 min read</span>
+              </div>
+              <h2 class="archive-title">关于</h2>
+              <p class="archive-summary">
+                站点作者、写作主题和长期维护方向。短内容卡片仍保留摘要区域，避免归档列表出现忽长忽短的跳动。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">profile</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <div class="year-band" id="y2026-06"><span>2026 · 06</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover archive-empty-cover">
+              <span class="archive-cover__placeholder">动</span>
+              <span class="archive-cover__type">NO COVER</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2026-06-18">2026 · 06 · 18</time>
+                <span>2 min read</span>
+              </div>
+              <h2 class="archive-title">动态页面记录</h2>
+              <p class="archive-summary">
+                归档中跨月份内容按真实发布时间进入对应分组。点击左侧月份时，页面会跳到这一条月份分隔线。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">moments</span>
+                  <span class="tag">log</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <div class="year-band" id="y2025-12"><span>2025 · 12</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover">
+              <img src="static/images/wallhaven-ly22v2.png" alt="文章封面预览">
+              <span class="archive-cover__type">IMAGE</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2025-12-12">2025 · 12 · 12</time>
+                <span>6 min read</span>
+              </div>
+              <h2 class="archive-title">旧文章迁移笔记</h2>
+              <p class="archive-summary">
+                旧内容迁移后仍然通过月份索引进入归档。时间线不只展示年份，也承担月份级别的跳转导航。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">archive</span>
+                  <span class="tag">migration</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <div class="year-band" id="y2025-10"><span>2025 · 10</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover archive-empty-cover">
+              <span class="archive-cover__placeholder">管</span>
+              <span class="archive-cover__type">NO COVER</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2025-10-03">2025 · 10 · 03</time>
+                <span>4 min read</span>
+              </div>
+              <h2 class="archive-title">管理后台设计记录</h2>
+              <p class="archive-summary">
+                后台相关文章在归档中同样展示标签和摘要。封面缺失时保持固定视觉面积，不造成布局跳动。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">admin</span>
+                  <span class="tag">cms</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+
+        <div class="year-band" id="y2024-09"><span>2024 · 09</span></div>
+
+        <article class="archive-card">
+          <a class="archive-card__link" href="#">
+            <div class="archive-cover">
+              <img src="static/images/bg-demo.svg" alt="文章封面预览">
+              <span class="archive-cover__type">IMAGE</span>
+            </div>
+            <div class="archive-card__body">
+              <div class="archive-meta mono">
+                <time datetime="2024-09-09">2024 · 09 · 09</time>
+                <span>3 min read</span>
+              </div>
+              <h2 class="archive-title">早期站点构想</h2>
+              <p class="archive-summary">
+                时间线的年份节点会一直留在左侧，月份链接负责精确定位。移动端则转为横向可滑动月份导航。
+              </p>
+              <div class="archive-bottom">
+                <div class="archive-tags">
+                  <span class="tag">idea</span>
+                  <span class="tag">blog</span>
+                </div>
+                <span class="archive-arrow" aria-hidden="true">→</span>
+              </div>
+            </div>
+          </a>
+        </article>
+      </div>
+    </section>
+
+    <section class="implementation-notes" aria-label="落地说明">
+      <div class="label">BUILD NOTES</div>
+      <ul>
+        <li>归档模板读取 <span class="mono">.Params.cover.image</span>，无图片时读取 <span class="mono">.Params.background</span>，仍为空则使用标题首字母占位。</li>
+        <li>摘要优先使用 <span class="mono">.Description</span>，其次使用 <span class="mono">.Summary | plainify | truncate</span>，避免后台未填摘要时卡片空白。</li>
+        <li>标签直接复用当前 <span class="mono">pc-tag</span> 视觉语言，后续实现时只新增归档页局部 class，避免误触首页卡片和文章页。</li>
+        <li>左侧时间线桌面 sticky，移动端横向年份条。动效只使用 transform 和 opacity，并提供 reduced-motion 降级。</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const cards = document.querySelectorAll(".archive-card");
+    const monthLinks = document.querySelectorAll("[data-month-link]");
+    const monthBands = document.querySelectorAll(".year-band[id]");
+
+    function setActiveMonth(id) {
+      monthLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.dataset.monthLink === id);
+      });
+
+      document.querySelectorAll(".timeline-group").forEach((group) => {
+        const hasActiveMonth = Boolean(group.querySelector(".timeline-months .is-active"));
+        group.classList.toggle("is-active", hasActiveMonth);
+      });
+    }
+
+    monthLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        setActiveMonth(link.dataset.monthLink);
+      });
+    });
+
+    const monthObserver = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+      if (visible) {
+        setActiveMonth(visible.target.id);
+      }
+    }, {
+      rootMargin: "-18% 0px -68% 0px",
+      threshold: [0, 0.2, 0.6]
+    });
+
+    monthBands.forEach((band) => monthObserver.observe(band));
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      }
+    }, { threshold: 0.18 });
+
+    cards.forEach((card, index) => {
+      card.style.transitionDelay = `${Math.min(index * 42, 180)}ms`;
+      observer.observe(card);
+    });
+  </script>
+</body>
+</html>

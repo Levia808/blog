@@ -1,27 +1,124 @@
 {{- define "main" }}
 <section class="container archives-page">
+  {{- $pages := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
   <header class="list-header" data-reveal>
     <div class="label">ARCHIVE</div>
     <h1 class="list-title">{{ .Title }}</h1>
-    <p class="mono list-count">{{ len (where site.RegularPages "Params.archived" "ne" true) }} posts</p>
+    <p class="mono list-count">{{ len $pages }} posts</p>
   </header>
 
-  {{- $groups := (where site.RegularPages "Params.archived" "ne" true).GroupByDate "2006" }}
-  {{- range $groups }}
-  <section class="archive-year" data-reveal>
-    <h2 class="mono archive-year-title">{{ .Key }}</h2>
-    <ul class="archive-list">
-      {{- range .Pages }}
-      <li class="archive-entry">
-        <time class="mono archive-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01 · 02" }}</time>
-        <a class="archive-link" href="{{ .RelPermalink }}">{{ .Title }}</a>
-        {{- with .Params.tags }}
-        <span class="archive-tags">{{ range . }}<span class="pc-tag">{{ . }}</span>{{ end }}</span>
-        {{- end }}
-      </li>
+  <div class="archive-intro" data-reveal>
+    <div class="label">INDEX</div>
+    <p>按月份定位旧文章，卡片内保留封面、摘要和标签。视频封面默认静止，只在鼠标悬停或键盘聚焦时播放。</p>
+  </div>
+
+  {{- $yearGroups := $pages.GroupByDate "2006" }}
+  <div class="archive-index">
+    <aside class="archive-timeline" aria-label="归档时间线" data-archive-timeline data-reveal>
+      {{- range $yearGroups }}
+      <section class="archive-timeline-year">
+        <h2 class="mono archive-timeline-title">{{ .Key }}</h2>
+        <p class="mono archive-timeline-count">{{ len .Pages }} posts</p>
+        <nav class="archive-timeline-months" aria-label="{{ .Key }} 月份">
+          {{- range (.Pages.GroupByDate "2006-01") }}
+          {{- $monthId := printf "archive-%s" .Key }}
+          {{- $firstPage := index .Pages 0 }}
+          <a href="#{{ $monthId }}" data-archive-month-link="{{ $monthId }}">
+            <span>{{ $firstPage.Date.Format "01 月" }}</span>
+            <small>{{ len .Pages }}</small>
+          </a>
+          {{- end }}
+        </nav>
+      </section>
       {{- end }}
-    </ul>
-  </section>
-  {{- end }}
+    </aside>
+
+    <div class="archive-stack">
+      {{- range $yearGroups }}
+      {{- range (.Pages.GroupByDate "2006-01") }}
+      {{- $monthId := printf "archive-%s" .Key }}
+      {{- $firstPage := index .Pages 0 }}
+      <section class="archive-month" id="{{ $monthId }}" data-archive-month-section data-reveal>
+        <header class="archive-month-head">
+          <span class="mono">{{ $firstPage.Date.Format "2006 · 01" }}</span>
+          <small class="mono">{{ len .Pages }} posts</small>
+        </header>
+
+        <div class="archive-month-list">
+          {{- range .Pages }}
+          {{- $title := .Title | replaceRE "\\|" "<br>" | replaceRE "<br/?>" "<br>" }}
+          {{- $glyph := substr (.Title | plainify) 0 1 }}
+          {{- $coverImage := .Params.cover.image | default .Params.background }}
+          {{- $coverSrc := "" }}
+          {{- with $coverImage }}
+          {{- $coverRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+          {{- $coverRes := resources.Get $coverRel }}
+          {{- if $coverRes }}
+          {{- if in (slice ".jpg" ".jpeg" ".png" ".webp") (path.Ext $coverRel | lower) }}
+          {{- $coverSrc = ($coverRes.Resize "900x webp q76").RelPermalink }}
+          {{- else }}
+          {{- $coverSrc = $coverRes.RelPermalink }}
+          {{- end }}
+          {{- else if fileExists (printf "static/%s" $coverRel) }}
+          {{- $coverSrc = printf "/%s" $coverRel }}
+          {{- else }}
+          {{- $coverSrc = (. | relURL) }}
+          {{- end }}
+          {{- end }}
+          {{- $videoSrc := "" }}
+          {{- with .Params.cover.video }}
+          {{- $videoSrc = (. | relURL) }}
+          {{- $videoRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+          {{- $videoRes := resources.Get $videoRel }}
+          {{- if $videoRes }}
+          {{- $videoSrc = $videoRes.RelPermalink }}
+          {{- else if fileExists (printf "static/%s" $videoRel) }}
+          {{- $videoSrc = printf "/%s" $videoRel }}
+          {{- end }}
+          {{- end }}
+          <article class="archive-card{{ if $videoSrc }} archive-card--video{{ end }}" data-reveal>
+            <a class="archive-card-link" href="{{ .RelPermalink }}">
+              <div class="archive-cover">
+                {{- if $videoSrc }}
+                <video class="archive-cover-video" src="{{ $videoSrc }}"{{ if $coverSrc }} poster="{{ $coverSrc }}"{{ end }} muted playsinline loop preload="metadata" aria-hidden="true"></video>
+                <span class="archive-cover-type mono">VIDEO</span>
+                <span class="archive-cover-progress" aria-hidden="true"><span></span></span>
+                {{- else if $coverSrc }}
+                <img src="{{ $coverSrc }}" alt="{{ .Title }} 封面" loading="lazy" decoding="async">
+                <span class="archive-cover-type mono">IMAGE</span>
+                {{- else }}
+                <span class="archive-cover-placeholder" aria-hidden="true">{{ $glyph }}</span>
+                <span class="archive-cover-type mono">NO COVER</span>
+                {{- end }}
+              </div>
+              <div class="archive-card-body">
+                <div class="archive-card-meta mono">
+                  <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006 · 01 · 02" }}</time>
+                  <span>{{ .ReadingTime }} min</span>
+                </div>
+                <h3 class="archive-card-title">{{ $title | safeHTML }}</h3>
+                {{- with .Description }}
+                <p class="archive-card-summary">{{ . | plainify | truncate 136 }}</p>
+                {{- else }}
+                <p class="archive-card-summary">{{ .Summary | plainify | truncate 136 }}</p>
+                {{- end }}
+                <div class="archive-card-bottom">
+                  {{- with .Params.tags }}
+                  <div class="archive-card-tags">{{ range . }}<span class="pc-tag">{{ . }}</span>{{ end }}</div>
+                  {{- else }}
+                  <div class="archive-card-tags"><span class="pc-tag">untagged</span></div>
+                  {{- end }}
+                  <span class="archive-card-arrow" aria-hidden="true">→</span>
+                </div>
+              </div>
+            </a>
+          </article>
+          {{- end }}
+        </div>
+      </section>
+      {{- end }}
+      {{- end }}
+    </div>
+  </div>
 </section>
 {{- end }}
