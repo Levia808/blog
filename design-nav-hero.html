@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design · 导航 + 标题栏 + 开屏欢迎（MOD × Odin's Crow 动效复刻）</title>
+<style>
+  :root {
+    --bg: #0e0e0c;
+    --bg-2: #161614;
+    --fg: #e8e6df;
+    --muted: #8a887e;
+    --faint: #55534b;
+    --accent: #6b8b6b;
+    --line: rgba(232, 230, 223, .12);
+    --font-sans: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --ease: cubic-bezier(.22, .61, .36, 1);
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    cursor: none;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+  @media (hover: none) { body { cursor: auto; } }
+
+  /* ═══════ 自定义光标（Odin's Crow / Obys 风格）═══════ */
+  .cursor {
+    position: fixed; top: 0; left: 0; z-index: 200;
+    pointer-events: none; border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .cursor-dot {
+    width: 6px; height: 6px; background: var(--accent);
+    transition: width .25s var(--ease), height .25s var(--ease);
+  }
+  .cursor-ring {
+    width: 42px; height: 42px; border: 1px solid rgba(232,230,223,.35);
+    transition: width .3s var(--ease), height .3s var(--ease),
+      border-color .3s, background-color .3s, opacity .3s;
+  }
+  .cursor.hovering .cursor-ring {
+    width: 72px; height: 72px;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .cursor.hovering .cursor-dot { width: 3px; height: 3px; }
+  @media (hover: none) { .cursor { display: none; } }
+
+  /* ═══════ 开屏加载（Odin's Crow）═══════ */
+  .loader {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 4.5vh 4vw;
+    transition: transform .9s var(--ease), visibility .9s;
+  }
+  .loader.done { transform: translateY(-100%); visibility: hidden; pointer-events: none; }
+  .loader-top { display: flex; justify-content: space-between; align-items: center; }
+  .loader-brand { font-size: 15px; letter-spacing: .22em; text-transform: uppercase; color: var(--fg); }
+  .loader-brand i { font-style: normal; color: var(--accent); }
+  .loader-tag { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; }
+  .loader-mid { display: flex; align-items: baseline; gap: 30px; }
+  .loader-count {
+    font-family: var(--font-mono); font-weight: 500; line-height: .9;
+    font-size: clamp(120px, 22vw, 300px); letter-spacing: -.04em; color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .loader-count em { font-style: normal; color: var(--accent); }
+  .loader-word { font-size: clamp(18px, 2.2vw, 30px); color: var(--muted); font-style: italic; }
+  .loader-bar { position: relative; height: 1px; background: var(--line); }
+  .loader-bar i {
+    position: absolute; inset: 0 auto 0 0; width: 0%;
+    background: var(--accent); transition: width .2s linear;
+  }
+
+  /* ═══════ 导航（MOD：极简 + 滚动状态 + 下划线生长）═══════ */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+    height: 72px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4vw;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .5s var(--ease), border-color .5s, backdrop-filter .5s;
+  }
+  .nav.scrolled {
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom-color: var(--line);
+  }
+  .nav-logo { font-size: 20px; font-weight: 600; letter-spacing: -.02em; text-decoration: none; color: var(--fg); }
+  .nav-logo i { font-style: normal; color: var(--accent); }
+  .nav-links { display: flex; gap: clamp(18px, 2.6vw, 40px); }
+  .nav-links a {
+    font-size: 15px; font-weight: 500; color: var(--muted);
+    text-decoration: none; position: relative; padding: 6px 0;
+    transition: color .25s;
+    cursor: none;
+  }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 0;
+    background: var(--accent); transition: width .35s var(--ease);
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta {
+    font-size: 14px; color: var(--bg); background: var(--accent);
+    padding: 9px 20px; border-radius: 99px; text-decoration: none; font-weight: 600;
+    transition: transform .2s var(--ease), background .25s;
+    cursor: none;
+  }
+  .nav-cta:hover { background: #7da07d; transform: translateY(-1px); }
+  .nav-cta:active { transform: translateY(0) scale(.98); }
+
+  /* ═══════ 欢迎区（Odin：编号 + 大字 + 逐行揭示）═══════ */
+  .welcome {
+    min-height: 100dvh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 16vh 4vw 6vh;
+    position: relative;
+  }
+  .welcome-index {
+    position: absolute; top: 13vh; left: 4vw;
+    font-family: var(--font-mono); font-size: 12px; color: var(--faint);
+    letter-spacing: .2em;
+  }
+  .welcome-index b { color: var(--accent); font-weight: 500; }
+  .w-line { overflow: hidden; display: block; }
+  .w-line-inner {
+    display: block;
+    transform: translateY(112%);
+    transition: transform 1.1s var(--ease);
+  }
+  .loader.done ~ * .w-line-inner, body.loaded .w-line-inner { transform: translateY(0); }
+  .welcome-title {
+    font-size: clamp(46px, 8.6vw, 132px);
+    font-weight: 500; letter-spacing: -.045em; line-height: 1.04;
+    max-width: 15ch;
+  }
+  .welcome-title .em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .welcome-sub {
+    margin-top: 3.4vh; font-size: clamp(15px, 1.3vw, 18px); color: var(--muted);
+    max-width: 44ch; line-height: 1.7;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .9s var(--ease) .6s, transform .9s var(--ease) .6s;
+  }
+  body.loaded .welcome-sub { opacity: 1; transform: none; }
+  .welcome-meta {
+    margin-top: 5vh; display: flex; gap: 40px; align-items: flex-end;
+    border-top: 1px solid var(--line); padding-top: 2.4vh;
+    font-family: var(--font-mono); font-size: 11px; color: var(--faint);
+    letter-spacing: .14em; text-transform: uppercase;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .9s var(--ease) .85s, transform .9s var(--ease) .85s;
+  }
+  body.loaded .welcome-meta { opacity: 1; transform: none; }
+  .welcome-meta b { color: var(--muted); font-weight: 500; }
+  .scroll-hint { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .scroll-hint .bar { width: 1px; height: 44px; background: var(--line); position: relative; overflow: hidden; }
+  .scroll-hint .bar::after {
+    content: ""; position: absolute; left: 0; top: -100%; width: 100%; height: 100%;
+    background: var(--accent); animation: scrollDrop 2.2s var(--ease) infinite;
+  }
+  @keyframes scrollDrop { to { top: 100%; } }
+
+  /* ═══════ 文章列表（MOD：hover 位移 + 滚动揭示）═══════ */
+  .listing { padding: 14vh 4vw 10vh; border-top: 1px solid var(--line); }
+  .listing-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6vh; }
+  .listing-head h2 { font-size: clamp(28px, 3.4vw, 52px); font-weight: 500; letter-spacing: -.03em; }
+  .listing-head h2 i { font-style: italic; color: var(--accent); font-weight: 400; }
+  .listing-head .idx { font-family: var(--font-mono); font-size: 12px; color: var(--faint); letter-spacing: .18em; }
+  .entry {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 10px 40px; padding: 34px 0; border-top: 1px solid var(--line);
+    text-decoration: none; color: var(--fg); position: relative;
+    cursor: none;
+  }
+  .entry:last-child { border-bottom: 1px solid var(--line); }
+  .entry .e-arrow {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(-14px);
+    opacity: 0; font-size: 22px; color: var(--accent);
+    transition: opacity .3s var(--ease), transform .35s var(--ease);
+  }
+  .entry:hover .e-arrow { opacity: 1; transform: translateY(-50%) translateX(0); }
+  .entry-inner { transition: transform .4s var(--ease); }
+  .entry:hover .entry-inner { transform: translateX(20px); }
+  .entry-title { font-size: clamp(26px, 3vw, 46px); font-weight: 500; letter-spacing: -.02em; line-height: 1.15; }
+  .entry-title em { font-style: italic; font-weight: 400; color: var(--muted); transition: color .3s; }
+  .entry:hover .entry-title em { color: var(--accent); }
+  .entry-meta { text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--faint); line-height: 1.9; }
+  .entry-meta b { color: var(--accent); font-weight: 500; }
+  .entry-tags { display: flex; gap: 8px; margin-top: 12px; }
+  .entry-tags span {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px;
+    transition: color .3s, border-color .3s;
+  }
+  .entry:hover .entry-tags span { color: var(--fg); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+
+  /* 滚动揭示 */
+  .rv { opacity: 0; transform: translateY(46px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+  .rv.in { opacity: 1; transform: none; }
+  .rv .entry-inner { transition: transform .4s var(--ease); }
+
+  /* ═══════ 章节（Odin 编号）═══════ */
+  .chapter {
+    padding: 12vh 4vw; border-top: 1px solid var(--line);
+    display: grid; grid-template-columns: 1fr 2.2fr; gap: 6vw;
+  }
+  .chapter .no { font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .2em; }
+  .chapter h3 { font-size: clamp(30px, 3.6vw, 56px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; }
+  .chapter h3 em { font-style: italic; color: var(--accent); font-weight: 400; }
+  .chapter p { color: var(--muted); line-height: 1.8; max-width: 52ch; font-size: 16px; }
+  .chapter p + p { margin-top: 18px; }
+
+  .footer { border-top: 1px solid var(--line); padding: 6vh 4vw; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--faint); letter-spacing: .12em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { display: none; }
+    .w-line-inner { transform: none; transition: none; }
+    .welcome-sub, .welcome-meta { opacity: 1; transform: none; transition: none; }
+    .rv { opacity: 1; transform: none; transition: none; }
+    .scroll-hint .bar::after { animation: none; }
+    body { cursor: auto; }
+  }
+  @media (max-width: 720px) {
+    .nav-links { gap: 14px; }
+    .nav-links a { font-size: 13px; }
+    .nav-cta { display: none; }
+    .welcome-meta { flex-wrap: wrap; gap: 16px; }
+    .chapter { grid-template-columns: 1fr; }
+    .entry { grid-template-columns: 1fr; }
+    .entry-meta { text-align: left; }
+    .entry .e-arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 自定义光标 -->
+<div class="cursor cursor-dot" id="curDot"></div>
+<div class="cursor cursor-ring" id="curRing"></div>
+
+<!-- 开屏加载 -->
+<div class="loader" id="loader">
+  <div class="loader-top">
+    <span class="loader-brand">Levia's <i>Blog</i></span>
+    <span class="loader-tag">记录 · 思考 · 分享</span>
+  </div>
+  <div class="loader-mid">
+    <div class="loader-count"><span id="loadNum">0</span><em>%</em></div>
+    <div class="loader-word">加载中…</div>
+  </div>
+  <div class="loader-bar"><i id="loadBar"></i></div>
+</div>
+
+<!-- 导航 -->
+<nav class="nav" id="nav">
+  <a class="nav-logo" href="#">Levia<i>'s</i> Blog</a>
+  <div class="nav-links">
+    <a href="#work">动态</a>
+    <a href="#work">归档</a>
+    <a href="#about">关于</a>
+    <a href="#contact">搜索</a>
+  </div>
+  <a class="nav-cta" href="#">登录</a>
+</nav>
+
+<!-- 欢迎区 -->
+<section class="welcome">
+  <div class="welcome-index"><b>01</b> — WELCOME</div>
+  <h1 class="welcome-title">
+    <span class="w-line"><span class="w-line-inner">写代码，</span></span>
+    <span class="w-line"><span class="w-line-inner">也写<span class="em">生活</span>。</span></span>
+  </h1>
+  <p class="welcome-sub">记录学习、思考与技术分享。一个关于构建、打磨与创造的私人空间。</p>
+  <div class="welcome-meta">
+    <span><b>EST.</b> 2026</span>
+    <span><b>POSTS</b> 08</span>
+    <span><b>MODE</b> 杂志</span>
+    <span class="scroll-hint">SCROLL <span class="bar"></span></span>
+  </div>
+</section>
+
+<!-- 文章列表 -->
+<section class="listing" id="work">
+  <div class="listing-head rv">
+    <h2>最新<i>文章</i></h2>
+    <span class="idx">LATEST — 2026</span>
+  </div>
+
+  <div class="rv"><a class="entry" href="#">
+    <span class="e-arrow">→</span>
+    <div class="entry-inner">
+      <div class="entry-title">构建现代化个人博客 <em>· 从零到双线部署</em></div>
+      <div class="entry-tags"><span>HUGO</span><span>部署</span><span>实践</span></div>
+    </div>
+    <div class="entry-meta"><b>2026 · 08</b><br>12 MIN</div>
+  </a></div>
+
+  <div class="rv"><a class="entry" href="#">
+    <span class="e-arrow">→</span>
+    <div class="entry-inner">
+      <div class="entry-title">视频封面与编码兼容 <em>· 一次踩坑记录</em></div>
+      <div class="entry-tags"><span>视频</span><span>HEVC</span></div>
+    </div>
+    <div class="entry-meta"><b>2026 · 08</b><br>8 MIN</div>
+  </a></div>
+
+  <div class="rv"><a class="entry" href="#">
+    <span class="e-arrow">→</span>
+    <div class="entry-inner">
+      <div class="entry-title">编辑器字体系统 <em>· 所见即所得</em></div>
+      <div class="entry-tags"><span>字体</span><span>CMS</span></div>
+    </div>
+    <div class="entry-meta"><b>2026 · 08</b><br>6 MIN</div>
+  </a></div>
+
+  <div class="rv"><a class="entry" href="#">
+    <span class="e-arrow">→</span>
+    <div class="entry-inner">
+      <div class="entry-title">你好，世界 <em>· 站点开张</em></div>
+      <div class="entry-tags"><span>随笔</span></div>
+    </div>
+    <div class="entry-meta"><b>2026 · 08</b><br>2 MIN</div>
+  </a></div>
+</section>
+
+<!-- 章节 -->
+<section class="chapter" id="about">
+  <div class="no rv">02 — ABOUT</div>
+  <div class="rv">
+    <h3>关于<span class="em">我</span>，与这个站点</h3>
+    <p>这里记录我正在构建的一切——从代码到设计，从踩坑到打磨。每个项目都是一次探索，每篇文章都是一段旅程。</p>
+    <p>本站基于 Hugo 构建，双线部署，拥有完整的内容管理体系与自定义视觉语言。</p>
+  </div>
+</section>
+
+<section class="chapter" id="contact">
+  <div class="no rv">03 — CONTACT</div>
+  <div class="rv">
+    <h3>保持<span class="em">联系</span></h3>
+    <p>有任何想法、建议或合作意向，欢迎随时交流。</p>
+  </div>
+</section>
+
+<div class="footer">
+  <span>© 2026 LEVIA'S BLOG</span>
+  <span>DESIGN: MOD × ODIN'S CROW</span>
+</div>
+
+<script>
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── 开屏加载：数字 + 进度 → 上滑退出 → 触发欢迎动画 ── */
+  (function () {
+    var num = 0, done = false;
+    var iv = setInterval(function () {
+      num += Math.random() * 24 + 8;
+      if (num >= 100) {
+        num = 100; clearInterval(iv);
+        document.getElementById('loadNum').textContent = '100';
+        document.getElementById('loadBar').style.width = '100%';
+        setTimeout(function () {
+          document.getElementById('loader').classList.add('done');
+          document.body.classList.add('loaded');
+          done = true;
+        }, 380);
+        return;
+      }
+      document.getElementById('loadNum').textContent = Math.floor(num);
+      document.getElementById('loadBar').style.width = Math.floor(num) + '%';
+    }, 100);
+    if (reduced) {
+      clearInterval(iv);
+      document.getElementById('loadNum').textContent = '100';
+      document.getElementById('loadBar').style.width = '100%';
+      setTimeout(function () {
+        document.getElementById('loader').classList.add('done');
+        document.body.classList.add('loaded');
+      }, 200);
+    }
+  })();
+
+  /* ── 自定义光标（Obys 风格：点 + 圆环，hover 放大）── */
+  (function () {
+    if (reduced || !window.matchMedia('(hover: hover)').matches) return;
+    var dot = document.getElementById('curDot');
+    var ring = document.getElementById('curRing');
+    var mx = -100, my = -100, rx = -100, ry = -100;
+    window.addEventListener('mousemove', function (e) {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+    }, { passive: true });
+    (function loop() {
+      rx += (mx - rx) * .18;
+      ry += (my - ry) * .18;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(loop);
+    })();
+    var hoverables = 'a, button, .entry, .nav-cta';
+    document.addEventListener('mouseover', function (e) {
+      if (e.target.closest(hoverables)) {
+        document.body.classList.add('cursor-hover');
+        ring.classList.add('hovering');
+      }
+    });
+    document.addEventListener('mouseout', function (e) {
+      if (e.target.closest(hoverables)) {
+        document.body.classList.remove('cursor-hover');
+        ring.classList.remove('hovering');
+      }
+    });
+  })();
+
+  /* ── 导航滚动状态 ── */
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+
+  /* ── 滚动揭示（IntersectionObserver）── */
+  (function () {
+    if (reduced) {
+      document.querySelectorAll('.rv').forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: .18, rootMargin: '0px 0px -6% 0px' });
+    document.querySelectorAll('.rv').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>
