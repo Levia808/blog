@@ -9,17 +9,50 @@
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
 
-<section class="welcome-full" id="welcome" aria-label="欢迎">
-  <h1 class="welcome-title" id="welcomeTitle" aria-label="Levia's Blog">{{ $P.navLogo | default site.Title }}</h1>
-  {{- with $P.avatarUrl }}
-  <div class="welcome-avatar" id="welcomeAvatar" aria-hidden="true" style="background-image:url('{{ . }}')"></div>
-  {{- end }}
-  <div class="shape-blur" id="shapeBlur" aria-hidden="true"></div>
-  <div class="welcome-foot">
-    <span class="mono welcome-prefix">//</span>
-    <span class="welcome-type" id="welcomeType" aria-live="polite"></span><span class="blink-cursor"></span>
+<!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-top">
+    <span class="loader-brand">LEVIA<span class="loader-dot">'s</span> BLOG</span>
+    <span class="loader-tag">记录 · 思考 · 分享</span>
   </div>
-  <div class="scroll-hint"><div>scroll</div><div class="sh-arrow"></div></div>
+  <div class="loader-mid">
+    <div class="loader-count"><span id="loadNum">0</span><em>%</em></div>
+    <div class="loader-word">加载中…</div>
+  </div>
+  <div class="loader-bar"><i id="loadBar"></i></div>
+</div>
+
+<!-- 开屏欢迎 (瑞士风 hero, 亮色) -->
+<section class="hero-home" id="welcome" aria-label="欢迎">
+  <!-- 变形导航 -->
+  <nav class="hero-nav" id="heroNav" aria-label="主导航">
+    {{- range site.Menus.main }}
+    {{- if not (in (lower .URL) "login") }}
+    <a class="hn-link" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{- end }}
+    {{- end }}
+  </nav>
+  <a class="hn-link hn-cta" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
+  <button type="button" class="hn-link hn-icon" id="searchTrigger" title="搜索 (Ctrl+K)" aria-label="搜索">
+    <svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M229.7,218.3l-43.2-43.2a92.4,92.4,0,1,0-11.3,11.3l43.2,43.2A8,8,0,0,0,229.7,218.3ZM40,124a84,84,0,1,1,84,84A84.1,84.1,0,0,1,40,124Z"/></svg>
+  </button>
+  <button class="hn-link hn-icon" id="themeToggle" accesskey="t" title="切换主题 (Alt + T)" aria-label="切换主题">
+    <svg class="icon-sun" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.1,64.1,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48,48,0,0,0,176,128ZM58.3,69.7a8,8,0,0,0,11.4-11.4L58.3,46.9A8,8,0,0,0,46.9,58.3Zm0,116.6-11.4,11.4a8,8,0,0,0,11.4,11.4l11.4-11.4a8,8,0,0,0-11.4-11.4ZM192,72a8,8,0,0,0,5.7-2.3l11.4-11.4a8,8,0,0,0-11.4-11.4L186.3,58.3A8,8,0,0,0,192,72Zm5.7,114.3a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4ZM64,128a8,8,0,0,0-8-8H40a8,8,0,0,0,0,16H56A8,8,0,0,0,64,128Zm176-8H224a8,8,0,0,0,0,16h16a8,8,0,0,0,0-16ZM114.3,197.7a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4Z"/></svg>
+    <svg class="icon-moon" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M233.5,114.1A8,8,0,0,0,224,112a72.1,72.1,0,0,1-80.7-80.7,8,8,0,0,0-9.5-9.5A96,96,0,1,0,234.2,138.4a8,8,0,0,0-.7-24.3ZM128,208a80,80,0,0,1-80-80c0-30.4,16.9-56.6,41.9-70.5a112.3,112.3,0,0,0,86.6,86.6C162.6,191.1,136.4,208,128,208Z"/></svg>
+  </button>
+  <div class="hn-user" id="userMenuContainer" hidden>
+    <button type="button" class="hn-link hn-icon" id="userMenuTrigger" aria-label="用户菜单"><img class="hn-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt=""></button>
+  </div>
+
+  <div class="ht-wrap" id="heroWrap"><h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1></div>
+
+  <div class="hero-lines" id="heroLines">
+    <i></i><i></i><i></i><i></i>
+    <i>
+      <span class="l-text">Preserving legacies, driving growth</span>
+      <a class="l-arrow" href="#latest-posts" aria-label="向下滚动">↓</a>
+    </i>
+  </div>
 </section>
 
 <section class="container blog-home">
