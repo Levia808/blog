@@ -1030,9 +1030,18 @@ body.admin-only { overflow: hidden; height: 100vh; }
   background: rgba(12, 12, 11, .42);
   pointer-events: none;
 }
-/* 收起的多余图片: 隐藏但保留在 lightbox 画廊组内
-   !important 压过 .moment-media img 的 display:block (特异性更高) */
-.moment-media .moment-media-hidden { display: none !important; }
+/* 收起的多余图片: 绝对定位移出视口 (不可见但不占布局)
+   不用 display:none — glightbox 会跳过 offsetParent 为 null 的元素, 导致收起图无法在放大后查看 */
+.moment-media .moment-media-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  left: -9999px;
+  top: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 
 /* ── 编辑面板媒体编辑 ── */
 .mem-list {
@@ -1087,27 +1096,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
   z-index: 2;
 }
 .mem-remove:hover { background: var(--danger); border-color: var(--danger); }
-.mem-tools {
-  display: flex;
-  gap: 4px;
-  padding: 6px;
-}
-.mem-tool {
-  flex: 1;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: none;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  cursor: pointer;
-}
-.mem-tool-label { position: relative; overflow: hidden; }
-.mem-tool:hover { border-color: var(--accent); color: var(--accent); }
 .mem-add {
   display: flex;
   align-items: center;

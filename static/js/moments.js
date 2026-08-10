@@ -221,10 +221,6 @@
     return '<div class="mem-item" data-url="' + escapeHtml(url) + '">' +
       '<div class="mem-preview">' + preview +
       '<button type="button" class="mem-remove" data-edit-media-remove title="删除">×</button>' +
-      '</div>' +
-      '<div class="mem-tools">' +
-      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺ 替换' +
-      '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
       '</div></div>';
   }
 
@@ -252,23 +248,8 @@
     var html = '<div class="mem-item is-new" data-file-uid="' + uid + '">' +
       '<div class="mem-preview">' + editMediaPreviewHtml(file, url) +
       '<button type="button" class="mem-remove" data-edit-media-remove title="删除">×</button>' +
-      '</div>' +
-      '<div class="mem-tools">' +
-      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺ 替换' +
-      '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
       '</div></div>';
     listEl.insertAdjacentHTML('beforeend', html);
-  }
-
-  function replaceEditMediaItem(item, file) {
-    var uid = 'e' + (++editMediaSeq);
-    editMediaFiles[uid] = file;
-    var url = URL.createObjectURL(file);
-    item.classList.add('is-new');
-    item.dataset.fileUid = uid;
-    delete item.dataset.url;
-    var preview = item.querySelector('.mem-preview');
-    if (preview) preview.innerHTML = editMediaPreviewHtml(file, url);
   }
 
   function revokeEditMediaBlobs(card) {
@@ -330,7 +311,7 @@
       if (!Sortable || !panel.isConnected) return;
       destroyEditSortable(momentId);
       activeSortables[momentId] = Sortable.create(memList, {
-        animation: 150,
+        animation: 220,
         easing: 'cubic-bezier(.22, .61, .36, 1)',
         ghostClass: 'mem-item-ghost',
         chosenClass: 'mem-item-chosen',
@@ -338,6 +319,7 @@
         delay: 100,
         delayOnTouchOnly: true,
         touchStartThreshold: 5,
+        swapThreshold: 0.65,
         filter: 'button, label, input',
         preventOnFilter: true
       });
@@ -566,16 +548,14 @@
   });
 
   listEl.addEventListener('click', function (e) {
-    /* 点击动态图片: 预载该动态被收起的图片 (lightbox 内右键可浏览全部) */
+    /* 点击动态图片: 预载该动态被收起的图片 (lightbox 内右键可浏览全部)
+       data-src 保留 — glightbox 优先读取它作为内容源, src 预载触发下载双保险 */
     var mediaClickImg = e.target.closest('.moment-media img');
     if (mediaClickImg) {
       var mediaCard = mediaClickImg.closest('.moment-card');
       if (mediaCard) {
         mediaCard.querySelectorAll('.moment-media-hidden[data-src]').forEach(function (img) {
-          if (!img.src) {
-            img.src = img.dataset.src;
-            delete img.dataset.src;
-          }
+          if (!img.src) img.src = img.dataset.src;
         });
       }
     }
@@ -902,12 +882,6 @@
         files.forEach(function (file) { appendEditMediaItem(listWrap, file); });
         refreshEditSortable(addList);
       }
-      input.value = '';
-      return;
-    }
-    if (input.hasAttribute('data-edit-media-file')) {
-      var item = input.closest('.mem-item');
-      if (item) replaceEditMediaItem(item, files[0]);
       input.value = '';
       return;
     }
