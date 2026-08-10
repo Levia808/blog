@@ -1460,6 +1460,49 @@
     });
   }
 
+  /* ── 桌面端全局滚动缓动 (Lenis) ──
+     仅鼠标设备 (hover:hover + pointer:fine); reduced-motion 跳过
+     兼容: 原生 scroll 事件 (scrollspy/导航变形/TOC 回弹均不受影响) */
+  function initSmoothScroll() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    if (!window.Lenis) return;
+    /* 移除 CSS smooth, 避免与 Lenis 缓动叠加 */
+    document.documentElement.style.scrollBehavior = 'auto';
+    var lenis = new Lenis({
+      duration: 1.2,
+      easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+      smoothWheel: true,
+      wheelMultiplier: 1
+    });
+    window.__lenis = lenis;
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    /* 锚点平滑滚动 (接管原生 hash 跳转) */
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href === '#') return;
+      var target = document.querySelector(href);
+      if (!target) return;
+      e.preventDefault();
+      lenis.scrollTo(target, { offset: -80, duration: 1.2 });
+    });
+
+    /* 浮层联动: body 锁定滚动 (搜索/弹窗等 overflow:hidden) 时暂停 Lenis */
+    var locked = false;
+    var mo = new MutationObserver(function () {
+      var now = document.body.style.overflow === 'hidden';
+      if (now === locked) return;
+      locked = now;
+      if (now) lenis.stop();
+      else lenis.start();
+    });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+  }
+
   function boot() {
     initLightbox();
     initWelcomeEffects();
@@ -1480,6 +1523,7 @@
     initReveal();
     initTocScrollspy();
     initTocFloat();
+    initSmoothScroll();
     initSearchOverlay();
     initSearchPage();
     initArchivePage();
