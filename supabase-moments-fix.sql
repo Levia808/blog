@@ -32,6 +32,16 @@ DROP POLICY IF EXISTS moments_insert ON public.moments;
 CREATE POLICY moments_insert ON public.moments
   FOR INSERT WITH CHECK (public.is_staff());
 
+-- ②b 旧库补表 (幂等): 评论点赞表 + 评论回复列 (老版本 supabase-moments.sql 缺失)
+CREATE TABLE IF NOT EXISTS public.moment_comment_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id UUID NOT NULL REFERENCES public.moment_comments(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (comment_id, user_id)
+);
+ALTER TABLE public.moment_comments ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES public.moment_comments(id) ON DELETE CASCADE;
+
 -- ③ 评论 RLS: 公开浏览, 登录用户写自己的, 发送者或管理员可删
 DROP POLICY IF EXISTS moment_comments_select ON public.moment_comments;
 DROP POLICY IF EXISTS moment_comments_insert ON public.moment_comments;
