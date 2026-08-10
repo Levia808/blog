@@ -1,55 +1,43 @@
-
 {{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $currentPage := . -}}
-{{- $logo := $P.navLogo | default ($P.author | default site.Title) -}}
 
-<nav class="nav-full" id="siteHeader" aria-label="主导航" data-component="top-nav">
-  <a class="nf-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
-  <div class="nf-links">
-    {{- range site.Menus.main }}
-    {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
-    {{- $isLoginItem := in (lower .URL) "login" -}}
-    {{- if not $isLoginItem }}
-    {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
-    {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
-    <a class="nf-link{{ if $isActive }} active{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
-    {{- end }}
-    {{- end }}
-  </div>
-  <div class="nf-actions">
-    <button class="theme-toggle" id="themeToggle" accesskey="t" title="切换主题 (Alt + T)" aria-label="切换主题">
-      <svg class="icon-sun" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.1,64.1,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48,48,0,0,0,176,128ZM58.3,69.7a8,8,0,0,0,11.4-11.4L58.3,46.9A8,8,0,0,0,46.9,58.3Zm0,116.6-11.4,11.4a8,8,0,0,0,11.4,11.4l11.4-11.4a8,8,0,0,0-11.4-11.4ZM192,72a8,8,0,0,0,5.7-2.3l11.4-11.4a8,8,0,0,0-11.4-11.4L186.3,58.3A8,8,0,0,0,192,72Zm5.7,114.3a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4ZM64,128a8,8,0,0,0-8-8H40a8,8,0,0,0,0,16H56A8,8,0,0,0,64,128Zm176-8H224a8,8,0,0,0,0,16h16a8,8,0,0,0,0-16ZM114.3,197.7a8,8,0,0,0-11.4,11.4l11.4,11.4a8,8,0,0,0,11.4-11.4Z"/></svg>
-      <svg class="icon-moon" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M233.5,114.1A8,8,0,0,0,224,112a72.1,72.1,0,0,1-80.7-80.7,8,8,0,0,0-9.5-9.5A96,96,0,1,0,234.2,138.4a8,8,0,0,0-.7-24.3ZM128,208a80,80,0,0,1-80-80c0-30.4,16.9-56.6,41.9-70.5a112.3,112.3,0,0,0,86.6,86.6C162.6,191.1,136.4,208,128,208Z"/></svg>
+<!-- 全局变形导航: 首页初始均分铺满 → 滚动收拢右端; 其他页面初始即收起 -->
+<nav class="hero-nav" id="heroNav" aria-label="主导航" data-component="top-nav">
+  <a class="hn-logo" id="hnLogo" href="{{ "" | relLangURL }}">LEVIA<span class="hn-logo-dot">'s</span></a>
+  {{- range site.Menus.main }}
+  {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
+  {{- $isLoginItem := in (lower .URL) "login" -}}
+  {{- if not $isLoginItem }}
+  {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
+  <a class="hn-link{{ if $isActive }} active{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+  {{- end }}
+  {{- end }}
+  {{- if $P.auth }}
+  <a class="hn-link hn-cta" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
+  <div class="hn-user" id="userMenuContainer" hidden>
+    <button type="button" class="hn-avatar-btn" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
+      <img class="hn-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
     </button>
-    <button type="button" class="nf-icon-btn" id="searchTrigger" title="搜索 (Ctrl+K)" aria-label="搜索">
-      <svg viewBox="0 0 256 256" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M229.7,218.3l-43.2-43.2a92.4,92.4,0,1,0-11.3,11.3l43.2,43.2A8,8,0,0,0,229.7,218.3ZM40,124a84,84,0,1,1,84,84A84.1,84.1,0,0,1,40,124Z"/></svg>
-    </button>
-    {{- if $P.auth }}
-    <a class="nav-login-btn" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
-    <div class="dropdown" id="userMenuContainer" hidden>
-      <button type="button" class="nf-avatar" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
-        <img class="nf-avatar-img" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
-      </button>
-      <div class="dropdown-menu" id="userDropdown" hidden>
-        <div class="dm-head">
-          <img class="dm-avatar" id="userMenuAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
-          <div>
-            <strong id="userMenuName">博客读者</strong>
-            <span class="dm-email" id="userMenuEmail"></span>
-          </div>
+    <div class="dropdown-menu hn-dropdown" id="userDropdown" hidden>
+      <div class="dm-head">
+        <img class="dm-avatar" id="userMenuAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
+        <div>
+          <strong id="userMenuName">博客读者</strong>
+          <span class="dm-email" id="userMenuEmail"></span>
         </div>
-        <a href="{{ "profile/" | relLangURL }}">个人主页</a>
-        <a href="{{ "admin-cms/" | relURL }}" id="cmsLink" hidden>写文章</a>
-        <a href="{{ "admin/" | relLangURL }}" id="adminLink" hidden>管理后台</a>
-        <div class="dm-divider"></div>
-        <button type="button" id="logoutBtn">注销</button>
       </div>
+      <a href="{{ "profile/" | relLangURL }}">个人主页</a>
+      <a href="{{ "admin-cms/" | relURL }}" id="cmsLink" hidden>写文章</a>
+      <a href="{{ "admin/" | relLangURL }}" id="adminLink" hidden>管理后台</a>
+      <div class="dm-divider"></div>
+      <button type="button" id="logoutBtn">注销</button>
     </div>
-    {{- end }}
   </div>
+  {{- end }}
 </nav>
 
+<!-- 移动端导航 -->
 <div class="nav-mobile" id="siteHeaderMobile" aria-label="主导航" data-component="mobile-nav">
-  <a class="nm-logo" href="{{ "" | relLangURL }}">{{ $logo }}</a>
+  <a class="nm-logo" href="{{ "" | relLangURL }}">{{ $P.navLogo | default ($P.author | default site.Title) }}</a>
   <button type="button" class="nm-toggle" id="mobileMenuToggle" aria-label="打开菜单" aria-expanded="false">
     <svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
   </button>
@@ -58,32 +46,20 @@
 <div class="drawer-mask" id="drawerMask" hidden aria-hidden="true"></div>
 <aside class="drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="主导航" aria-hidden="true" data-component="side-nav">
   <div class="drawer-head">
-    <span class="drawer-logo">{{ $logo }}</span>
+    <span class="drawer-logo">{{ $P.navLogo | default ($P.author | default site.Title) }}</span>
     <button type="button" class="drawer-close" id="drawerClose" aria-label="关闭菜单">
       <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
     </button>
   </div>
   <nav class="drawer-menu">
-    {{- range $index, $item := site.Menus.main }}
-    {{- $menuItemURL := (cond (strings.HasSuffix $item.URL "/") $item.URL (printf "%s/" $item.URL)) -}}
-    {{- $isLoginItem := in (lower $item.URL) "login" -}}
-    {{- if not $isLoginItem }}
+    {{- range site.Menus.main }}
+    {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
     {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
-    {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
-    <a href="{{ $item.URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>
-      <span class="dm-idx">{{ printf "%02d" (add $index 1) }}</span>{{ $item.Name }}<span class="dm-arr">›››</span>
-    </a>
+    <a href="{{ .URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}><span class="dm-idx">›</span>{{ .Name }}</a>
     {{- end }}
-    {{- end }}
-  </nav>
-  {{- if $P.auth }}
-  <div class="drawer-user">
-    <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
-    <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>
-    <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden><span class="dm-idx">▦</span>管理后台</a>
+    {{- if $P.auth }}
     <a href="{{ "login/" | relLangURL }}" id="mobileLoginBtn" data-smooth-login><span class="dm-idx">›</span>登录</a>
     <button type="button" id="mobileLogoutBtn" hidden><span class="dm-idx">×</span>退出登录</button>
-  </div>
-  {{- end }}
-  <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
-</aside>
+    {{- end }}
+  </nav>
+</div>

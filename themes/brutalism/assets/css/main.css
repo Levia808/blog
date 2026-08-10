@@ -1855,6 +1855,15 @@ button,
 /* 变形导航 (hero 内, 初始均分) */
 .hero-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100; pointer-events: none; transition: background .6s cubic-bezier(.22,.61,.36,1), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
 .hero-nav.solid { background: rgba(246,245,241,.72); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2); border-bottom-color: rgba(26,26,24,.1); }
+.hn-logo {
+  position: fixed; left: 2vw; top: 36px; z-index: 102;
+  transform: translateY(-50%);
+  font-family: "Anton", var(--font-display), sans-serif;
+  font-size: 21px; letter-spacing: .02em; color: #1a1a18;
+  text-decoration: none; pointer-events: auto;
+}
+.hn-logo .hn-logo-dot { color: var(--accent); font-family: var(--font-sans); font-size: 13px; font-weight: 600; }
+.hero-home .hn-logo { display: none; }
 .hn-link {
   position: fixed; top: 36px; z-index: 101;
   transform: translateY(-50%);

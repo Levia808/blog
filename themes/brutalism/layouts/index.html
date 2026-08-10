@@ -24,19 +24,7 @@
 
 <!-- 开屏欢迎 (瑞士风 hero, 亮色) -->
 <section class="hero-home" id="welcome" aria-label="欢迎">
-  <!-- 变形导航 -->
-  <nav class="hero-nav" id="heroNav" aria-label="主导航">
-    {{- range site.Menus.main }}
-    {{- if not (in (lower .URL) "login") }}
-    <a class="hn-link" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
-    {{- end }}
-    {{- end }}
-  </nav>
-  <a class="hn-link hn-cta" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
-  <div class="hn-user" id="userMenuContainer" hidden>
-    <button type="button" class="hn-link hn-icon" id="userMenuTrigger" aria-label="用户菜单"><img class="hn-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt=""></button>
-  </div>
-
+  <!-- 变形导航由全局 header.html 提供 -->
   <div class="ht-wrap" id="heroWrap"><h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1></div>
 
   <div class="hero-lines" id="heroLines">

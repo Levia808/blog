@@ -1019,7 +1019,8 @@
   /* ── 首页开屏: 加载动画 + 变形导航 + 标题入场 (瑞士风 hero) ── */
   function initHomeHero() {
     var hero = document.getElementById('heroWrap');
-    if (!hero) return;
+    var nav = document.getElementById('heroNav');
+    if (!nav) return;
     var reduced = reducedMotion;
     /* 强制回到顶部 (刷新后不保留滚动位置, 展示初始均分导航) */
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -1029,20 +1030,13 @@
     var nav = document.getElementById('heroNav');
     var links = [];
     var cta = document.getElementById('navLoginBtn');
-    var search = document.getElementById('searchTrigger');
-    var theme = document.getElementById('themeToggle');
     var user = document.getElementById('userMenuContainer');
-    var all = [cta, search, theme, user].filter(Boolean);
-    var menu = [];
-    try { menu = document.querySelectorAll('.nf-links a') && [] ; } catch (e) {}
-
-    /* 渲染菜单链接 (site.Menus.main 由服务端注入到 heroNav) */
+    var all = [cta, user].filter(Boolean);
     var heroNav = document.getElementById('heroNav');
     if (heroNav) {
-      var injected = heroNav.querySelectorAll('a');
-      injected.forEach(function (a) { links.push(a); });
+      heroNav.querySelectorAll('.hn-link:not(.hn-cta), .hn-cta').forEach(function (a) { links.push(a); });
     }
-    all.forEach(function (el) { links.push(el); });
+    all.forEach(function (el) { if (links.indexOf(el) < 0) links.push(el); });
 
     /* 加载动画 */
     var loader = document.getElementById('loader');
@@ -1072,15 +1066,20 @@
     var init = null;
     var curP = 0, tgtP = 0;
     function ease(p) { return p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3); }
+    var isHome = !!document.getElementById('heroWrap');
+    var hnLogo = document.getElementById('hnLogo');
+    if (hnLogo && isHome) hnLogo.style.display = 'none';
     function measure() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var pad = vw * 0.04;
-      var titleFont = parseFloat(getComputedStyle(title).fontSize);
-      wrap.style.left = '0px'; wrap.style.top = '0px';
-      var th = title.offsetHeight;
+      var rightPad = vw * 0.02;
+      var titleFont = 20;
+      if (title) titleFont = parseFloat(getComputedStyle(title).fontSize);
+      if (wrap) { wrap.style.left = '0px'; wrap.style.top = '0px'; }
+      var th = title ? title.offsetHeight : 0;
       var tX = pad;
       var tY = Math.max(vh - th - vh * 0.42, 96);
-      wrap.style.left = tX + 'px'; wrap.style.top = tY + 'px';
+      if (wrap) { wrap.style.left = tX + 'px'; wrap.style.top = tY + 'px'; }
       /* 用 JS 定位值 (不受入场动画 transform 影响) */
       var tInit = { x: tX, y: tY };
       var tSize = 20;
@@ -1090,10 +1089,13 @@
       var n = links.length || 1;
       links.forEach(function (el, i) {
         var w = el.offsetWidth || 60;
-        items.push({ el: el, w: w, initLeft: pad + (i / (n - 1)) * (vw - pad * 2) - w / 2 });
+        var initLeft = isHome
+          ? pad + (i / (n - 1)) * (vw - pad * 2) - w / 2
+          : vw + 100;
+        items.push({ el: el, w: w, initLeft: initLeft });
       });
-      var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (items.length - 1) * 32;
-      var rightStart = vw - pad - totalW;
+      var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (items.length - 1) * 28;
+      var rightStart = vw - rightPad - totalW;
       var acc = 0;
       items.forEach(function (g) { g.targetLeft = rightStart + acc; acc += g.w + 32; });
       init = { vh: vh, vw: vw, pad: pad, tInit: tInit, tTarget: tTarget, tScale: tScale, items: items, maxScroll: Math.max(vh - 72, 1) };
@@ -1102,19 +1104,21 @@
       curP += (tgtP - curP) * 0.1;
       if (Math.abs(tgtP - curP) < 0.001) curP = tgtP;
       var p = curP;
-      var dx = (init.tTarget.x - init.tInit.x) * p;
-      var dy = (init.tTarget.y - init.tInit.y) * p;
-      var sc = 1 + (init.tScale - 1) * p;
-      title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
-      title.style.opacity = 1 - p * 0.25;
+      if (title) {
+        var dx = (init.tTarget.x - init.tInit.x) * p;
+        var dy = (init.tTarget.y - init.tInit.y) * p;
+        var sc = 1 + (init.tScale - 1) * p;
+        title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
+        title.style.opacity = 1 - p * 0.25;
+      }
       init.items.forEach(function (g) {
-        g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px';
+        if (g.el) g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px';
       });
-      if (user) user.style.left = (parseFloat(user.style.left || 0) || 0) + 0 + 'px';
-      nav.classList.toggle('solid', p > 0.85);
+      if (nav) nav.classList.toggle('solid', p > 0.85);
     }
     function layoutInit() {
       measure();
+      if (!isHome) { curP = 1; tgtP = 1; }
       update();
       window.addEventListener('scroll', function () {
         if (init) tgtP = ease(window.scrollY / init.maxScroll);
