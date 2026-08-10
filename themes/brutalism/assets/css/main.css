@@ -1831,7 +1831,7 @@ html.js .home-page .nav-full {
   left: 0;
   right: 0;
   opacity: 1;
-  pointer-events: none;
+  pointer-events: auto;
   transform: translateY(0);
   background: transparent;
   border-bottom-color: transparent;
@@ -1857,8 +1857,13 @@ html.js .home-page.home-nav-collapsed .nav-full.nav-hidden {
   pointer-events: none;
   transform: translateY(-100%);
 }
+html.js .home-page .hero-nav,
 html.js .home-page.home-nav-collapsed .hero-nav {
   opacity: 0;
+  pointer-events: none;
+}
+html.js .home-page .hero-nav .hn-link {
+  visibility: hidden;
   pointer-events: none;
 }
 html.js .home-page .nav-full .nf-logo {
@@ -1866,13 +1871,12 @@ html.js .home-page .nav-full .nf-logo {
   pointer-events: none;
 }
 html.js .home-page .nav-full .nf-links {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .22s cubic-bezier(.22,.61,.36,1);
-}
-html.js .home-page.home-nav-collapsed .nav-full .nf-links {
   opacity: 1;
   pointer-events: auto;
+  transition: none;
+}
+html.js .home-page .nav-full .nf-link {
+  will-change: transform;
 }
 html.js .home-page .ht-wrap {
   z-index: 190;
