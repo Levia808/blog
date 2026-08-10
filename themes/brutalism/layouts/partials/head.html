@@ -1,9 +1,9 @@
 
-{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $css := slice (resources.Get "css/main.css") (resources.Get "css/features.css") | resources.Concat "css/bundle.css" -}}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $css := slice (resources.Get "css/main.css") (resources.Get "css/features.css") (resources.Get "css/swiss.css") | resources.Concat "css/bundle.css" -}}
 {{- if hugo.IsProduction }}{{ $css = $css | minify | fingerprint }}{{ end }}
 <meta name="description" content="{{ with $P.description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify }}{{ end }}{{ end }}">
 <meta name="keywords" content="{{ with $P.keywords }}{{ delimit . ", " }}{{ end }}">
-<meta name="theme-color" content="#0C0C0B">
+<meta name="theme-color" content="#f7f8f4">
 <meta name="color-scheme" content="dark light">
 {{- with $P.author }}
 <meta name="author" content="{{ . }}">
