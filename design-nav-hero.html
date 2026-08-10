@@ -6,7 +6,7 @@
 <title>Design · 导航 + 标题 + 开屏（滚动变形版）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0e0e0c;
@@ -92,9 +92,9 @@
   /* ── 大标题（fixed，滚动变形为导航 LOGO）── */
   .hero-title {
     position: fixed; z-index: 150;
-    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
-    font-weight: 900;
-    font-size: clamp(76px, 14.5vw, 240px);
+    font-family: "Anton", "Inter", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    font-size: clamp(88px, 17.5vw, 300px);
     letter-spacing: -.05em; line-height: .95;
     transform-origin: left top;
     will-change: transform;
@@ -116,17 +116,6 @@
     will-change: opacity;
   }
   .hero .fade-on-scroll { transition: opacity .5s var(--ease), transform .5s var(--ease); }
-
-  /* 元数据行：标题正下方，细线分隔 */
-  .hero-meta {
-    margin-top: 2.6vh; margin-left: 4vw; margin-right: 4vw;
-    display: flex; gap: 48px; align-items: center;
-    border-top: 1px solid rgba(232, 230, 223, .5);
-    padding-top: 14px;
-    font-family: var(--font-mono); font-size: 11px; color: var(--faint);
-    letter-spacing: .16em; text-transform: uppercase;
-  }
-  .hero-meta b { color: var(--fg); font-weight: 500; }
 
   /* 装饰性线条组：置于开屏最下部，全宽从左贯穿到右，粗细渐变加粗 */
   .hero-lines {
@@ -261,12 +250,6 @@
 
 <!-- 开屏内容 -->
 <section class="hero" id="hero">
-  <div class="hero-meta fade-on-scroll" id="heroMeta">
-    <span><b>EST.</b> 2026</span>
-    <span><b>POSTS</b> 08</span>
-    <span><b>LOCATION</b> SHENZHEN</span>
-    <span style="margin-left:auto"><b>01</b> — WELCOME</span>
-  </div>
   <div class="hero-lines fade-on-scroll" id="heroLines">
     <i></i>
     <i></i>
@@ -360,7 +343,6 @@
   var layout = (function () {
     var title = document.getElementById('heroTitle');
     var hero = document.getElementById('hero');
-    var meta = document.getElementById('heroMeta');
     var lines = document.getElementById('heroLines');
     var links = [l1, l2, l3, l4].filter(Boolean);
     var cta = document.getElementById('navCta');
