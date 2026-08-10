@@ -7,7 +7,6 @@
 
   function forceInitialScrollTop() {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    if (window.location.hash) return;
     window.scrollTo(0, 0);
     window.requestAnimationFrame(function () { window.scrollTo(0, 0); });
   }
