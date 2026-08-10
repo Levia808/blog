@@ -9,7 +9,7 @@
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
 
-<!-- 开屏加载 (LEVIA + 数字进度) -->
+<!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
 <div class="loader" id="loader" aria-hidden="true">
   <div class="loader-top">
     <span class="loader-brand">LEVIA<span class="loader-dot">'s</span> BLOG</span>
@@ -22,15 +22,27 @@
   <div class="loader-bar"><i id="loadBar"></i></div>
 </div>
 
-<!-- 开屏欢迎 -->
+<!-- 开屏欢迎 (瑞士风 hero, 亮色) -->
 <section class="hero-home" id="welcome" aria-label="欢迎">
-  <!-- 变形导航由全局 header.html 提供 -->
+  <!-- 变形导航 -->
+  <nav class="hero-nav" id="heroNav" aria-label="主导航">
+    {{- range site.Menus.main }}
+    {{- if not (in (lower .URL) "login") }}
+    <a class="hn-link" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{- end }}
+    {{- end }}
+  </nav>
+  <a class="hn-link hn-cta" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
+  <div class="hn-user" id="userMenuContainer" hidden>
+    <button type="button" class="hn-link hn-icon" id="userMenuTrigger" aria-label="用户菜单"><img class="hn-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt=""></button>
+  </div>
+
   <div class="ht-wrap" id="heroWrap"><h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1></div>
 
   <div class="hero-lines" id="heroLines">
     <i></i><i></i><i></i><i></i>
     <i>
-      <span class="l-text">{{ $P.description | default "记录 · 思考 · 分享" }}</span>
+      <span class="l-text">Preserving legacies, driving growth</span>
       <a class="l-arrow" href="#latest-posts" aria-label="向下滚动">↓</a>
     </i>
   </div>

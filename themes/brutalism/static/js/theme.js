@@ -5,38 +5,23 @@
   var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   document.documentElement.classList.add('js');
 
-  function forceInitialScrollTop() {
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    window.scrollTo(0, 0);
-    window.requestAnimationFrame(function () { window.scrollTo(0, 0); });
-  }
-  forceInitialScrollTop();
-  window.addEventListener('load', forceInitialScrollTop, { once: true });
-  window.addEventListener('pageshow', function (event) {
-    if (event.persisted) forceInitialScrollTop();
-  });
-
   /* ── 导航：下滑隐藏 / 上滑显示 ── */
   function initNavScroll() {
-    var desktop = document.getElementById('heroNav');
-    var mobile = document.getElementById('siteHeaderMobile');
-    if (!desktop && !mobile) return;
+    var headers = [document.getElementById('siteHeader'), document.getElementById('siteHeaderMobile')].filter(Boolean);
+    if (!headers.length) return;
 
     var lastY = window.scrollY;
     var ticking = false;
     var NAV_HIDE_THRESHOLD = 60;
-    var hasHomeHero = !!document.getElementById('heroWrap');
 
     function update() {
       var y = window.scrollY;
-      if (desktop && !hasHomeHero) {
-        desktop.classList.add('solid');
-        desktop.classList.add('is-collapsed');
-      }
-      if (mobile) {
-        if (y < NAV_HIDE_THRESHOLD) mobile.classList.remove('nav-hidden');
-        else if (y > lastY && y - lastY > NAV_HIDE_THRESHOLD) mobile.classList.add('nav-hidden');
-        else if (y < lastY) mobile.classList.remove('nav-hidden');
+      if (y < NAV_HIDE_THRESHOLD) {
+        headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
+      } else if (y > lastY && y - lastY > NAV_HIDE_THRESHOLD) {
+        headers.forEach(function (h) { h.classList.add('nav-hidden'); });
+      } else if (y < lastY) {
+        headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
       }
       lastY = y;
       ticking = false;
@@ -1031,30 +1016,38 @@
     })();
   }
 
-  /* ── 首页开屏: 加载动画 + 变形导航 + 标题入场 ── */
+  /* ── 首页开屏: 加载动画 + 变形导航 + 标题入场 (瑞士风 hero) ── */
   function initHomeHero() {
-    var nav = document.getElementById('heroNav');
-    if (!nav) return;
+    var hero = document.getElementById('heroWrap');
+    if (!hero) return;
     var reduced = reducedMotion;
+    /* 强制回到顶部 (刷新后不保留滚动位置, 展示初始均分导航) */
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    if (window.scrollY > 0) window.scrollTo(0, 0);
     var title = document.getElementById('heroTitle');
     var wrap = document.getElementById('heroWrap');
-    var heroLines = document.getElementById('heroLines');
-    var isHome = !!wrap && !!document.getElementById('welcome');
-    nav.classList.toggle('is-home', isHome);
-    nav.classList.toggle('is-collapsed', !isHome);
-    nav.classList.toggle('solid', !isHome);
+    var nav = document.getElementById('heroNav');
+    var links = [];
+    var cta = document.getElementById('navLoginBtn');
+    var search = document.getElementById('searchTrigger');
+    var theme = document.getElementById('themeToggle');
+    var user = document.getElementById('userMenuContainer');
+    var all = [cta, search, theme, user].filter(Boolean);
+    var menu = [];
+    try { menu = document.querySelectorAll('.nf-links a') && [] ; } catch (e) {}
 
-    function getVisibleNavItems() {
-      return Array.prototype.slice.call(nav.querySelectorAll('.hn-link, .hn-user')).filter(function (el) {
-        return !el.hidden && window.getComputedStyle(el).display !== 'none';
-      });
+    /* 渲染菜单链接 (site.Menus.main 由服务端注入到 heroNav) */
+    var heroNav = document.getElementById('heroNav');
+    if (heroNav) {
+      var injected = heroNav.querySelectorAll('a');
+      injected.forEach(function (a) { links.push(a); });
     }
+    all.forEach(function (el) { links.push(el); });
 
     /* 加载动画 */
     var loader = document.getElementById('loader');
     var loadNum = document.getElementById('loadNum');
     var loadBar = document.getElementById('loadBar');
-    var layoutStarted = false;
     function finishLoad() {
       if (loadNum) loadNum.textContent = '100';
       if (loadBar) loadBar.style.width = '100%';
@@ -1064,10 +1057,7 @@
         layoutInit();
       }, 380);
     }
-    if (!loader || !isHome) {
-      document.body.classList.add('loaded');
-      requestAnimationFrame(layoutInit);
-    } else if (reduced) { if (loadNum) loadNum.textContent = '100'; finishLoad(); }
+    if (reduced) { if (loadNum) loadNum.textContent = '100'; finishLoad(); }
     else {
       var num = 0;
       var iv = setInterval(function () {
@@ -1085,92 +1075,51 @@
     function measure() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var pad = vw * 0.04;
-      var rightPad = vw * 0.02;
-      var titleFont = 20;
-      if (title) titleFont = parseFloat(getComputedStyle(title).fontSize) || 20;
-      if (wrap) { wrap.style.left = '0px'; wrap.style.top = '0px'; }
-      var th = title ? title.offsetHeight : 0;
+      var titleFont = parseFloat(getComputedStyle(title).fontSize);
+      wrap.style.left = '0px'; wrap.style.top = '0px';
+      var th = title.offsetHeight;
       var tX = pad;
       var tY = Math.max(vh - th - vh * 0.42, 96);
-      if (wrap) { wrap.style.left = tX + 'px'; wrap.style.top = tY + 'px'; }
+      wrap.style.left = tX + 'px'; wrap.style.top = tY + 'px';
       /* 用 JS 定位值 (不受入场动画 transform 影响) */
       var tInit = { x: tX, y: tY };
       var tSize = 20;
       var tScale = tSize / titleFont;
       var tTarget = { x: pad, y: 26 };
       var items = [];
-      var visibleItems = getVisibleNavItems();
-      var n = visibleItems.length || 1;
-      visibleItems.forEach(function (el, i) {
+      var n = links.length || 1;
+      links.forEach(function (el, i) {
         var w = el.offsetWidth || 60;
-        var ratio = n > 1 ? i / (n - 1) : 0.5;
-        var initLeft = isHome
-          ? pad + ratio * (vw - pad * 2) - w / 2
-          : vw + 100;
-        items.push({ el: el, w: w, initLeft: initLeft });
+        items.push({ el: el, w: w, initLeft: pad + (i / (n - 1)) * (vw - pad * 2) - w / 2 });
       });
-      var gap = vw < 1000 ? 22 : 32;
-      var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + Math.max(items.length - 1, 0) * gap;
-      var rightStart = vw - rightPad - totalW;
+      var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (items.length - 1) * 32;
+      var rightStart = vw - pad - totalW;
       var acc = 0;
-      items.forEach(function (g) { g.targetLeft = rightStart + acc; acc += g.w + gap; });
+      items.forEach(function (g) { g.targetLeft = rightStart + acc; acc += g.w + 32; });
       init = { vh: vh, vw: vw, pad: pad, tInit: tInit, tTarget: tTarget, tScale: tScale, items: items, maxScroll: Math.max(vh - 72, 1) };
-      nav.classList.add('is-ready');
     }
     function update() {
-      if (!init) return;
       curP += (tgtP - curP) * 0.1;
       if (Math.abs(tgtP - curP) < 0.001) curP = tgtP;
       var p = curP;
-      if (title) {
-        var dx = (init.tTarget.x - init.tInit.x) * p;
-        var dy = (init.tTarget.y - init.tInit.y) * p;
-        var sc = 1 + (init.tScale - 1) * p;
-        title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
-        title.style.opacity = isHome ? Math.max(0, 1 - p * 1.15) : 0;
-      }
+      var dx = (init.tTarget.x - init.tInit.x) * p;
+      var dy = (init.tTarget.y - init.tInit.y) * p;
+      var sc = 1 + (init.tScale - 1) * p;
+      title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
+      title.style.opacity = 1 - p * 0.25;
       init.items.forEach(function (g) {
-        if (g.el) {
-          var lx = g.initLeft + (g.targetLeft - g.initLeft) * p;
-          g.el.style.transform = 'translate3d(' + lx.toFixed(2) + 'px,-50%,0)';
-        }
+        g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px';
       });
-      if (heroLines) {
-        heroLines.style.opacity = Math.max(0, 1 - p * 1.1);
-        heroLines.style.transform = 'translateY(' + (-p * 46) + 'px)';
-      }
-      nav.classList.toggle('solid', !isHome || p > 0.85);
-      nav.classList.toggle('is-collapsed', !isHome || p > 0.85);
-    }
-    var refreshQueued = false;
-    function refreshLayout() {
-      if (!layoutStarted || refreshQueued) return;
-      refreshQueued = true;
-      requestAnimationFrame(function () {
-        refreshQueued = false;
-        measure();
-        update();
-      });
+      if (user) user.style.left = (parseFloat(user.style.left || 0) || 0) + 0 + 'px';
+      nav.classList.toggle('solid', p > 0.85);
     }
     function layoutInit() {
-      if (layoutStarted) return;
-      layoutStarted = true;
       measure();
-      if (!isHome) { curP = 1; tgtP = 1; }
       update();
       window.addEventListener('scroll', function () {
         if (init) tgtP = ease(window.scrollY / init.maxScroll);
       }, { passive: true });
-      window.addEventListener('resize', refreshLayout);
-      if (window.MutationObserver) {
-        var observer = new MutationObserver(refreshLayout);
-        var login = document.getElementById('navLoginBtn');
-        var user = document.getElementById('userMenuContainer');
-        [login, user].forEach(function (el) {
-          if (el) observer.observe(el, { attributes: true, attributeFilter: ['hidden', 'class', 'style'] });
-        });
-        observer.observe(nav, { childList: true });
-      }
+      window.addEventListener('resize', function () { measure(); update(); });
       requestAnimationFrame(function loop() {
         if (init && Math.abs(tgtP - curP) > 0.0005) update();
         requestAnimationFrame(loop);
@@ -1315,11 +1264,10 @@
   function initSearchOverlay() {
     var overlay = document.getElementById('searchOverlay');
     var trigger = document.getElementById('searchTrigger');
-    if (!overlay) return;
+    if (!overlay || !trigger) return;
     overlayController = initSearchController('searchInput', 'searchResults', 'searchStatus', true);
 
-    function openOverlay(event) {
-      if (event) event.preventDefault();
+    function openOverlay() {
       overlay.hidden = false;
       document.body.style.overflow = 'hidden';
       if (overlayController) overlayController.focus();
@@ -1329,7 +1277,7 @@
       document.body.style.overflow = '';
     };
 
-    if (trigger) trigger.addEventListener('click', openOverlay);
+    trigger.addEventListener('click', openOverlay);
     overlay.addEventListener('click', function (e) { if (e.target === overlay) closeOverlay(); });
     document.getElementById('searchClose').addEventListener('click', closeOverlay);
     document.addEventListener('keydown', function (e) {
