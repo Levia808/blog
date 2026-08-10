@@ -1785,7 +1785,7 @@ button,
   right: 0;
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(18px, -50%, 0);
+  transform: translate3d(calc(var(--nav-auth-track-x, 0px) + 18px), -50%, 0);
   transform-origin: right center;
   transition:
     opacity 210ms cubic-bezier(.22,.61,.36,1),
@@ -1796,17 +1796,17 @@ button,
   will-change: transform, opacity;
 }
 .nav-auth-control.nav-auth-visible {
-  opacity: 1;
+  opacity: var(--nav-auth-track-opacity, 1);
   pointer-events: auto;
-  transform: translate3d(0, -50%, 0);
+  transform: translate3d(var(--nav-auth-track-x, 0px), -50%, 0);
 }
 .nav-auth-control.nav-auth-leaving {
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(18px, -50%, 0);
+  transform: translate3d(calc(var(--nav-auth-track-x, 0px) + 18px), -50%, 0);
 }
 .nav-auth-control.nav-auth-visible.nav-login-btn:hover {
-  transform: translate3d(0, calc(-50% - 1px), 0);
+  transform: translate3d(var(--nav-auth-track-x, 0px), calc(-50% - 1px), 0);
 }
 .nav-auth-control.nav-auth-visible .nf-avatar:hover,
 .nav-auth-control.nav-auth-visible .nf-avatar:focus-visible {
@@ -1816,7 +1816,13 @@ button,
 .nav-auth-control.nav-auth-visible.nav-auth-nav-hidden.nav-login-btn:hover {
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(18px, -50%, 0);
+  transform: translate3d(calc(var(--nav-auth-track-x, 0px) + 18px), -50%, 0);
+}
+html.js .home-page .nav-auth-control {
+  transition:
+    border-color var(--ax-dur-medium) ease-out,
+    background-color var(--ax-dur-medium) ease-out,
+    color var(--ax-dur-medium) ease-out;
 }
 
 html.js .home-page .nav-full {
@@ -1824,9 +1830,13 @@ html.js .home-page .nav-full {
   top: 0;
   left: 0;
   right: 0;
-  opacity: 0;
+  opacity: 1;
   pointer-events: none;
-  transform: translateY(-10px);
+  transform: translateY(0);
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   transition:
     opacity .35s cubic-bezier(.22,.61,.36,1),
     transform .35s cubic-bezier(.22,.61,.36,1),
@@ -1837,6 +1847,10 @@ html.js .home-page.home-nav-collapsed .nav-full {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+  background: var(--nav-glass-bg);
+  border-bottom-color: var(--nav-glass-border);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
 }
 html.js .home-page.home-nav-collapsed .nav-full.nav-hidden {
   opacity: 0;
@@ -1850,6 +1864,15 @@ html.js .home-page.home-nav-collapsed .hero-nav {
 html.js .home-page .nav-full .nf-logo {
   opacity: 0;
   pointer-events: none;
+}
+html.js .home-page .nav-full .nf-links {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s cubic-bezier(.22,.61,.36,1);
+}
+html.js .home-page.home-nav-collapsed .nav-full .nf-links {
+  opacity: 1;
+  pointer-events: auto;
 }
 html.js .home-page .ht-wrap {
   z-index: 190;

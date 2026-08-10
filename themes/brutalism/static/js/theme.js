@@ -5,10 +5,24 @@
   var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   document.documentElement.classList.add('js');
 
-  function setNavAuthOffset(isOffset) {
-    document.querySelectorAll('.nav-auth-control').forEach(function (el) {
-      el.classList.toggle('nav-auth-nav-hidden', isOffset);
-    });
+  function clamp01(value) {
+    return value < 0 ? 0 : value > 1 ? 1 : value;
+  }
+
+  function setNavAuthProgress(progress) {
+    var header = document.getElementById('siteHeader');
+    if (!header) return;
+    var actions = header.querySelector('.nf-actions');
+    if (!actions || actions.offsetWidth === 0) return;
+
+    var p = clamp01(progress);
+    var rect = actions.getBoundingClientRect();
+    var offscreenX = Math.max(96, window.innerWidth - rect.left + 24);
+    var alpha = clamp01((p - 0.08) / 0.34);
+    alpha = alpha * alpha * (3 - 2 * alpha);
+
+    header.style.setProperty('--nav-auth-track-x', Math.round(offscreenX * (1 - p)) + 'px');
+    header.style.setProperty('--nav-auth-track-opacity', alpha.toFixed(3));
   }
 
   function forceInitialScrollTop() {
@@ -37,7 +51,7 @@
     if (behavior === 'fixed') {
       headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
       document.body.classList.remove('nav-is-hidden');
-      setNavAuthOffset(false);
+      if (!document.body.classList.contains('home-page')) setNavAuthProgress(1);
       return;
     }
 
@@ -51,15 +65,15 @@
       if (y < NAV_HIDE_THRESHOLD) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
         document.body.classList.remove('nav-is-hidden');
-        setNavAuthOffset(false);
+        if (!document.body.classList.contains('home-page')) setNavAuthProgress(1);
       } else if (y > lastY + SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.add('nav-hidden'); });
         document.body.classList.add('nav-is-hidden');
-        setNavAuthOffset(true);
+        if (!document.body.classList.contains('home-page')) setNavAuthProgress(0);
       } else if (y < lastY - SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
         document.body.classList.remove('nav-is-hidden');
-        setNavAuthOffset(false);
+        if (!document.body.classList.contains('home-page')) setNavAuthProgress(1);
       }
       lastY = y;
       ticking = false;
@@ -732,7 +746,7 @@
   function initScrambleHover() {
     if (reducedMotion) return;
     var SCRAMBLE_POOL = '가나다라마바사아자차카타파하あいうえおかきこさしすせそАБВГДЕЖЗИКЛМНОПР×÷±§#%&$@';
-    var targets = document.querySelectorAll('.pc-title[data-scramble="1"], .pcf-title[data-scramble="1"], .article-title[data-scramble="1"], .archive-link, .nf-link, .nm-menu a');
+    var targets = document.querySelectorAll('.pc-title[data-scramble="1"], .pcf-title[data-scramble="1"], .article-title[data-scramble="1"], .archive-link');
     if (!targets.length) return;
 
     function scrambleTo(el, original) {
@@ -1145,7 +1159,7 @@
       nav.classList.toggle('is-collapsed', p > 0.85);
       var isCollapsed = p > 0.85;
       document.body.classList.toggle('home-nav-collapsed', isCollapsed);
-      setNavAuthOffset(!isCollapsed || document.body.classList.contains('nav-is-hidden'));
+      setNavAuthProgress(document.body.classList.contains('nav-is-hidden') ? 0 : p);
     }
     function layoutInit() {
       measure();
