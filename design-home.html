@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design · 加载 → 首页 联动设计稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E4DED4;
+    --ink: #101010;
+    --accent: #6B8B6B;
+    --grey: #8a887e;
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); font-family: "JetBrains Mono", monospace; color: var(--ink); overflow-x: hidden; }
+
+  /* ═══════ 加载层（与 hero 联动: 描边标题 → 实心）═══════ */
+  .loader {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding: 3.5vh 3vw;
+    pointer-events: none;
+    transition: opacity .6s var(--ease), visibility .6s;
+  }
+  .loader.leave { opacity: 0; visibility: hidden; }
+  .loader-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 14px;
+    opacity: 0;
+    animation: headIn .7s var(--ease) .05s forwards;
+    transition: transform .5s var(--ease), opacity .5s;
+  }
+  .loader.leave .loader-head { transform: translateY(-24px); opacity: 0; }
+  @keyframes headIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+  .l-brand { font-family: "Anton", sans-serif; font-size: 17px; letter-spacing: .06em; }
+  .l-brand .dot { color: var(--accent); }
+  .l-index { font-size: 10px; letter-spacing: .3em; color: var(--grey); font-variant-numeric: tabular-nums; }
+  .l-index b { color: var(--ink); font-weight: 500; }
+
+  .loader-foot {
+    display: flex; align-items: center; gap: 22px;
+    opacity: 0;
+    animation: footIn .7s var(--ease) .4s forwards;
+    transition: transform .5s var(--ease), opacity .5s;
+  }
+  .loader.leave .loader-foot { transform: translateY(30px); opacity: 0; }
+  @keyframes footIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  .l-progress { flex: 1; position: relative; height: 30px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); display: flex; align-items: center; overflow: hidden; }
+  .l-progress::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(16,16,16,.16); }
+  .l-progress i { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--ink); transition: width .25s cubic-bezier(.22,.61,.36,1); }
+  .l-progress i::after { content: ""; position: absolute; right: -2px; top: 0; bottom: 0; width: 4px; background: var(--accent); transition: background .3s; }
+  .l-pct { font-size: clamp(60px, 9vw, 130px); font-weight: 500; line-height: .9; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .l-pct em { font-style: normal; color: var(--accent); font-size: .5em; }
+  .l-status { font-size: 10px; letter-spacing: .22em; color: var(--grey); text-transform: uppercase; min-width: 150px; }
+  .l-status .ch { display: inline-block; opacity: 0; transform: translateY(5px); }
+  .l-status .ch.in { opacity: 1; transform: none; transition: opacity .16s, transform .16s; }
+  .l-status.leaving { transition: opacity .2s var(--ease), transform .2s; opacity: 0; transform: translateY(-6px); }
+
+  /* ═══════ 变形导航（hero 顶部, 初始均分）═══════ */
+  .hn-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 120; pointer-events: none; transition: background .6s var(--ease), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
+  .hn-nav.solid { background: rgba(228,222,212,.75); backdrop-filter: blur(20px); border-bottom-color: rgba(16,16,16,.1); }
+  .hn-link { position: fixed; top: 36px; z-index: 121; transform: translateY(-50%); font-size: 15px; font-weight: 500; color: #55534b; text-decoration: none; padding: 6px 0; pointer-events: auto; opacity: 0; transition: color .25s, opacity .6s var(--ease); }
+  .hn-nav.ready .hn-link { opacity: 1; }
+  .hn-link::after { content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 0; background: var(--accent); transition: width .35s var(--ease); }
+  .hn-link:hover { color: var(--ink); }
+  .hn-link:hover::after { width: 100%; }
+  .hn-cta { color: #fff; background: var(--accent); border-radius: 99px; padding: 9px 22px; }
+  .hn-cta:hover { color: #fff; background: #567a56; }
+  .hn-cta::after { display: none; }
+
+  /* ═══════ 首页 hero（标题 = 加载描边标题的延续）═══════ */
+  .hero { min-height: 100dvh; display: flex; flex-direction: column; }
+  .hero-title {
+    font-family: "Anton", sans-serif;
+    font-size: clamp(90px, 18vw, 320px);
+    line-height: .85; letter-spacing: -.03em;
+    padding: 16vh 3vw 0;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+    transition: color .5s var(--ease), -webkit-text-stroke .5s var(--ease), transform .5s var(--ease);
+    position: relative;
+    white-space: nowrap;
+  }
+  .hero-title.filled { color: var(--ink); -webkit-text-stroke: 0; }
+  .hero-title .sub { font-family: "JetBrains Mono", monospace; font-size: clamp(15px, 1.3vw, 22px); letter-spacing: .02em; color: var(--grey); margin-left: .4em; -webkit-text-stroke: 0; }
+
+  /* 线条组（进度条完成 → 从底部生长, 粗细渐变） */
+  .hero-lines { margin-top: auto; display: flex; flex-direction: column; width: 100%; opacity: 0; transform: translateY(40px); transition: opacity .8s var(--ease) .15s, transform .8s var(--ease) .15s; }
+  .hero.ready .hero-lines { opacity: 1; transform: none; }
+  .hero-lines i { display: block; width: 100%; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 1s var(--ease); }
+  .hero.ready .hero-lines i { transform: scaleX(1); }
+  .hero-lines i:nth-child(1) { height: 3px; transition-delay: .3s; }
+  .hero-lines i:nth-child(2) { height: 8px; transition-delay: .38s; }
+  .hero-lines i:nth-child(3) { height: 17px; transition-delay: .46s; }
+  .hero-lines i:nth-child(4) { height: 32px; transition-delay: .54s; }
+  .hero-lines i:nth-child(5) { height: 54px; background: #050505; transition-delay: .62s; display: flex; align-items: center; justify-content: space-between; padding: 0 3vw; }
+  .hero-lines .l-text { font-family: "Anton", sans-serif; font-weight: 400; font-size: clamp(13px, 1.2vw, 19px); letter-spacing: .04em; color: #f6f5f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hero-lines .l-arrow { flex: none; width: 40px; height: 40px; border: 1px solid rgba(246,245,241,.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f6f5f1; font-size: 17px; text-decoration: none; transition: background .3s, transform .3s; animation: bob 2s var(--ease) infinite; }
+  .hero-lines .l-arrow:hover { background: var(--accent); }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+  /* 内容占位 */
+  .content { min-height: 60vh; border-top: 1px solid var(--ink); margin-top: 6vh; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader * { animation: none !important; transition: none !important; }
+    .loader { opacity: 0; visibility: hidden; }
+    .hero-title { color: var(--ink); -webkit-text-stroke: 0; }
+    .hero-lines { opacity: 1; transform: none; }
+    .hero-lines i { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ 加载层 ═══ -->
+<div class="loader" id="loader">
+  <div class="loader-head">
+    <span class="l-brand">LEVIA<span class="dot">'s</span></span>
+    <span class="l-index"><b id="idxNum">0001</b> — INIT</span>
+  </div>
+  <div style="flex:1"></div>
+  <div class="loader-foot">
+    <div class="l-progress"><i id="bar"></i></div>
+    <div class="l-pct"><span id="num">0</span><em>%</em></div>
+    <div class="l-status" id="status">INIT</div>
+  </div>
+</div>
+
+<!-- ═══ 变形导航 ═══ -->
+<nav class="hn-nav" id="hnNav"></nav>
+<a class="hn-link hn-cta" id="lCta" href="#content">登录</a>
+<a class="hn-link" id="l1" href="#content">动态</a>
+<a class="hn-link" id="l2" href="#content">归档</a>
+<a class="hn-link" id="l3" href="#content">关于</a>
+<a class="hn-link" id="l4" href="#content">搜索</a>
+
+<!-- ═══ 首页 hero ═══ -->
+<section class="hero" id="hero">
+  <h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1>
+  <div class="hero-lines" id="heroLines">
+    <i></i><i></i><i></i><i></i>
+    <i>
+      <span class="l-text">Preserving legacies, driving growth</span>
+      <a class="l-arrow" href="#content" aria-label="向下滚动">↓</a>
+    </i>
+  </div>
+</section>
+
+<div class="content" id="content"></div>
+
+<script>
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var loader = document.getElementById('loader');
+  var hero = document.getElementById('hero');
+  var title = document.getElementById('heroTitle');
+  var statusEl = document.getElementById('status');
+
+  /* 状态打字机 */
+  var statuses = ['INITIALIZING', 'READING POSTS', 'LOADING FONTS', 'READY'];
+  function typeStatus(text) {
+    statusEl.classList.add('leaving');
+    setTimeout(function () {
+      statusEl.classList.remove('leaving');
+      statusEl.textContent = '';
+      for (var i = 0; i < text.length; i++) {
+        (function (idx) {
+          setTimeout(function () {
+            var s = document.createElement('span');
+            s.className = 'ch';
+            s.textContent = text[idx];
+            statusEl.appendChild(s);
+            setTimeout(function () { s.classList.add('in'); }, 10);
+          }, idx * 32);
+        })(i);
+      }
+    }, 200);
+  }
+
+  /* 进度 */
+  var num = 0, si = 0, idx = 1;
+  var pctEl = document.getElementById('num');
+  var shownNum = 0, targetNum = 0;
+  (function numLoop() {
+    shownNum += (targetNum - shownNum) * 0.16;
+    if (Math.abs(targetNum - shownNum) < 0.06) shownNum = targetNum;
+    pctEl.textContent = Math.floor(shownNum);
+    requestAnimationFrame(numLoop);
+  })();
+  typeStatus(statuses[0]);
+
+  var iv = setInterval(function () {
+    num += Math.random() * 7 + 3;
+    if (num >= 100) {
+      num = 100;
+      clearInterval(iv);
+      targetNum = 100;
+      document.getElementById('bar').style.width = '100%';
+      setTimeout(finish, 500);
+      return;
+    }
+    var n = Math.floor(num);
+    targetNum = n;
+    document.getElementById('bar').style.width = n + '%';
+    if (n > idx * 14) { idx++; document.getElementById('idxNum').textContent = String(idx).padStart(4, '0'); }
+    var ns = n > 70 ? 3 : n > 40 ? 2 : n > 12 ? 1 : 0;
+    if (ns !== si) { si = ns; typeStatus(statuses[si]); }
+  }, 150);
+
+  /* 完成: 描边标题填实 → 加载层淡出 → hero 内容入场 → 导航就绪 */
+  function finish() {
+    title.classList.add('filled');
+    document.getElementById('idxNum').textContent = 'DONE';
+    setTimeout(function () {
+      loader.classList.add('leave');
+      hero.classList.add('ready');
+      document.getElementById('hnNav').classList.add('ready');
+      document.querySelectorAll('.hn-link').forEach(function (a) { a.classList.add('ready'); });
+      initNav();
+    }, 380);
+  }
+
+  /* 变形导航: 初始均分 → 滚动收拢 */
+  var links = [l1, l2, l3, l4, lCta].filter(Boolean);
+  var init = null, curP = 0, tgtP = 0;
+  function ease(p) { return p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3); }
+  function initNav() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var pad = vw * 0.04, rightPad = vw * 0.02;
+    var items = [];
+    var n = links.length;
+    links.forEach(function (el, i) {
+      var w = el.offsetWidth || 60;
+      items.push({ el: el, w: w, initLeft: pad + (i / (n - 1)) * (vw - pad * 2) - w / 2 });
+    });
+    var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (n - 1) * 28;
+    var rightStart = vw - rightPad - totalW;
+    var acc = 0;
+    items.forEach(function (g) { g.targetLeft = rightStart + acc; acc += g.w + 28; });
+    init = { maxScroll: Math.max(vh - 72, 1), items: items };
+    function update() {
+      curP += (tgtP - curP) * 0.1;
+      if (Math.abs(tgtP - curP) < 0.001) curP = tgtP;
+      var p = curP;
+      init.items.forEach(function (g) { g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px'; });
+      document.getElementById('hnNav').classList.toggle('solid', p > 0.85);
+    }
+    update();
+    window.addEventListener('scroll', function () { tgtP = ease(window.scrollY / init.maxScroll); }, { passive: true });
+    requestAnimationFrame(function loop() {
+      if (Math.abs(tgtP - curP) > 0.0005) update();
+      requestAnimationFrame(loop);
+    });
+  }
+
+  if (reduced) {
+    clearInterval(iv);
+    targetNum = 100;
+    document.getElementById('bar').style.width = '100%';
+    setTimeout(finish, 200);
+  }
+</script>
+</body>
+</html>
