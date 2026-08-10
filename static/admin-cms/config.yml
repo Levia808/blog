@@ -54,6 +54,15 @@ collections:
         fields:
           - { label: 作者, name: author, widget: string }
           - { label: 导航 Logo 文字, name: navLogo, widget: string }
+          - label: 导航栏行为
+            name: navBehavior
+            widget: select
+            required: true
+            default: auto
+            options:
+              - { label: "动态收起（下滚隐藏，上滚展开）", value: auto }
+              - { label: "常驻显示", value: fixed }
+            hint: "控制全站收起态导航栏；首页开屏标题仍会先按设计稿变形为左侧 Logo"
           - { label: 欢迎页头像 (圆形裁切显示), name: avatarUrl, widget: string, required: false,
               hint: "图片 URL，建议正方形（如 GitHub 头像），欢迎页标题后圆形放大显示，与文本重合区域反相" }
           - { label: 站点描述, name: description, widget: text }

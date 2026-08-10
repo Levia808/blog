@@ -27,6 +27,12 @@
   function initNavScroll() {
     var headers = [document.getElementById('siteHeader'), document.getElementById('siteHeaderMobile')].filter(Boolean);
     if (!headers.length) return;
+    var behavior = document.body.dataset.navBehavior || 'auto';
+    if (behavior === 'fixed') {
+      headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
+      document.body.classList.remove('nav-is-hidden');
+      return;
+    }
 
     var lastY = window.scrollY;
     var ticking = false;

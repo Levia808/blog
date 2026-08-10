@@ -177,12 +177,16 @@ html.js [data-reveal].reveal-visible {
   padding: 14px 28px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   top: 0;
   z-index: 180;
   transition: transform var(--dur-normal) ease-out;
 }
 .nav-full.nav-hidden { transform: translateY(-100%); }
+.nav-full:not(.nav-hidden),
+.nav-mobile:not(.nav-hidden) { transform: translateY(0); }
 .nav-full.nav-hidden,
 .nav-mobile.nav-hidden { pointer-events: none; }
 .nf-logo { flex: 0 0 auto; margin-right: auto; font-size: 18px; font-weight: 650; letter-spacing: 1.5px; color: var(--white); text-decoration: none; }
@@ -348,7 +352,9 @@ html.js [data-reveal].reveal-visible {
   padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   top: 0;
   z-index: 50;
   transition: transform var(--dur-normal) ease-out;
@@ -1664,9 +1670,16 @@ button,
 .nav-full,
 .nav-mobile {
   min-height: 64px;
+  z-index: 180;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(18px);
   border-bottom-color: var(--ax-border);
+}
+.site-has-nav:not(.home-page):not(.login-only) .site-main {
+  padding-top: 68px;
+}
+@media (max-width: 768px) {
+  .site-has-nav:not(.home-page):not(.login-only) .site-main { padding-top: 64px; }
 }
 .nav-full {
   display: flex;

@@ -194,6 +194,13 @@
     return btoa(binary);
   }
 
+  function base64Decode(str) {
+    var binary = atob(String(str || '').replace(/\s/g, ''));
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
   function ghFetch(path, options) {
     options = options || {};
     options.headers = Object.assign({
@@ -503,6 +510,67 @@
       });
   }
 
+  /* ── 导航栏行为 (data/site.yaml 读写) ── */
+  var siteConfigSha = null;
+
+  function readNavBehavior(text) {
+    var match = String(text || '').match(/^navBehavior\s*:\s*["']?([A-Za-z-]+)["']?\s*$/m);
+    return match && match[1] === 'fixed' ? 'fixed' : 'auto';
+  }
+
+  function writeNavBehavior(text, value) {
+    var behavior = value === 'fixed' ? 'fixed' : 'auto';
+    var line = 'navBehavior: ' + behavior;
+    if (/^navBehavior\s*:/m.test(text)) return text.replace(/^navBehavior\s*:.*$/m, line);
+    if (/^navLogo\s*:.*$/m.test(text)) return text.replace(/^(navLogo\s*:.*)$/m, '$1\n' + line);
+    return line + '\n' + text;
+  }
+
+  function loadNavBehaviorConfig() {
+    var select = document.getElementById('cfgNavBehavior');
+    if (!select || !getGhToken()) return;
+    clearError('cfgNavError');
+    ghFetch('/repos/' + GH_REPO + '/contents/data/site.yaml')
+      .then(function (file) {
+        siteConfigSha = file.sha;
+        select.value = readNavBehavior(base64Decode(file.content));
+      })
+      .catch(function (error) {
+        showError('导航设置加载失败：' + (error.message || error), 'cfgNavError');
+      });
+  }
+
+  function saveNavBehaviorConfig() {
+    if (!getGhToken()) {
+      showError('请先授权 GitHub 后再保存导航设置。', 'cfgNavError');
+      return;
+    }
+    var select = document.getElementById('cfgNavBehavior');
+    var btn = document.getElementById('cfgNavSaveBtn');
+    var value = select ? select.value : 'auto';
+    clearError('cfgNavError');
+    if (btn) { btn.disabled = true; btn.textContent = '保存中…'; }
+    ghFetch('/repos/' + GH_REPO + '/contents/data/site.yaml')
+      .then(function (file) {
+        siteConfigSha = file.sha;
+        var next = writeNavBehavior(base64Decode(file.content), value);
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/site.yaml', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '更新导航栏行为: ' + value, content: base64Encode(next), sha: siteConfigSha })
+        });
+      })
+      .then(function () {
+        showToast('导航栏行为已保存，站点重建后生效', 'success');
+      })
+      .catch(function (error) {
+        showError('导航设置保存失败：' + (error.message || error), 'cfgNavError');
+      })
+      .finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '保存导航设置'; }
+      });
+  }
+
   /* ── 文章卡片样式 (data/cards.yaml 读写) ── */
   var cardsSha = null;
   function loadCardStyle() {
@@ -642,6 +710,10 @@
   if (cfgSaveBtn) cfgSaveBtn.addEventListener('click', saveWelcomeConfig);
   var cfgReloadBtn = document.getElementById('cfgReloadBtn');
   if (cfgReloadBtn) cfgReloadBtn.addEventListener('click', loadWelcomeConfig);
+  var cfgNavSaveBtn = document.getElementById('cfgNavSaveBtn');
+  if (cfgNavSaveBtn) cfgNavSaveBtn.addEventListener('click', saveNavBehaviorConfig);
+  var cfgNavReloadBtn = document.getElementById('cfgNavReloadBtn');
+  if (cfgNavReloadBtn) cfgNavReloadBtn.addEventListener('click', loadNavBehaviorConfig);
 
   function updateGhAuthStatus() {
     var authorized = Boolean(getGhToken());
@@ -1188,6 +1260,7 @@
         if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
         if (drawerLogout) drawerLogout.addEventListener('click', doLogout);
         await loadDashboard();
+        loadNavBehaviorConfig();
         updateGhAuthStatus();
       } catch (error) {
         showError(errorText(error));

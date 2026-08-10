@@ -141,6 +141,21 @@
           </div>
           <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></div>
 
+          <div class="panel-title">导航栏行为</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>全局导航栏</span>
+              <select id="cfgNavBehavior">
+                <option value="auto">动态收起（下滚隐藏，上滚展开）</option>
+                <option value="fixed">常驻显示</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgNavSaveBtn">保存导航设置</button>
+              <button type="button" class="btn" id="cfgNavReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgNavError" hidden></p>
+          </div>
+
           <div class="panel-title">欢迎页配置（打字机 + 动效参数）</div>
           <div class="settings-form">
             <label class="sf-field sf-wide"><span>打字机文本</span><textarea id="cfgTypewriterText" rows="2" placeholder="写代码，也写生活。记录学习与思考。"></textarea></label>

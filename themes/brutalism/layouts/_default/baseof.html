@@ -8,7 +8,7 @@
   <title>{{ block "title" . }}{{ if not .IsHome }}{{ .Title }} · {{ end }}{{ site.Title }}{{ end }}</title>
   {{ partial "head.html" . }}
 </head>
-<body class="{{ block "body-class" . }}{{ end }}">
+<body class="{{ block "body-class" . }}{{ end }}{{ if not (eq .Layout "admin") }} site-has-nav{{ end }} nav-behavior-{{ $P.navBehavior | default "auto" }}" data-nav-behavior="{{ $P.navBehavior | default "auto" }}">
   <a class="skip-link" href="#main">Skip to content</a>
   {{- if not (eq .Layout "admin") }}
   {{- if not .IsHome }}
