@@ -196,25 +196,36 @@
       '</div></article>';
   }
 
-  // 查询降级链: 新版表(回复+评论赞) → 无评论赞 → 旧表(无回复) — 兼容未更新 SQL 的数据库
+  // 查询降级链: 新版表(回复+评论赞) → 无评论赞 → 旧表(无回复) → 无关系(裸表)
+  // 兼容未更新 SQL 的数据库 (外层关系缺失返回 400 时逐级降级)
   var commentQueries = [
     'id, content, created_at, user_id, parent_id, profiles(display_name, username, avatar_url), moment_comment_likes(user_id)',
     'id, content, created_at, user_id, parent_id, profiles(display_name, username, avatar_url)',
     'id, content, created_at, user_id, profiles(display_name, username, avatar_url)'
+  ];
+  var momentQueries = [
+    '*, profiles(display_name, username, avatar_url), moment_likes(user_id), moment_comments(%CQ%)',
+    '*, profiles(display_name, username, avatar_url), moment_comments(%CQ%)',
+    '*, profiles(display_name, username, avatar_url)',
+    '*'
   ];
 
   async function loadMoments() {
     try {
       var result = null;
       var lastError = null;
-      for (var qi = 0; qi < commentQueries.length; qi++) {
-        var attempt = await window.blogSupabase
-          .from('moments')
-          .select('*, profiles(display_name, username, avatar_url), moment_likes(user_id), moment_comments(' + commentQueries[qi] + ')')
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!attempt.error) { result = attempt; break; }
-        lastError = attempt.error;
+      for (var mi = 0; mi < momentQueries.length && !result; mi++) {
+        for (var qi = 0; qi < commentQueries.length; qi++) {
+          var sel = momentQueries[mi].replace('%CQ%', commentQueries[qi]);
+          if (sel.indexOf('%CQ%') >= 0) break;
+          var attempt = await window.blogSupabase
+            .from('moments')
+            .select(sel)
+            .order('created_at', { ascending: false })
+            .limit(50);
+          if (!attempt.error) { result = attempt; break; }
+          lastError = attempt.error;
+        }
       }
       if (!result) throw lastError;
       var moments = result.data || [];
