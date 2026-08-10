@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Design · 导航 + 标题 + 开屏（滚动变形版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0e0e0c;
@@ -77,68 +80,82 @@
   /* ── 大标题（fixed，滚动变形为导航 LOGO）── */
   .hero-title {
     position: fixed; z-index: 90;
-    font-size: clamp(52px, 9.2vw, 152px);
-    font-weight: 500; letter-spacing: -.045em; line-height: 1.05;
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900;
+    font-size: clamp(64px, 12vw, 200px);
+    letter-spacing: -.05em; line-height: .95;
     transform-origin: left top;
-    will-change: transform, font-size;
+    will-change: transform;
     white-space: nowrap;
   }
-  .hero-title .em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .hero-title .sub {
+    font-family: var(--font-sans);
+    font-weight: 500; font-size: clamp(16px, 1.6vw, 28px);
+    letter-spacing: .02em; color: var(--muted); margin-left: .35em;
+  }
+  .hero-title .accent { color: var(--accent); }
 
   /* ── 开屏内容区（线 / 竖条 / 元信息随滚动淡出）── */
   .hero {
     min-height: 100dvh;
     position: relative;
-    display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 0 4vw 7vh;
+    display: flex; flex-direction: column;
+    padding: 0;
     will-change: opacity;
   }
   .hero .fade-on-scroll { transition: opacity .5s var(--ease), transform .5s var(--ease); }
 
-  /* 大标题底部：从左向右进入的渐粗线（左细右粗梯形） */
-  .hero-line {
-    margin-top: 4.2vh;
-    width: 46vw; height: 10px;
-    background: var(--accent);
-    clip-path: polygon(0% 40%, 100% 0%, 100% 100%, 0% 60%);
-    transform: translateX(-108%);
-    transition: transform 1.2s var(--ease) .55s;
-  }
-  body.loaded .hero-line { transform: translateX(0); }
-  .hero-line i {
-    display: block; height: 100%; background: var(--fg);
-    clip-path: polygon(0% 40%, 38% 0%, 38% 100%, 0% 60%);
-  }
-
-  /* 最下部：垂直高度最大的矩形 + 竖排英文短句 */
-  .hero-rail {
-    position: absolute; left: 4vw; bottom: 7vh;
-    display: flex; align-items: stretch; gap: 14px;
-  }
-  .hero-rail .rail-bar {
-    width: 3px; height: clamp(120px, 18vh, 200px);
-    background: var(--accent);
-  }
-  .hero-rail .rail-text {
-    writing-mode: vertical-rl;
-    font-family: var(--font-mono); font-size: 12px; letter-spacing: .3em;
-    color: var(--muted); text-transform: uppercase;
-  }
-
+  /* 元数据行：标题正下方，细线分隔 */
   .hero-meta {
-    margin-top: 3vh; display: flex; gap: 36px; align-items: flex-end;
-    border-top: 1px solid var(--line); padding-top: 2.2vh;
+    margin-top: 2.6vh; margin-left: 4vw; margin-right: 4vw;
+    display: flex; gap: 48px; align-items: center;
+    border-top: 1px solid rgba(232, 230, 223, .5);
+    padding-top: 14px;
     font-family: var(--font-mono); font-size: 11px; color: var(--faint);
-    letter-spacing: .14em; text-transform: uppercase;
+    letter-spacing: .16em; text-transform: uppercase;
   }
-  .hero-meta b { color: var(--muted); font-weight: 500; }
-  .scroll-hint { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .scroll-hint .bar { width: 1px; height: 44px; background: var(--line); position: relative; overflow: hidden; }
-  .scroll-hint .bar::after {
-    content: ""; position: absolute; left: 0; top: -100%; width: 100%; height: 100%;
-    background: var(--accent); animation: scrollDrop 2.2s var(--ease) infinite;
+  .hero-meta b { color: var(--fg); font-weight: 500; }
+
+  /* 装饰性线条组：粗细渐变，最上最细 → 越下越粗 → 厚黑条（重力感） */
+  .hero-lines {
+    margin-top: 3.6vh; margin-left: 4vw; margin-right: 4vw;
+    display: flex; flex-direction: column; gap: 10px;
   }
-  @keyframes scrollDrop { to { top: 100%; } }
+  .hero-lines i {
+    display: block; background: var(--fg);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 1s var(--ease);
+  }
+  body.loaded .hero-lines i { transform: scaleX(1); }
+  .hero-lines i:nth-child(1) { height: 2px; transition-delay: .5s; }
+  .hero-lines i:nth-child(2) { height: 5px; transition-delay: .58s; }
+  .hero-lines i:nth-child(3) { height: 11px; transition-delay: .66s; }
+  .hero-lines i:nth-child(4) { height: 20px; transition-delay: .74s; }
+  .hero-lines i:nth-child(5) { height: 38px; background: #000; transition-delay: .82s; }
+
+  /* 底部标语栏：实心深黑矩形块 */
+  .hero-banner {
+    margin-top: auto;
+    background: #040403;
+    border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 26px 4vw;
+  }
+  .hero-banner .b-text {
+    font-family: "Inter", sans-serif;
+    font-weight: 700; font-size: clamp(15px, 1.5vw, 22px);
+    letter-spacing: .01em; color: #eae6dc;
+  }
+  .hero-banner .b-arrow {
+    width: 54px; height: 54px; flex: none;
+    border: 1px solid rgba(234, 230, 220, .35); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #eae6dc; font-size: 20px; text-decoration: none;
+    transition: background .3s var(--ease), transform .3s var(--ease);
+    animation: bob 2s var(--ease) infinite;
+  }
+  .hero-banner .b-arrow:hover { background: var(--accent); color: #040403; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
   /* ── 内容区 ── */
   .listing { padding: 16vh 4vw 10vh; border-top: 1px solid var(--line); }
@@ -218,21 +235,23 @@
 <a class="nav-link" id="l3" href="#about">关于</a>
 <a class="nav-link" id="l4" href="#contact">搜索</a>
 
-<!-- 大标题（fixed，滚动变形为导航 LOGO） -->
-<h1 class="hero-title" id="heroTitle">写代码，也写<span class="em">生活</span>。</h1>
+<!-- 大标题（fixed，滚动变形为导航 LOGO）：LEVIA -->
+<h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1>
 
 <!-- 开屏内容 -->
 <section class="hero" id="hero">
-  <div class="hero-rail fade-on-scroll" id="heroRail">
-    <span class="rail-bar"></span>
-    <span class="rail-text">WRITE · CODE · LIVE · SHARE</span>
-  </div>
-  <div class="hero-line fade-on-scroll" id="heroLine"><i></i></div>
   <div class="hero-meta fade-on-scroll" id="heroMeta">
     <span><b>EST.</b> 2026</span>
     <span><b>POSTS</b> 08</span>
-    <span><b>MODE</b> 杂志</span>
-    <span class="scroll-hint">SCROLL <span class="bar"></span></span>
+    <span><b>LOCATION</b> SHENZHEN</span>
+    <span style="margin-left:auto"><b>01</b> — WELCOME</span>
+  </div>
+  <div class="hero-lines fade-on-scroll" id="heroLines">
+    <i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div class="hero-banner fade-on-scroll" id="heroBanner">
+    <span class="b-text">Preserving legacies, driving growth</span>
+    <a class="b-arrow" href="#work" aria-label="向下滚动">↓</a>
   </div>
 </section>
 
@@ -317,9 +336,9 @@
   var layout = (function () {
     var title = document.getElementById('heroTitle');
     var hero = document.getElementById('hero');
-    var rail = document.getElementById('heroRail');
-    var line = document.getElementById('heroLine');
     var meta = document.getElementById('heroMeta');
+    var lines = document.getElementById('heroLines');
+    var banner = document.getElementById('heroBanner');
     var links = [l1, l2, l3, l4].filter(Boolean);
     var cta = document.getElementById('navCta');
     var linksAll = links.concat(cta ? [cta] : []);
@@ -371,9 +390,13 @@
 
     function ease(p) { return p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3); }
 
+    var curP = 0;
+    var tgtP = 0;
+
     function update() {
-      var s = window.scrollY;
-      var p = ease(s / init.maxScroll);
+      curP += (tgtP - curP) * 0.1;
+      if (Math.abs(tgtP - curP) < 0.001) curP = tgtP;
+      var p = curP;
       /* 标题：居中大字 → 左上 LOGO */
       var dx = (init.tTarget.x - init.tInit.x) * p;
       var dy = (init.tTarget.y - init.tInit.y) * p;
@@ -391,23 +414,20 @@
       hero.style.transform = 'translateY(' + (-p * 46) + 'px)';
     }
 
-    function onScroll() {
-      if (!init) return;
-      if (!running) {
-        running = true;
-        requestAnimationFrame(function () {
-          update();
-          running = false;
-        });
-      }
+    function loop() {
+      if (init && Math.abs(tgtP - curP) > 0.0005) update();
+      requestAnimationFrame(loop);
     }
 
     return {
       init: function () {
         measure();
         update();
-        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scroll', function () {
+          if (init) tgtP = ease(window.scrollY / init.maxScroll);
+        }, { passive: true });
         window.addEventListener('resize', function () { measure(); update(); });
+        requestAnimationFrame(loop);
       }
     };
   })();
