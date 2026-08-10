@@ -1137,7 +1137,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
   .moments-wrap { max-width: none; }
 }
 @media (max-width: 480px) {
-  .moment-media { grid-template-columns: 1fr; }
   .moment-card { padding: 14px 12px; }
   .moment-content { font-size: 13px; }
 }
