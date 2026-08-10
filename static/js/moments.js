@@ -118,15 +118,35 @@
 
   function renderMedia(media, single) {
     if (!media || !media.length) return '';
-    var cls = single ? 'moment-media single' : 'moment-media';
-    return '<div class="' + cls + '">' + media.map(function (url) {
+    /* 单图: 原比例完整显示; 多图: 方形网格裁切
+       列数策略: 2张/4张 → 2列 (1×2 / 2×2), 3张 → 3列 (1×3), ≥5张 → 3列优先
+       超过 3×3 (>9张): 只渲染前 9 张, 最后一张叠加半透明层显示 "+多余数" */
+    var isGrid = media.length > 1;
+    var gridCls = '';
+    if (isGrid) {
+      var n = media.length;
+      gridCls = (n === 2 || n === 4) ? ' moment-media-grid-2' : ' moment-media-grid-3';
+    }
+    var cls = 'moment-media' + (single ? ' single' : '') + (isGrid ? ' moment-media-grid' + gridCls : '');
+    var displayMedia = media;
+    var extra = 0;
+    if (media.length > 9) {
+      displayMedia = media.slice(0, 9);
+      extra = media.length - 9;
+    }
+    var items = displayMedia.map(function (url, i) {
       var ext = String(url).split('.').pop().toLowerCase();
-      if (['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext)) {
-        /* data-src 懒加载: 进入视口才加载视频数据, 省带宽/内存 */
-        return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+      var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
+      var item = isVideo
+        ? '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
+        : '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+      if (extra > 0 && i === displayMedia.length - 1) {
+        item = '<div class="moment-media-more">' + item +
+          '<span class="mm-more-badge">+' + extra + '</span></div>';
       }
-      return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
-    }).join('') + '</div>';
+      return item;
+    }).join('');
+    return '<div class="' + cls + '">' + items + '</div>';
   }
 
   function commentActions(c, momentId) {
@@ -177,6 +197,83 @@
     return currentUser.id === moment.user_id || (currentProfile && currentProfile.role === 'superadmin');
   }
 
+  /* ── 编辑面板媒体编辑: 新增/替换/删除/排序 ── */
+  var editMediaFiles = {};
+  var editMediaSeq = 0;
+
+  function editMediaItemHtml(url) {
+    var ext = String(url).split('.').pop().toLowerCase();
+    var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
+    var preview = isVideo
+      ? '<video src="' + escapeHtml(url) + '" muted playsinline preload="metadata"></video>'
+      : '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+    return '<div class="mem-item" data-url="' + escapeHtml(url) + '">' +
+      '<div class="mem-preview">' + preview + '</div>' +
+      '<div class="mem-tools">' +
+      '<button type="button" class="mem-tool" data-edit-media-up title="前移">↑</button>' +
+      '<button type="button" class="mem-tool" data-edit-media-down title="后移">↓</button>' +
+      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺' +
+      '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
+      '<button type="button" class="mem-tool is-danger" data-edit-media-remove title="删除">×</button>' +
+      '</div></div>';
+  }
+
+  function renderEditMedia(moment) {
+    var media = moment.media || [];
+    return '<div class="mem-list" data-edit-media-list>' +
+      media.map(editMediaItemHtml).join('') +
+      '</div>' +
+      '<label class="mem-add">+ 添加图片 / 视频' +
+      '<input type="file" accept="image/*,video/*" multiple data-edit-media-add hidden></label>';
+  }
+
+  function editMediaPreviewHtml(file, url) {
+    var isVideo = file.type.startsWith('video');
+    return isVideo
+      ? '<video src="' + url + '" muted playsinline preload="metadata"></video>'
+      : '<img src="' + url + '" alt="" loading="lazy" decoding="async">';
+  }
+
+  function appendEditMediaItem(listEl, file) {
+    var uid = 'e' + (++editMediaSeq);
+    editMediaFiles[uid] = file;
+    var url = URL.createObjectURL(file);
+    var html = '<div class="mem-item is-new" data-file-uid="' + uid + '">' +
+      '<div class="mem-preview">' + editMediaPreviewHtml(file, url) + '</div>' +
+      '<div class="mem-tools">' +
+      '<button type="button" class="mem-tool" data-edit-media-up title="前移">↑</button>' +
+      '<button type="button" class="mem-tool" data-edit-media-down title="后移">↓</button>' +
+      '<label class="mem-tool mem-tool-label" data-edit-media-replace title="替换">↺' +
+      '<input type="file" accept="image/*,video/*" data-edit-media-file hidden></label>' +
+      '<button type="button" class="mem-tool is-danger" data-edit-media-remove title="删除">×</button>' +
+      '</div></div>';
+    listEl.insertAdjacentHTML('beforeend', html);
+  }
+
+  function replaceEditMediaItem(item, file) {
+    var uid = 'e' + (++editMediaSeq);
+    editMediaFiles[uid] = file;
+    var url = URL.createObjectURL(file);
+    item.classList.add('is-new');
+    item.dataset.fileUid = uid;
+    delete item.dataset.url;
+    var preview = item.querySelector('.mem-preview');
+    if (preview) preview.innerHTML = editMediaPreviewHtml(file, url);
+  }
+
+  function revokeEditMediaBlobs(card) {
+    if (!card) return;
+    card.querySelectorAll('.mem-item.is-new').forEach(function (item) {
+      var el = item.querySelector('.mem-preview img, .mem-preview video');
+      if (el && el.src && el.src.indexOf('blob:') === 0) URL.revokeObjectURL(el.src);
+    });
+  }
+
+  function resetEditMediaState() {
+    editMediaFiles = {};
+    editMediaSeq = 0;
+  }
+
   function renderMoment(moment) {
     var p = moment.profiles || {};
     var name = p.display_name || p.username || '博客读者';
@@ -195,6 +292,7 @@
       renderMedia(moment.media, (moment.media || []).length === 1) +
       (canManage ? '<div class="moment-edit-panel" data-moment-edit-panel="' + moment.id + '" hidden>' +
       '<textarea class="moment-edit-input" rows="4" maxlength="2000" data-moment-edit-input="' + moment.id + '">' + escapeHtml(moment.content || '') + '</textarea>' +
+      renderEditMedia(moment) +
       '<div class="moment-edit-actions">' +
       '<button type="button" class="moment-action-btn is-primary" data-moment-save="' + moment.id + '">保存</button>' +
       '<button type="button" class="moment-action-btn" data-moment-cancel-edit="' + moment.id + '">取消</button>' +
@@ -404,8 +502,49 @@
       var editPanel = editCard && editCard.querySelector('[data-moment-edit-panel="' + editId + '"]');
       var editInput = editCard && editCard.querySelector('[data-moment-edit-input="' + editId + '"]');
       if (editPanel && editInput) {
+        /* 同时只允许一个编辑面板 (全局 editMediaFiles 状态一致) */
+        listEl.querySelectorAll('.moment-edit-panel:not([hidden])').forEach(function (p) {
+          if (p !== editPanel) {
+            revokeEditMediaBlobs(p.closest('.moment-card'));
+            p.hidden = true;
+          }
+        });
+        resetEditMediaState();
+        /* 重新打开 = 放弃上次未保存的媒体改动 (map 已清空, is-new 项失效) */
+        revokeEditMediaBlobs(editCard);
+        editCard.querySelectorAll('.mem-item.is-new').forEach(function (item) { item.remove(); });
         editPanel.hidden = false;
         editInput.focus();
+      }
+      return;
+    }
+
+    /* 编辑媒体: 排序 / 删除 */
+    var mediaUpBtn = e.target.closest('[data-edit-media-up]');
+    if (mediaUpBtn) {
+      var upItem = mediaUpBtn.closest('.mem-item');
+      if (upItem && upItem.previousElementSibling) {
+        upItem.parentNode.insertBefore(upItem, upItem.previousElementSibling);
+      }
+      return;
+    }
+    var mediaDownBtn = e.target.closest('[data-edit-media-down]');
+    if (mediaDownBtn) {
+      var downItem = mediaDownBtn.closest('.mem-item');
+      if (downItem && downItem.nextElementSibling) {
+        downItem.parentNode.insertBefore(downItem.nextElementSibling, downItem);
+      }
+      return;
+    }
+    var mediaRemoveBtn = e.target.closest('[data-edit-media-remove]');
+    if (mediaRemoveBtn) {
+      var removeItem = mediaRemoveBtn.closest('.mem-item');
+      if (removeItem) {
+        if (removeItem.classList.contains('is-new')) {
+          var blobEl = removeItem.querySelector('.mem-preview img, .mem-preview video');
+          if (blobEl && blobEl.src && blobEl.src.indexOf('blob:') === 0) URL.revokeObjectURL(blobEl.src);
+        }
+        removeItem.remove();
       }
       return;
     }
@@ -416,6 +555,8 @@
       var cancelCard = listEl.querySelector('[data-moment-id="' + cancelId + '"]');
       var cancelPanel = cancelCard && cancelCard.querySelector('[data-moment-edit-panel="' + cancelId + '"]');
       var cancelError = cancelCard && cancelCard.querySelector('[data-moment-edit-error="' + cancelId + '"]');
+      revokeEditMediaBlobs(cancelCard);
+      resetEditMediaState();
       if (cancelPanel) cancelPanel.hidden = true;
       if (cancelError) cancelError.hidden = true;
       return;
@@ -431,7 +572,14 @@
       var saveError = saveCard && saveCard.querySelector('[data-moment-edit-error="' + saveId + '"]');
       if (!saveInput || !saveCard) return;
       var nextContent = saveInput.value.trim();
-      if (!nextContent && !saveCard.querySelector('.moment-media')) {
+      /* 按 DOM 顺序收集媒体 (排序/替换/删除/新增均已反映) */
+      var pendingMedia = [];
+      saveCard.querySelectorAll('.mem-item').forEach(function (item) {
+        var uid = item.dataset.fileUid;
+        if (uid && editMediaFiles[uid]) pendingMedia.push({ file: editMediaFiles[uid] });
+        else pendingMedia.push(item.dataset.url || '');
+      });
+      if (!nextContent && !pendingMedia.length) {
         if (saveError) {
           saveError.textContent = '内容不能为空';
           saveError.hidden = false;
@@ -440,25 +588,27 @@
       }
       saveBtn.disabled = true;
       if (saveError) saveError.hidden = true;
-      window.blogSupabase.from('moments')
-        .update({ content: nextContent, updated_at: new Date().toISOString() })
-        .eq('id', saveId)
-        .select('id, content, updated_at')
-        .single()
+      var uploads = pendingMedia.map(function (m) {
+        if (m && m.file) return window.Admin.uploadMedia(m.file).then(function (r) { return r.public_url || r; });
+        return null;
+      });
+      Promise.all(uploads.map(function (p) { return p || Promise.resolve(null); }))
+        .then(function (uploaded) {
+          var media = pendingMedia.map(function (m, i) {
+            if (m && m.file) return uploaded[i];
+            return m;
+          }).filter(function (m) { return typeof m === 'string' ? m !== '' : true; });
+          return window.blogSupabase.from('moments')
+            .update({ content: nextContent, media: media, updated_at: new Date().toISOString() })
+            .eq('id', saveId)
+            .select('id, content, updated_at');
+        })
         .then(function (result) {
           if (result.error) throw result.error;
-          var contentEl = saveCard.querySelector('.moment-content');
-          if (nextContent) {
-            if (!contentEl) {
-              saveCard.querySelector('.moment-head').insertAdjacentHTML('afterend', '<div class="moment-content"></div>');
-              contentEl = saveCard.querySelector('.moment-content');
-            }
-            contentEl.innerHTML = renderMarkdown(nextContent);
-          } else if (contentEl) {
-            contentEl.remove();
-          }
-          if (savePanel) savePanel.hidden = true;
+          revokeEditMediaBlobs(saveCard);
+          resetEditMediaState();
           flashNotice('动态已更新', 'success');
+          return loadMoments();
         }).catch(function (error) {
           if (saveError) {
             saveError.textContent = '保存失败：' + (error.message || error);
@@ -666,43 +816,51 @@
     }
   });
 
+  /* 编辑媒体: 新增 / 替换 (文件选择) */
+  listEl.addEventListener('change', function (e) {
+    var input = e.target;
+    if (!input.files || !input.files.length) return;
+    var files = Array.prototype.slice.call(input.files);
+    if (input.hasAttribute('data-edit-media-add')) {
+      var addList = input.closest('.moment-edit-panel');
+      var listWrap = addList && addList.querySelector('[data-edit-media-list]');
+      if (listWrap) {
+        files.forEach(function (file) { appendEditMediaItem(listWrap, file); });
+      }
+      input.value = '';
+      return;
+    }
+    if (input.hasAttribute('data-edit-media-file')) {
+      var item = input.closest('.mem-item');
+      if (item) replaceEditMediaItem(item, files[0]);
+      input.value = '';
+      return;
+    }
+  });
+
   document.querySelector('[data-moment-login]').addEventListener('click', function () {
     if (window.BlogAuth) window.BlogAuth.open('login');
   });
 
-  /* ── 卡片依次上浮动效 (平滑, 刷新/重载均生效) ── */
+  /* ── 卡片依次上浮动效 (CSS transition + stagger delay, 渲染即隐藏无闪烁) ── */
   function animateCardsIn(cards) {
     if (!cards || !cards.length) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var list = Array.prototype.slice.call(cards);
+    if (reduced) {
+      list.forEach(function (c) { c.classList.add('moment-card-in'); });
+      return;
+    }
     var animated = list.slice(0, 12);
     var rest = list.slice(12);
-    /* 预置隐藏 (同帧内), 防动画启动前闪烁 */
-    list.forEach(function (c) {
-      c.style.opacity = '0';
-      c.style.transform = 'translateY(22px)';
+    animated.forEach(function (c, i) {
+      c.style.transitionDelay = (i * 50) + 'ms';
+      c.classList.add('moment-card-in');
     });
-    requestAnimationFrame(function () {
-      if (window.anime) {
-        anime({
-          targets: animated,
-          opacity: [0, 1],
-          translateY: [22, 0],
-          delay: anime.stagger(50),
-          duration: 460,
-          easing: 'easeOutExpo'
-        });
-      } else {
-        animated.forEach(function (c, i) {
-          c.classList.add('moment-card-enter');
-          c.style.animationDelay = (i * 50) + 'ms';
-        });
-      }
-      rest.forEach(function (c) {
-        c.style.opacity = '1';
-        c.style.transform = 'none';
-      });
-    });
+    rest.forEach(function (c) { c.classList.add('moment-card-in'); });
+    setTimeout(function () {
+      animated.forEach(function (c) { c.style.transitionDelay = ''; });
+    }, 1200);
   }
 
   /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */
@@ -744,7 +902,8 @@
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
   function markLongImages() {
     listEl.querySelectorAll('.moment-media img').forEach(function (img) {
-      if (img.closest('.moment-media-long') || img.dataset.longChecked) return;
+      /* 多图正方形网格不处理长图; 已包裹/已检查跳过 */
+      if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') || img.dataset.longChecked) return;
       function check() {
         if (!img.naturalWidth) return;
         img.dataset.longChecked = '1';
