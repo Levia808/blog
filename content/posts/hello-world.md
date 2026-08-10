@@ -13,7 +13,7 @@ entry_title_font_name: ''
 entry_title_color: '#010057'
 entry_title_opacity: 75
 entry_title_size: null
-entry_title_effect: shiny
+entry_title_effect: reveal
 entry_scramble: false
 entry_align: center-center
 cover:
