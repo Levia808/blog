@@ -2058,13 +2058,14 @@ html.js .home-page.home-nav-collapsed.nav-is-hidden .ht-wrap {
 .hero-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100; pointer-events: none; transition: opacity .35s cubic-bezier(.22,.61,.36,1), background .6s cubic-bezier(.22,.61,.36,1), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
 .hero-nav.solid { background: rgba(246,245,241,.72); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2); border-bottom-color: rgba(26,26,24,.1); }
 .hn-link {
-  position: fixed; top: 36px; z-index: 101;
+  position: fixed; top: 36px; left: 0; z-index: 101;
   transform: translateY(-50%);
   font-size: 15px; font-weight: 500; color: #55534b;
   text-decoration: none; padding: 6px 0; pointer-events: auto; background: none; border: none;
   font-family: inherit; cursor: pointer;
   transition: color .25s;
   display: flex; align-items: center;
+  will-change: transform;
 }
 .hn-link::after { content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 0; background: var(--accent); transition: width .35s cubic-bezier(.22,.61,.36,1); }
 .hn-link:hover { color: #1a1a18; }

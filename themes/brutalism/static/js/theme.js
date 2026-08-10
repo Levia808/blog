@@ -1079,6 +1079,7 @@
     var title = document.getElementById('heroTitle');
     var wrap = document.getElementById('heroWrap');
     var nav = document.getElementById('heroNav');
+    var siteHeader = document.getElementById('siteHeader');
     var links = [];
 
     /* 首页 hero 只负责开屏均分动画；登录、头像、搜索由全局导航承接。 */
@@ -1115,7 +1116,8 @@
 
     /* 滚动变形 */
     var init = null;
-    var curP = 0, tgtP = 0;
+    var curP = 0;
+    var heroNavRaf = null;
     function ease(p) { return p < 0 ? 0 : p > 1 ? 1 : 1 - Math.pow(1 - p, 3); }
     function measure() {
       var vw = window.innerWidth, vh = window.innerHeight;
@@ -1134,18 +1136,31 @@
       var tTarget = { x: navPad, y: 21 };
       var items = [];
       var n = links.length || 1;
+      var targetLinks = siteHeader ? siteHeader.querySelectorAll('.nf-link') : [];
       links.forEach(function (el, i) {
         var w = el.offsetWidth || 60;
-        items.push({ el: el, w: w, initLeft: pad + (i / (n - 1)) * (vw - pad * 2) - w / 2 });
+        el.style.left = '0px';
+        items.push({
+          el: el,
+          w: w,
+          initLeft: pad + (i / (n - 1)) * (vw - pad * 2) - w / 2,
+          targetLeft: targetLinks[i] && targetLinks[i].offsetParent !== null
+            ? targetLinks[i].getBoundingClientRect().left
+            : null
+        });
       });
-      var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (items.length - 1) * 32;
-      var rightStart = vw - pad - totalW;
-      var acc = 0;
-      items.forEach(function (g) { g.targetLeft = rightStart + acc; acc += g.w + 32; });
+      if (items.some(function (g) { return g.targetLeft == null; })) {
+        var totalW = items.reduce(function (a, g) { return a + g.w; }, 0) + (items.length - 1) * 32;
+        var rightStart = vw - pad - totalW;
+        var acc = 0;
+        items.forEach(function (g) {
+          if (g.targetLeft == null) g.targetLeft = rightStart + acc;
+          acc += g.w + 32;
+        });
+      }
       init = { vh: vh, vw: vw, pad: pad, tInit: tInit, tTarget: tTarget, tScale: tScale, items: items, maxScroll: Math.max(vh - 72, 1) };
     }
     function update() {
-      curP = tgtP;
       var p = curP;
       var dx = (init.tTarget.x - init.tInit.x) * p;
       var dy = (init.tTarget.y - init.tInit.y) * p;
@@ -1153,7 +1168,8 @@
       title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
       title.style.opacity = 1;
       init.items.forEach(function (g) {
-        g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px';
+        var x = g.initLeft + (g.targetLeft - g.initLeft) * p;
+        g.el.style.transform = 'translate3d(' + x.toFixed(2) + 'px, -50%, 0)';
       });
       nav.classList.toggle('solid', p > 0.85);
       nav.classList.toggle('is-collapsed', p > 0.85);
@@ -1164,15 +1180,23 @@
     function layoutInit() {
       measure();
       update();
+      function scheduleHeroNavUpdate() {
+        if (heroNavRaf) return;
+        heroNavRaf = requestAnimationFrame(function () {
+          heroNavRaf = null;
+          if (!init) return;
+          curP = ease(window.scrollY / init.maxScroll);
+          update();
+        });
+      }
       window.addEventListener('scroll', function () {
-        if (init) tgtP = ease(window.scrollY / init.maxScroll);
+        scheduleHeroNavUpdate();
       }, { passive: true });
-      window.addEventListener('resize', function () { measure(); update(); });
-      requestAnimationFrame(function loop() {
-        if (init) tgtP = ease(window.scrollY / init.maxScroll);
-        if (init && Math.abs(tgtP - curP) > 0.0005) update();
-        requestAnimationFrame(loop);
+      window.addEventListener('resize', function () {
+        measure();
+        scheduleHeroNavUpdate();
       });
+      scheduleHeroNavUpdate();
     }
   }
 
