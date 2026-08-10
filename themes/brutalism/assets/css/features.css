@@ -1030,6 +1030,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
   background: rgba(12, 12, 11, .42);
   pointer-events: none;
 }
+/* 收起的多余图片: 隐藏但保留在 lightbox 画廊组内 */
+.moment-media-hidden { display: none; }
 
 /* ── 编辑面板媒体编辑 ── */
 .mem-list {

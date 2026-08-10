@@ -116,11 +116,15 @@
     return '<span class="' + cls + ' ' + fallbackCls + '">' + escapeHtml(name.slice(0, 1)) + '</span>';
   }
 
-  function renderMedia(media, single) {
-    if (!media || !media.length) return '';
+  function renderMedia(moment) {
+    var media = moment.media || [];
+    var single = media.length === 1;
+    var momentId = moment.id;
     /* 单图: 原比例完整显示; 多图: 方形网格裁切
        列数策略: 2张/4张 → 2列 (1×2 / 2×2), 3张 → 3列 (1×3), ≥5张 → 3列优先
-       超过 3×3 (>9张): 只渲染前 9 张, 最后一张叠加半透明层显示 "+多余数" */
+       超过 3×3 (>9张): 只渲染前 9 张, 最后一张叠加半透明层显示 "+多余数"
+       data-gallery 按动态分组 → 每条动态的图片组相互隔离 (lightbox 左右键不跨动态)
+       收起图以隐藏 img 追加同组 → 打开 lightbox 后右键可浏览 */
     var isGrid = media.length > 1;
     var gridCls = '';
     if (isGrid) {
@@ -139,14 +143,21 @@
       var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
       var item = isVideo
         ? '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
-        : '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+        : '<img data-gallery="moment-' + momentId + '" src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
       if (extra > 0 && i === displayMedia.length - 1) {
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
       }
       return item;
     }).join('');
-    return '<div class="' + cls + '">' + items + '</div>';
+    /* 收起的图片: 隐藏 img 同画廊组 (data-src 延迟下载, 点击任一图时预载) */
+    var hidden = '';
+    if (extra > 0) {
+      hidden = media.slice(9).map(function (url) {
+        return '<img class="moment-media-hidden" data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(url) + '" alt="">';
+      }).join('');
+    }
+    return '<div class="' + cls + '">' + items + hidden + '</div>';
   }
 
   function commentActions(c, momentId) {
@@ -289,7 +300,7 @@
       '<div><div class="moment-author">' + escapeHtml(name) + '</div>' +
       '<div class="moment-time">' + fmtTime(moment.created_at) + '</div></div></div>' +
       (moment.content ? '<div class="moment-content">' + renderMarkdown(moment.content) + '</div>' : '') +
-      renderMedia(moment.media, (moment.media || []).length === 1) +
+      renderMedia(moment) +
       (canManage ? '<div class="moment-edit-panel" data-moment-edit-panel="' + moment.id + '" hidden>' +
       '<textarea class="moment-edit-input" rows="4" maxlength="2000" data-moment-edit-input="' + moment.id + '">' + escapeHtml(moment.content || '') + '</textarea>' +
       renderEditMedia(moment) +
@@ -495,6 +506,20 @@
   });
 
   listEl.addEventListener('click', function (e) {
+    /* 点击动态图片: 预载该动态被收起的图片 (lightbox 内右键可浏览全部) */
+    var mediaClickImg = e.target.closest('.moment-media img');
+    if (mediaClickImg) {
+      var mediaCard = mediaClickImg.closest('.moment-card');
+      if (mediaCard) {
+        mediaCard.querySelectorAll('.moment-media-hidden[data-src]').forEach(function (img) {
+          if (!img.src) {
+            img.src = img.dataset.src;
+            delete img.dataset.src;
+          }
+        });
+      }
+    }
+
     var editBtn = e.target.closest('[data-moment-edit]');
     if (editBtn) {
       var editId = editBtn.dataset.momentEdit;
@@ -902,8 +927,9 @@
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
   function markLongImages() {
     listEl.querySelectorAll('.moment-media img').forEach(function (img) {
-      /* 多图正方形网格不处理长图; 已包裹/已检查跳过 */
-      if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') || img.dataset.longChecked) return;
+      /* 多图正方形网格不处理长图; 已包裹/已检查/收起隐藏图跳过 */
+      if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') ||
+          img.classList.contains('moment-media-hidden') || img.dataset.longChecked) return;
       function check() {
         if (!img.naturalWidth) return;
         img.dataset.longChecked = '1';
