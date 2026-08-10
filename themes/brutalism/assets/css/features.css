@@ -961,6 +961,26 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .moment-comment-input button:hover { transform: scale(1.03); }
 .moments-empty { border: 1px dashed var(--border); border-radius: 6px; padding: 48px 20px; text-align: center; color: var(--muted); }
 
+/* ── 动态列表加载动效 (刷新时静默加载, 不弹登录窗) ── */
+.moments-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: var(--muted);
+}
+.moments-loading i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: momentsSpin .8s linear infinite;
+}
+@keyframes momentsSpin { to { transform: rotate(360deg); } }
+
 /* ── 点赞粒子 (Anime.js 迸发) ── */
 .like-particle {
   position: fixed;

@@ -224,6 +224,7 @@
   ];
 
   async function loadMoments() {
+    showMomentsLoading(true);
     try {
       var result = null;
       var lastError = null;
@@ -269,12 +270,14 @@
       } else {
         listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(msg) + '</div>';
       }
+    } finally {
+      showMomentsLoading(false);
     }
   }
 
   function showComposer(show) {
     composer.hidden = !show;
-    loginWall.hidden = show;
+    if (show) loginWall.hidden = true;
     if (!show) {
       mcInput.value = '';
       selectedMedia = [];
@@ -293,19 +296,38 @@
     }).join('');
   }
 
+  function showMomentsLoading(show) {
+    if (show) {
+      hintEl.hidden = false;
+      hintEl.innerHTML = '<span class="moments-loading"><i></i>LOADING…</span>';
+    } else {
+      if (hintEl.querySelector('.moments-loading')) {
+        hintEl.hidden = true;
+        hintEl.innerHTML = '';
+        hintEl.style.color = '';
+      }
+    }
+  }
+
   async function syncAuth() {
+    /* 优先读本地 session (纯本地, 无网络往返): 已登录用户刷新页面不闪登录窗 */
+    var localUser = null;
     try {
-      currentUser = await window.Auth.user();
-    } catch (e) { currentUser = null; }
-    if (currentUser) {
+      var session = await window.Auth.session();
+      if (session && session.user) localUser = session.user;
+    } catch (e) {}
+    if (localUser) {
+      currentUser = localUser;
+      loginWall.hidden = true;
       try {
         currentProfile = await window.Profile.get(currentUser.id);
       } catch (e) { currentProfile = null; }
       var canPublish = currentProfile && (currentProfile.role === 'superadmin' || currentProfile.role === 'author');
-      loginWall.hidden = true;
       if (canPublish) showComposer(true);
       else composer.hidden = true;
     } else {
+      currentUser = null;
+      currentProfile = null;
       loginWall.hidden = false;
       composer.hidden = true;
     }
