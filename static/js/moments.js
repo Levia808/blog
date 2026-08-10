@@ -124,7 +124,7 @@
        列数策略: 2张/4张 → 2列 (1×2 / 2×2), 3张 → 3列 (1×3), ≥5张 → 3列优先
        超过 3×3 (>9张): 只渲染前 9 张, 最后一张叠加半透明层显示 "+多余数"
        放大查看: 点击图片拦截 glightbox 原生行为, 用 JS API (setElements+openAt)
-       构建该动态全部图片的画廊 → 收起图同样可浏览 (容器 data-media-all 存全量) */
+       构建该动态全部图片的画廊 → 收起图同样可浏览 (momentMediaCache 存全量) */
     var isGrid = media.length > 1;
     var gridCls = '';
     if (isGrid) {
@@ -150,7 +150,7 @@
       }
       return item;
     }).join('');
-    return '<div class="' + cls + '" data-media-all="' + escapeHtml(JSON.stringify(media)) + '">' + items + '</div>';
+    return '<div class="' + cls + '">' + items + '</div>';
   }
 
   function commentActions(c, momentId) {
@@ -392,6 +392,9 @@
       }
       if (!result) throw lastError;
       var moments = result.data || [];
+      /* 媒体缓存: JS 内存传递 (避免 HTML 属性编码风险) */
+      momentMediaCache = {};
+      moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; });
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
@@ -544,6 +547,14 @@
      官方文档模式: setElements([{href,type}]) + openAt(index)
      该动态全部图片 (含收起的 +N) 构成画廊 → 左右键浏览完整, 与文章图实例完全隔离 */
   var momentsLightbox = null;
+  var momentMediaCache = {};
+
+  function isVideoUrl(url) {
+    var path = String(url).split('?')[0].split('#')[0];
+    var ext = path.split('.').pop().toLowerCase();
+    return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
+  }
+
   function getMomentsLightbox() {
     if (window.GLightbox && !momentsLightbox) {
       momentsLightbox = window.GLightbox({
@@ -555,26 +566,39 @@
         draggable: true,
         preload: true
       });
+      /* 图片加载失败兜底: glightbox 无 onerror 处理, loader 会永远显示
+         (加载动画只在图片真正加载中时出现) */
+      momentsLightbox.on('slide_before_load', function (data) {
+        setTimeout(function () {
+          var slideNode = data && data.slideNode;
+          var img = slideNode && slideNode.querySelector('.gslide-media img');
+          if (!img) return;
+          img.addEventListener('error', function () {
+            var loader = document.querySelector('.gloader');
+            if (loader) loader.style.display = 'none';
+            var media = slideNode.querySelector('.gslide-media');
+            if (media) {
+              media.innerHTML = '<div class="gslide-error">图片加载失败</div>';
+            }
+          }, { once: true });
+        }, 0);
+      });
     }
     return momentsLightbox;
   }
 
   function openMomentLightbox(img) {
-    var wrap = img.closest('.moment-media');
+    var card = img.closest('.moment-card');
     var lb = getMomentsLightbox();
-    if (!wrap || !lb) return false;
-    var allMedia = [];
-    try { allMedia = JSON.parse(wrap.dataset.mediaAll || '[]'); } catch (err) {}
-    var images = allMedia.filter(function (url) {
-      var ext = String(url).split('.').pop().toLowerCase();
-      return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) < 0;
-    });
+    if (!card || !lb) return false;
+    var allMedia = momentMediaCache[card.dataset.momentId] || [];
+    var images = allMedia.filter(function (url) { return !isVideoUrl(url); });
     if (!images.length) return false;
     var startAt = Math.max(0, images.indexOf(img.getAttribute('src')));
     lb.setElements(images.map(function (url) {
       return { href: url, type: 'image' };
     }));
-    lb.openAt(Math.max(0, startAt));
+    lb.openAt(startAt);
     return true;
   }
 

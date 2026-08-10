@@ -1030,6 +1030,20 @@ body.admin-only { overflow: hidden; height: 100vh; }
   background: rgba(12, 12, 11, .42);
   pointer-events: none;
 }
+/* 放大查看: 图片加载失败占位 (glightbox 无 onerror, 由 JS 兜底) */
+.gslide-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+}
 /* 收起的多余图片: 绝对定位移出视口 (不可见但不占布局)
    不用 display:none — glightbox 会跳过 offsetParent 为 null 的元素, 导致收起图无法在放大后查看 */
 /* ── 编辑面板媒体编辑 ── */
