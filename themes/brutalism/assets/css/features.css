@@ -827,13 +827,42 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .moment-media img, .moment-media video {
   width: 100%;
   height: auto;
-  max-height: 520px;
-  object-fit: contain;
+  object-fit: cover;
   border: 1px solid var(--border);
   border-radius: 4px;
   display: block;
   cursor: pointer;
   background: var(--bg);
+}
+/* 长图 (高/宽 > 2.35:1): 取最上端裁切预览 + 左下角"长图"标记, 不缩放留黑边 */
+.moment-media-long {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.moment-media-long img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  object-position: top;
+  border: none;
+  border-radius: 0;
+}
+.moment-media-long-tag {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .15em;
+  color: #F6F5F1;
+  background: rgba(12, 12, 11, .62);
+  border: 1px solid rgba(246, 245, 241, .35);
+  padding: 2px 8px;
+  border-radius: 2px;
+  pointer-events: none;
 }
 .moment-actions { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
 .moment-action-btn {

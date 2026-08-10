@@ -245,6 +245,7 @@
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      markLongImages();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
@@ -641,6 +642,28 @@
   document.querySelector('[data-moment-login]').addEventListener('click', function () {
     if (window.BlogAuth) window.BlogAuth.open('login');
   });
+
+  /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
+  function markLongImages() {
+    listEl.querySelectorAll('.moment-media img').forEach(function (img) {
+      if (img.closest('.moment-media-long') || img.dataset.longChecked) return;
+      function check() {
+        if (!img.naturalWidth) return;
+        img.dataset.longChecked = '1';
+        if (img.naturalHeight / img.naturalWidth <= 2.35) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'moment-media-long';
+        var tag = document.createElement('span');
+        tag.className = 'moment-media-long-tag';
+        tag.textContent = '长图';
+        img.parentNode.insertBefore(wrap, img);
+        wrap.appendChild(img);
+        wrap.appendChild(tag);
+      }
+      if (img.complete) check();
+      else img.addEventListener('load', check);
+    });
+  }
 
   /* ── 评论实时同步: Supabase Realtime (postgres_changes) ──
      其他访客发布/删除评论时, 评论实时出现在对应动态下方 */
