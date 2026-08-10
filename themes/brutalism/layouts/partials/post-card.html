@@ -1,5 +1,6 @@
 {{- $cover := .Params.cover.image }}
 {{- $glyph := substr (.Title | plainify) 0 1 }}
+{{- $title := .Title | replaceRE "\\|" "<br>" | replaceRE "<br/?>" "<br>" }}
 {{- $img := "" }}
 {{- $isStatic := false }}
 {{- if $cover }}
