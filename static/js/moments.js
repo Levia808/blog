@@ -545,14 +545,29 @@
 
   /* ── 动态图片放大: 独立 GLightbox 实例 (selector: null, 纯 JS API 驱动)
      官方文档模式: setElements([{href,type}]) + openAt(index)
-     该动态全部图片 (含收起的 +N) 构成画廊 → 左右键浏览完整, 与文章图实例完全隔离 */
+     该动态全部图片 (含收起的 +N) 构成画廊 → 左右键浏览完整, 与文章图实例完全隔离
+     三重兜底: CDN 按需加载 / badge 点击兼容 / GLightbox 不可用时展开预览 */
   var momentsLightbox = null;
   var momentMediaCache = {};
+  var glightboxLibPromise = null;
 
   function isVideoUrl(url) {
     var path = String(url).split('?')[0].split('#')[0];
     var ext = path.split('.').pop().toLowerCase();
     return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
+  }
+
+  function loadGlightboxLib() {
+    if (window.GLightbox) return Promise.resolve(window.GLightbox);
+    if (glightboxLibPromise) return glightboxLibPromise;
+    glightboxLibPromise = new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/js/glightbox.min.js';
+      s.onload = function () { resolve(window.GLightbox); };
+      s.onerror = function () { resolve(null); };
+      document.head.appendChild(s);
+    });
+    return glightboxLibPromise;
   }
 
   function getMomentsLightbox() {
@@ -587,24 +602,67 @@
     return momentsLightbox;
   }
 
+  /* 终极兜底: glightbox 不可用时, 把收起图展开渲染进预览 */
+  function expandMomentMedia(card) {
+    var allMedia = momentMediaCache[card.dataset.momentId] || [];
+    var wrap = card.querySelector('.moment-media');
+    if (!wrap || allMedia.length <= 9) return false;
+    var extraHtml = allMedia.slice(9).map(function (url) {
+      if (isVideoUrl(url)) {
+        return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+      }
+      return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+    }).join('');
+    wrap.insertAdjacentHTML('beforeend', extraHtml);
+    var more = wrap.querySelector('.moment-media-more');
+    if (more) {
+      var badge = more.querySelector('.mm-more-badge');
+      if (badge) badge.remove();
+    }
+    markLongImages();
+    lazyLoadMedia();
+    flashNotice('已展开全部图片', 'success');
+    return true;
+  }
+
   function openMomentLightbox(img) {
     var card = img.closest('.moment-card');
-    var lb = getMomentsLightbox();
-    if (!card || !lb) return false;
+    if (!card) return false;
     var allMedia = momentMediaCache[card.dataset.momentId] || [];
     var images = allMedia.filter(function (url) { return !isVideoUrl(url); });
     if (!images.length) return false;
     var startAt = Math.max(0, images.indexOf(img.getAttribute('src')));
-    lb.setElements(images.map(function (url) {
-      return { href: url, type: 'image' };
-    }));
-    lb.openAt(startAt);
+    var lb = getMomentsLightbox();
+    if (lb) {
+      lb.setElements(images.map(function (url) {
+        return { href: url, type: 'image' };
+      }));
+      lb.openAt(startAt);
+      return true;
+    }
+    /* glightbox 未就绪: 按需加载, 失败则展开预览兜底 */
+    loadGlightboxLib().then(function () {
+      var loaded = getMomentsLightbox();
+      if (loaded) {
+        loaded.setElements(images.map(function (url) {
+          return { href: url, type: 'image' };
+        }));
+        loaded.openAt(startAt);
+      } else {
+        expandMomentMedia(card);
+      }
+    });
     return true;
   }
 
   listEl.addEventListener('click', function (e) {
-    /* 动态图片: 拦截 glightbox 原生行为 → JS API 打开该动态全量画廊 */
+    /* 动态图片: 拦截 glightbox 原生行为 → JS API 打开该动态全量画廊
+       badge(+N) 兜底: 即使 pointer-events 失效, 点击 +N 标记也能定位到图片 */
     var mediaImg = e.target.closest('.moment-media img');
+    if (!mediaImg) {
+      var moreBox = e.target.closest('.moment-media-more');
+      if (moreBox) mediaImg = moreBox.querySelector('img');
+    }
     if (mediaImg && openMomentLightbox(mediaImg)) {
       e.preventDefault();
       e.stopPropagation();
