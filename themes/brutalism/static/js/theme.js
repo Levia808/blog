@@ -5,6 +5,12 @@
   var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   document.documentElement.classList.add('js');
 
+  function setNavAuthOffset(isOffset) {
+    document.querySelectorAll('.nav-auth-control').forEach(function (el) {
+      el.classList.toggle('nav-auth-nav-hidden', isOffset);
+    });
+  }
+
   function forceInitialScrollTop() {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
@@ -31,6 +37,7 @@
     if (behavior === 'fixed') {
       headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
       document.body.classList.remove('nav-is-hidden');
+      setNavAuthOffset(false);
       return;
     }
 
@@ -44,12 +51,15 @@
       if (y < NAV_HIDE_THRESHOLD) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
         document.body.classList.remove('nav-is-hidden');
+        setNavAuthOffset(false);
       } else if (y > lastY + SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.add('nav-hidden'); });
         document.body.classList.add('nav-is-hidden');
+        setNavAuthOffset(true);
       } else if (y < lastY - SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
         document.body.classList.remove('nav-is-hidden');
+        setNavAuthOffset(false);
       }
       lastY = y;
       ticking = false;
@@ -1133,7 +1143,9 @@
       });
       nav.classList.toggle('solid', p > 0.85);
       nav.classList.toggle('is-collapsed', p > 0.85);
-      document.body.classList.toggle('home-nav-collapsed', p > 0.85);
+      var isCollapsed = p > 0.85;
+      document.body.classList.toggle('home-nav-collapsed', isCollapsed);
+      setNavAuthOffset(!isCollapsed || document.body.classList.contains('nav-is-hidden'));
     }
     function layoutInit() {
       measure();

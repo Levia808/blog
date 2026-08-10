@@ -19,6 +19,7 @@
   var mobileLoginBtn = document.getElementById('mobileLoginBtn');
   var mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
   var userMenuCloseTimer = null;
+  var navAuthTimers = new WeakMap();
 
   var panels = {
     login: document.getElementById('authLogin'),
@@ -71,6 +72,38 @@
     window.setTimeout(function () {
       window.location.href = href;
     }, 180);
+  }
+
+  function showNavAuthControl(el) {
+    if (!el) return;
+    var timer = navAuthTimers.get(el);
+    if (timer) {
+      window.clearTimeout(timer);
+      navAuthTimers.delete(el);
+    }
+    el.hidden = false;
+    window.requestAnimationFrame(function () {
+      el.classList.remove('nav-auth-leaving');
+      el.classList.add('nav-auth-visible');
+    });
+  }
+
+  function hideNavAuthControl(el) {
+    if (!el || el.hidden) return;
+    var timer = navAuthTimers.get(el);
+    if (timer) {
+      window.clearTimeout(timer);
+      navAuthTimers.delete(el);
+    }
+    el.classList.remove('nav-auth-visible');
+    el.classList.add('nav-auth-leaving');
+    navAuthTimers.set(el, window.setTimeout(function () {
+      if (!el.classList.contains('nav-auth-visible')) {
+        el.hidden = true;
+        el.classList.remove('nav-auth-leaving');
+      }
+      navAuthTimers.delete(el);
+    }, 280));
   }
 
   function openUserMenu() {
@@ -244,8 +277,8 @@
   function updateAuthUI() {
     Auth.user().then(function (user) {
       if (user) {
-        navLoginBtn && (navLoginBtn.hidden = true);
-        userMenuContainer && (userMenuContainer.hidden = false);
+        hideNavAuthControl(navLoginBtn);
+        showNavAuthControl(userMenuContainer);
         mobileLoginBtn && (mobileLoginBtn.hidden = true);
         mobileLogoutBtn && (mobileLogoutBtn.hidden = false);
         var claimPromise = window.Admin && typeof window.Admin.claimPrimarySuperadmin === 'function'
@@ -277,8 +310,8 @@
           mobileCmsLink && (mobileCmsLink.hidden = true);
         });
       } else {
-        navLoginBtn && (navLoginBtn.hidden = false);
-        userMenuContainer && (userMenuContainer.hidden = true);
+        showNavAuthControl(navLoginBtn);
+        hideNavAuthControl(userMenuContainer);
         mobileLoginBtn && (mobileLoginBtn.hidden = false);
         mobileLogoutBtn && (mobileLogoutBtn.hidden = true);
         if (userDropdown) {

@@ -17,8 +17,8 @@
   </div>
   <div class="nf-actions">
     {{- if $P.auth }}
-    <a class="nav-login-btn" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
-    <div class="dropdown" id="userMenuContainer" hidden>
+    <a class="nav-login-btn nav-auth-control nav-auth-visible" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
+    <div class="dropdown nav-auth-control" id="userMenuContainer" hidden>
       <button type="button" class="nf-avatar" id="userMenuTrigger" aria-label="用户菜单" aria-haspopup="true" aria-expanded="false">
         <img class="nf-avatar-img" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt="" loading="lazy">
       </button>

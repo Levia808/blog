@@ -1748,6 +1748,10 @@ button,
   height: 1px;
 }
 .nf-actions {
+  position: relative;
+  flex: 0 0 64px;
+  min-width: 64px;
+  height: 40px;
   justify-content: flex-end;
   gap: 10px;
   margin-left: 10px;
@@ -1774,6 +1778,45 @@ button,
   height: 36px;
   border-color: var(--nav-glass-border);
   background: rgba(26, 26, 24, 0.08);
+}
+.nav-auth-control {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(18px, -50%, 0);
+  transform-origin: right center;
+  transition:
+    opacity 210ms cubic-bezier(.22,.61,.36,1),
+    transform 260ms cubic-bezier(.22,.61,.36,1),
+    border-color var(--ax-dur-medium) ease-out,
+    background-color var(--ax-dur-medium) ease-out,
+    color var(--ax-dur-medium) ease-out;
+  will-change: transform, opacity;
+}
+.nav-auth-control.nav-auth-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, -50%, 0);
+}
+.nav-auth-control.nav-auth-leaving {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(18px, -50%, 0);
+}
+.nav-auth-control.nav-auth-visible.nav-login-btn:hover {
+  transform: translate3d(0, calc(-50% - 1px), 0);
+}
+.nav-auth-control.nav-auth-visible .nf-avatar:hover,
+.nav-auth-control.nav-auth-visible .nf-avatar:focus-visible {
+  transform: translateY(-1px) scale(1.04);
+}
+.nav-auth-control.nav-auth-visible.nav-auth-nav-hidden,
+.nav-auth-control.nav-auth-visible.nav-auth-nav-hidden.nav-login-btn:hover {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(18px, -50%, 0);
 }
 
 html.js .home-page .nav-full {
