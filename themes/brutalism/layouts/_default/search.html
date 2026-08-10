@@ -3,15 +3,27 @@
   <header class="list-header" data-reveal>
     <div class="label">SEARCH</div>
     <h1 class="list-title">搜索</h1>
+    <p class="mono list-count">index</p>
   </header>
-  <div class="search-box search-box--page" data-reveal>
-    <div class="sb-input-wrap">
-      <span class="sb-prefix">$</span>
-      <input id="searchInputPage" type="text" placeholder="search posts…" autocomplete="off" aria-label="搜索内容" data-index="{{ "index.json" | relURL }}">
+  <div class="search-stage" data-reveal>
+    <aside class="search-aside" aria-label="搜索说明">
+      <p class="search-aside__eyebrow mono">CONTENT INDEX</p>
+      <p class="search-aside__text">输入关键词，快速定位文章标题、摘要、正文和标签。</p>
+      <div class="search-aside__meta mono">
+        <span>Ctrl K</span>
+        <span>Enter open</span>
+        <span>Arrow select</span>
+      </div>
+    </aside>
+    <div class="search-box search-box--page">
+      <div class="sb-input-wrap">
+        <span class="sb-prefix">/</span>
+        <input id="searchInputPage" type="text" placeholder="Search posts" autocomplete="off" aria-label="搜索内容" data-index="{{ "index.json" | relURL }}">
+      </div>
+      <div class="sb-hint">默认显示最近内容，输入后即时筛选。</div>
+      <div class="sb-results" id="searchResultsPage"></div>
+      <div class="sb-status" id="searchStatusPage" hidden></div>
     </div>
-    <div class="sb-hint">Ctrl+K 可随时唤起全局搜索</div>
-    <div class="sb-results" id="searchResultsPage"></div>
-    <div class="sb-status" id="searchStatusPage" hidden></div>
   </div>
 </section>
 {{- end }}
