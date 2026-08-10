@@ -59,7 +59,7 @@
   @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.012); } }
   .l-word .ch { position: relative; display: inline-block; opacity: 0; transform: translateY(70%) rotate(8deg); }
   .l-word .ch.in { opacity: 1; transform: none; transition: transform .65s var(--ease), opacity .45s; }
-  .l-word .fill { position: absolute; inset: 0; color: var(--ink); -webkit-text-stroke: 0; width: 0%; overflow: hidden; white-space: nowrap; }
+  .l-word .fill { position: absolute; inset: 0; color: var(--ink); -webkit-text-stroke: 0; width: 0%; overflow: hidden; white-space: nowrap; transition: width .28s cubic-bezier(.22,.61,.36,1); }
   .l-word .fill .ch { opacity: 1; transform: none; }
   .l-word .stroke-layer { display: inline-block; white-space: nowrap; }
 
@@ -87,7 +87,8 @@
   .l-status { text-align: right; font-size: 11px; letter-spacing: .25em; color: var(--grey); text-transform: uppercase; }
   .l-status .sw { display: block; margin-top: 8px; color: var(--ink); letter-spacing: .05em; min-height: 1.2em; }
   .l-status .sw .ch { display: inline-block; opacity: 0; transform: translateY(6px); }
-  .l-status .sw .ch.in { opacity: 1; transform: none; transition: opacity .2s, transform .2s; }
+  .l-status .sw .ch.in { opacity: 1; transform: none; transition: opacity .18s, transform .18s; }
+  .l-status .sw.leaving { transition: opacity .22s var(--ease), transform .22s var(--ease); opacity: 0; transform: translateY(-7px); }
 
   /* 完成态 */
   .loader.finishing .l-word { animation: solidPop .5s var(--ease) forwards; }
@@ -166,18 +167,23 @@
   var statuses = ['INITIALIZING', 'READING POSTS', 'LOADING FONTS', 'READY'];
   var statusEl = document.getElementById('status');
   function typeStatus(text) {
-    statusEl.textContent = '';
-    for (var i = 0; i < text.length; i++) {
-      (function (idx) {
-        setTimeout(function () {
-          var s = document.createElement('span');
-          s.className = 'ch';
-          s.textContent = text[idx];
-          statusEl.appendChild(s);
-          setTimeout(function () { s.classList.add('in'); }, 10);
-        }, idx * 36);
-      })(i);
-    }
+    /* 旧字淡出 → 新字逐字打字机 (无缝) */
+    statusEl.classList.add('leaving');
+    setTimeout(function () {
+      statusEl.classList.remove('leaving');
+      statusEl.textContent = '';
+      for (var i = 0; i < text.length; i++) {
+        (function (idx) {
+          setTimeout(function () {
+            var s = document.createElement('span');
+            s.className = 'ch';
+            s.textContent = text[idx];
+            statusEl.appendChild(s);
+            setTimeout(function () { s.classList.add('in'); }, 10);
+          }, idx * 36);
+        })(i);
+      }
+    }, 240);
   }
 
   /* 进度驱动 */
@@ -185,13 +191,21 @@
   var idxNum = document.getElementById('idxNum');
   var idx = 1;
   var pctEl = document.getElementById('num');
+  /* 数字平滑补间: rAF 逼近目标, 无跳变 */
+  var shownNum = 0, targetNum = 0;
+  (function numLoop() {
+    shownNum += (targetNum - shownNum) * 0.16;
+    if (Math.abs(targetNum - shownNum) < 0.06) shownNum = targetNum;
+    pctEl.textContent = Math.floor(shownNum);
+    requestAnimationFrame(numLoop);
+  })();
   typeStatus(statuses[0]);
   var iv = setInterval(function () {
     num += Math.random() * 7 + 3;
     if (num >= 100) {
       num = 100;
       clearInterval(iv);
-      pctEl.textContent = '100';
+      targetNum = 100;
       document.getElementById('bar').style.width = '100%';
       fill.style.width = '100%';
       idxNum.textContent = 'DONE';
@@ -200,13 +214,9 @@
       return;
     }
     var n = Math.floor(num);
-    pctEl.textContent = n;
+    targetNum = n;
     document.getElementById('bar').style.width = n + '%';
     fill.style.width = n + '%';
-    /* 数字滚动 */
-    pctEl.classList.remove('roll');
-    void pctEl.offsetWidth;
-    pctEl.classList.add('roll');
     /* 编号递增 */
     if (n > idx * 14) { idx++; idxNum.textContent = String(idx).padStart(4, '0'); }
     /* 状态切换 */
