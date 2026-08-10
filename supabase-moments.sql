@@ -1,7 +1,7 @@
 -- ============================================================
 -- supabase-moments.sql · 「动态」栏目 (朋友圈风格)
 -- 表: moments (动态) / moment_likes (点赞) / moment_comments (评论)
--- 权限: 动态公开浏览 · 管理员发布 · 注册用户点赞/评论
+-- 权限: 动态公开浏览 · staff 发布 (作者 author / superadmin) · 注册用户点赞/评论
 -- 幂等可重复执行
 -- ============================================================
 
@@ -61,9 +61,9 @@ DROP POLICY IF EXISTS moment_comments_select ON public.moment_comments;
 DROP POLICY IF EXISTS moment_comments_insert ON public.moment_comments;
 DROP POLICY IF EXISTS moment_comments_delete ON public.moment_comments;
 
--- 动态: 公开浏览, 仅管理员(superadmin)发布/删除
+-- 动态: 公开浏览, staff(作者 author / superadmin)发布, 本人或管理员编辑/删除
 CREATE POLICY moments_select ON public.moments FOR SELECT USING (true);
-CREATE POLICY moments_insert ON public.moments FOR INSERT WITH CHECK (public.is_admin());
+CREATE POLICY moments_insert ON public.moments FOR INSERT WITH CHECK (public.is_staff());
 CREATE POLICY moments_update ON public.moments
   FOR UPDATE USING (auth.uid() = user_id OR public.is_admin())
   WITH CHECK (auth.uid() = user_id OR public.is_admin());

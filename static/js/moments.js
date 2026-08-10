@@ -300,7 +300,7 @@
       try {
         currentProfile = await window.Profile.get(currentUser.id);
       } catch (e) { currentProfile = null; }
-      var canPublish = currentProfile && (currentProfile.role === 'superadmin');
+      var canPublish = currentProfile && (currentProfile.role === 'superadmin' || currentProfile.role === 'author');
       loginWall.hidden = true;
       if (canPublish) showComposer(true);
       else composer.hidden = true;
@@ -590,6 +590,8 @@
           if (result.error) throw result.error;
           // 本地追加评论 DOM + 评论数字 +1, 不重渲染
           var comment = result.data;
+          /* Realtime 事件可能先于本回调到达 → 已存在则跳过 */
+          if (commentNode(comment.moment_id, comment.id)) { cleanupCommentInput(input); return; }
           var panel = listEl.querySelector('[data-moment-comments="' + momentId2 + '"]');
           if (!panel) {
             /* 容器缺失 (UI 重构/未渲染) → 重载列表兜底 */
@@ -621,12 +623,7 @@
             var cc = toggle ? toggle.querySelector('.ma-count') : null;
             if (cc) cc.textContent = (parseInt(cc.textContent, 10) || 0) + 1;
           }
-          if (input) {
-            input.value = '';
-            input.placeholder = '写下你的评论…';
-            delete input.dataset.parentId;
-            delete input.dataset.replyMode;
-          }
+          cleanupCommentInput(input);
         }).catch(function (error) {
           var msg = (error && error.message) || String(error);
           if (/permission|permission denied|RLS|policy|row.?level|not allowed/i.test(msg)) {
@@ -645,6 +642,109 @@
     if (window.BlogAuth) window.BlogAuth.open('login');
   });
 
+  /* ── 评论实时同步: Supabase Realtime (postgres_changes) ──
+     其他访客发布/删除评论时, 评论实时出现在对应动态下方 */
+  var realtimeChannel = null;
+
+  function cleanupCommentInput(input) {
+    if (!input) return;
+    input.value = '';
+    input.placeholder = '写下你的评论…';
+    delete input.dataset.parentId;
+    delete input.dataset.replyMode;
+  }
+
+  function commentNode(momentId, commentId) {
+    var card = listEl.querySelector('[data-moment-id="' + momentId + '"]');
+    if (!card) return null;
+    return card.querySelector('[data-cmt-like="' + commentId + '"]');
+  }
+
+  function bumpCommentCount(momentId, delta) {
+    var card = listEl.querySelector('[data-moment-id="' + momentId + '"]');
+    var toggle = card && card.querySelector('[data-moment-toggle-comments]');
+    var cc = toggle ? toggle.querySelector('.ma-count') : null;
+    if (cc) cc.textContent = Math.max(0, (parseInt(cc.textContent, 10) || 0) + delta);
+  }
+
+  function appendCommentNode(momentId, comment) {
+    var panel = listEl.querySelector('[data-moment-comments="' + momentId + '"]');
+    if (!panel) return false;
+    var p = comment.profiles || {};
+    var name = p.display_name || p.username || '读者';
+    var node = document.createElement('div');
+    node.className = 'moment-comment' + (comment.parent_id ? ' is-reply' : '');
+    node.innerHTML = avatarHtml(p, 'mc-avatar', 'mc-avatar-fallback') +
+      '<div class="mcc-body"><span class="mcc-author">' + escapeHtml(name) + '</span> ' +
+      '<span class="mcc-text">' + escapeHtml(comment.content) + '</span>' +
+      '<div class="mcc-time">' + fmtTime(comment.created_at) + '</div>' +
+      commentActions(comment, momentId) + '</div>';
+    var inputRow = panel.querySelector('.moment-comment-input');
+    if (comment.parent_id) {
+      var parentNode = panel.querySelector('[data-cmt-like="' + comment.parent_id + '"]');
+      var anchor = parentNode ? parentNode.closest('.moment-comment').nextSibling : inputRow;
+      panel.insertBefore(node, anchor);
+    } else {
+      panel.insertBefore(node, inputRow);
+    }
+    bumpCommentCount(momentId, 1);
+    return true;
+  }
+
+  function onRealtimeComment(row) {
+    if (!row || !row.moment_id) return;
+    /* 自己的评论已本地追加 → 去重 */
+    if (commentNode(row.moment_id, row.id)) return;
+    /* 目标动态未在列表中渲染 → 刷新列表兜底 */
+    if (!listEl.querySelector('[data-moment-id="' + row.moment_id + '"]')) {
+      loadMoments();
+      return;
+    }
+    var comment = {
+      id: row.id,
+      content: row.content,
+      parent_id: row.parent_id,
+      created_at: row.created_at,
+      user_id: row.user_id,
+      moment_id: row.moment_id
+    };
+    window.Profile.get(row.user_id)
+      .then(function (profile) {
+        comment.profiles = profile || {};
+        appendCommentNode(row.moment_id, comment);
+      })
+      .catch(function () {
+        comment.profiles = {};
+        appendCommentNode(row.moment_id, comment);
+      });
+  }
+
+  function onRealtimeCommentDelete(row) {
+    if (!row || !row.id) return;
+    var node = commentNode(row.moment_id, row.id);
+    if (node) {
+      node.remove();
+      bumpCommentCount(row.moment_id, -1);
+    }
+  }
+
+  function subscribeRealtime() {
+    if (!window.blogSupabase || typeof window.blogSupabase.channel !== 'function') return;
+    if (realtimeChannel) {
+      window.blogSupabase.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+    realtimeChannel = window.blogSupabase
+      .channel('moments-comments-live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'moment_comments' }, function (payload) {
+        onRealtimeComment(payload.new);
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'moment_comments' }, function (payload) {
+        onRealtimeCommentDelete(payload.old);
+      })
+      .subscribe();
+  }
+
   function whenAuthReady(cb) {
     if (window.Auth) { cb(); return; }
     var tries = 0;
@@ -655,6 +755,7 @@
   }
 
   whenAuthReady(function () {
+    subscribeRealtime();
     syncAuth();
     if (window.Auth.onAuthChange) window.Auth.onAuthChange(function () { syncAuth(); });
   });

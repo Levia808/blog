@@ -847,14 +847,16 @@ body.admin-only { overflow: hidden; height: 100vh; }
   border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-wrap: nowrap;
   transition: transform var(--dur-fast), border-color var(--dur-slow), color var(--dur-slow);
 }
 .moment-action-btn:hover { transform: scale(1.04); border-color: var(--accent); color: var(--accent); }
 .moment-action-btn.is-liked { color: var(--accent); border-color: var(--accent); }
 .moment-action-btn.is-primary { color: var(--accent); border-color: var(--accent); }
 .moment-action-btn.is-danger:hover { color: var(--danger); border-color: var(--danger); }
-.moment-action-btn .ma-count { color: var(--faint); }
-.moment-action-btn::before { content: "+"; color: var(--faint); margin-right: 2px; }
+.moment-action-btn .ma-count { color: var(--faint); flex-shrink: 0; }
+.moment-action-btn::before { content: "+"; color: var(--faint); margin-right: 2px; flex-shrink: 0; }
 .moment-action-btn.is-liked::before { content: "✓"; color: var(--accent); }
 
 .moment-edit-panel {
@@ -943,8 +945,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
 
 /* ── 移动端补全 (设计稿 design-mobile v1) ── */
 @media (max-width: 640px) {
-  .moment-action-btn { min-height: 40px; flex: 1; justify-content: center; }
-  .moment-actions { gap: 8px; }
+  .moment-action-btn { min-height: 40px; flex: 1 1 auto; justify-content: center; white-space: nowrap; }
+  .moment-actions { gap: 8px; flex-wrap: wrap; }
   .moments-composer { padding: 12px; }
   .mc-actions { flex-wrap: wrap; }
   .mc-actions .btn { flex: 1; justify-content: center; min-height: 42px; }
@@ -998,6 +1000,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-wrap: nowrap;
   min-height: 28px;
   transition: color var(--dur-slow), transform var(--dur-fast);
 }

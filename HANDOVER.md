@@ -172,10 +172,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 - [ ] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）——**当前仅在本地**
 - [ ] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
 - [ ] **P1** 设计稿（design-loader/design-home）确认后集成到站点（当前站点加载动画已应用 d52268d 优化）
-- [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS、avatars 桶上传策略
-- [ ] **P2** 主题加 `version` 字段
-- [ ] **P2** 楷体等中文系统字体预览降级提示优化
-- [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS（`moment_comments` insert 策略）、`avatars` 桶上传策略、`profiles` 更新策略
+- [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS（`moment_comments` insert 策略）、`avatars` 桶上传策略、`profiles` 更新策略——**动态修复见 `supabase-moments-fix.sql`（一键幂等，含 Realtime 发布）**
 - [ ] **P1** 用户验收：编辑器字体上传→预览→封面生效全链路；欢迎页头像随个人主页更新
 - [ ] **P2** 主题加 `version` 字段（便于版本追踪）
 - [ ] **P2** 楷体等中文系统字体预览降级提示优化
@@ -187,6 +184,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 动态修复：评论 RLS 一键修复 SQL（含 Realtime 发布）+ 评论实时同步（postgres_changes，双向去重）+ 点赞按钮移动端换行修复（nowrap + 操作行 flex-wrap）+ 作者(author)可发动态（前端 + moments_insert 改 is_staff） |
 | 08-09 | `本次提交` | 移除文章页特殊效果：删除编辑器开关/类型字段、文章模板标记、懒加载逻辑、样式与特效 bundle |
 | 08-09 | `da89df5` | 重构全屏封面字体控件：独立 JS/CSS、低延迟本地预览、自定义字体上传渲染验收、Docker server --noTimes |
 | 08-11 | `d52268d` | **本地未推送**：加载动画优化（数字补间/打字机/标题描边联动/完成态）+ 修复导航收集 bug |
