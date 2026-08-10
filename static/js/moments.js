@@ -1045,10 +1045,13 @@
   }
 
   /* ── 图片分批懒加载: 同一卡片多图串行下载 (最多 2 张并发)
-     避免 9 张大图同时下载+解码导致滚动卡顿 */
+     避免 9 张大图同时下载+解码导致滚动卡顿
+     业界模式 (vanilla-lazyload cancel_on_exit): 滚出视口的图立即取消下载,
+     快速滚动经过多图动态时只加载停留的图 */
   var imageQueue = [];
   var imageLoadingCount = 0;
   var imageIO = null;
+  var loadingImages = {};
   var MAX_CONCURRENT_IMAGES = 2;
 
   function pumpImageQueue() {
@@ -1056,13 +1059,18 @@
       var img = imageQueue.shift();
       if (!img.dataset.src || img.src) continue;
       imageLoadingCount++;
+      loadingImages[img.__lazyId] = img;
       img.src = img.dataset.src;
       img.addEventListener('load', function () {
+        if (!loadingImages[this.__lazyId]) return;
+        delete loadingImages[this.__lazyId];
         imageLoadingCount--;
         markLongImages();
         pumpImageQueue();
       }, { once: true });
       img.addEventListener('error', function () {
+        if (!loadingImages[this.__lazyId]) return;
+        delete loadingImages[this.__lazyId];
         imageLoadingCount--;
         pumpImageQueue();
       }, { once: true });
@@ -1071,6 +1079,7 @@
 
   function lazyLoadImages() {
     imageQueue = [];
+    loadingImages = {};
     if (imageIO) { imageIO.disconnect(); imageIO = null; }
     var imgs = listEl.querySelectorAll('.moment-media img[data-src]');
     if (!imgs.length) return;
@@ -1080,16 +1089,29 @@
     }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
         var img = en.target;
-        io.unobserve(img);
-        if (!img.dataset.src || img.src) return;
-        imageQueue.push(img);
-        pumpImageQueue();
+        if (en.isIntersecting) {
+          if (!img.dataset.src || img.src) return;
+          imageQueue.push(img);
+          pumpImageQueue();
+        } else {
+          /* 滚出视口: 取消下载 + 移出队列 (快速滚动经过时不无谓下载) */
+          if (loadingImages[img.__lazyId]) {
+            img.removeAttribute('src');
+            delete loadingImages[img.__lazyId];
+            imageLoadingCount--;
+          }
+          var qi = imageQueue.indexOf(img);
+          if (qi >= 0) imageQueue.splice(qi, 1);
+          pumpImageQueue();
+        }
       });
-    }, { rootMargin: '400px 0px' });
+    }, { rootMargin: '300px 0px' });
     imageIO = io;
-    imgs.forEach(function (img) { io.observe(img); });
+    imgs.forEach(function (img) {
+      img.__lazyId = 'i' + (++editMediaSeq) + '_' + Math.random().toString(36).slice(2, 8);
+      io.observe(img);
+    });
   }
 
   /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */
