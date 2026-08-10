@@ -323,6 +323,8 @@
     }
 
     list.addEventListener('wheel', function (event) {
+      /* Lenis 平滑滚动接管时禁用卡片级 wheel 导航 (避免双滚动源冲突) */
+      if (window.__lenis) return;
       if (Math.abs(event.deltaY) < 18 || Math.abs(event.deltaY) < Math.abs(event.deltaX) || !inCardViewport()) return;
       var direction = event.deltaY > 0 ? 1 : -1;
       var current = nearestCardIndex();
@@ -1479,15 +1481,20 @@
     function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
     requestAnimationFrame(raf);
 
-    /* 锚点平滑滚动 (接管原生 hash 跳转) */
+    /* 锚点平滑滚动 (接管原生 hash 跳转)
+       保持历史: pushState 更新 hash → 后退/刷新锚点定位不失效
+       skip-link 排除: 保留其无障碍原生跳转行为 */
     document.addEventListener('click', function (e) {
       var a = e.target.closest('a[href^="#"]');
-      if (!a) return;
+      if (!a || a.classList.contains('skip-link')) return;
       var href = a.getAttribute('href');
       if (!href || href === '#') return;
       var target = document.querySelector(href);
       if (!target) return;
       e.preventDefault();
+      if (window.location.hash !== href) {
+        try { history.pushState(null, '', href); } catch (err) {}
+      }
       lenis.scrollTo(target, { offset: -80, duration: 1.2 });
     });
 
