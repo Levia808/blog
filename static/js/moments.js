@@ -549,14 +549,22 @@
 
   listEl.addEventListener('click', function (e) {
     /* 点击动态图片: 预载该动态被收起的图片 (lightbox 内右键可浏览全部)
-       data-src 保留 — glightbox 优先读取它作为内容源, src 预载触发下载双保险 */
+       glightbox 在 init 时缓存元素的 src 到 slideConfig.href — 隐藏图当时无 src,
+       需在填充后 reload() 重收集, 否则打开为空白且无加载动效 */
     var mediaClickImg = e.target.closest('.moment-media img');
     if (mediaClickImg) {
       var mediaCard = mediaClickImg.closest('.moment-card');
+      var hiddenFilled = false;
       if (mediaCard) {
         mediaCard.querySelectorAll('.moment-media-hidden[data-src]').forEach(function (img) {
-          if (!img.src) img.src = img.dataset.src;
+          if (!img.src) {
+            img.src = img.dataset.src;
+            hiddenFilled = true;
+          }
         });
+      }
+      if (hiddenFilled && window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
+        window.__blogLightbox.reload();
       }
     }
 
