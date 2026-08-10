@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design · 开屏加载重构（瑞士风）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E4DED4;        /* NORDIC LINEN 米白 */
+    --ink: #101010;       /* 深黑 */
+    --accent: #6B8B6B;    /* 苔绿 */
+    --grey: #8a887e;
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); font-family: "JetBrains Mono", monospace; color: var(--ink); overflow: hidden; }
+
+  /* ═══════ 开屏加载（瑞士国际主义）═══════ */
+  .loader {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    padding: 3.5vh 3vw;
+    transition: transform .95s var(--ease), visibility .95s;
+  }
+  .loader.done { transform: translateY(-100%); visibility: hidden; }
+
+  /* 顶部: 品牌行 + 编号 */
+  .loader-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 14px;
+  }
+  .l-brand { font-family: "Anton", sans-serif; font-size: 17px; letter-spacing: .06em; }
+  .l-brand .dot { color: var(--accent); }
+  .l-index { font-size: 10px; letter-spacing: .3em; color: var(--grey); }
+  .l-index b { color: var(--ink); font-weight: 500; }
+
+  /* 中央: 巨大描边字母 (进度驱动填充) */
+  .loader-core {
+    flex: 1;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+  .l-word {
+    font-family: "Anton", sans-serif;
+    font-size: clamp(120px, 24vw, 420px);
+    line-height: .82;
+    letter-spacing: -.02em;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+    position: relative;
+    user-select: none;
+  }
+  .l-word .fill {
+    position: absolute; inset: 0;
+    color: var(--ink);
+    -webkit-text-stroke: 0;
+    width: 0%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .l-grid-line {
+    position: absolute; left: 0; right: 0;
+    height: 1px; background: rgba(16,16,16,.18);
+  }
+  .l-grid-line.t1 { top: 30%; }
+  .l-grid-line.t2 { bottom: 30%; }
+
+  /* 底部: 进度条 + 百分比 + 状态 */
+  .loader-foot {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px;
+  }
+  .l-progress {
+    flex: 1;
+    position: relative; height: 34px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    display: flex; align-items: center;
+  }
+  .l-progress i {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+    background: var(--ink);
+    transition: width .2s linear;
+  }
+  .l-progress i::after {
+    content: ""; position: absolute; right: -2px; top: 0; bottom: 0; width: 4px;
+    background: var(--accent);
+  }
+  .l-pct {
+    font-size: clamp(80px, 14vw, 220px);
+    font-weight: 500; line-height: .9; letter-spacing: -.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .l-pct em { font-style: normal; color: var(--accent); font-size: .45em; }
+  .l-status {
+    text-align: right; font-size: 11px; letter-spacing: .25em;
+    color: var(--grey); text-transform: uppercase;
+  }
+  .l-status .sw { display: block; margin-top: 8px; color: var(--ink); letter-spacing: .05em; }
+
+  /* 角落编号轴 (瑞士坐标感) */
+  .l-axis {
+    position: absolute; left: 3vw; bottom: 18%;
+    font-size: 10px; letter-spacing: .25em; color: var(--grey);
+    writing-mode: vertical-rl;
+  }
+  .l-axis i { display: block; width: 1px; height: 60px; background: var(--ink); margin-bottom: 10px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader-count, .l-progress i { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════ 开屏加载（瑞士风重构）═══════ -->
+<div class="loader" id="loader">
+  <!-- 顶部: 品牌 + 编号 -->
+  <div class="loader-head">
+    <span class="l-brand">LEVIA<span class="dot">'s</span></span>
+    <span class="l-index"><b>LOAD</b> — 0001</span>
+  </div>
+
+  <!-- 中央: 巨大描边 LEVIA + 网格线 -->
+  <div class="loader-core">
+    <span class="l-grid-line t1"></span>
+    <span class="l-grid-line t2"></span>
+    <div class="l-word">LEVIA<span class="fill" id="wordFill">LEVIA</span></div>
+    <span class="l-axis"><i></i>SCROLL SYSTEM</span>
+  </div>
+
+  <!-- 底部: 进度 + 百分比 + 状态 -->
+  <div class="loader-foot">
+    <div class="l-progress"><i id="bar"></i></div>
+    <div class="l-pct"><span id="num">0</span><em>%</em></div>
+    <div class="l-status">INITIALIZING<span class="sw" id="status">加载中…</span></div>
+  </div>
+</div>
+
+<!-- 完成后的占位内容 -->
+<div style="height:100vh; display:flex; align-items:center; justify-content:center; font-family:Anton; font-size:60px;">WELCOME</div>
+
+<script>
+  var num = 0;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var statuses = ['初始化系统', '读取文章', '加载字体', '完成'];
+  var si = 0;
+  var iv = setInterval(function () {
+    num += Math.random() * 20 + 7;
+    if (num >= 100) {
+      num = 100;
+      clearInterval(iv);
+      document.getElementById('num').textContent = '100';
+      document.getElementById('bar').style.width = '100%';
+      document.getElementById('wordFill').style.width = '100%';
+      document.getElementById('status').textContent = '完成';
+      setTimeout(function () {
+        document.getElementById('loader').classList.add('done');
+      }, 450);
+      return;
+    }
+    document.getElementById('num').textContent = Math.floor(num);
+    document.getElementById('bar').style.width = Math.floor(num) + '%';
+    document.getElementById('wordFill').style.width = Math.floor(num) + '%';
+    if (num > 70 && si < 3) si = 3;
+    else if (num > 40 && si < 2) si = 2;
+    else if (num > 15 && si < 1) si = 1;
+    document.getElementById('status').textContent = statuses[si];
+  }, 100);
+</script>
+</body>
+</html>
