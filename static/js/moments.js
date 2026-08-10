@@ -123,8 +123,8 @@
     /* 单图: 原比例完整显示; 多图: 方形网格裁切
        列数策略: 2张/4张 → 2列 (1×2 / 2×2), 3张 → 3列 (1×3), ≥5张 → 3列优先
        超过 3×3 (>9张): 只渲染前 9 张, 最后一张叠加半透明层显示 "+多余数"
-       data-gallery 按动态分组 → 每条动态的图片组相互隔离 (lightbox 左右键不跨动态)
-       收起图以隐藏 img 追加同组 → 打开 lightbox 后右键可浏览 */
+       放大查看: 点击图片拦截 glightbox 原生行为, 用 JS API (setElements+openAt)
+       构建该动态全部图片的画廊 → 收起图同样可浏览 (容器 data-media-all 存全量) */
     var isGrid = media.length > 1;
     var gridCls = '';
     if (isGrid) {
@@ -150,14 +150,7 @@
       }
       return item;
     }).join('');
-    /* 收起的图片: 隐藏 img 同画廊组 (data-src 延迟下载, 点击任一图时预载) */
-    var hidden = '';
-    if (extra > 0) {
-      hidden = media.slice(9).map(function (url) {
-        return '<img class="moment-media-hidden" data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(url) + '" alt="">';
-      }).join('');
-    }
-    return '<div class="' + cls + '">' + items + hidden + '</div>';
+    return '<div class="' + cls + '" data-media-all="' + escapeHtml(JSON.stringify(media)) + '">' + items + '</div>';
   }
 
   function commentActions(c, momentId) {
@@ -547,25 +540,50 @@
     }
   });
 
+  /* ── 动态图片放大: 独立 GLightbox 实例 (selector: null, 纯 JS API 驱动)
+     官方文档模式: setElements([{href,type}]) + openAt(index)
+     该动态全部图片 (含收起的 +N) 构成画廊 → 左右键浏览完整, 与文章图实例完全隔离 */
+  var momentsLightbox = null;
+  function getMomentsLightbox() {
+    if (window.GLightbox && !momentsLightbox) {
+      momentsLightbox = window.GLightbox({
+        selector: null,
+        keyboardNavigation: true,
+        touchNavigation: true,
+        loop: false,
+        zoomable: true,
+        draggable: true,
+        preload: true
+      });
+    }
+    return momentsLightbox;
+  }
+
+  function openMomentLightbox(img) {
+    var wrap = img.closest('.moment-media');
+    var lb = getMomentsLightbox();
+    if (!wrap || !lb) return false;
+    var allMedia = [];
+    try { allMedia = JSON.parse(wrap.dataset.mediaAll || '[]'); } catch (err) {}
+    var images = allMedia.filter(function (url) {
+      var ext = String(url).split('.').pop().toLowerCase();
+      return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) < 0;
+    });
+    if (!images.length) return false;
+    var startAt = Math.max(0, images.indexOf(img.getAttribute('src')));
+    lb.setElements(images.map(function (url) {
+      return { href: url, type: 'image' };
+    }));
+    lb.openAt(Math.max(0, startAt));
+    return true;
+  }
+
   listEl.addEventListener('click', function (e) {
-    /* 点击动态图片: 预载该动态被收起的图片 (lightbox 内右键可浏览全部)
-       glightbox 在 init 时缓存元素的 src 到 slideConfig.href — 隐藏图当时无 src,
-       需在填充后 reload() 重收集, 否则打开为空白且无加载动效 */
-    var mediaClickImg = e.target.closest('.moment-media img');
-    if (mediaClickImg) {
-      var mediaCard = mediaClickImg.closest('.moment-card');
-      var hiddenFilled = false;
-      if (mediaCard) {
-        mediaCard.querySelectorAll('.moment-media-hidden[data-src]').forEach(function (img) {
-          if (!img.src) {
-            img.src = img.dataset.src;
-            hiddenFilled = true;
-          }
-        });
-      }
-      if (hiddenFilled && window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
-        window.__blogLightbox.reload();
-      }
+    /* 动态图片: 拦截 glightbox 原生行为 → JS API 打开该动态全量画廊 */
+    var mediaImg = e.target.closest('.moment-media img');
+    if (mediaImg && openMomentLightbox(mediaImg)) {
+      e.preventDefault();
+      e.stopPropagation();
     }
 
     var editBtn = e.target.closest('[data-moment-edit]');
@@ -959,9 +977,8 @@
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
   function markLongImages() {
     listEl.querySelectorAll('.moment-media img').forEach(function (img) {
-      /* 多图正方形网格不处理长图; 已包裹/已检查/收起隐藏图跳过 */
-      if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') ||
-          img.classList.contains('moment-media-hidden') || img.dataset.longChecked) return;
+      /* 多图正方形网格不处理长图; 已包裹/已检查跳过 */
+      if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') || img.dataset.longChecked) return;
       function check() {
         if (!img.naturalWidth) return;
         img.dataset.longChecked = '1';

@@ -1032,17 +1032,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 /* 收起的多余图片: 绝对定位移出视口 (不可见但不占布局)
    不用 display:none — glightbox 会跳过 offsetParent 为 null 的元素, 导致收起图无法在放大后查看 */
-.moment-media .moment-media-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  left: -9999px;
-  top: 0;
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* ── 编辑面板媒体编辑 ── */
 .mem-list {
   display: grid;
