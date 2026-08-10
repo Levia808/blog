@@ -1,5 +1,6 @@
 
 {{- define "title" }}{{ site.Title }}{{ end }}
+{{- define "body-class" }}home-page{{ end }}
 {{- define "main" }}
 {{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
 {{- with site.Data.welcome }}
@@ -8,6 +9,8 @@
 {{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
+
+{{ partial "header.html" . }}
 
 <!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
 <div class="loader" id="loader" aria-hidden="true">
@@ -32,12 +35,9 @@
     {{- end }}
     {{- end }}
   </nav>
-  <a class="hn-link hn-cta" id="navLoginBtn" href="{{ "login/" | relLangURL }}" data-smooth-login>登录</a>
-  <div class="hn-user" id="userMenuContainer" hidden>
-    <button type="button" class="hn-link hn-icon" id="userMenuTrigger" aria-label="用户菜单"><img class="hn-avatar" id="userAvatar" src="{{ "favicon.svg" | relURL }}" alt=""></button>
-  </div>
-
-  <div class="ht-wrap" id="heroWrap"><h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1></div>
+  <a class="ht-wrap" id="heroWrap" href="{{ "" | relLangURL }}" aria-label="{{ site.Title }}">
+    <h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1>
+  </a>
 
   <div class="hero-lines" id="heroLines">
     <i></i><i></i><i></i><i></i>

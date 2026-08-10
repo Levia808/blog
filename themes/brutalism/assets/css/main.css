@@ -172,21 +172,24 @@ html.js [data-reveal].reveal-visible {
 .nav-full {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 16px;
   padding: 14px 28px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 180;
   transition: transform var(--dur-normal) ease-out;
 }
 .nav-full.nav-hidden { transform: translateY(-100%); }
-.nf-logo { font-size: 16px; font-weight: 550; letter-spacing: 1.5px; color: var(--white); text-decoration: none; }
-.nf-links { display: flex; align-items: center; gap: 28px; }
+.nav-full.nav-hidden,
+.nav-mobile.nav-hidden { pointer-events: none; }
+.nf-logo { flex: 0 0 auto; margin-right: auto; font-size: 18px; font-weight: 650; letter-spacing: 1.5px; color: var(--white); text-decoration: none; }
+.nf-links { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
 .nf-link {
   position: relative;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   text-decoration: none;
   letter-spacing: 0.5px;
@@ -200,9 +203,9 @@ html.js [data-reveal].reveal-visible {
   height: 2px;
   background: var(--accent);
 }
-.nf-actions { display: flex; align-items: center; gap: 16px; }
+.nf-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-left: 8px; }
 .nf-icon-btn {
-  width: 34px; height: 34px;
+  width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: 1px solid var(--border); border-radius: 4px;
   color: var(--muted); cursor: pointer;
@@ -214,8 +217,8 @@ html.js [data-reveal].reveal-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 16px;
-  font-size: 11px;
+  padding: 7px 17px;
+  font-size: 12px;
   font-family: var(--font-mono);
   color: var(--fg);
   background: transparent;
@@ -228,7 +231,7 @@ html.js [data-reveal].reveal-visible {
 .nav-login-btn:hover { transform: scale(1.04); border-color: var(--accent); color: var(--accent); }
 
 .theme-toggle {
-  width: 36px; height: 36px;
+  width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border); border-radius: 4px;
   background: transparent; color: var(--muted);
@@ -246,7 +249,7 @@ html.js [data-reveal].reveal-visible {
    任何时刻移出都从当前帧平滑反向，无跳变、无排队 */
 .nf-avatar {
   position: relative;
-  width: 28px; height: 28px;
+  width: 34px; height: 34px;
   padding: 0;
   border-radius: 4px;
   border: 1px solid var(--border);
@@ -1665,13 +1668,50 @@ button,
   backdrop-filter: blur(18px);
   border-bottom-color: var(--ax-border);
 }
-.nf-links { gap: 6px; }
+.nav-full {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  min-height: 68px;
+  padding: 14px clamp(18px, 3vw, 36px);
+}
+.nf-logo {
+  flex: 0 0 auto;
+  margin-right: auto;
+  font-size: clamp(18px, 1.7vw, 22px);
+  font-weight: 680;
+}
+.nav-wordmark {
+  font-family: "Anton", var(--font-display), sans-serif;
+  font-size: clamp(24px, 2.2vw, 30px);
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: -.04em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.nav-wordmark-sub {
+  margin-left: .32em;
+  font-family: var(--font-sans);
+  font-size: .42em;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--muted);
+  text-transform: none;
+}
+.nf-links {
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
 .nf-link {
-  min-height: 36px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: var(--ax-radius-element);
+  font-size: 13.5px;
   letter-spacing: 0;
 }
 .nf-link:hover,
@@ -1686,7 +1726,73 @@ button,
   bottom: 5px;
   height: 1px;
 }
-.nf-actions { gap: 10px; }
+.nf-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: 10px;
+}
+.nf-icon-btn,
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+}
+.nav-login-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 12.5px;
+}
+.nf-avatar {
+  width: 36px;
+  height: 36px;
+}
+
+html.js .home-page .nav-full {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition:
+    opacity .35s cubic-bezier(.22,.61,.36,1),
+    transform .35s cubic-bezier(.22,.61,.36,1),
+    background-color var(--ax-dur-medium),
+    border-color var(--ax-dur-medium);
+}
+html.js .home-page.home-nav-collapsed .nav-full {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+html.js .home-page.home-nav-collapsed .nav-full.nav-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+}
+html.js .home-page.home-nav-collapsed .hero-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+html.js .home-page .nav-full .nf-logo {
+  opacity: 0;
+  pointer-events: none;
+}
+html.js .home-page .ht-wrap {
+  z-index: 190;
+  color: inherit;
+  text-decoration: none;
+  pointer-events: none;
+  transition: opacity .28s cubic-bezier(.22,.61,.36,1);
+}
+html.js .home-page.home-nav-collapsed:not(.nav-is-hidden) .ht-wrap {
+  opacity: 1;
+  pointer-events: auto;
+}
+html.js .home-page.home-nav-collapsed.nav-is-hidden .ht-wrap {
+  opacity: 0;
+  pointer-events: none;
+}
 
 .dropdown-menu,
 .search-box,
@@ -1853,7 +1959,7 @@ button,
 .loader-bar i { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--accent); transition: width .2s linear; }
 
 /* 变形导航 (hero 内, 初始均分) */
-.hero-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100; pointer-events: none; transition: background .6s cubic-bezier(.22,.61,.36,1), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
+.hero-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100; pointer-events: none; transition: opacity .35s cubic-bezier(.22,.61,.36,1), background .6s cubic-bezier(.22,.61,.36,1), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
 .hero-nav.solid { background: rgba(246,245,241,.72); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2); border-bottom-color: rgba(26,26,24,.1); }
 .hn-link {
   position: fixed; top: 36px; z-index: 101;

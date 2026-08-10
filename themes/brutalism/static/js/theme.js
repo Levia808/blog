@@ -5,6 +5,24 @@
   var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   document.documentElement.classList.add('js');
 
+  function forceInitialScrollTop() {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+    window.requestAnimationFrame(function () { window.scrollTo(0, 0); });
+  }
+  forceInitialScrollTop();
+  [40, 120, 280, 600, 1000].forEach(function (delay) {
+    window.setTimeout(forceInitialScrollTop, delay);
+  });
+  document.addEventListener('DOMContentLoaded', forceInitialScrollTop, { once: true });
+  window.addEventListener('load', forceInitialScrollTop, { once: true });
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      forceInitialScrollTop();
+      window.setTimeout(forceInitialScrollTop, 120);
+    }
+  });
+
   /* ── 导航：下滑隐藏 / 上滑显示 ── */
   function initNavScroll() {
     var headers = [document.getElementById('siteHeader'), document.getElementById('siteHeaderMobile')].filter(Boolean);
@@ -13,15 +31,19 @@
     var lastY = window.scrollY;
     var ticking = false;
     var NAV_HIDE_THRESHOLD = 60;
+    var SCROLL_DELTA = 4;
 
     function update() {
       var y = window.scrollY;
       if (y < NAV_HIDE_THRESHOLD) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
-      } else if (y > lastY && y - lastY > NAV_HIDE_THRESHOLD) {
+        document.body.classList.remove('nav-is-hidden');
+      } else if (y > lastY + SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.add('nav-hidden'); });
-      } else if (y < lastY) {
+        document.body.classList.add('nav-is-hidden');
+      } else if (y < lastY - SCROLL_DELTA) {
         headers.forEach(function (h) { h.classList.remove('nav-hidden'); });
+        document.body.classList.remove('nav-is-hidden');
       }
       lastY = y;
       ticking = false;
@@ -1028,27 +1050,20 @@
     var wrap = document.getElementById('heroWrap');
     var nav = document.getElementById('heroNav');
     var links = [];
-    var cta = document.getElementById('navLoginBtn');
-    var search = document.getElementById('searchTrigger');
-    var theme = document.getElementById('themeToggle');
-    var user = document.getElementById('userMenuContainer');
-    var all = [cta, search, theme, user].filter(Boolean);
-    var menu = [];
-    try { menu = document.querySelectorAll('.nf-links a') && [] ; } catch (e) {}
 
-    /* 渲染菜单链接 (site.Menus.main 由服务端注入到 heroNav) */
+    /* 首页 hero 只负责开屏均分动画；登录、头像、搜索由全局导航承接。 */
     var heroNav = document.getElementById('heroNav');
     if (heroNav) {
-      var injected = heroNav.querySelectorAll('a');
+      var injected = heroNav.querySelectorAll('.hn-link');
       injected.forEach(function (a) { links.push(a); });
     }
-    all.forEach(function (el) { links.push(el); });
 
     /* 加载动画 */
     var loader = document.getElementById('loader');
     var loadNum = document.getElementById('loadNum');
     var loadBar = document.getElementById('loadBar');
     function finishLoad() {
+      forceInitialScrollTop();
       if (loadNum) loadNum.textContent = '100';
       if (loadBar) loadBar.style.width = '100%';
       setTimeout(function () {
@@ -1075,6 +1090,7 @@
     function measure() {
       var vw = window.innerWidth, vh = window.innerHeight;
       var pad = vw * 0.04;
+      var navPad = Math.max(18, Math.min(36, vw * 0.03));
       var titleFont = parseFloat(getComputedStyle(title).fontSize);
       wrap.style.left = '0px'; wrap.style.top = '0px';
       var th = title.offsetHeight;
@@ -1083,9 +1099,9 @@
       wrap.style.left = tX + 'px'; wrap.style.top = tY + 'px';
       /* 用 JS 定位值 (不受入场动画 transform 影响) */
       var tInit = { x: tX, y: tY };
-      var tSize = 20;
+      var tSize = 28;
       var tScale = tSize / titleFont;
-      var tTarget = { x: pad, y: 26 };
+      var tTarget = { x: navPad, y: 21 };
       var items = [];
       var n = links.length || 1;
       links.forEach(function (el, i) {
@@ -1099,19 +1115,19 @@
       init = { vh: vh, vw: vw, pad: pad, tInit: tInit, tTarget: tTarget, tScale: tScale, items: items, maxScroll: Math.max(vh - 72, 1) };
     }
     function update() {
-      curP += (tgtP - curP) * 0.1;
-      if (Math.abs(tgtP - curP) < 0.001) curP = tgtP;
+      curP = tgtP;
       var p = curP;
       var dx = (init.tTarget.x - init.tInit.x) * p;
       var dy = (init.tTarget.y - init.tInit.y) * p;
       var sc = 1 + (init.tScale - 1) * p;
       title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
-      title.style.opacity = 1 - p * 0.25;
+      title.style.opacity = 1;
       init.items.forEach(function (g) {
         g.el.style.left = (g.initLeft + (g.targetLeft - g.initLeft) * p) + 'px';
       });
-      if (user) user.style.left = (parseFloat(user.style.left || 0) || 0) + 0 + 'px';
       nav.classList.toggle('solid', p > 0.85);
+      nav.classList.toggle('is-collapsed', p > 0.85);
+      document.body.classList.toggle('home-nav-collapsed', p > 0.85);
     }
     function layoutInit() {
       measure();
@@ -1121,6 +1137,7 @@
       }, { passive: true });
       window.addEventListener('resize', function () { measure(); update(); });
       requestAnimationFrame(function loop() {
+        if (init) tgtP = ease(window.scrollY / init.maxScroll);
         if (init && Math.abs(tgtP - curP) > 0.0005) update();
         requestAnimationFrame(loop);
       });
