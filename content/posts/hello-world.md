@@ -7,13 +7,13 @@ tags:
   - 随笔
 description: 你好世界
 background: /images/pexels-tigran-manukyan-33097708.jpg
-entry_title_font: /images/Cube-Font-1.ttf
+entry_title_font: /images/Boxing-Regular.otf
 entry_title_font_file: /images/Boxing-Regular.otf
 entry_title_font_name: ''
 entry_title_color: '#010057'
 entry_title_opacity: 75
 entry_title_size: null
-entry_title_effect: shuffle
+entry_title_effect: shiny
 entry_scramble: false
 entry_align: center-center
 cover:
