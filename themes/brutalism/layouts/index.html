@@ -9,7 +9,7 @@
 {{- $latest := first 6 $posts }}
 {{- $featured := index $posts 0 }}
 
-<!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
+<!-- 开屏加载 (LEVIA + 数字进度) -->
 <div class="loader" id="loader" aria-hidden="true">
   <div class="loader-top">
     <span class="loader-brand">LEVIA<span class="loader-dot">'s</span> BLOG</span>
@@ -22,7 +22,7 @@
   <div class="loader-bar"><i id="loadBar"></i></div>
 </div>
 
-<!-- 开屏欢迎 (瑞士风 hero, 亮色) -->
+<!-- 开屏欢迎 -->
 <section class="hero-home" id="welcome" aria-label="欢迎">
   <!-- 变形导航由全局 header.html 提供 -->
   <div class="ht-wrap" id="heroWrap"><h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1></div>
@@ -30,7 +30,7 @@
   <div class="hero-lines" id="heroLines">
     <i></i><i></i><i></i><i></i>
     <i>
-      <span class="l-text">Preserving legacies, driving growth</span>
+      <span class="l-text">{{ $P.description | default "记录 · 思考 · 分享" }}</span>
       <a class="l-arrow" href="#latest-posts" aria-label="向下滚动">↓</a>
     </i>
   </div>

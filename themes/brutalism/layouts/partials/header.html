@@ -7,8 +7,9 @@
   {{- $menuItemURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) -}}
   {{- $isLoginItem := in (lower .URL) "login" -}}
   {{- if not $isLoginItem }}
+  {{- $isSearchItem := in (lower .URL) "search" -}}
   {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
-  <a class="hn-link{{ if $isActive }} active{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+  <a class="hn-link{{ if $isActive }} active{{ end }}"{{ if $isSearchItem }} id="searchTrigger"{{ end }} href="{{ .URL | relLangURL }}">{{ .Name }}</a>
   {{- end }}
   {{- end }}
   {{- if $P.auth }}
