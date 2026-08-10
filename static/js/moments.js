@@ -34,10 +34,10 @@
   }
 
   var noticeTimer = null;
-  function flashNotice(text) {
+  function flashNotice(text, tone) {
     hintEl.hidden = false;
     hintEl.textContent = text;
-    hintEl.style.color = 'var(--danger)';
+    hintEl.style.color = tone === 'success' ? 'var(--accent)' : 'var(--danger)';
     clearTimeout(noticeTimer);
     noticeTimer = setTimeout(function () {
       hintEl.hidden = true;
@@ -167,6 +167,11 @@
     return html;
   }
 
+  function canManageMoment(moment) {
+    if (!currentUser || !moment) return false;
+    return currentUser.id === moment.user_id || (currentProfile && currentProfile.role === 'superadmin');
+  }
+
   function renderMoment(moment) {
     var p = moment.profiles || {};
     var name = p.display_name || p.username || '博客读者';
@@ -176,18 +181,26 @@
     }
     var likeCount = (moment.moment_likes && moment.moment_likes.length) || 0;
     var commentCount = (moment.moment_comments && moment.moment_comments.length) || 0;
+    var canManage = canManageMoment(moment);
     return '<article class="moment-card" data-moment-id="' + moment.id + '">' +
       '<div class="moment-head">' + avatarHtml(p, 'moment-avatar', 'moment-avatar-fallback') +
       '<div><div class="moment-author">' + escapeHtml(name) + '</div>' +
       '<div class="moment-time">' + fmtTime(moment.created_at) + '</div></div></div>' +
       (moment.content ? '<div class="moment-content">' + renderMarkdown(moment.content) + '</div>' : '') +
       renderMedia(moment.media, (moment.media || []).length === 1) +
+      (canManage ? '<div class="moment-edit-panel" data-moment-edit-panel="' + moment.id + '" hidden>' +
+      '<textarea class="moment-edit-input" rows="4" maxlength="2000" data-moment-edit-input="' + moment.id + '">' + escapeHtml(moment.content || '') + '</textarea>' +
+      '<div class="moment-edit-actions">' +
+      '<button type="button" class="moment-action-btn is-primary" data-moment-save="' + moment.id + '">保存</button>' +
+      '<button type="button" class="moment-action-btn" data-moment-cancel-edit="' + moment.id + '">取消</button>' +
+      '</div><p class="auth-error moment-edit-error" data-moment-edit-error="' + moment.id + '" hidden></p></div>' : '') +
       '<div class="moment-actions">' +
       '<button type="button" class="moment-action-btn' + (liked ? ' is-liked' : '') + '" data-moment-like="' + moment.id + '">' +
       '<svg class="heart-icon" viewBox="0 0 32 32" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M16 29s-13-8.2-13-17.5C3 6.9 6.7 3.5 10.5 3.5c2.3 0 4.5 1.1 5.5 2.9 1-1.8 3.2-2.9 5.5-2.9C25.3 3.5 29 6.9 29 11.5 29 20.8 16 29 16 29z"/></svg>' +
       (liked ? '已赞' : '点赞') + ' <span class="ma-count">' + likeCount + '</span></button>' +
       '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '">评论 <span class="ma-count">' + commentCount + '</span></button>' +
-      (currentUser && currentUser.id === moment.user_id ? '' : '') +
+      (canManage ? '<button type="button" class="moment-action-btn" data-moment-edit="' + moment.id + '">编辑</button>' +
+      '<button type="button" class="moment-action-btn is-danger" data-moment-delete="' + moment.id + '">删除</button>' : '') +
       '</div>' +
       '<div class="moment-comments" data-moment-comments="' + moment.id + '">' +
       renderComments(moment) +
@@ -356,6 +369,104 @@
   });
 
   listEl.addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-moment-edit]');
+    if (editBtn) {
+      var editId = editBtn.dataset.momentEdit;
+      var editCard = listEl.querySelector('[data-moment-id="' + editId + '"]');
+      var editPanel = editCard && editCard.querySelector('[data-moment-edit-panel="' + editId + '"]');
+      var editInput = editCard && editCard.querySelector('[data-moment-edit-input="' + editId + '"]');
+      if (editPanel && editInput) {
+        editPanel.hidden = false;
+        editInput.focus();
+      }
+      return;
+    }
+
+    var cancelEditBtn = e.target.closest('[data-moment-cancel-edit]');
+    if (cancelEditBtn) {
+      var cancelId = cancelEditBtn.dataset.momentCancelEdit;
+      var cancelCard = listEl.querySelector('[data-moment-id="' + cancelId + '"]');
+      var cancelPanel = cancelCard && cancelCard.querySelector('[data-moment-edit-panel="' + cancelId + '"]');
+      var cancelError = cancelCard && cancelCard.querySelector('[data-moment-edit-error="' + cancelId + '"]');
+      if (cancelPanel) cancelPanel.hidden = true;
+      if (cancelError) cancelError.hidden = true;
+      return;
+    }
+
+    var saveBtn = e.target.closest('[data-moment-save]');
+    if (saveBtn) {
+      if (!currentUser) { window.BlogAuth.open('login'); return; }
+      var saveId = saveBtn.dataset.momentSave;
+      var saveCard = listEl.querySelector('[data-moment-id="' + saveId + '"]');
+      var saveInput = saveCard && saveCard.querySelector('[data-moment-edit-input="' + saveId + '"]');
+      var savePanel = saveCard && saveCard.querySelector('[data-moment-edit-panel="' + saveId + '"]');
+      var saveError = saveCard && saveCard.querySelector('[data-moment-edit-error="' + saveId + '"]');
+      if (!saveInput || !saveCard) return;
+      var nextContent = saveInput.value.trim();
+      if (!nextContent && !saveCard.querySelector('.moment-media')) {
+        if (saveError) {
+          saveError.textContent = '内容不能为空';
+          saveError.hidden = false;
+        }
+        return;
+      }
+      saveBtn.disabled = true;
+      if (saveError) saveError.hidden = true;
+      window.blogSupabase.from('moments')
+        .update({ content: nextContent, updated_at: new Date().toISOString() })
+        .eq('id', saveId)
+        .select('id, content, updated_at')
+        .single()
+        .then(function (result) {
+          if (result.error) throw result.error;
+          var contentEl = saveCard.querySelector('.moment-content');
+          if (nextContent) {
+            if (!contentEl) {
+              saveCard.querySelector('.moment-head').insertAdjacentHTML('afterend', '<div class="moment-content"></div>');
+              contentEl = saveCard.querySelector('.moment-content');
+            }
+            contentEl.innerHTML = renderMarkdown(nextContent);
+          } else if (contentEl) {
+            contentEl.remove();
+          }
+          if (savePanel) savePanel.hidden = true;
+          flashNotice('动态已更新', 'success');
+        }).catch(function (error) {
+          if (saveError) {
+            saveError.textContent = '保存失败：' + (error.message || error);
+            saveError.hidden = false;
+          } else {
+            flashNotice('保存失败：' + (error.message || error));
+          }
+        }).finally(function () {
+          saveBtn.disabled = false;
+        });
+      return;
+    }
+
+    var deleteBtn = e.target.closest('[data-moment-delete]');
+    if (deleteBtn) {
+      if (!currentUser) { window.BlogAuth.open('login'); return; }
+      if (!window.confirm('确认删除这条动态？')) return;
+      var deleteId = deleteBtn.dataset.momentDelete;
+      var deleteCard = listEl.querySelector('[data-moment-id="' + deleteId + '"]');
+      deleteBtn.disabled = true;
+      window.blogSupabase.from('moments').delete().eq('id', deleteId)
+        .then(function (result) {
+          if (result.error) throw result.error;
+          if (deleteCard) deleteCard.remove();
+          flashNotice('动态已删除', 'success');
+          if (!listEl.querySelector('.moment-card')) {
+            listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+          }
+        }).catch(function (error) {
+          flashNotice('删除失败：' + (error.message || error));
+        }).finally(function () {
+          deleteBtn.disabled = false;
+        });
+      return;
+    }
+
     var likeBtn = e.target.closest('[data-moment-like]');
     if (likeBtn) {
       if (!currentUser) { window.BlogAuth.open('login'); return; }

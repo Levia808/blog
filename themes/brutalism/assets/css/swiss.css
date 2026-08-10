@@ -1310,6 +1310,17 @@ body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
   transform: translate3d(0, -1px, 0);
 }
 
+.site-main .moment-action-btn.is-primary {
+  border-color: var(--swiss-moss);
+  color: var(--swiss-moss);
+}
+
+.site-main .moment-action-btn.is-danger:hover {
+  border-color: var(--swiss-danger);
+  color: var(--swiss-danger);
+  background: color-mix(in srgb, var(--swiss-danger) 10%, transparent);
+}
+
 .site-main .btn-primary,
 .site-main .comments-button-primary,
 .site-main .auth-btn-primary,

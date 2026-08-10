@@ -851,9 +851,40 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .moment-action-btn:hover { transform: scale(1.04); border-color: var(--accent); color: var(--accent); }
 .moment-action-btn.is-liked { color: var(--accent); border-color: var(--accent); }
+.moment-action-btn.is-primary { color: var(--accent); border-color: var(--accent); }
+.moment-action-btn.is-danger:hover { color: var(--danger); border-color: var(--danger); }
 .moment-action-btn .ma-count { color: var(--faint); }
 .moment-action-btn::before { content: "+"; color: var(--faint); margin-right: 2px; }
 .moment-action-btn.is-liked::before { content: "✓"; color: var(--accent); }
+
+.moment-edit-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
+}
+.moment-edit-panel[hidden] { display: none; }
+.moment-edit-input {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  line-height: 1.7;
+  outline: none;
+}
+.moment-edit-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.moment-edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.moment-edit-error { margin: 0; font-size: 12px; }
 
 .moment-comments { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
 .moment-comment { display: flex; gap: 10px; }

@@ -80,7 +80,7 @@
             <a class="archive-card-link" href="{{ .RelPermalink }}">
               <div class="archive-cover">
                 {{- if $videoSrc }}
-                <video class="archive-cover-video" src="{{ $videoSrc }}"{{ if $coverSrc }} poster="{{ $coverSrc }}"{{ end }} muted playsinline loop preload="metadata" aria-hidden="true"></video>
+                <video class="archive-cover-video" src="{{ $videoSrc }}" muted playsinline loop preload="auto" aria-hidden="true"></video>
                 <span class="archive-cover-type mono">VIDEO</span>
                 <span class="archive-cover-progress" aria-hidden="true"><span></span></span>
                 {{- else if $coverSrc }}

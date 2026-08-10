@@ -1424,11 +1424,22 @@
       function pausePreview(reset) {
         if (!video.paused) video.pause();
         if (reset) {
-          try { video.currentTime = 0; } catch (e) {}
+          try { video.currentTime = 0.001; } catch (e) {}
           if (progress) progress.style.width = '0';
         }
       }
 
+      function primeFirstFrame() {
+        video.pause();
+        if (video.readyState >= 1) {
+          try { video.currentTime = 0.001; } catch (e) {}
+        }
+      }
+
+      video.addEventListener('loadedmetadata', primeFirstFrame, { once: true });
+      video.addEventListener('loadeddata', primeFirstFrame, { once: true });
+      if (video.readyState >= 1) primeFirstFrame();
+      video.load();
       video.addEventListener('timeupdate', updateProgress);
       card.addEventListener('pointerenter', playPreview);
       card.addEventListener('pointerleave', function () { pausePreview(true); });
