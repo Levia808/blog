@@ -1075,6 +1075,33 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .cp-fs-date { font-family: var(--font-mono); font-size: 9px; color: var(--muted); }
 .cp-fs-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: -0.01em; line-height: 1.05; }
 .cp-fs-quote { font-size: 11px; color: var(--fg); font-style: italic; border-left: 2px solid var(--accent); padding-left: 10px; }
+.cp-feature {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+}
+.cp-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.7), rgba(0,0,0,.18) 58%, rgba(0,0,0,.34)),
+    var(--faint);
+  opacity: .72;
+}
+.cp-feature-inner {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 68%;
+}
 
 /* --- Astryx-adapted admin and workflow components --- */
 .admin-wrap {
@@ -1184,7 +1211,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .cp-col,
 .cp-grid .cp-card,
 .cp-hlist .cp-hcard,
-.cp-fullscreen {
+.cp-fullscreen,
+.cp-feature {
   border-radius: var(--ax-radius-container, 6px);
 }
 

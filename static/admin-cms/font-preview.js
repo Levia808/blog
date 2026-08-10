@@ -233,6 +233,16 @@
     return option.label;
   }
 
+  function cardStyleLabel(value) {
+    return ({
+      inherit: '跟随全局',
+      grid: '网格',
+      horizontal: '横向长条',
+      fullscreen: '全屏封面',
+      feature: '2:1 精选横幅'
+    })[value] || '跟随全局';
+  }
+
   function updatePreview(root) {
     if (!root || !root.isConnected) return;
     var select = root.querySelector('.fp-select');
@@ -250,11 +260,13 @@
     var titleSize = clampTitleSize(readField('entry_title_size'));
     var titleEffect = readField('entry_title_effect') || 'none';
     var align = readField('entry_align') || 'left-bottom';
+    var cardStyle = readField('card_style') || 'inherit';
     var hiddenTitle = readBool('entry_hide_title');
     var description = readField('description');
     var local = path && state.localPreviews[path];
 
     stage.dataset.align = align;
+    stage.dataset.cardStyle = cardStyle;
     stage.dataset.titleHidden = hiddenTitle ? 'true' : 'false';
     stage.dataset.effect = titleEffect;
     stage.classList.remove('is-error', 'is-loading', 'is-effecting');
@@ -273,7 +285,7 @@
       quote.hidden = !description;
     }
     if (meta) {
-      meta.textContent = (hiddenTitle ? '隐藏标题模式' : '显示标题模式') + ' / ' + align;
+      meta.textContent = cardStyleLabel(cardStyle) + ' / ' + (hiddenTitle ? '隐藏标题' : '显示标题') + ' / ' + align + ' / ' + titleSize + '%';
     }
 
     if (path) {
@@ -603,7 +615,7 @@
     ['input', 'change'].forEach(function (eventName) {
       document.addEventListener(eventName, function (event) {
         if (event.target.closest('.fp-root')) return;
-        if (event.target.closest('[data-key-path="title"], [data-key-path="description"], [data-key-path="date"], [data-key-path="entry_title_color"], [data-key-path="entry_title_opacity"], [data-key-path="entry_title_size"], [data-key-path="entry_title_effect"], [data-key-path="entry_align"], [data-key-path="entry_hide_title"], [data-key-path="entry_title_font_file"], [data-key-path="entry_title_font_name"]')) {
+        if (event.target.closest('[data-key-path="title"], [data-key-path="description"], [data-key-path="date"], [data-key-path="card_style"], [data-key-path="entry_title_color"], [data-key-path="entry_title_opacity"], [data-key-path="entry_title_size"], [data-key-path="entry_title_effect"], [data-key-path="entry_align"], [data-key-path="entry_hide_title"], [data-key-path="entry_title_font_file"], [data-key-path="entry_title_font_name"]')) {
           scheduleUpdate();
         }
       }, true);
@@ -622,9 +634,9 @@
     return R('div', { className: 'fp-root', 'data-fp-value': value },
       R('div', { className: 'fp-head' },
         R('div', null,
-          R('div', { className: 'fp-kicker' }, 'Fullscreen Cover'),
-          R('div', { className: 'fp-title' }, '全屏标题字体'),
-          R('div', { className: 'fp-subtitle' }, '切换字体后立即预览当前文章的封面标题')
+          R('div', { className: 'fp-kicker' }, 'Cover Title System'),
+          R('div', { className: 'fp-title' }, '卡片标题视觉'),
+          R('div', { className: 'fp-subtitle' }, '切换字体、样式、字号和位置后立即预览当前文章的卡片标题')
         ),
         R('div', { className: 'fp-state', 'data-tone': 'ready' }, '就绪')
       ),

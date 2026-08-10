@@ -167,12 +167,27 @@ body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
 }
 
 .site-main .grid-3 > .post-card-cover,
+.site-main .grid-3 > .post-card-feature,
+.site-main .grid-3 > .post-card-fullscreen,
 .site-main .grid-auto > .post-card-cover,
+.site-main .grid-auto > .post-card-feature,
+.site-main .grid-auto > .post-card-fullscreen,
 .site-main .tags-cloud > .tag-pill {
   grid-column: span 4;
 }
 
+.site-main .grid-3 > .post-card-feature,
+.site-main .grid-auto > .post-card-feature {
+  grid-column: span 8;
+}
+
+.site-main .grid-3 > .post-card-fullscreen,
+.site-main .grid-auto > .post-card-fullscreen {
+  grid-column: 1 / -1;
+}
+
 .site-main .post-card-cover,
+.site-main .post-card-feature,
 .site-main .blog-empty,
 .site-main .about-strip,
 .site-main .article-main,
@@ -201,6 +216,7 @@ body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
 }
 
 .site-main .post-card-cover,
+.site-main .post-card-feature,
 .site-main .pn-card,
 .site-main .moment-card,
 .site-main .stat,
@@ -219,6 +235,8 @@ body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
 }
 
 .site-main .post-card-cover:hover,
+.site-main .post-card-feature:hover,
+.site-main .post-card-feature:focus-within,
 .site-main .pn-card:hover,
 .site-main .moment-card:hover,
 .site-main .stat:hover,
@@ -1603,6 +1621,39 @@ body.admin-only .btn-primary {
   letter-spacing: 0;
 }
 
+.site-main .post-card-feature {
+  border-color: rgba(247, 248, 244, 0.34);
+  border-radius: var(--swiss-radius);
+  background: var(--swiss-ink);
+  box-shadow: none;
+}
+
+.site-main .post-card-feature .pcf-link::after {
+  background:
+    linear-gradient(90deg, rgba(17, 19, 15, 0.76), rgba(17, 19, 15, 0.24) 58%, rgba(17, 19, 15, 0.42)),
+    linear-gradient(180deg, rgba(95, 129, 95, 0.1), transparent 42%);
+}
+
+.site-main .post-card-feature .pcf-title {
+  letter-spacing: 0;
+}
+
+.site-main .post-card-feature .pcf-date,
+.site-main .post-card-feature .pcf-tag {
+  color: rgba(247, 248, 244, 0.74);
+}
+
+.site-main .post-card-feature .pcf-quote {
+  color: rgba(247, 248, 244, 0.88);
+  border-left-color: #dce5d8;
+}
+
+.site-main .post-card-feature:hover .pcf-tag,
+.site-main .post-card-feature:focus-within .pcf-tag {
+  color: #ffffff;
+  border-color: rgba(220, 229, 216, 0.76);
+}
+
 .site-main .article-body pre[style],
 .site-main .article-body pre[style] code {
   background: var(--swiss-soft) !important;
@@ -1631,9 +1682,16 @@ body.admin-only .btn-primary {
   }
 
   .site-main .grid-3 > .post-card-cover,
+  .site-main .grid-3 > .post-card-feature,
   .site-main .grid-auto > .post-card-cover,
+  .site-main .grid-auto > .post-card-feature,
   .site-main .tags-cloud > .tag-pill {
     grid-column: span 6;
+  }
+
+  .site-main .grid-3 > .post-card-fullscreen,
+  .site-main .grid-auto > .post-card-fullscreen {
+    grid-column: 1 / -1;
   }
 
   .site-main .article-layout {
@@ -1700,7 +1758,11 @@ body.admin-only .btn-primary {
   }
 
   .site-main .grid-3 > .post-card-cover,
+  .site-main .grid-3 > .post-card-feature,
+  .site-main .grid-3 > .post-card-fullscreen,
   .site-main .grid-auto > .post-card-cover,
+  .site-main .grid-auto > .post-card-feature,
+  .site-main .grid-auto > .post-card-fullscreen,
   .site-main .tags-cloud > .tag-pill {
     grid-column: 1;
   }
@@ -1757,6 +1819,7 @@ body.admin-only .btn-primary {
 
 @media (prefers-reduced-motion: reduce) {
   .site-main .post-card-cover,
+  .site-main .post-card-feature,
   .site-main .pn-card,
   .site-main .moment-card,
   .site-main .stat,

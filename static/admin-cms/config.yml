@@ -41,6 +41,7 @@ collections:
             default: fullscreen
             options:
               - { label: "全屏杂志封面（占满整页）", value: fullscreen }
+              - { label: "精选横幅（2:1 标题封面）", value: feature }
               - { label: "网格", value: grid }
               - { label: "横向长条", value: horizontal }
             hint: "保存后自动部署，主站首页卡片样式立即更新"
@@ -149,6 +150,18 @@ collections:
         default: false
         required: false
         hint: "勾选 = 归档（从首页/列表隐藏，保留原链接并显示归档标记）"
+      - label: 单篇卡片样式
+        name: card_style
+        widget: select
+        required: false
+        default: inherit
+        options:
+          - { label: 跟随全局卡片样式, value: inherit }
+          - { label: 网格卡片, value: grid }
+          - { label: 横向长条卡片, value: horizontal }
+          - { label: 全屏杂志封面, value: fullscreen }
+          - { label: 精选横幅（2:1 标题封面）, value: feature }
+        hint: "只控制当前文章在首页/列表中的卡片外观；选择「跟随全局」时使用后台的全站卡片布局"
       - label: 标签
         name: tags
         widget: list
@@ -171,7 +184,7 @@ collections:
         widget: fontPreviewSelect
         required: false
         default: display
-        hint: "下拉选择后下方预览窗格即时显示字体渲染效果；仅「全屏杂志封面入口」卡片样式生效"
+        hint: "下拉选择后下方预览窗格即时显示字体渲染效果；适用于「全屏杂志封面」和「精选横幅」卡片"
       - label: 自定义标题字体文件
         name: entry_title_font_file
         widget: file
@@ -186,7 +199,7 @@ collections:
         name: entry_title_color
         widget: color
         required: false
-        hint: "留空使用默认白色"
+        hint: "留空使用默认白色；适用于全屏和精选横幅标题"
       - label: 全屏标题不透明度
         name: entry_title_opacity
         widget: number
@@ -239,7 +252,7 @@ collections:
           - { label: 中下, value: center-bottom }
           - { label: 正中, value: center-center }
           - { label: 右下, value: right-bottom }
-        hint: "仅「全屏杂志封面入口」卡片样式生效"
+        hint: "适用于「全屏杂志封面」和「精选横幅」卡片"
       - label: 卡片封面（首页/列表卡片）
         name: cover
         widget: object
@@ -251,13 +264,13 @@ collections:
             widget: image
             choose_url: true
             required: false
-          - label: 封面视频（全屏样式生效）
+          - label: 封面视频（全屏/精选横幅生效）
             name: video
             widget: file
             choose_url: true
             required: false
             accept: [".mp4", ".webm", ".mov"]
-            hint: "设置后全屏卡片封面播放视频（静音循环自动播放，无控件，底部细进度条）；视频优先于封面图片"
+            hint: "设置后全屏卡片会自动播放；精选横幅默认显示首帧，鼠标悬停或聚焦时播放；视频优先于封面图片"
       - label: 正文
         name: body
         widget: markdown

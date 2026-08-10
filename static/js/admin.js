@@ -580,7 +580,7 @@
       .then(function (file) {
         cardsSha = file.sha;
         var m = atob(String(file.content).replace(/\s/g, '')).match(/^style\s*[:=]\s*["']?([\w]+)["']?/m);
-        if (m && ['grid', 'horizontal', 'fullscreen'].includes(m[1])) select.value = m[1];
+        if (m && ['grid', 'horizontal', 'fullscreen', 'feature'].includes(m[1])) select.value = m[1];
         syncCardPreviewSelect();
         renderCardPreview();
       renderFontPreview();
@@ -600,6 +600,7 @@
     var glyphs = ['构', 'R', 'C'];
     var gridEl = document.getElementById('cpGridPreview');
     var listEl = document.getElementById('cpHListPreview');
+    var featureEl = document.getElementById('cpFeaturePreview');
     if (gridEl) {
       gridEl.innerHTML = posts.map(function (p, i) {
         return '<div class="cp-card"><div class="cp-thumb">' + (glyphs[i] || '▦') + '</div>' +
@@ -613,6 +614,14 @@
           '<div class="cp-body"><div class="cp-title">' + escapeHtml(p.title) + '</div>' +
           '<div class="cp-date">' + escapeHtml(String(p.date || p.created_at || '').slice(0, 10)) + ' · 5 min read</div></div></div>';
       }).join('');
+    }
+    if (featureEl) {
+      var first = posts[0] || { title: '构建现代化个人博客', date: '2026-08-06' };
+      featureEl.innerHTML = '<div class="cp-feature-inner">' +
+        '<div class="cp-fs-date">' + escapeHtml(String(first.date || first.created_at || '').slice(0, 10)) + ' · 5 min</div>' +
+        '<div class="cp-fs-title">' + escapeHtml(first.title) + '</div>' +
+        '<div class="cp-fs-quote">2:1 横向标题封面，用于突出单篇文章。</div>' +
+      '</div>';
     }
   }
 
@@ -677,7 +686,7 @@
   if (cardSaveBtn) cardSaveBtn.addEventListener('click', function () {
     var select = document.getElementById('cfgCardStyle');
     var style = select ? select.value : 'grid';
-    var content = '# 卡片样式 (管理面板「卡片样式」可编辑)\n# grid = 网格 | horizontal = 横向长条 | fullscreen = 全屏杂志封面\nstyle: "' + style + '"\n';
+    var content = '# 卡片样式 (管理面板「卡片样式」可编辑)\n# grid = 网格 | horizontal = 横向长条 | fullscreen = 全屏杂志封面 | feature = 2:1 精选横幅\nstyle: "' + style + '"\n';
     var btn = cardSaveBtn;
     btn.disabled = true;
     btn.textContent = '保存中…';
@@ -691,7 +700,8 @@
         });
       })
       .then(function () {
-        showToast('卡片样式已保存：' + (style === 'horizontal' ? '横向长条' : '当前网格') + '，站点约 1 分钟重建生效', 'success');
+        var styleLabel = style === 'horizontal' ? '横向长条' : style === 'fullscreen' ? '全屏杂志封面' : style === 'feature' ? '精选横幅' : '当前网格';
+        showToast('卡片样式已保存：' + styleLabel + '，站点约 1 分钟重建生效', 'success');
         var hint = document.getElementById('cfgCardHint');
         if (hint) hint.textContent = '已提交，Cloudflare 重建中…';
       })

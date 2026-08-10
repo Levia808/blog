@@ -6,7 +6,7 @@
     <h1 class="list-title">{{ .Title }}</h1>
     <p class="mono list-count">{{ len $pages }} items</p>
   </header>
-  <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else if eq site.Data.cards.style "fullscreen" }}card-list card-list--fullscreen{{ else }}grid-3{{ end }}">
+  <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else if eq site.Data.cards.style "fullscreen" }}card-list card-list--fullscreen{{ else if eq site.Data.cards.style "feature" }}card-list card-list--feature{{ else }}grid-3{{ end }}">
     {{- range $pages }}
     {{ partial "post-card.html" . }}
     {{- end }}

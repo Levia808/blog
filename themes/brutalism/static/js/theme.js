@@ -193,11 +193,10 @@
   /* Fullscreen card paging + title entrance effects */
   function initFullscreenCards() {
     var list = document.querySelector('.card-list--fullscreen');
-    if (!list) return;
-
-    var cards = Array.prototype.slice.call(list.querySelectorAll('.post-card-fullscreen'));
-    if (!cards.length) return;
-    document.documentElement.classList.add('fullscreen-snap-enabled');
+    var cards = list ? Array.prototype.slice.call(list.querySelectorAll('.post-card-fullscreen')) : [];
+    var effectCards = Array.prototype.slice.call(document.querySelectorAll('.post-card-fullscreen, .post-card-feature'));
+    if (!cards.length && !effectCards.length) return;
+    if (list && cards.length) document.documentElement.classList.add('fullscreen-snap-enabled');
 
     function wrapTitleUnits(title) {
       if (!title || title.dataset.unitsReady === '1') return;
@@ -231,7 +230,7 @@
       title.dataset.unitsReady = '1';
     }
 
-    cards.forEach(function (card) {
+    effectCards.forEach(function (card) {
       var title = card.querySelector('.pcf-title[data-title-effect]');
       if (title) wrapTitleUnits(title);
     });
@@ -263,9 +262,9 @@
     }
 
     function setActive(index) {
-      if (index < 0 || index >= cards.length) return;
+      if (index < 0 || index >= effectCards.length) return;
       activeIndex = index;
-      cards.forEach(function (card, cardIndex) {
+      effectCards.forEach(function (card, cardIndex) {
         var active = cardIndex === index;
         card.classList.toggle('is-card-active', active);
         if (!active) {
@@ -273,7 +272,7 @@
           if (inactiveTitle) inactiveTitle.dataset.shufflePlayed = '';
         }
       });
-      var title = cards[index].querySelector('.pcf-title[data-title-effect="shuffle"]');
+      var title = effectCards[index].querySelector('.pcf-title[data-title-effect="shuffle"]');
       runShuffle(title);
     }
 
@@ -286,12 +285,14 @@
           if (entry.isIntersecting && (!best || entry.intersectionRatio > best.intersectionRatio)) best = entry;
         });
         if (best) {
-          var index = cards.indexOf(best.target);
+          var index = effectCards.indexOf(best.target);
           if (index >= 0) setActive(index);
         }
       }, { threshold: [0.25, 0.55, 0.75], rootMargin: '-8% 0px -8% 0px' });
-      cards.forEach(function (card) { observer.observe(card); });
+      effectCards.forEach(function (card) { observer.observe(card); });
     }
+
+    if (!list || !cards.length) return;
 
     function inCardViewport() {
       var rect = list.getBoundingClientRect();
@@ -772,7 +773,7 @@
       if (el.dataset.original != null) return;
       el.dataset.original = el.innerHTML;
       /* 判定区域扩大: 标题绑定到整个卡片, 导航/归档链接绑定到父容器 */
-      var zone = el.closest('.post-card-cover, .post-card-fullscreen, .blog-section__head, .pagination, .article-toc');
+      var zone = el.closest('.post-card-cover, .post-card-fullscreen, .post-card-feature, .blog-section__head, .pagination, .article-toc');
       if (!zone || zone === el) zone = el.parentElement || el;
       function zoneEnter() {
         if (el.dataset.iv) { clearInterval(Number(el.dataset.iv)); el.dataset.iv = ''; }
@@ -832,7 +833,7 @@
 
   /* ── 视频全屏封面: 自动播放判定 + 细进度条 ── */
   function initPcfVideo() {
-    var videos = document.querySelectorAll('.post-card-fullscreen.pcf-video-card video.pcf-video');
+    var videos = document.querySelectorAll('.post-card-fullscreen.pcf-video-card video.pcf-video, .post-card-feature.pcf-video-card video.pcf-video');
     if (!videos.length) return;
     videos.forEach(function (video, i) {
       var bar = video.parentElement.querySelector('.pcf-video-bar-fill');
@@ -851,6 +852,14 @@
       var tryPause = function () {
         if (!video.paused) video.pause();
       };
+      var featureCard = video.closest('.post-card-feature');
+      if (featureCard) {
+        featureCard.addEventListener('mouseenter', tryPlay);
+        featureCard.addEventListener('mouseleave', tryPause);
+        featureCard.addEventListener('focusin', tryPlay);
+        featureCard.addEventListener('focusout', tryPause);
+        return;
+      }
       if (i === 0) {
         tryPlay();
       } else if ('IntersectionObserver' in window) {

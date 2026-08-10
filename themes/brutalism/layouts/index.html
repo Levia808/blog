@@ -56,7 +56,7 @@
       <a class="section-more" href="{{ "archives/" | relLangURL }}">全部 →</a>
     </div>
 
-    <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else if eq site.Data.cards.style "fullscreen" }}card-list card-list--fullscreen{{ else }}grid-3{{ end }}">
+    <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else if eq site.Data.cards.style "fullscreen" }}card-list card-list--fullscreen{{ else if eq site.Data.cards.style "feature" }}card-list card-list--feature{{ else }}grid-3{{ end }}">
       {{- range $latest }}
       {{ partial "post-card.html" . }}
       {{- else }}
