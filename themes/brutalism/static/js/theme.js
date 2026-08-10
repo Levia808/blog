@@ -1021,6 +1021,9 @@
     var hero = document.getElementById('heroWrap');
     if (!hero) return;
     var reduced = reducedMotion;
+    /* 强制回到顶部 (刷新后不保留滚动位置, 展示初始均分导航) */
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    if (window.scrollY > 0) window.scrollTo(0, 0);
     var title = document.getElementById('heroTitle');
     var wrap = document.getElementById('heroWrap');
     var nav = document.getElementById('heroNav');
