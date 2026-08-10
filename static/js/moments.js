@@ -95,13 +95,17 @@
   }
 
   function fmtTime(iso) {
+    if (!iso) return '';
     var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
     var diff = (Date.now() - d.getTime()) / 1000;
+    /* 半小时内: 具体分钟前 */
     if (diff < 60) return '刚刚';
-    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
-    if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
-    if (diff < 86400 * 7) return Math.floor(diff / 86400) + ' 天前';
-    return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    if (diff < 1800) return Math.floor(diff / 60) + ' 分钟前';
+    /* 半小时后: 具体 yy/mm/dd hh:mm */
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return pad(d.getFullYear() % 100) + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
 
   function avatarHtml(profile, cls, fallbackCls) {
@@ -118,9 +122,10 @@
     return '<div class="' + cls + '">' + media.map(function (url) {
       var ext = String(url).split('.').pop().toLowerCase();
       if (['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext)) {
-        return '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+        /* data-src 懒加载: 进入视口才加载视频数据, 省带宽/内存 */
+        return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
-      return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy">';
+      return '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
     }).join('') + '</div>';
   }
 
@@ -247,19 +252,11 @@
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
       markLongImages();
+      lazyLoadMedia();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
-      if (window.anime && moments.length) {
-        anime({
-          targets: listEl.querySelectorAll('.moment-card'),
-          opacity: [0, 1],
-          translateY: [14, 0],
-          delay: anime.stagger(45),
-          duration: 380,
-          easing: 'easeOutCubic'
-        });
-      }
+      animateCardsIn(listEl.querySelectorAll('.moment-card'));
       hintEl.textContent = moments.length ? '共 ' + moments.length + ' 条动态' : '';
       hintEl.hidden = Boolean(moments.length);
     } catch (error) {
@@ -275,12 +272,19 @@
     }
   }
 
+  function releaseSelectedMedia() {
+    selectedMedia.forEach(function (item) {
+      if (item.file && item.url) URL.revokeObjectURL(item.url);
+    });
+    selectedMedia = [];
+  }
+
   function showComposer(show) {
     composer.hidden = !show;
     if (show) loginWall.hidden = true;
     if (!show) {
       mcInput.value = '';
-      selectedMedia = [];
+      releaseSelectedMedia();
       mcMediaList.innerHTML = '';
       mcError.hidden = true;
     }
@@ -386,7 +390,8 @@
   mcMediaList.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-remove-media]');
     if (btn) {
-      selectedMedia.splice(Number(btn.dataset.removeMedia), 1);
+      var removed = selectedMedia.splice(Number(btn.dataset.removeMedia), 1)[0];
+      if (removed && removed.file && removed.url) URL.revokeObjectURL(removed.url);
       renderSelectedMedia();
     }
   });
@@ -664,6 +669,77 @@
   document.querySelector('[data-moment-login]').addEventListener('click', function () {
     if (window.BlogAuth) window.BlogAuth.open('login');
   });
+
+  /* ── 卡片依次上浮动效 (平滑, 刷新/重载均生效) ── */
+  function animateCardsIn(cards) {
+    if (!cards || !cards.length) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var list = Array.prototype.slice.call(cards);
+    var animated = list.slice(0, 12);
+    var rest = list.slice(12);
+    /* 预置隐藏 (同帧内), 防动画启动前闪烁 */
+    list.forEach(function (c) {
+      c.style.opacity = '0';
+      c.style.transform = 'translateY(22px)';
+    });
+    requestAnimationFrame(function () {
+      if (window.anime) {
+        anime({
+          targets: animated,
+          opacity: [0, 1],
+          translateY: [22, 0],
+          delay: anime.stagger(50),
+          duration: 460,
+          easing: 'easeOutExpo'
+        });
+      } else {
+        animated.forEach(function (c, i) {
+          c.classList.add('moment-card-enter');
+          c.style.animationDelay = (i * 50) + 'ms';
+        });
+      }
+      rest.forEach(function (c) {
+        c.style.opacity = '1';
+        c.style.transform = 'none';
+      });
+    });
+  }
+
+  /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */
+  var mediaObserver = null;
+  function lazyLoadMedia() {
+    if (mediaObserver) { mediaObserver.disconnect(); mediaObserver = null; }
+    var videos = listEl.querySelectorAll('video[data-src]');
+    if (!videos.length) return;
+    /* play 兜底: 未进入视口被点击也立即加载 */
+    videos.forEach(function (v) {
+      v.addEventListener('play', function () {
+        if (v.dataset.src && !v.src) {
+          v.src = v.dataset.src;
+          delete v.dataset.src;
+        }
+      }, { once: true });
+    });
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(function (v) {
+        if (v.dataset.src) { v.src = v.dataset.src; delete v.dataset.src; }
+      });
+      return;
+    }
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var v = en.target;
+        if (v.dataset.src && !v.src) {
+          v.src = v.dataset.src;
+          delete v.dataset.src;
+        }
+        obs.unobserve(v);
+      });
+    }, { rootMargin: '200px 0px' });
+    mediaObserver = obs;
+    videos.forEach(function (v) { obs.observe(v); });
+  }
 
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标 ── */
   function markLongImages() {

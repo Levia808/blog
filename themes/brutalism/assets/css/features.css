@@ -981,6 +981,15 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 @keyframes momentsSpin { to { transform: rotate(360deg); } }
 
+/* ── 卡片依次上浮动效 (anime.js 缺失时的 CSS 回退) ── */
+@keyframes momentCardEnter {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+.moment-card-enter {
+  animation: momentCardEnter .46s cubic-bezier(.22, .61, .36, 1) both;
+}
+
 /* ── 点赞粒子 (Anime.js 迸发) ── */
 .like-particle {
   position: fixed;
