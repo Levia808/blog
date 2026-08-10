@@ -822,12 +822,13 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .moment-content { font-size: 14px; line-height: 1.8; color: var(--body-text); }
 .moment-content p { margin-bottom: 8px; }
 .moment-content p:last-child { margin-bottom: 0; }
-.moment-media { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.moment-media { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: start; }
 .moment-media.single { grid-template-columns: 1fr; }
 .moment-media img, .moment-media video {
   width: 100%;
-  max-height: 360px;
-  object-fit: cover;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
   border: 1px solid var(--border);
   border-radius: 4px;
   display: block;
