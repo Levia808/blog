@@ -3,176 +3,224 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Design · 开屏加载重构（瑞士风）</title>
+<title>Design · 开屏加载重构 V2（瑞士风 · 动画组）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #E4DED4;        /* NORDIC LINEN 米白 */
-    --ink: #101010;       /* 深黑 */
-    --accent: #6B8B6B;    /* 苔绿 */
+    --bg: #E4DED4;
+    --ink: #101010;
+    --accent: #6B8B6B;
     --grey: #8a887e;
     --ease: cubic-bezier(.22,.61,.36,1);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); font-family: "JetBrains Mono", monospace; color: var(--ink); overflow: hidden; }
+  .loader { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; padding: 3.5vh 3vw; }
+  .loader.done .layer-head { transform: translateY(-110%); }
+  .loader.done .layer-core { transform: translateY(-100%); }
+  .loader.done .layer-foot { transform: translateY(-110%); }
+  .layer-head, .layer-core, .layer-foot { transition: transform .9s var(--ease); }
+  .layer-core { transition-delay: .08s; }
+  .layer-foot { transition-delay: .16s; }
 
-  /* ═══════ 开屏加载（瑞士国际主义）═══════ */
-  .loader {
-    position: fixed; inset: 0; z-index: 100;
-    background: var(--bg);
-    display: flex; flex-direction: column;
-    padding: 3.5vh 3vw;
-    transition: transform .95s var(--ease), visibility .95s;
-  }
-  .loader.done { transform: translateY(-100%); visibility: hidden; }
-
-  /* 顶部: 品牌行 + 编号 */
+  /* ── 顶部 ── */
   .loader-head {
     display: flex; justify-content: space-between; align-items: baseline;
     border-bottom: 1px solid var(--ink);
     padding-bottom: 14px;
+    position: relative;
+    opacity: 0;
+    animation: headIn .7s var(--ease) .1s forwards;
   }
+  @keyframes headIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+  .loader-head::after {
+    content: ""; position: absolute; left: 0; bottom: -1px; height: 1px; width: 0%;
+    background: var(--accent);
+    animation: accentLine 2.4s var(--ease) .3s forwards;
+  }
+  @keyframes accentLine { 0% { width: 0; } 100% { width: 100%; } }
   .l-brand { font-family: "Anton", sans-serif; font-size: 17px; letter-spacing: .06em; }
   .l-brand .dot { color: var(--accent); }
-  .l-index { font-size: 10px; letter-spacing: .3em; color: var(--grey); }
+  .l-index { font-size: 10px; letter-spacing: .3em; color: var(--grey); font-variant-numeric: tabular-nums; }
   .l-index b { color: var(--ink); font-weight: 500; }
 
-  /* 中央: 巨大描边字母 (进度驱动填充) */
-  .loader-core {
-    flex: 1;
-    display: flex; flex-direction: column;
-    justify-content: center;
-    position: relative;
-  }
-  .l-word {
-    font-family: "Anton", sans-serif;
-    font-size: clamp(120px, 24vw, 420px);
-    line-height: .82;
-    letter-spacing: -.02em;
-    color: transparent;
-    -webkit-text-stroke: 2px var(--ink);
-    position: relative;
-    user-select: none;
-  }
-  .l-word .fill {
-    position: absolute; inset: 0;
-    color: var(--ink);
-    -webkit-text-stroke: 0;
-    width: 0%;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .l-grid-line {
-    position: absolute; left: 0; right: 0;
-    height: 1px; background: rgba(16,16,16,.18);
-  }
-  .l-grid-line.t1 { top: 30%; }
-  .l-grid-line.t2 { bottom: 30%; }
+  /* ── 中央 ── */
+  .loader-core { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; }
+  .l-grid-line { position: absolute; left: 0; right: 0; height: 1px; background: rgba(16,16,16,.2); transform: scaleX(0); }
+  .l-grid-line.t1 { top: 28%; transform-origin: left; animation: growX 1s var(--ease) .45s forwards; animation-name: growX, driftA; animation-duration: 1s, 4s; animation-delay: .45s, 2s; animation-fill-mode: forwards, none; }
+  .l-grid-line.t2 { bottom: 28%; transform-origin: right; animation: growX 1s var(--ease) .55s forwards; animation-name: growX, driftB; animation-duration: 1s, 4.5s; animation-delay: .55s, 2s; animation-fill-mode: forwards, none; }
+  @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes driftA { 0%,100% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+  @keyframes driftB { 0%,100% { transform: translateX(5px); } 50% { transform: translateX(-5px); } }
 
-  /* 底部: 进度条 + 百分比 + 状态 */
-  .loader-foot {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    gap: 24px;
-  }
-  .l-progress {
-    flex: 1;
-    position: relative; height: 34px;
-    border-top: 1px solid var(--ink);
-    border-bottom: 1px solid var(--ink);
-    display: flex; align-items: center;
-  }
-  .l-progress i {
-    position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
-    background: var(--ink);
-    transition: width .2s linear;
-  }
-  .l-progress i::after {
-    content: ""; position: absolute; right: -2px; top: 0; bottom: 0; width: 4px;
-    background: var(--accent);
-  }
-  .l-pct {
-    font-size: clamp(80px, 14vw, 220px);
-    font-weight: 500; line-height: .9; letter-spacing: -.04em;
-    font-variant-numeric: tabular-nums;
-  }
+  .l-word { font-family: "Anton", sans-serif; font-size: clamp(120px, 24vw, 420px); line-height: .82; letter-spacing: -.02em; color: transparent; -webkit-text-stroke: 2px var(--ink); position: relative; user-select: none; animation: breathe 3.2s ease-in-out 2.4s infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.012); } }
+  .l-word .ch { position: relative; display: inline-block; opacity: 0; transform: translateY(70%) rotate(8deg); }
+  .l-word .ch.in { opacity: 1; transform: none; transition: transform .65s var(--ease), opacity .45s; }
+  .l-word .fill { position: absolute; inset: 0; color: var(--ink); -webkit-text-stroke: 0; width: 0%; overflow: hidden; white-space: nowrap; }
+  .l-word .fill .ch { opacity: 1; transform: none; }
+  .l-word .stroke-layer { display: inline-block; white-space: nowrap; }
+
+  .l-axis { position: absolute; left: 3vw; bottom: 18%; font-size: 10px; letter-spacing: .25em; color: var(--grey); writing-mode: vertical-rl; opacity: 0; animation: axisIn .8s var(--ease) .9s forwards; }
+  @keyframes axisIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  .l-axis i { display: block; width: 1px; height: 60px; background: var(--ink); margin-bottom: 10px; transform: scaleY(0); transform-origin: bottom; animation: axisGrow .8s var(--ease) 1s forwards; }
+  @keyframes axisGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .l-axis b { position: absolute; top: 62px; left: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: axisDot 3s var(--ease) 1.6s infinite; }
+  @keyframes axisDot { 0% { top: 62px; } 50% { top: 130px; } 100% { top: 62px; } }
+
+  /* ── 底部 ── */
+  .loader-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; opacity: 0; animation: footIn .7s var(--ease) .8s forwards; }
+  @keyframes footIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  .l-progress { flex: 1; position: relative; height: 34px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); display: flex; align-items: center; overflow: hidden; }
+  .l-progress::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(16,16,16,.18); }
+  .l-progress i { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--ink); transition: width .2s linear; }
+  .l-progress i::after { content: ""; position: absolute; right: -2px; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+  .l-progress .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .l-progress .ticks span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(16,16,16,.12); }
+  .l-pct { font-size: clamp(80px, 14vw, 220px); font-weight: 500; line-height: .9; letter-spacing: -.04em; font-variant-numeric: tabular-nums; position: relative; }
+  .l-pct .num { display: inline-block; }
+  .l-pct .num.roll { animation: numRoll .25s var(--ease); }
+  @keyframes numRoll { 0% { transform: translateY(8px); opacity: .3; } 100% { transform: none; opacity: 1; } }
   .l-pct em { font-style: normal; color: var(--accent); font-size: .45em; }
-  .l-status {
-    text-align: right; font-size: 11px; letter-spacing: .25em;
-    color: var(--grey); text-transform: uppercase;
-  }
-  .l-status .sw { display: block; margin-top: 8px; color: var(--ink); letter-spacing: .05em; }
+  .l-status { text-align: right; font-size: 11px; letter-spacing: .25em; color: var(--grey); text-transform: uppercase; }
+  .l-status .sw { display: block; margin-top: 8px; color: var(--ink); letter-spacing: .05em; min-height: 1.2em; }
+  .l-status .sw .ch { display: inline-block; opacity: 0; transform: translateY(6px); }
+  .l-status .sw .ch.in { opacity: 1; transform: none; transition: opacity .2s, transform .2s; }
 
-  /* 角落编号轴 (瑞士坐标感) */
-  .l-axis {
-    position: absolute; left: 3vw; bottom: 18%;
-    font-size: 10px; letter-spacing: .25em; color: var(--grey);
-    writing-mode: vertical-rl;
-  }
-  .l-axis i { display: block; width: 1px; height: 60px; background: var(--ink); margin-bottom: 10px; }
+  /* 完成态 */
+  .loader.finishing .l-word { animation: solidPop .5s var(--ease) forwards; }
+  .loader.finishing .l-word .fill { transition: width .45s var(--ease); }
+  .loader.finishing .l-progress i { background: var(--accent); }
+  .loader.finishing .l-progress { animation: barPulse .8s var(--ease) 2; }
+  @keyframes barPulse { 0%,100% { box-shadow: none; } 50% { box-shadow: inset 0 0 0 1px var(--accent); } }
+  .loader.finishing .l-pct .num { animation: pctDone .6s var(--ease); }
+  @keyframes pctDone { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
 
   @media (prefers-reduced-motion: reduce) {
-    .loader-count, .l-progress i { transition: none; }
+    .loader * { animation: none !important; transition: none !important; }
+    .l-word { color: var(--ink); -webkit-text-stroke: 0; }
+    .l-word .ch { opacity: 1; transform: none; }
   }
 </style>
 </head>
 <body>
 
-<!-- ═══════ 开屏加载（瑞士风重构）═══════ -->
 <div class="loader" id="loader">
-  <!-- 顶部: 品牌 + 编号 -->
-  <div class="loader-head">
-    <span class="l-brand">LEVIA<span class="dot">'s</span></span>
-    <span class="l-index"><b>LOAD</b> — 0001</span>
+  <div class="layer-head">
+    <div class="loader-head">
+      <span class="l-brand">LEVIA<span class="dot">'s</span></span>
+      <span class="l-index"><b id="idxNum">0001</b> — INIT</span>
+    </div>
   </div>
 
-  <!-- 中央: 巨大描边 LEVIA + 网格线 -->
-  <div class="loader-core">
-    <span class="l-grid-line t1"></span>
-    <span class="l-grid-line t2"></span>
-    <div class="l-word">LEVIA<span class="fill" id="wordFill">LEVIA</span></div>
-    <span class="l-axis"><i></i>SCROLL SYSTEM</span>
+  <div class="layer-core">
+    <div class="loader-core">
+      <span class="l-grid-line t1"></span>
+      <span class="l-grid-line t2"></span>
+      <div class="l-word">
+        <span class="stroke-layer" id="wordStroke">LEVIA</span>
+        <span class="fill" id="wordFill">LEVIA</span>
+      </div>
+      <span class="l-axis"><i></i><b></b>SCROLL SYSTEM</span>
+    </div>
   </div>
 
-  <!-- 底部: 进度 + 百分比 + 状态 -->
-  <div class="loader-foot">
-    <div class="l-progress"><i id="bar"></i></div>
-    <div class="l-pct"><span id="num">0</span><em>%</em></div>
-    <div class="l-status">INITIALIZING<span class="sw" id="status">加载中…</span></div>
+  <div class="layer-foot">
+    <div class="loader-foot">
+      <div class="l-progress"><i id="bar"></i><div class="ticks"><span style="left:25%"></span><span style="left:50%"></span><span style="left:75%"></span></div></div>
+      <div class="l-pct"><span class="num" id="num">0</span><em>%</em></div>
+      <div class="l-status">PROGRESS<span class="sw" id="status">INIT</span></div>
+    </div>
   </div>
 </div>
 
-<!-- 完成后的占位内容 -->
 <div style="height:100vh; display:flex; align-items:center; justify-content:center; font-family:Anton; font-size:60px;">WELCOME</div>
 
 <script>
-  var num = 0;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var statuses = ['初始化系统', '读取文章', '加载字体', '完成'];
-  var si = 0;
+  var loader = document.getElementById('loader');
+
+  /* 字符入场 (stagger) */
+  var strokeEl = document.getElementById('wordStroke');
+  var fill = document.getElementById('wordFill');
+  function splitChars(el) {
+    var text = el.textContent;
+    el.textContent = '';
+    for (var i = 0; i < text.length; i++) {
+      var s = document.createElement('span');
+      s.className = 'ch';
+      s.textContent = text[i];
+      el.appendChild(s);
+    }
+  }
+  splitChars(strokeEl);      /* 描边层: 字符逐个进入 */
+  splitChars(fill);          /* 填充层: 进度揭示 (字符恒显) */
+  var chs = strokeEl.querySelectorAll('.ch');
+  chs.forEach(function (c, i) {
+    setTimeout(function () { c.classList.add('in'); }, 180 + i * 100);
+  });
+
+  /* 状态打字机 */
+  var statuses = ['INITIALIZING', 'READING POSTS', 'LOADING FONTS', 'READY'];
+  var statusEl = document.getElementById('status');
+  function typeStatus(text) {
+    statusEl.textContent = '';
+    for (var i = 0; i < text.length; i++) {
+      (function (idx) {
+        setTimeout(function () {
+          var s = document.createElement('span');
+          s.className = 'ch';
+          s.textContent = text[idx];
+          statusEl.appendChild(s);
+          setTimeout(function () { s.classList.add('in'); }, 10);
+        }, idx * 36);
+      })(i);
+    }
+  }
+
+  /* 进度驱动 */
+  var num = 0, si = 0;
+  var idxNum = document.getElementById('idxNum');
+  var idx = 1;
+  var pctEl = document.getElementById('num');
+  typeStatus(statuses[0]);
   var iv = setInterval(function () {
-    num += Math.random() * 20 + 7;
+    num += Math.random() * 7 + 3;
     if (num >= 100) {
       num = 100;
       clearInterval(iv);
-      document.getElementById('num').textContent = '100';
+      pctEl.textContent = '100';
       document.getElementById('bar').style.width = '100%';
-      document.getElementById('wordFill').style.width = '100%';
-      document.getElementById('status').textContent = '完成';
-      setTimeout(function () {
-        document.getElementById('loader').classList.add('done');
-      }, 450);
+      fill.style.width = '100%';
+      idxNum.textContent = 'DONE';
+      loader.classList.add('finishing');
+      setTimeout(function () { loader.classList.add('done'); }, 900);
       return;
     }
-    document.getElementById('num').textContent = Math.floor(num);
-    document.getElementById('bar').style.width = Math.floor(num) + '%';
-    document.getElementById('wordFill').style.width = Math.floor(num) + '%';
-    if (num > 70 && si < 3) si = 3;
-    else if (num > 40 && si < 2) si = 2;
-    else if (num > 15 && si < 1) si = 1;
-    document.getElementById('status').textContent = statuses[si];
-  }, 100);
+    var n = Math.floor(num);
+    pctEl.textContent = n;
+    document.getElementById('bar').style.width = n + '%';
+    fill.style.width = n + '%';
+    /* 数字滚动 */
+    pctEl.classList.remove('roll');
+    void pctEl.offsetWidth;
+    pctEl.classList.add('roll');
+    /* 编号递增 */
+    if (n > idx * 14) { idx++; idxNum.textContent = String(idx).padStart(4, '0'); }
+    /* 状态切换 */
+    var ns = n > 70 ? 3 : n > 40 ? 2 : n > 12 ? 1 : 0;
+    if (ns !== si) { si = ns; typeStatus(statuses[si]); }
+  }, 150);
+
+  if (reduced) {
+    clearInterval(iv);
+    pctEl.textContent = '100';
+    document.getElementById('bar').style.width = '100%';
+    fill.style.width = '100%';
+    setTimeout(function () { loader.classList.add('done'); }, 200);
+  }
 </script>
 </body>
 </html>
