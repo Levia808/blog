@@ -1856,7 +1856,8 @@ button,
 .hero-nav { position: fixed; top: 0; left: 0; right: 0; height: 72px; z-index: 100; pointer-events: none; transition: background .6s cubic-bezier(.22,.61,.36,1), border-color .6s, backdrop-filter .6s; border-bottom: 1px solid transparent; }
 .hero-nav.solid { background: rgba(246,245,241,.72); backdrop-filter: blur(20px) saturate(1.2); -webkit-backdrop-filter: blur(20px) saturate(1.2); border-bottom-color: rgba(26,26,24,.1); }
 .hn-link {
-  position: fixed; top: 24px; z-index: 101;
+  position: fixed; top: 36px; z-index: 101;
+  transform: translateY(-50%);
   font-size: 15px; font-weight: 500; color: #55534b;
   text-decoration: none; padding: 6px 0; pointer-events: auto; background: none; border: none;
   font-family: inherit; cursor: pointer;
@@ -1869,9 +1870,9 @@ button,
 .hn-link.hn-icon::after { display: none; }
 .hn-icon { width: 20px; height: 20px; justify-content: center; padding: 0; }
 .hn-cta { color: #fff; background: var(--accent); border-radius: 99px; padding: 9px 22px; }
-.hn-cta:hover { background: #567a56; color: #fff; }
+.hn-cta:hover { background: #567a56; color: #fff; filter: brightness(1.05); }
 .hn-cta::after { display: none; }
-.hn-user { position: fixed; top: 18px; z-index: 101; }
+.hn-user { position: fixed; top: 36px; transform: translateY(-50%); z-index: 101; }
 .hn-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 
 /* 标题 */

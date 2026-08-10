@@ -1082,7 +1082,7 @@
       var tInit = { x: tX, y: tY };
       var tSize = 20;
       var tScale = tSize / titleFont;
-      var tTarget = { x: pad, y: 25 };
+      var tTarget = { x: pad, y: 26 };
       var items = [];
       var n = links.length || 1;
       links.forEach(function (el, i) {
