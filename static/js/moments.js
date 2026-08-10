@@ -546,10 +546,12 @@
   /* ── 动态图片放大: 独立 GLightbox 实例 (selector: null, 纯 JS API 驱动)
      官方文档模式: setElements([{href,type}]) + openAt(index)
      该动态全部图片 (含收起的 +N) 构成画廊 → 左右键浏览完整, 与文章图实例完全隔离
-     三重兜底: CDN 按需加载 / badge 点击兼容 / GLightbox 不可用时展开预览 */
+     关键: 原生 glightbox 把 click 监听直接绑定在 img 元素上 (目标阶段先执行),
+     必须在 document 捕获阶段拦截 (stopPropagation) 才能阻止原生 9 张画廊抢先打开 */
   var momentsLightbox = null;
   var momentMediaCache = {};
   var glightboxLibPromise = null;
+  var loaderTimer = null;
 
   function isVideoUrl(url) {
     var path = String(url).split('?')[0].split('#')[0];
@@ -570,6 +572,16 @@
     return glightboxLibPromise;
   }
 
+  function hideMomentsLoader() {
+    var loader = document.querySelector('.gloader');
+    if (loader) loader.style.display = 'none';
+  }
+
+  function scheduleLoaderTimeout() {
+    if (loaderTimer) clearTimeout(loaderTimer);
+    loaderTimer = setTimeout(hideMomentsLoader, 12000);
+  }
+
   function getMomentsLightbox() {
     if (window.GLightbox && !momentsLightbox) {
       momentsLightbox = window.GLightbox({
@@ -581,16 +593,23 @@
         draggable: true,
         preload: true
       });
-      /* 图片加载失败兜底: glightbox 无 onerror 处理, loader 会永远显示
-         (加载动画只在图片真正加载中时出现) */
+      /* 加载动画条件控制: 仅在放大查看且图片未加载完成时显示, 否则强制关闭 */
+      momentsLightbox.on('slide_before_load', function () {
+        scheduleLoaderTimeout();
+      });
+      momentsLightbox.on('slide_after_load', function () {
+        if (loaderTimer) clearTimeout(loaderTimer);
+        hideMomentsLoader();
+      });
+      /* 图片加载失败兜底: glightbox 无 onerror 处理, loader 会永远显示 */
       momentsLightbox.on('slide_before_load', function (data) {
         setTimeout(function () {
           var slideNode = data && data.slideNode;
           var img = slideNode && slideNode.querySelector('.gslide-media img');
           if (!img) return;
           img.addEventListener('error', function () {
-            var loader = document.querySelector('.gloader');
-            if (loader) loader.style.display = 'none';
+            if (loaderTimer) clearTimeout(loaderTimer);
+            hideMomentsLoader();
             var media = slideNode.querySelector('.gslide-media');
             if (media) {
               media.innerHTML = '<div class="gslide-error">图片加载失败</div>';
@@ -655,19 +674,22 @@
     return true;
   }
 
-  listEl.addEventListener('click', function (e) {
-    /* 动态图片: 拦截 glightbox 原生行为 → JS API 打开该动态全量画廊
-       badge(+N) 兜底: 即使 pointer-events 失效, 点击 +N 标记也能定位到图片 */
+  /* 动态图片点击: document 捕获阶段拦截 (先于 img 元素上的 glightbox 原生监听)
+     stopPropagation 阻止事件到达目标阶段 → 原生 9 张画廊不会抢先打开 */
+  document.addEventListener('click', function (e) {
     var mediaImg = e.target.closest('.moment-media img');
     if (!mediaImg) {
       var moreBox = e.target.closest('.moment-media-more');
       if (moreBox) mediaImg = moreBox.querySelector('img');
     }
-    if (mediaImg && openMomentLightbox(mediaImg)) {
-      e.preventDefault();
+    if (mediaImg) {
       e.stopPropagation();
+      e.preventDefault();
+      openMomentLightbox(mediaImg);
     }
+  }, true);
 
+  listEl.addEventListener('click', function (e) {
     var editBtn = e.target.closest('[data-moment-edit]');
     if (editBtn) {
       var editId = editBtn.dataset.momentEdit;
