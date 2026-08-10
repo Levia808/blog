@@ -1096,29 +1096,68 @@
       siteHeader.querySelectorAll('.nf-link').forEach(function (a) { links.push(a); });
     }
 
-    /* 加载动画 */
+    /* 加载动画 (流畅: 数字平滑补间 + 状态打字机 + 标题描边联动) */
     var loader = document.getElementById('loader');
     var loadNum = document.getElementById('loadNum');
     var loadBar = document.getElementById('loadBar');
+    var loadWord = document.getElementById('loadWord');
+    var loadTitle = document.getElementById('heroTitle');
+    var shownNum = 0, targetNum = 0;
+    if (loadNum) {
+      (function numLoop() {
+        shownNum += (targetNum - shownNum) * 0.16;
+        if (Math.abs(targetNum - shownNum) < 0.06) shownNum = targetNum;
+        loadNum.textContent = Math.floor(shownNum);
+        requestAnimationFrame(numLoop);
+      })();
+    }
+    var loadStatuses = ['加载中…', '读取文章…', '加载字体…', '完成'];
+    var statusSi = 0;
+    function typeLoadWord(text) {
+      if (!loadWord) return;
+      loadWord.textContent = '';
+      for (var i = 0; i < text.length; i++) {
+        (function (idx) {
+          setTimeout(function () {
+            var s = document.createElement('span');
+            s.className = 'ch';
+            s.textContent = text[idx];
+            loadWord.appendChild(s);
+            setTimeout(function () { s.classList.add('in'); }, 10);
+          }, idx * 34);
+        })(i);
+      }
+    }
     function finishLoad() {
       forceInitialScrollTop();
-      if (loadNum) loadNum.textContent = '100';
+      targetNum = 100;
       if (loadBar) loadBar.style.width = '100%';
+      if (loadTitle) loadTitle.classList.add('filled');
       setTimeout(function () {
-        if (loader) loader.classList.add('done');
-        document.body.classList.add('loaded');
-        layoutInit();
-      }, 380);
+        if (loader) loader.classList.add('finishing');
+        setTimeout(function () {
+          if (loader) loader.classList.add('done');
+          document.body.classList.add('loaded');
+          layoutInit();
+        }, 620);
+      }, 420);
     }
-    if (reduced) { if (loadNum) loadNum.textContent = '100'; finishLoad(); }
-    else {
+    if (reduced) {
+      if (loadTitle) loadTitle.classList.add('filled');
+      if (loadNum) loadNum.textContent = '100';
+      finishLoad();
+    } else {
       var num = 0;
+      typeLoadWord(loadStatuses[0]);
       var iv = setInterval(function () {
-        num += Math.random() * 24 + 8;
+        num += Math.random() * 7 + 3;
         if (num >= 100) { clearInterval(iv); finishLoad(); return; }
-        if (loadNum) loadNum.textContent = Math.floor(num);
-        if (loadBar) loadBar.style.width = Math.floor(num) + '%';
-      }, 100);
+        var n = Math.floor(num);
+        targetNum = n;
+        if (loadBar) loadBar.style.width = n + '%';
+        var ns = n > 70 ? 3 : n > 40 ? 2 : n > 12 ? 1 : 0;
+        if (ns !== statusSi) { statusSi = ns; typeLoadWord(loadStatuses[ns]); }
+      }, 150);
     }
 
     /* 滚动变形 */
