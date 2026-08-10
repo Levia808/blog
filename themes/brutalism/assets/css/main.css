@@ -20,6 +20,12 @@
   --overlay: rgba(0, 0, 0, 0.85);
   --bg-opacity: 0.22;
   --bw: 1px;
+  --nav-glass-bg: rgba(246, 245, 241, 0.78);
+  --nav-glass-border: rgba(26, 26, 24, 0.10);
+  --nav-glass-text: #1A1A18;
+  --nav-glass-muted: #55534B;
+  --nav-glass-faint: #8A887E;
+  --nav-glass-hover: rgba(26, 26, 24, 0.06);
 
   --font-sans: "Inter", "Noto Sans SC", system-ui, -apple-system, sans-serif;
   --font-display: "Space Grotesk", "Inter", "Noto Sans SC", sans-serif;
@@ -175,8 +181,8 @@ html.js [data-reveal].reveal-visible {
   justify-content: flex-start;
   gap: 16px;
   padding: 14px 28px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  border-bottom: 1px solid var(--nav-glass-border);
+  background: var(--nav-glass-bg);
   position: fixed;
   left: 0;
   right: 0;
@@ -189,17 +195,17 @@ html.js [data-reveal].reveal-visible {
 .nav-mobile:not(.nav-hidden) { transform: translateY(0); }
 .nav-full.nav-hidden,
 .nav-mobile.nav-hidden { pointer-events: none; }
-.nf-logo { flex: 0 0 auto; margin-right: auto; font-size: 18px; font-weight: 650; letter-spacing: 1.5px; color: var(--white); text-decoration: none; }
+.nf-logo { flex: 0 0 auto; margin-right: auto; font-size: 18px; font-weight: 650; letter-spacing: 1.5px; color: var(--nav-glass-text); text-decoration: none; }
 .nf-links { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-left: auto; }
 .nf-link {
   position: relative;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--nav-glass-muted);
   text-decoration: none;
   letter-spacing: 0.5px;
   transition: color var(--dur-slow), transform var(--dur-fast);
 }
-.nf-link:hover, .nf-link.active { color: var(--fg); transform: translateY(-1px); }
+.nf-link:hover, .nf-link.active { color: var(--nav-glass-text); transform: translateY(-1px); }
 .nf-link.active::after {
   content: "";
   position: absolute;
@@ -224,9 +230,9 @@ html.js [data-reveal].reveal-visible {
   padding: 7px 17px;
   font-size: 12px;
   font-family: var(--font-mono);
-  color: var(--fg);
+  color: var(--nav-glass-text);
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--nav-glass-border);
   border-radius: 4px;
   cursor: pointer;
   text-decoration: none;
@@ -350,8 +356,8 @@ html.js [data-reveal].reveal-visible {
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  border-bottom: 1px solid var(--nav-glass-border);
+  background: var(--nav-glass-bg);
   position: fixed;
   left: 0;
   right: 0;
@@ -360,10 +366,10 @@ html.js [data-reveal].reveal-visible {
   transition: transform var(--dur-normal) ease-out;
 }
 .nav-mobile.nav-hidden { transform: translateY(-100%); }
-.nm-logo { font-size: 15px; font-weight: 550; color: var(--white); text-decoration: none; letter-spacing: 1px; }
+.nm-logo { font-size: 15px; font-weight: 550; color: var(--nav-glass-text); text-decoration: none; letter-spacing: 1px; }
 .nm-toggle {
   font-size: 18px;
-  color: var(--muted);
+  color: var(--nav-glass-muted);
   cursor: pointer;
   background: none;
   border: none;
@@ -371,7 +377,7 @@ html.js [data-reveal].reveal-visible {
   display: flex; align-items: center;
   transition: transform var(--dur-fast), color var(--dur-slow);
 }
-.nm-toggle:hover { transform: scale(1.1); color: var(--fg); }
+.nm-toggle:hover { transform: scale(1.1); color: var(--nav-glass-text); }
 { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @keyframes scroll-hint {
   0%, 100% { opacity: 0; transform: translateX(-50%) translateY(0); }
@@ -1671,9 +1677,11 @@ button,
 .nav-mobile {
   min-height: 64px;
   z-index: 180;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(18px);
-  border-bottom-color: var(--ax-border);
+  background: var(--nav-glass-bg);
+  color: var(--nav-glass-text);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom-color: var(--nav-glass-border);
 }
 .site-has-nav:not(.home-page):not(.login-only) .site-main {
   padding-top: 68px;
@@ -1701,7 +1709,7 @@ button,
   font-weight: 400;
   line-height: .95;
   letter-spacing: -.04em;
-  color: var(--white);
+  color: var(--nav-glass-text);
   text-transform: uppercase;
 }
 .nav-wordmark-sub {
@@ -1710,7 +1718,7 @@ button,
   font-size: .42em;
   font-weight: 500;
   letter-spacing: .02em;
-  color: var(--muted);
+  color: var(--nav-glass-faint);
   text-transform: none;
 }
 .nf-links {
@@ -1729,8 +1737,8 @@ button,
 }
 .nf-link:hover,
 .nf-link.active {
-  background: color-mix(in srgb, var(--fg) 5%, transparent);
-  color: var(--fg);
+  background: var(--nav-glass-hover);
+  color: var(--nav-glass-text);
   transform: none;
 }
 .nf-link.active::after {
@@ -1753,10 +1761,19 @@ button,
   min-height: 40px;
   padding: 0 16px;
   font-size: 12.5px;
+  color: var(--nav-glass-text);
+  border-color: var(--nav-glass-border);
+}
+.nav-login-btn:hover {
+  color: var(--nav-glass-text);
+  background: var(--nav-glass-hover);
+  border-color: rgba(26, 26, 24, 0.22);
 }
 .nf-avatar {
   width: 36px;
   height: 36px;
+  border-color: var(--nav-glass-border);
+  background: rgba(26, 26, 24, 0.08);
 }
 
 html.js .home-page .nav-full {
