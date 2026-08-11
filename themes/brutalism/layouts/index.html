@@ -68,20 +68,6 @@
     </div>
   </section>
 
-  <section class="blog-section" aria-labelledby="about-blurb">
-    <div class="blog-section__head" data-reveal>
-      <div class="label">ABOUT</div>
-      <h2 id="about-blurb">关于</h2>
-      <a class="section-more" href="{{ "about/" | relLangURL }}">更多 →</a>
-    </div>
-    <div class="about-strip" data-reveal>
-      <p>{{ $P.description }}</p>
-      <div class="mono about-tags">
-        {{- range $P.keywords }}
-        <span class="pc-tag">{{ . }}</span>
-        {{- end }}
-      </div>
-    </div>
   </section>
 </section>
 {{- end }}
