@@ -24,6 +24,112 @@
     });
   }
 
+  /* ── Threads 串文转发: 正文链接识别 → 读静态 JSON 资源 → 自绘卡片 (降级为链接) ── */
+  var threadsStorageBase = null;
+
+  function threadsInfo(url) {
+    var u = String(url || '').replace(/[.。]$/, '').trim();
+    var m = u.match(/threads\.net\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
+    return m ? { url: u, handle: m[1], id: m[2] } : null;
+  }
+
+  function createThreadsCard(url) {
+    var info = threadsInfo(url);
+    if (!info) return null;
+    var card = document.createElement('a');
+    card.className = 'threads-card';
+    card.href = info.url;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+    card.innerHTML =
+      '<span class="th-head"><span class="th-brand">THREADS · 转发的串文</span><span class="th-open">→</span></span>' +
+      '<span class="th-loading mono">正在加载串文…</span>';
+    loadThreadsData(card, info);
+    return card;
+  }
+
+  function loadThreadsData(card, info) {
+    var base = threadsStorageBase;
+    if (!base) {
+      try {
+        base = window.blogSupabase.storage.from('threads-reposts').getPublicUrl('x.json').data.publicUrl.replace('/x.json', '');
+      } catch (e) { base = ''; }
+      threadsStorageBase = base;
+    }
+    var jsonUrl = (base ? base + '/' : '') + info.id + '.json';
+    fetch(jsonUrl).then(function (r) {
+      if (!r.ok) throw new Error('no resource');
+      return r.json();
+    }).then(function (data) {
+      renderThreadsCard(card, data);
+    }).catch(function () {
+      /* 降级: 保留链接文本 */
+      var fallback = document.createElement('span');
+      fallback.className = 'th-fallback mono';
+      fallback.textContent = 'Threads 串文 · ' + info.handle;
+      card.replaceWith(fallback);
+    });
+  }
+
+  function renderThreadsCard(card, d) {
+    var replies = (d.replies || []).map(function (r) {
+      return '<div class="th-reply"><div class="th-author">' +
+        '<span class="th-avatar">' + escapeHtml((r.handle || '?').slice(0, 1).toUpperCase()) + '</span>' +
+        '<span class="th-aname">' + escapeHtml(r.author || '') + '</span>' +
+        '<span class="th-ahandle">' + escapeHtml(r.handle || '') + '</span></div>' +
+        '<div class="th-post">' + escapeHtml(r.text || '') + '</div></div>';
+    }).join('');
+    var stats = d.stats || {};
+    card.innerHTML =
+      '<span class="th-head"><span class="th-brand">THREADS · 转发的串文</span><span class="th-open">→</span></span>' +
+      '<span class="th-main">' +
+        '<span class="th-author">' +
+          '<span class="th-avatar">' + escapeHtml((d.author || '?').slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="th-aname">' + escapeHtml(d.author || '') + '</span>' +
+          '<span class="th-ahandle">' + escapeHtml(d.handle || '') + '</span>' +
+          (d.time ? '<span class="th-time">' + escapeHtml(d.time) + '</span>' : '') +
+        '</span>' +
+        '<span class="th-post">' + escapeHtml(d.text || '') + '</span>' +
+        (replies ? '<span class="th-thread">' + replies + '</span>' : '') +
+      '</span>' +
+      '<span class="th-stats"><span>❤ <b>' + (stats.likes || 0) + '</b></span>' +
+      '<span>💬 <b>' + (stats.replies || 0) + '</b></span>' +
+      '<span>↻ <b>' + (stats.reposts || 0) + '</b></span><span>THREADS.NET</span></span>';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(8px)';
+    card.style.transition = 'opacity 0.4s cubic-bezier(.16,1,.3,1), transform 0.4s cubic-bezier(.16,1,.3,1)';
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        card.style.opacity = '1';
+        card.style.transform = 'none';
+      });
+    });
+  }
+
+  /* 正文扫描: threads.net 链接 → 转发卡片 */
+  function transformThreadsLinks(container) {
+    if (!container) return;
+    var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      var text = node.nodeValue;
+      if (!text || text.indexOf('threads.net') < 0) return;
+      var parts = text.split(/(https?:\/\/www\.threads\.net\/@[^\s]+)/gi);
+      if (parts.length <= 1) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function (part, i) {
+        if (i % 2 === 1 && /threads\.net/i.test(part)) {
+          var card = createThreadsCard(part.trim());
+          if (card) frag.appendChild(card);
+        } else if (part) {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
   function renderMarkdown(value) {
     var html = escapeHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -409,6 +515,7 @@
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      transformThreadsLinks(listEl);
       markLongImages();
       preloadSingleImages();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {

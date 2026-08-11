@@ -715,6 +715,76 @@
       });
   });
 
+  /* ── Threads 串文转发设置 (Cookie localStorage 保存 + 测试 + 爬取) ── */
+  var threadsCookieKey = 'blog_threads_cookie';
+  var threadsSaveBtn = document.getElementById('cfgThreadsSave');
+  var threadsTestBtn = document.getElementById('cfgThreadsTest');
+  var threadsFetchBtn = document.getElementById('cfgThreadsFetch');
+  var threadsCookieInput = document.getElementById('cfgThreadsCookie');
+  var threadsUrlInput = document.getElementById('cfgThreadsUrl');
+  var threadsErrorEl = document.getElementById('cfgThreadsError');
+  var threadsHintEl = document.getElementById('cfgThreadsHint');
+
+  function setThreadsError(msg) {
+    if (threadsErrorEl) { threadsErrorEl.textContent = msg || ''; threadsErrorEl.hidden = !msg; }
+  }
+  function setThreadsHint(msg) {
+    if (threadsHintEl) threadsHintEl.textContent = msg || '';
+  }
+  if (threadsCookieInput) {
+    try { threadsCookieInput.value = localStorage.getItem(threadsCookieKey) || ''; } catch (e) {}
+  }
+  if (threadsSaveBtn) threadsSaveBtn.addEventListener('click', function () {
+    try { localStorage.setItem(threadsCookieKey, threadsCookieInput.value.trim()); } catch (e) {}
+    setThreadsError('');
+    showToast('Threads Cookie 已保存（存于本机浏览器）', 'success');
+  });
+  if (threadsTestBtn) threadsTestBtn.addEventListener('click', function () {
+    var cookie = threadsCookieInput.value.trim();
+    if (!cookie) { setThreadsError('请先填写 Cookie'); return; }
+    setThreadsError('');
+    threadsTestBtn.disabled = true;
+    var url = 'https://www.threads.net/@zuck/post/C6S6o1sx7Rn';
+    blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
+      .then(function (res) {
+        var data = res && res.data;
+        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        setThreadsHint('连接成功 · 已生成资源: ' + (data.id || ''));
+        showToast('Threads 连接成功', 'success');
+      })
+      .catch(function (e) {
+        var msg = (e && e.message) || String(e);
+        if (/Cookie|无效|过期/i.test(msg)) setThreadsError('Cookie 无效或已过期：' + msg);
+        else setThreadsError('测试失败：' + msg + '（请确认已部署 Edge Function: supabase functions deploy threads-fetch）');
+      })
+      .finally(function () { threadsTestBtn.disabled = false; });
+  });
+  if (threadsFetchBtn) threadsFetchBtn.addEventListener('click', function () {
+    var url = (threadsUrlInput.value || '').trim();
+    var cookie = threadsCookieInput.value.trim();
+    if (!url) { setThreadsError('请输入 Threads 链接'); return; }
+    if (!cookie) { setThreadsError('请先保存 Cookie'); return; }
+    if (!/threads\.net\/@[^/]+\/post\/[A-Za-z0-9_-]+/i.test(url)) { setThreadsError('无效的 Threads 串文链接'); return; }
+    setThreadsError('');
+    threadsFetchBtn.disabled = true;
+    threadsFetchBtn.textContent = '爬取中…';
+    blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
+      .then(function (res) {
+        var data = res && res.data;
+        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        setThreadsHint('已生成静态资源: ' + (data.publicUrl || ''));
+        showToast('串文资源已生成', 'success');
+      })
+      .catch(function (e) {
+        var msg = (e && e.message) || String(e);
+        setThreadsError('爬取失败：' + msg + '（Cookie 失效请重新获取；确认已部署 Edge Function 与 threads-reposts 桶）');
+      })
+      .finally(function () {
+        threadsFetchBtn.disabled = false;
+        threadsFetchBtn.textContent = '爬取并生成资源';
+      });
+  });
+
   renderFontPreview();
   var cfgSaveBtn = document.getElementById('cfgSaveBtn');
   if (cfgSaveBtn) cfgSaveBtn.addEventListener('click', saveWelcomeConfig);

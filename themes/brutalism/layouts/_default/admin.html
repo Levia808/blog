@@ -190,6 +190,22 @@
             <p class="auth-error" id="cfgCardError" hidden></p>
           </div>
 
+          <div class="panel-title">Threads 串文转发</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Threads Cookie（登录 Threads 后从浏览器复制，用于后端爬取串文）</span><input type="password" id="cfgThreadsCookie" placeholder="sessionid=…; ds_user_id=…" autocomplete="off"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsSave">保存 Cookie</button>
+              <button type="button" class="btn" id="cfgThreadsTest">测试连接</button>
+            </div>
+            <label class="sf-field sf-wide"><span>爬取串文（输入 Threads 链接，生成静态资源）</span><input type="text" id="cfgThreadsUrl" placeholder="https://www.threads.net/@user/post/xxx"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsFetch">爬取并生成资源</button>
+              <span class="hint" id="cfgThreadsHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsError" hidden></p>
+            <div class="note">说明：Threads 无开放 OAuth，需浏览器登录后复制 Cookie（F12 → Network → 任意请求头）。爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，动态渲染读取。</div>
+          </div>
+
           <div class="panel-title">样式预览</div>
           <div class="card-preview">
             <div class="cp-col" data-cp="grid">
