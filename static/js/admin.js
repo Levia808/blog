@@ -824,6 +824,16 @@
   function setThreadsFetchError(msg) {
     if (threadsFetchErrorEl) { threadsFetchErrorEl.textContent = msg || ''; threadsFetchErrorEl.hidden = !msg; }
   }
+  /* 把 supabase-js invoke 错误翻译成人话 */
+  function functionsErrorText(e) {
+    var status = e && e.context && e.context.statusCode;
+    if (status === 404) return 'Edge Function 未部署，请运行: supabase functions deploy threads-fetch --no-verify-jwt';
+    if (status === 401 || status === 403) return '函数鉴权失败（请确认 --no-verify-jwt 部署）';
+    if (status >= 500) return '函数服务器错误 (HTTP ' + status + ')';
+    var msg = (e && e.message) || String(e);
+    if (/Failed to fetch|NetworkError|load failed/i.test(msg)) return '无法连接函数服务（网络/函数未部署？）';
+    return msg;
+  }
   function setThreadsHint(msg) {
     if (threadsHintEl) threadsHintEl.textContent = msg || '';
   }
@@ -903,7 +913,7 @@
       .catch(function (e) {
         var msg = (e && e.message) || String(e);
         if (/Cookie|无效|过期/i.test(msg)) setThreadsError('Cookie 无效或已过期：' + msg);
-        else setThreadsError('测试失败：' + msg + '（请确认已部署 Edge Function: supabase functions deploy threads-fetch）');
+        else setThreadsError('测试失败：' + functionsErrorText(e));
       })
       .finally(function () { threadsTestBtn.disabled = false; });
   });
@@ -925,8 +935,7 @@
         showToast('串文资源已生成', 'success');
       })
       .catch(function (e) {
-        var msg = (e && e.message) || String(e);
-        setThreadsFetchError('爬取失败：' + msg + '（Cookie 失效请重新自动登录；确认已部署 Edge Function 与 threads-reposts 桶）');
+        setThreadsFetchError('爬取失败：' + functionsErrorText(e) + (e && e.context && e.context.statusCode === 404 ? '' : '（Cookie 失效请重新浏览器登录）'));
       })
       .finally(function () {
         threadsFetchBtn.disabled = false;

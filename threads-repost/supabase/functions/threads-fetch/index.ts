@@ -45,15 +45,25 @@ Deno.serve(async (req) => {
       stats: { likes: 0, replies: 0, reposts: 0 },
       fetchedAt: new Date().toISOString()
     };
-    // 写入 storage (公共桶 threads-reposts)
+    // 写入 storage (公共桶 threads-reposts, 不存在则自动创建)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
     const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-    const { error: upErr } = await supabase.storage
+    let { error: upErr } = await supabase.storage
       .from('threads-reposts')
       .upload(id + '.json', blob, { upsert: true, contentType: 'application/json' });
+    if (upErr && /not found|不存在|bucket/i.test(upErr.message)) {
+      // 桶缺失或未公开 → 自动创建/设为公开后重试 (service role 权限足够)
+      await supabase.storage.createBucket('threads-reposts', { public: true, upsert: true })
+        .catch(() => {});
+      await supabase.storage.updateBucket('threads-reposts', { public: true })
+        .catch(() => {});
+      ({ error: upErr } = await supabase.storage
+        .from('threads-reposts')
+        .upload(id + '.json', blob, { upsert: true, contentType: 'application/json' }));
+    }
     if (upErr) return json({ error: '存储失败: ' + upErr.message }, 500);
 
     const publicUrl = supabase.storage.from('threads-reposts').getPublicUrl(id + '.json').data.publicUrl;
