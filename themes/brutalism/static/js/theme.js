@@ -1389,13 +1389,29 @@
       });
     }
 
-    /* 终端光标定位: 跟随 $ 前缀实际宽度 (固定 left 会因字体/字号错位) */
+    /* 终端光标: 跟随输入文本插入位置 (canvas 精确测量文本宽度) */
     var dollarEl = cmd ? cmd.querySelector('.search-dollar') : null;
     var caretEl = cmd ? cmd.querySelector('.search-caret') : null;
+    var caretCanvas = null;
+    function measureTextWidth(text) {
+      if (!text) return 0;
+      var cs = window.getComputedStyle(input);
+      caretCanvas = caretCanvas || document.createElement('canvas');
+      var ctx = caretCanvas.getContext('2d');
+      ctx.font = cs.font;
+      return ctx.measureText(text).width;
+    }
     function posCaret() {
-      if (caretEl && dollarEl) caretEl.style.left = (dollarEl.offsetWidth + 16) + 'px';
+      if (!caretEl || !dollarEl) return;
+      var base = dollarEl.offsetWidth + 16;
+      var text = input.value.slice(0, input.selectionStart || input.value.length);
+      caretEl.style.left = (base + measureTextWidth(text)) + 'px';
     }
     posCaret();
+    input.addEventListener('input', posCaret);
+    input.addEventListener('keyup', posCaret);
+    input.addEventListener('click', posCaret);
+    document.addEventListener('selectionchange', posCaret);
     window.addEventListener('resize', posCaret);
 
     function esc(v) {
