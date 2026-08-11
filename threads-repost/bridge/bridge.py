@@ -249,7 +249,20 @@ EXTRACT_JS = r"""
     textLines.push(l);
   }
   var text = textLines.join('\n');
-  return { ready: text.length > 0, author: author, time: time, text: text, likes: likes, replies: replies };
+  var media = [];
+  var seen = {};
+  Array.from(document.querySelectorAll('img')).forEach(function (img) {
+    var alt = img.alt || '';
+    var src = img.currentSrc || img.src || '';
+    var isAvatar = /头像|avatar/i.test(alt) || (img.naturalWidth === 150 && img.naturalHeight === 150);
+    if (!isAvatar && src && !seen[src]) { seen[src] = true; media.push({ type: 'image', url: src, width: img.naturalWidth, height: img.naturalHeight }); }
+  });
+  Array.from(document.querySelectorAll('video')).forEach(function (v) {
+    var src = v.currentSrc || v.src || (v.querySelector('source') || {}).src || '';
+    if (src && !seen[src]) { seen[src] = true; media.push({ type: 'video', url: src }); }
+  });
+  if (media.length > 10) media = media.slice(0, 10);
+  return { ready: text.length > 0 || media.length > 0, author: author, time: time, text: text, likes: likes, replies: replies, media: media };
 })()
 """
 
@@ -289,6 +302,7 @@ def fetch_post(url):
                     'url': url, 'id': pid, 'author': val.get('author') or handle,
                     'handle': '@' + handle, 'time': val.get('time', ''),
                     'text': val.get('text', ''), 'replies': [],
+                    'media': val.get('media', []),
                     'stats': {'likes': val.get('likes', 0), 'replies': val.get('replies', 0), 'reposts': 0},
                     'fetchedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                 }}

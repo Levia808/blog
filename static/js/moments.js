@@ -84,6 +84,12 @@
     var timeHtml = d.time
       ? '<span class="th-time">' + escapeHtml(d.time) + '</span>'
       : '';
+    var media = (d.media || []).map(function (m) {
+      if (m.type === 'video') {
+        return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" controls preload="metadata"></video></span>';
+      }
+      return '<span class="th-media-item"><img src="' + escapeHtml(m.url) + '" alt="" loading="lazy" decoding="async"></span>';
+    }).join('');
     card.innerHTML =
       '<span class="th-body">' +
         '<span class="th-author">' +
@@ -94,6 +100,7 @@
           '</span>' +
         '</span>' +
         '<span class="th-post">' + escapeHtml(d.text || '') + '</span>' +
+        (media ? '<span class="th-media">' + media + '</span>' : '') +
       '</span>' +
       '<span class="th-foot">' +
         THREADS_LOGO +

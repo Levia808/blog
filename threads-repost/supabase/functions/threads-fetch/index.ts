@@ -32,6 +32,12 @@ Deno.serve(async (req) => {
         display_name: d.display_name || '',
         time: d.time || '',
         text: String(d.text || '').slice(0, 2000),
+        media: Array.isArray(d.media) ? d.media.map((m: any) => ({
+          type: m.type === 'video' ? 'video' : 'image',
+          url: String(m.url || ''),
+          width: Number(m.width) || 0,
+          height: Number(m.height) || 0
+        })).slice(0, 10) : [],
         replies: Array.isArray(d.replies) ? d.replies : [],
         stats: {
           likes: (d.stats && d.stats.likes) || 0,
