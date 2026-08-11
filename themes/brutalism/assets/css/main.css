@@ -2236,12 +2236,10 @@ body.loaded .hero-lines i { transform: scaleX(1); }
 .hero-lines .l-arrow:hover { background: var(--accent); }
 @keyframes homeBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
 
-/* 首页内容区: hero 白底 → 深色内容过渡 */
+/* 首页内容区: hero 白底 → 内容过渡 (保持原有间距, 无白色渐变容器) */
 .hero-home + .blog-home { margin-top: 0; position: relative; }
 .hero-home + .blog-home::before {
-  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 120px;
-  background: linear-gradient(180deg, #f6f5f1, transparent);
-  pointer-events: none; z-index: 1;
+  content: ""; display: block; height: 120px; width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
