@@ -412,7 +412,8 @@
       var dy = e.deltaY;
       if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
         lastSwipe = now;
-        if (dx < 0) lightbox.nextSlide();
+        /* 手指左滑(dx>0, 自然滚动内容右移) → 下一张 — 与触摸手势方向一致 */
+        if (dx > 0) lightbox.nextSlide();
         else lightbox.prevSlide();
       }
     }

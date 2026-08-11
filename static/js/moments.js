@@ -699,7 +699,8 @@
       var dy = e.deltaY;
       if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
         lastSwipe = now;
-        if (dx < 0) lightbox.nextSlide();
+        /* 手指左滑(dx>0, 自然滚动内容右移) → 下一张 — 与触摸手势方向一致 */
+        if (dx > 0) lightbox.nextSlide();
         else lightbox.prevSlide();
       }
     }
@@ -822,7 +823,17 @@
     var allMedia = momentMediaCache[card.dataset.momentId] || [];
     var images = allMedia.filter(function (url) { return !isVideoUrl(url); });
     if (!images.length) return false;
-    var startAt = Math.max(0, images.indexOf(img.getAttribute('src') || img.getAttribute('data-src')));
+    /* 点击哪张预览就放大哪张: preview URL 与原图文件名归一化匹配
+       (多图预览 src 是 preview-xxx, 画廊元素是原图 xxx — indexOf 直接匹配会失败) */
+    function fileKey(url) {
+      var u = String(url || '').split('?')[0];
+      var name = u.slice(u.lastIndexOf('/') + 1);
+      if (name.indexOf('preview-') === 0) name = name.slice(8);
+      return name;
+    }
+    var clickedKey = fileKey(img.getAttribute('src') || img.getAttribute('data-src'));
+    var startAt = 0;
+    images.forEach(function (u, i) { if (fileKey(u) === clickedKey) startAt = i; });
     var lb = getMomentsLightbox();
     if (lb) {
       lb.setElements(images.map(function (url) {
