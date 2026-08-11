@@ -824,15 +824,30 @@
   function setThreadsFetchError(msg) {
     if (threadsFetchErrorEl) { threadsFetchErrorEl.textContent = msg || ''; threadsFetchErrorEl.hidden = !msg; }
   }
-  /* 把 supabase-js invoke 错误翻译成人话 */
-  function functionsErrorText(e) {
-    var status = e && e.context && e.context.statusCode;
-    if (status === 404) return 'Edge Function 未部署，请运行: supabase functions deploy threads-fetch --no-verify-jwt';
-    if (status === 401 || status === 403) return '函数鉴权失败（请确认 --no-verify-jwt 部署）';
-    if (status >= 500) return '函数服务器错误 (HTTP ' + status + ')';
+  /* 把 supabase-js invoke 结果/错误翻译成人话:
+     v2 对非 2xx 不 reject, 而是 resolve 成 { data: null, error: FunctionsHttpError },
+     error.context 是 Response, 真实错误原因在 context.json() 里 */
+  function checkInvoke(res) {
+    if (res && res.error) throw res.error;   // FunctionsHttpError / RelayError / FetchError
+    var data = res && res.data;
+    if (!data) throw new Error('函数未返回数据');
+    if (data.error) throw new Error(data.error);
+    return data;
+  }
+  function describeInvokeError(e) {
+    var ctx = e && e.context;
+    if (ctx && typeof ctx.json === 'function') {
+      return ctx.json().then(function (body) {
+        var msg = (body && (body.error || body.message)) || ('HTTP ' + ctx.status);
+        return '函数返回错误 (HTTP ' + ctx.status + ')：' + msg;
+      }).catch(function () {
+        return '函数返回错误 (HTTP ' + (ctx.status || '?') + ')';
+      });
+    }
+    if (ctx && ctx.status) return Promise.resolve('函数返回错误 (HTTP ' + ctx.status + ')');
     var msg = (e && e.message) || String(e);
-    if (/Failed to fetch|NetworkError|load failed/i.test(msg)) return '无法连接函数服务（网络/函数未部署？）';
-    return msg;
+    if (/Failed to fetch|NetworkError|load failed/i.test(msg)) return Promise.resolve('无法连接函数服务（网络/函数未部署？）');
+    return Promise.resolve(msg);
   }
   function setThreadsHint(msg) {
     if (threadsHintEl) threadsHintEl.textContent = msg || '';
@@ -879,18 +894,18 @@
     threadsLoginBtn.textContent = '登录中…';
     blogSupabase.functions.invoke('threads-login', { body: { username: username, password: password } })
       .then(function (res) {
-        var data = res && res.data;
-        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        var data = checkInvoke(res);
+        setThreadsLoginHint('登录成功 · 已自动保存 Cookie');
         try { localStorage.setItem(threadsCookieKey, data.cookie); } catch (e) {}
         if (threadsCookieInput) threadsCookieInput.value = data.cookie;
         updatePlatformStatus();
-        setThreadsLoginHint('登录成功 · 已自动保存 Cookie');
         showToast('登录成功，Cookie 已自动保存', 'success');
         threadsLoginPass.value = '';
       })
       .catch(function (e) {
-        var msg = (e && e.message) || String(e);
-        setThreadsLoginError(msg + '（如需验证码/双因素，请用浏览器登录后手动粘贴 Cookie）');
+        describeInvokeError(e).then(function (msg) {
+          setThreadsLoginError(msg + '（如需验证码/双因素，请用浏览器登录）');
+        });
       })
       .finally(function () {
         threadsLoginBtn.disabled = false;
@@ -905,15 +920,15 @@
     var url = 'https://www.threads.net/@zuck/post/C6S6o1sx7Rn';
     blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
       .then(function (res) {
-        var data = res && res.data;
-        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        var data = checkInvoke(res);
         setThreadsHint('连接成功 · 已生成资源: ' + (data.id || ''));
         showToast('Threads 连接成功', 'success');
       })
       .catch(function (e) {
-        var msg = (e && e.message) || String(e);
-        if (/Cookie|无效|过期/i.test(msg)) setThreadsError('Cookie 无效或已过期：' + msg);
-        else setThreadsError('测试失败：' + functionsErrorText(e));
+        describeInvokeError(e).then(function (msg) {
+          if (/Cookie|无效|过期|提取串文/i.test(msg)) setThreadsError('Cookie 无效或已过期：' + msg);
+          else setThreadsError('测试失败：' + msg);
+        });
       })
       .finally(function () { threadsTestBtn.disabled = false; });
   });
@@ -929,13 +944,14 @@
     threadsFetchBtn.textContent = '爬取中…';
     blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
       .then(function (res) {
-        var data = res && res.data;
-        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        var data = checkInvoke(res);
         setThreadsHint('已生成静态资源: ' + (data.publicUrl || ''));
         showToast('串文资源已生成', 'success');
       })
       .catch(function (e) {
-        setThreadsFetchError('爬取失败：' + functionsErrorText(e) + (e && e.context && e.context.statusCode === 404 ? '' : '（Cookie 失效请重新浏览器登录）'));
+        describeInvokeError(e).then(function (msg) {
+          setThreadsFetchError('爬取失败：' + msg);
+        });
       })
       .finally(function () {
         threadsFetchBtn.disabled = false;

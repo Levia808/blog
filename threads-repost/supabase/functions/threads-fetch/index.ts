@@ -13,14 +13,17 @@ Deno.serve(async (req) => {
   if (!cookie) return json({ error: '缺少 Threads Cookie（后台设置中配置）' }, 400);
 
   try {
-    const res = await fetch('https://www.threads.net/@' + handle + '/post/' + id, {
+    // threads.net 已迁移至 threads.com; 直连 threads.com (带无效 sessionid 时 threads.net 会 500 且不跳转)
+    const fetchUrl = 'https://www.threads.com/@' + handle + '/post/' + id;
+    const res = await fetch(fetchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
         'Cookie': cookie,
         'Accept-Language': 'zh-CN,zh;q=0.9'
       },
       redirect: 'follow'
     });
+    if (res.status === 500) return json({ error: 'Threads 返回 500：Cookie 无效或已过期，请重新浏览器登录' }, 502);
     if (!res.ok) return json({ error: 'Threads 请求失败: HTTP ' + res.status }, 502);
     const html = await res.text();
 

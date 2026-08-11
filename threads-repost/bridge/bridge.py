@@ -145,6 +145,29 @@ def open_tab(url):
     return target
 
 
+def validate_cookie(cookie_str):
+    """用真实爬取验证 cookie 是否有效 (无效 sessionid → Threads 返回 500)"""
+    url = 'https://www.threads.com/@zuck/post/C6S6o1sx7Rn'
+    req = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cookie': cookie_str,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            html = r.read().decode('utf-8', 'ignore')
+            i = html.find('og:description')
+            return i >= 0 and 'content=' in html[i:i + 300]
+    except Exception:
+        return False
+
+
+def cookie_string(c):
+    return 'sessionid=' + c.get('sessionid', '') + \
+        ('; ds_user_id=' + c['ds_user_id'] if c.get('ds_user_id') else '') + \
+        ('; csrftoken=' + c['csrftoken'] if c.get('csrftoken') else '')
+
+
 def read_cookies():
     with _lock:
         t = dict(_opened_target)
@@ -158,11 +181,25 @@ def read_cookies():
             client.close()
     except Exception as e:
         return {'ok': False, 'error': '读取失败: ' + str(e)}
-    picked = {}
+    # 按域名分组: threads.com 的登录态优先于 instagram.com
+    by_domain = {'threads.com': {}, 'instagram.com': {}}
     for c in res.get('result', {}).get('cookies', []) or []:
-        if any(c.get('domain', '').endswith(d) for d in COOKIE_DOMAINS):
-            picked.setdefault(c['name'], c['value'])
-    return {'ok': True, 'cookies': picked}
+        d = c.get('domain', '')
+        for key in by_domain:
+            if d.endswith(key):
+                by_domain[key].setdefault(c['name'], c['value'])
+    # 依次尝试各域登录态, 用真实爬取验证, 返回第一个有效的
+    for key in ('threads.com', 'instagram.com'):
+        c = by_domain[key]
+        if 'sessionid' not in c:
+            continue
+        cs = cookie_string(c)
+        if validate_cookie(cs):
+            return {'ok': True, 'cookies': c}
+    for key in ('threads.com', 'instagram.com'):
+        if 'sessionid' in by_domain[key]:
+            return {'ok': False, 'error': '找到登录态但验证失败 (sessionid 无效或已过期) — 请在弹出的浏览器中重新登录后再试'}
+    return {'ok': False, 'error': '未找到登录态 (sessionid) — 请在浏览器中完成登录'}
 
 
 def close_tab():
