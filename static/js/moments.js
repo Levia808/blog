@@ -1155,28 +1155,36 @@
     var deleteBtn = e.target.closest('[data-moment-delete]');
     if (deleteBtn) {
       if (!currentUser) { window.BlogAuth.open('login'); return; }
-      if (!window.confirm('确认删除这条动态？')) return;
-      var deleteId = deleteBtn.dataset.momentDelete;
-      var deleteCard = listEl.querySelector('[data-moment-id="' + deleteId + '"]');
-      deleteBtn.disabled = true;
-      window.blogSupabase.from('moments').delete().eq('id', deleteId)
-        .then(function (result) {
-          if (result.error) throw result.error;
-          if (deleteCard) deleteCard.remove();
-          flashNotice('动态已删除', 'success');
-          if (!listEl.querySelector('.moment-card')) {
-            listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
-          }
-        }).catch(function (error) {
-          var msg = (error && error.message) || String(error);
-          if (/permission|RLS|policy|row.?level|not allowed|relation/i.test(msg)) {
-            flashNotice('删除失败：数据库权限未配置，请在 Supabase SQL Editor 执行 supabase-moments-visibility.sql');
-          } else {
-            flashNotice('删除失败：' + msg);
-          }
-        }).finally(function () {
-          deleteBtn.disabled = false;
-        });
+      /* 瑞士风确认弹窗 (原生 confirm 在某些环境被禁用导致删除失效) */
+      window.Admin.confirmDialog({
+        title: '[ 删除动态 ]',
+        message: '确认删除这条动态？此操作不可恢复。',
+        confirmText: '删除',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) { deleteBtn.disabled = false; return; }
+        var deleteId = deleteBtn.dataset.momentDelete;
+        var deleteCard = listEl.querySelector('[data-moment-id="' + deleteId + '"]');
+        deleteBtn.disabled = true;
+        window.blogSupabase.from('moments').delete().eq('id', deleteId)
+          .then(function (result) {
+            if (result.error) throw result.error;
+            if (deleteCard) deleteCard.remove();
+            flashNotice('动态已删除', 'success');
+            if (!listEl.querySelector('.moment-card')) {
+              listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+            }
+          }).catch(function (error) {
+            var msg = (error && error.message) || String(error);
+            if (/permission|RLS|policy|row.?level|not allowed|relation/i.test(msg)) {
+              flashNotice('删除失败：数据库权限未配置，请在 Supabase SQL Editor 执行 supabase-moments-visibility.sql');
+            } else {
+              flashNotice('删除失败：' + msg);
+            }
+          }).finally(function () {
+            deleteBtn.disabled = false;
+          });
+      });
       return;
     }
 
@@ -1268,19 +1276,26 @@
 
     var cmtDeleteBtn = e.target.closest('[data-cmt-delete]');
     if (cmtDeleteBtn) {
-      if (!window.confirm('确认删除这条评论？')) return;
-      var delCommentId = cmtDeleteBtn.dataset.cmtDelete;
-      cmtDeleteBtn.disabled = true;
-      window.blogSupabase.from('moment_comments').delete().eq('id', delCommentId)
-        .then(function (result) {
-          if (result.error) throw result.error;
-          flashNotice('评论已删除', 'success');
-          return loadMoments();
-        }).catch(function (error) {
-          flashNotice('删除失败：' + (error.message || error));
-        }).finally(function () {
-          cmtDeleteBtn.disabled = false;
-        });
+      window.Admin.confirmDialog({
+        title: '[ 删除评论 ]',
+        message: '确认删除这条评论？此操作不可恢复。',
+        confirmText: '删除',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) return;
+        var delCommentId = cmtDeleteBtn.dataset.cmtDelete;
+        cmtDeleteBtn.disabled = true;
+        window.blogSupabase.from('moment_comments').delete().eq('id', delCommentId)
+          .then(function (result) {
+            if (result.error) throw result.error;
+            flashNotice('评论已删除', 'success');
+            return loadMoments();
+          }).catch(function (error) {
+            flashNotice('删除失败：' + (error.message || error));
+          }).finally(function () {
+            cmtDeleteBtn.disabled = false;
+          });
+      });
       return;
     }
 

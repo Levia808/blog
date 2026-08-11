@@ -1676,3 +1676,16 @@ body.admin-only { overflow: hidden; height: 100vh; }
 @media (max-width: 640px) {
   .mv-acts { flex-direction: column; gap: 6px; }
 }
+
+/* ── 通用确认弹窗 (替代原生 confirm) ── */
+.mv-confirm-panel { width: min(420px, 92vw); }
+.mv-confirm-body {
+  padding: 24px 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--swiss-text);
+  background: var(--swiss-surface);
+  border-bottom: 1px solid var(--swiss-line);
+}
+.mv-save.mv-danger { border-color: var(--swiss-danger); background: var(--swiss-danger); color: #f7f8f4; }
+.mv-save.mv-danger:hover { filter: brightness(1.08); }

@@ -342,6 +342,37 @@ var Admin = window.Admin = {
     return Boolean(data);
   },
 
+  /* ── 瑞士极简确认弹窗 (替代原生 confirm — 某些环境原生 confirm 被禁用导致删除失效) ── */
+  confirmDialog(options) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.className = 'moment-vis-overlay';
+      overlay.innerHTML =
+        '<div class="moment-vis-panel mv-confirm-panel">' +
+          '<div class="mv-head"><span class="mono mv-title">' + String(options.title || '确认操作') + '</span></div>' +
+          '<div class="mv-confirm-body">' + String(options.message || '确定执行此操作？') + '</div>' +
+          '<div class="mv-foot">' +
+            '<button type="button" class="mv-cancel" data-cf-no>取消</button>' +
+            '<button type="button" class="mv-save' + (options.danger ? ' mv-danger' : '') + '" data-cf-yes>' + String(options.confirmText || '确认') + '</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { overlay.classList.add('show'); });
+      });
+      function done(result) {
+        overlay.classList.remove('show');
+        setTimeout(function () { overlay.remove(); }, 240);
+        resolve(result);
+      }
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) { done(false); return; }
+        if (e.target.closest('[data-cf-no]')) { done(false); return; }
+        if (e.target.closest('[data-cf-yes]')) { done(true); return; }
+      });
+    });
+  },
+
   /* 图片上传前压缩: canvas → webp ≤1600px, 大图体积降 80%+ (预览加载提速)
      GIF/SVG/其他格式保留原文件 */
   /* 图片双版本压缩: original(≤2560px q0.88, 放大查看) + preview(≤600px q0.7, 预览提速)

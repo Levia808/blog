@@ -1041,7 +1041,13 @@
     if (deleteBtn) {
       var postName = deleteBtn.dataset.postDelete;
       var post = ghPostsCache.find(function (p) { return p.name === postName; });
-      if (!window.confirm('确认删除文章「' + (post ? post.title : postName) + '」？此操作会从仓库删除文件，不可恢复。')) return;
+      window.Admin.confirmDialog({
+        title: '[ 删除文章 ]',
+        message: '确认删除文章「' + (post ? post.title : postName) + '」？此操作会从仓库删除文件，不可恢复。',
+        confirmText: '删除',
+        danger: true
+      }).then(async function (ok) {
+        if (!ok) return;
       try {
         deleteBtn.disabled = true;
         var target = ghPostsCache.find(function (p) { return p.name === postName; });
@@ -1058,6 +1064,7 @@
       } finally {
         deleteBtn.disabled = false;
       }
+      });
       return;
     }
 
@@ -1111,7 +1118,13 @@
 
     var ghDeleteMedia = event.target.closest('[data-gh-media-delete]');
     if (ghDeleteMedia) {
-      if (!window.confirm('确认删除仓库文件「' + ghDeleteMedia.dataset.ghMediaDelete + '」？此操作会提交删除，不可恢复。')) return;
+      window.Admin.confirmDialog({
+        title: '[ 删除仓库文件 ]',
+        message: '确认删除仓库文件「' + ghDeleteMedia.dataset.ghMediaDelete + '」？此操作会提交删除，不可恢复。',
+        confirmText: '删除',
+        danger: true
+      }).then(async function (ok) {
+        if (!ok) return;
       try {
         ghDeleteMedia.disabled = true;
         await ghFetch('/repos/' + GH_REPO + '/contents/' + ghDeleteMedia.dataset.ghPath, {
@@ -1126,12 +1139,19 @@
       } finally {
         ghDeleteMedia.disabled = false;
       }
+      });
       return;
     }
 
     var deleteMedia = event.target.closest('[data-media-delete]');
     if (deleteMedia) {
-      if (!window.confirm('确认删除这个媒体资产？')) return;
+      window.Admin.confirmDialog({
+        title: '[ 删除媒体 ]',
+        message: '确认删除这个媒体资产？存储文件与记录将一并删除。',
+        confirmText: '删除',
+        danger: true
+      }).then(async function (ok) {
+        if (!ok) return;
       try {
         deleteMedia.disabled = true;
         await Admin.deleteMedia(deleteMedia.dataset.mediaDelete);
@@ -1139,6 +1159,7 @@
       } catch (error) {
         showError(errorText(error));
       }
+      });
     }
   });
 
