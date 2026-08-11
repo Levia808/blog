@@ -420,9 +420,17 @@
   }, true);
 
   /* 滚轮隔离: 鼠标悬停地点面板时, 滚动事件只影响菜单内部 (不滚页面)
-     列表区域由 CSS overscroll-behavior: contain 兜底 (滚到边界不再外溢) */
+     列表可滚动时放行内部滚动, 滚到顶/底拦截外溢; 列表不可滚动或非列表区域一律拦截
+     (不依赖 overscroll-behavior 兼容性, CSS contain 仅作增强) */
   mcLocPanel.addEventListener('wheel', function (e) {
-    if (!e.target.closest('.mlp-list')) e.preventDefault();
+    var list = e.target.closest('.mlp-list');
+    if (list && list.scrollHeight > list.clientHeight) {
+      var atTop = e.deltaY < 0 && list.scrollTop <= 0;
+      var atBottom = e.deltaY > 0 && list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
+      if (atTop || atBottom) e.preventDefault();
+    } else {
+      e.preventDefault();
+    }
   }, { passive: false });
 
   /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */

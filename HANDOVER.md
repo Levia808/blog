@@ -186,6 +186,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 地点菜单再调：滚轮隔离改为纯 JS 边界判断（列表可滚动时放行内部滚动、到顶/底或不可滚动/非列表区一律拦截，不依赖 overscroll-behavior 兼容性）+ 菜单再次加大（480px、列表 340px、字号 14.5px、圆角 12px） |
 | 08-11 | `本地` | 地点菜单交互：滚轮隔离（悬停面板 wheel 只滚菜单内，列表区 overscroll-behavior: contain + 非列表区 JS preventDefault）+ 列表滚动条重构为浅色极简（6px 苔绿半透明 thumb，Firefox scrollbar-width thin） |
 | 08-11 | `本地` | 地点 UI 调整：地点按钮移至操作行**最左侧**（高度不变同行）、下拉面板放大（420px、列表 280px、字号 13→14px）、面板固定**瑞士极简浅色样式**（米白/墨黑/苔绿，不随站点深浅主题，参考 design-moment-location.html） |
 | 08-11 | `本地` | 地点功能修复：① 地点按钮移入 mc-actions 与发布键同行动态（面板定宽 340px）② **修复定位/搜索全挂根因**——Photon 公共实例不支持 `lang=zh`（仅 default/de/en/fr），移除后浏览器自动带 Accept-Language；附近地点改用 `include=osm.*` 分类查询（无 q 必须指定 include，原实现请求被拒）③ 前端同名同坐标去重 + 空名过滤 ④ AbortController 8s 超时降级 |
