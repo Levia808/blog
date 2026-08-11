@@ -186,6 +186,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 地点 UI 调整：地点按钮移至操作行**最左侧**（高度不变同行）、下拉面板放大（420px、列表 280px、字号 13→14px）、面板固定**瑞士极简浅色样式**（米白/墨黑/苔绿，不随站点深浅主题，参考 design-moment-location.html） |
 | 08-11 | `本地` | 地点功能修复：① 地点按钮移入 mc-actions 与发布键同行动态（面板定宽 340px）② **修复定位/搜索全挂根因**——Photon 公共实例不支持 `lang=zh`（仅 default/de/en/fr），移除后浏览器自动带 Accept-Language；附近地点改用 `include=osm.*` 分类查询（无 q 必须指定 include，原实现请求被拒）③ 前端同名同坐标去重 + 空名过滤 ④ AbortController 8s 超时降级 |
 | 08-11 | `本地` | 动态发布地点上线（design-moment-location.html 集成）：三通道（GPS 定位→Photon reverse 识别 / 定位后附近地点 / 搜索指定，防抖 300ms）、选择面板自动定位+chip 显示、发布携带 `location {name,lat,lng}`、卡片左下角灰色小字渲染、面板关闭清空搜索状态、moments 表需执行 `supabase-moments-location.sql` |
 | 08-11 | `本地` | 动态评论树状回复上线（design-comment-tree.html 集成）：回复的回复递归嵌套子树（缩进+边线，L3 起收紧）、内联回复输入条（发送成功/取消/Esc/点击外部自动收起隐藏）、appendCommentNode 树插入、commentNode 定位整节点（realtime 删除级联清空容器） |

@@ -15,7 +15,6 @@
       <textarea id="mcInput" rows="3" maxlength="2000" placeholder="分享此刻…（支持 Markdown）" aria-label="动态内容"></textarea>
       <div class="mc-media-list" id="mcMediaList"></div>
       <div class="mc-actions">
-        <label class="btn" style="cursor:pointer;">+ 添加图片 / 视频<input type="file" id="mcFileInput" accept="image/*,video/*" multiple hidden></label>
         <div class="mc-loc" id="mcLocBar">
           <button type="button" class="btn mc-loc-add" id="mcLocAdd" style="font-size:12px;">📍 添加地点</button>
           <span class="mc-loc-chip" id="mcLocChip" hidden>
@@ -33,6 +32,7 @@
             <div class="mlp-attr mono">地点数据 © OpenStreetMap</div>
           </div>
         </div>
+        <label class="btn" style="cursor:pointer;">+ 添加图片 / 视频<input type="file" id="mcFileInput" accept="image/*,video/*" multiple hidden></label>
         <button type="button" class="btn btn-primary" id="mcPublishBtn">发布</button>
       </div>
       <p class="auth-error" id="mcError" hidden></p>
