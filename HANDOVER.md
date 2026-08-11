@@ -184,6 +184,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 动态页图片/头像加载防闪修复：① 列表 **diff 渲染**（按 id+数据 key 对比，未变卡片复用 DOM 零重载图，点赞/评论数仅同步数字）② 单图占位 `sizeFrame` 显式 height 参与过渡（aspect-ratio 不可动画导致 120px→真实高度瞬间跳变）③ 长图 wrap 替换 frame（原实现 frame 残留大空盒）+ 原比例全高→280px 平滑收拢动画 ④ 头像加载淡入 + 加载失败回退字母占位（破图图标消除） |
 | 08-11 | `本地` | 动态修复：评论 RLS 一键修复 SQL（含 Realtime 发布）+ 评论实时同步（postgres_changes，双向去重）+ 点赞按钮移动端换行修复（nowrap + 操作行 flex-wrap）+ 作者(author)可发动态（前端 + moments_insert 改 is_staff） |
 | 08-09 | `本次提交` | 移除文章页特殊效果：删除编辑器开关/类型字段、文章模板标记、懒加载逻辑、样式与特效 bundle |
 | 08-09 | `da89df5` | 重构全屏封面字体控件：独立 JS/CSS、低延迟本地预览、自定义字体上传渲染验收、Docker server --noTimes |
