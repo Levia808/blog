@@ -107,10 +107,13 @@
               {{- end }}
               {{- $tStyle := "" }}
               {{- if $fontCustom }}
-                {{- $fontName := .Params.entry_title_font_name | default "Custom Title" }}
-                {{- $fontFormat := "woff2" }}{{ if strings.HasSuffix $fontCustom ".ttf" }}{{ $fontFormat = "truetype" }}{{ else if strings.HasSuffix $fontCustom ".otf" }}{{ $fontFormat = "opentype" }}{{ else if strings.HasSuffix $fontCustom ".woff" }}{{ $fontFormat = "woff" }}{{ end }}
-                <style>@font-face { font-family: '{{ $fontName }}'; src: url('{{ $fontCustom | relURL }}') format('{{ $fontFormat }}'); font-display: swap; }</style>
-                {{- $tStyle = printf "font-family:'%s', Georgia, serif;" $fontName }}
+                {{- /* 静态字体: 唯一名 f-文件名 (title-fonts.css 预存) */}}
+                {{- $fcFile := .Params.entry_title_font_file | default $fontCustom }}
+                {{- $fcBase := path.Base $fcFile }}
+                {{- $fcSlug := strings.TrimSuffix (path.Ext $fcBase) $fcBase }}
+                {{- $fcSlug = replaceRE "[^\\w\\p{Han}-]" "-" $fcSlug }}
+                {{- $fcSlug = lower $fcSlug }}
+                {{- $tStyle = printf "font-family:'f-%s', Georgia, serif;" $fcSlug }}
               {{- end }}
               {{- with .Params.entry_title_color }}{{ $tStyle = printf "%s color:%s;" $tStyle . }}{{ end }}
               {{- with .Params.entry_title_opacity }}{{ $tStyle = printf "%s opacity:%.2f;" $tStyle (div (float .) 100) }}{{ end }}
