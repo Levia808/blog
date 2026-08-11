@@ -12,11 +12,11 @@
 {{- end }}
 {{- if and $P.auth (eq .Layout "moments") (fileExists "static/js/moments.js") }}
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-<script src="{{ "js/moments.js" | relURL }}"></script>
+<script src="{{ "js/moments.js" | relURL }}?v={{ now.Unix }}"></script>
 {{- end }}
 {{- if and $P.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}
 <script src="{{ "js/profile.js" | relURL }}"></script>
 {{- end }}
 {{- if and $P.auth (eq .Layout "admin") (fileExists "static/js/admin.js") }}
-<script src="{{ "js/admin.js" | relURL }}"></script>
+<script src="{{ "js/admin.js" | relURL }}?v={{ now.Unix }}"></script>
 {{- end }}
