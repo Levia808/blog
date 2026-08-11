@@ -419,22 +419,151 @@
     closeLocPanel();
   }, true);
 
-  /* ── 滚轮隔离 (捕获阶段, 先于 Lenis window 冒泡监听执行):
+  /* ── 滚轮隔离 (document 捕获, 覆盖发布器+编辑面板所有地点面板):
      ① data-lenis-prevent-wheel 属性 → Lenis 官方放行该区域
      ② 捕获阶段 preventDefault + stopPropagation → 彻底阻断传播到 Lenis/页面
      ③ 手动驱动列表滚动 (scrollTop += deltaY, 边界自动 clamp, 无滚动链外溢) */
-  mcLocPanel.addEventListener('wheel', function (e) {
+  document.addEventListener('wheel', function (e) {
+    var panel = e.target.closest('.mc-loc-panel');
+    if (!panel) return;
     e.preventDefault();
     e.stopPropagation();
-    var list = mcLocList;
-    if (!e.target.closest('.mlp-list') || list.scrollHeight <= list.clientHeight) return;
+    var list = panel.querySelector('.mlp-list');
+    if (!list || list.scrollHeight <= list.clientHeight) return;
     var dy = e.deltaY;
     if (e.deltaMode === 1) dy *= 16;
     else if (e.deltaMode === 2) dy *= list.clientHeight;
     list.scrollTop += dy;
   }, { capture: true, passive: false });
 
-  /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */
+  /* ── 编辑面板地点 (每卡独立状态):
+     规则: 自定义地点选择完全使用所选条目的 {name,lat,lng}, 不混入 GPS 定位数据;
+     GPS 仅用于反向编码显示当前位置 + 生成附近列表 */
+  var editLocState = {};
+  var editLocTimer = null;
+
+  function editLocSetStatus(panel, text, tone) {
+    var s = panel && panel.querySelector('[data-edit-loc-status]');
+    if (!s) return;
+    s.textContent = text || '';
+    s.className = 'mlp-status mono' + (tone === 'ok' ? ' ok' : tone === 'err' ? ' err' : '');
+  }
+
+  function editLocRenderList(panel, items, note) {
+    var list = panel && panel.querySelector('[data-edit-loc-list]');
+    if (!list) return;
+    if (!items || !items.length) {
+      list.innerHTML = '<div class="mlp-empty">' + (note || '无结果') + '</div>';
+      return;
+    }
+    list.innerHTML = items.map(function (it) {
+      return '<button type="button" class="mlp-item" data-loc-lat="' + it.lat + '" data-loc-lng="' + it.lng + '" data-loc-name="' + escapeHtml(it.name) + '">' +
+        '<span class="mlp-item-ico" aria-hidden="true">📍</span>' +
+        '<span class="mlp-item-main">' + escapeHtml(it.name) + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  function editLocLoadNearby(panel, st) {
+    if (!panel || !st || !st.gps) return;
+    locNearby(st.gps.lat, st.gps.lng).then(function (d) {
+      var search = panel.querySelector('[data-edit-loc-search]');
+      if (!search.value.trim()) {
+        editLocRenderList(panel, dedupeLocations((d.features || []).map(locFromFeature)), '附近没有地点');
+      }
+    }).catch(function () {
+      editLocRenderList(panel, null, '附近地点加载失败，可手动搜索');
+    });
+  }
+
+  function editLocGpsLocate(panel, st) {
+    if (!window.navigator || !window.navigator.geolocation) {
+      editLocSetStatus(panel, '浏览器不支持定位，请手动搜索');
+      return;
+    }
+    editLocSetStatus(panel, '正在定位…');
+    window.navigator.geolocation.getCurrentPosition(function (pos) {
+      st.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      st.locatedOnce = true;
+      locReverse(st.gps.lat, st.gps.lng).then(function (d) {
+        var loc = locFromFeature((d && d.features && d.features[0]) || null);
+        editLocSetStatus(panel, loc ? '当前位置：' + loc.name : '已定位（无地点名称）', 'ok');
+      }).catch(function () {
+        editLocSetStatus(panel, '已定位 ' + st.gps.lat.toFixed(4) + ', ' + st.gps.lng.toFixed(4), 'ok');
+      });
+      editLocLoadNearby(panel, st);
+    }, function (err) {
+      st.gps = null;
+      editLocSetStatus(panel, err && err.code === 1 ? '定位被拒绝，可手动搜索' : '定位失败，可手动搜索', 'err');
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 });
+  }
+
+  function editLocOpenPanel(panel, st) {
+    closeAllEditLocPanels(panel);
+    panel.hidden = false;
+    if (!st.locatedOnce) editLocGpsLocate(panel, st);
+    var inp = panel.querySelector('[data-edit-loc-search]');
+    if (inp) inp.focus();
+  }
+
+  function closeAllEditLocPanels(exceptPanel) {
+    listEl.querySelectorAll('[data-edit-loc-panel]').forEach(function (p) {
+      if (p === exceptPanel) return;
+      p.hidden = true;
+      var search = p.querySelector('[data-edit-loc-search]');
+      if (search) search.value = '';
+      var list = p.querySelector('[data-edit-loc-list]');
+      if (list) list.innerHTML = '';
+    });
+  }
+
+  function editLocSelect(panel, st, loc) {
+    if (!loc || !loc.name) return;
+    st.selected = { name: loc.name, lat: loc.lat, lng: loc.lng };
+    st.dirty = true;
+    var chip = panel.parentNode.querySelector('[data-edit-loc-chip]');
+    var add = panel.parentNode.querySelector('[data-edit-loc-add]');
+    var nameEl = panel.parentNode.querySelector('[data-edit-loc-name]');
+    if (chip) chip.hidden = false;
+    if (add) add.hidden = true;
+    if (nameEl) nameEl.textContent = loc.name;
+    panel.hidden = true;
+  }
+
+  function editLocInitState(momentId, moment) {
+    var loc = (moment && moment.location) || null;
+    editLocState[momentId] = {
+      selected: loc && loc.name ? { name: loc.name, lat: loc.lat, lng: loc.lng } : null,
+      gps: null,
+      locatedOnce: false,
+      dirty: false
+    };
+  }
+
+  function editLocRenderChip(card, st) {
+    var chip = card.querySelector('[data-edit-loc-chip]');
+    var add = card.querySelector('[data-edit-loc-add]');
+    var nameEl = card.querySelector('[data-edit-loc-name]');
+    var has = st && st.selected && st.selected.name;
+    if (chip) chip.hidden = !has;
+    if (add) add.hidden = !!has;
+    if (nameEl) nameEl.textContent = has ? st.selected.name : '';
+  }
+
+  function editLocDiscard(momentId) {
+    delete editLocState[momentId];
+    var card = listEl.querySelector('[data-moment-id="' + momentId + '"]');
+    if (card) {
+      var panel = card.querySelector('[data-edit-loc-panel]');
+      if (panel) panel.hidden = true;
+      var search = card.querySelector('[data-edit-loc-search]');
+      if (search) search.value = '';
+      var list = card.querySelector('[data-edit-loc-list]');
+      if (list) list.innerHTML = '';
+    }
+  }
+
+  /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 (content 编辑保存后重渲染自动重建) */
   function transformThreadsLinks(container) {
     if (!container) return;
     var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
@@ -749,6 +878,23 @@
       '<input type="file" accept="image/*,video/*" multiple data-edit-media-add hidden></label>';
   }
 
+  /* 编辑面板地点栏 (复用发布器 mlp-* 结构; 自定义选择仅用条目字段, 不混 GPS 数据) */
+  function renderEditLoc(moment) {
+    return '<div class="mem-loc" data-edit-loc>' +
+      '<button type="button" class="btn mem-loc-add" data-edit-loc-add style="font-size:12px;">📍 地点</button>' +
+      '<span class="mc-loc-chip" data-edit-loc-chip hidden>' +
+      '<span>📍</span><b data-edit-loc-name></b>' +
+      '<button type="button" class="mc-loc-remove" data-edit-loc-remove aria-label="移除地点">✕</button></span>' +
+      '<div class="mc-loc-panel" data-edit-loc-panel data-lenis-prevent-wheel hidden>' +
+      '<div class="mlp-row">' +
+      '<button type="button" class="mlp-locate" data-edit-locate>◎ 使用当前位置</button>' +
+      '<span class="mlp-status mono" data-edit-loc-status></span></div>' +
+      '<input type="text" class="mlp-search" data-edit-loc-search placeholder="搜索地点…" autocomplete="off">' +
+      '<div class="mlp-list" data-edit-loc-list></div>' +
+      '<div class="mlp-attr mono">地点数据 © OpenStreetMap</div>' +
+      '</div></div>';
+  }
+
   function editMediaPreviewHtml(file, url) {
     var isVideo = file.type.startsWith('video');
     return isVideo
@@ -863,6 +1009,7 @@
       (canManage ? '<div class="moment-edit-panel" data-moment-edit-panel="' + moment.id + '" hidden>' +
       '<textarea class="moment-edit-input" rows="4" maxlength="2000" data-moment-edit-input="' + moment.id + '">' + escapeHtml(moment.content || '') + '</textarea>' +
       renderEditMedia(moment) +
+      renderEditLoc(moment) +
       '<div class="moment-edit-actions">' +
       '<button type="button" class="moment-action-btn is-primary" data-moment-save="' + moment.id + '">保存</button>' +
       '<button type="button" class="moment-action-btn" data-moment-cancel-edit="' + moment.id + '">取消</button>' +
@@ -1726,9 +1873,60 @@
         /* 重新打开 = 放弃上次未保存的媒体改动 (map 已清空, is-new 项失效) */
         revokeEditMediaBlobs(editCard);
         editCard.querySelectorAll('.mem-item.is-new').forEach(function (item) { item.remove(); });
+        /* 地点: 重新打开 = 丢弃未保存修改, 按当前数据重建状态 */
+        var momentData = momentDataCache[editId];
+        editLocInitState(editId, momentData || {});
+        editLocRenderChip(editCard, editLocState[editId]);
         editPanel.hidden = false;
         editInput.focus();
         initEditSortable(editPanel);
+      }
+      return;
+    }
+
+    /* 编辑面板地点: 打开面板 / 定位 / 选择 / 移除 */
+    var editLocAddBtn = e.target.closest('[data-edit-loc-add]');
+    if (editLocAddBtn) {
+      var editLocCard = editLocAddBtn.closest('.moment-card');
+      var editLocId = editLocCard && editLocCard.dataset.momentId;
+      var editLocPanel = editLocCard && editLocCard.querySelector('[data-edit-loc-panel]');
+      var editLocSt = editLocState[editLocId];
+      if (editLocCard && editLocPanel && editLocSt) {
+        editLocOpenPanel(editLocPanel, editLocSt);
+      }
+      return;
+    }
+    var editLocateBtn = e.target.closest('[data-edit-locate]');
+    if (editLocateBtn) {
+      var elc = editLocateBtn.closest('.moment-card');
+      var elId = elc && elc.dataset.momentId;
+      var elPanel = elc && elc.querySelector('[data-edit-loc-panel]');
+      if (elPanel && editLocState[elId]) editLocGpsLocate(elPanel, editLocState[elId]);
+      return;
+    }
+    var editLocRemoveBtn = e.target.closest('[data-edit-loc-remove]');
+    if (editLocRemoveBtn) {
+      var elrc = editLocRemoveBtn.closest('.moment-card');
+      var elrId = elrc && elrc.dataset.momentId;
+      var elrSt = editLocState[elrId];
+      if (elrSt) {
+        elrSt.selected = null;
+        elrSt.dirty = true;
+        editLocRenderChip(elrc, elrSt);
+      }
+      return;
+    }
+    var editLocItem = e.target.closest('[data-edit-loc-panel] .mlp-item');
+    if (editLocItem) {
+      var elp = editLocItem.closest('[data-edit-loc-panel]');
+      var elpc = elp && elp.closest('.moment-card');
+      var elpId = elpc && elpc.dataset.momentId;
+      if (elp && editLocState[elpId]) {
+        editLocSelect(elp, editLocState[elpId], {
+          name: editLocItem.dataset.locName,
+          lat: parseFloat(editLocItem.dataset.locLat),
+          lng: parseFloat(editLocItem.dataset.locLng)
+        });
       }
       return;
     }
@@ -1757,6 +1955,7 @@
       destroyEditSortable(cancelId);
       revokeEditMediaBlobs(cancelCard);
       resetEditMediaState();
+      editLocDiscard(cancelId);
       if (cancelPanel) cancelPanel.hidden = true;
       if (cancelError) cancelError.hidden = true;
       return;
@@ -1798,8 +1997,14 @@
             if (m && m.file) return uploaded[i];
             return m;
           }).filter(function (m) { return typeof m === 'string' ? m !== '' : true; });
+          var updatePayload = { content: nextContent, media: media, updated_at: new Date().toISOString() };
+          /* 地点: 仅当用户操作过 (dirty) 才写入; 移除 → location 置 null */
+          var locSt = editLocState[saveId];
+          if (locSt && locSt.dirty) {
+            updatePayload.location = locSt.selected || null;
+          }
           return window.blogSupabase.from('moments')
-            .update({ content: nextContent, media: media, updated_at: new Date().toISOString() })
+            .update(updatePayload)
             .eq('id', saveId)
             .select('id, content, updated_at');
         })
@@ -1807,6 +2012,7 @@
           if (result.error) throw result.error;
           revokeEditMediaBlobs(saveCard);
           resetEditMediaState();
+          editLocDiscard(saveId);
           flashNotice('动态已更新', 'success');
           return loadMoments();
         }).catch(function (error) {
@@ -2049,6 +2255,40 @@
       return;
     }
   });
+
+  /* 编辑面板地点: 搜索输入 (防抖 300ms) */
+  listEl.addEventListener('input', function (e) {
+    var search = e.target.closest('[data-edit-loc-search]');
+    if (!search) return;
+    var panel = search.closest('[data-edit-loc-panel]');
+    var card = panel && panel.closest('.moment-card');
+    var st = card && editLocState[card.dataset.momentId];
+    if (!panel || !st) return;
+    clearTimeout(editLocTimer);
+    var q = search.value.trim();
+    editLocTimer = setTimeout(function () {
+      if (!q) {
+        if (st.gps) editLocLoadNearby(panel, st);
+        else editLocRenderList(panel, null, '输入关键词搜索地点');
+        return;
+      }
+      editLocSetStatus(panel, '搜索中…');
+      locSearch(q).then(function (d) {
+        editLocSetStatus(panel, '');
+        editLocRenderList(panel, dedupeLocations((d.features || []).map(locFromFeature)), '未找到相关地点');
+      }).catch(function () {
+        editLocSetStatus(panel, '搜索失败', 'err');
+        editLocRenderList(panel, null, '搜索失败，请重试');
+      });
+    }, 300);
+  });
+
+  /* 编辑面板地点: 点击面板以外 → 收起 */
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-edit-loc-panel]') || e.target.closest('[data-edit-loc-add]') ||
+        e.target.closest('[data-edit-loc-chip]') || e.target.closest('.mlp-item')) return;
+    closeAllEditLocPanels(null);
+  }, true);
 
   document.querySelector('[data-moment-login]').addEventListener('click', function () {
     if (window.BlogAuth) window.BlogAuth.open('login');

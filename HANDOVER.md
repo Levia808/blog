@@ -186,6 +186,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 动态编辑增强：① 编辑面板新增**地点可编辑**（复用 mlp-* 选择器，每卡独立状态；保存仅 dirty 时写 location，移除→置 null，未操作→保留原值，取消→丢弃）② **threads 链接随 content 编辑**（原文进 textarea，保存后 diff 重渲染重建卡片）③ 自定义地点规则：location 完全使用所选条目的 {name,lat,lng}，**不混入 GPS 定位数据**（GPS 仅用于反向编码与附近列表）④ wheel 隔离委托化（document 捕获覆盖全部地点面板） |
 | 08-11 | `本地` | **滚轮隔离重做（根因：Lenis 平滑滚动接管 wheel，冒泡阶段 preventDefault 无法阻止其 window 监听）**——成熟方案三保险：① `data-lenis-prevent-wheel` 属性（Lenis 官方支持，1.3.26 验证）② 捕获阶段 `preventDefault + stopPropagation`（先于 Lenis 冒泡监听执行）③ 手动驱动列表滚动（scrollTop += deltaY，deltaMode 换算，边界自然 clamp 无链外溢） |
 | 08-11 | `本地` | 地点菜单再调：滚轮隔离改为纯 JS 边界判断（列表可滚动时放行内部滚动、到顶/底或不可滚动/非列表区一律拦截，不依赖 overscroll-behavior 兼容性）+ 菜单再次加大（480px、列表 340px、字号 14.5px、圆角 12px） |
 | 08-11 | `本地` | 地点菜单交互：滚轮隔离（悬停面板 wheel 只滚菜单内，列表区 overscroll-behavior: contain + 非列表区 JS preventDefault）+ 列表滚动条重构为浅色极简（6px 苔绿半透明 thumb，Firefox scrollbar-width thin） |
