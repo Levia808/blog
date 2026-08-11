@@ -834,8 +834,41 @@ body.admin-only { overflow: hidden; height: 100vh; }
 .moment-content p:last-child { margin-bottom: 0; }
 .moment-media { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: start; }
 .moment-media.single { grid-template-columns: 1fr; }
-/* 单图加载占位: 避免 0 高度 → 自然高度的布局跳变 (网格方形已固定比例) */
-.moment-media:not(.moment-media-grid) img { min-height: 120px; }
+
+/* ── 媒体帧: 等大占位 + 加载动画 ── */
+.media-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  min-height: 240px;
+}
+.media-frame--grid { aspect-ratio: 1 / 1; min-height: 0; }
+.media-frame .media-spinner {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.media-frame .media-spinner i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: mediaFrameSpin 0.8s linear infinite;
+}
+@keyframes mediaFrameSpin { to { transform: rotate(360deg); } }
+.media-frame.loaded .media-spinner { display: none; }
+.media-frame img,
+.media-frame video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: block;
+}
 .moment-media img, .moment-media video {
   width: 100%;
   height: auto;

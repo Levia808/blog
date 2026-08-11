@@ -148,6 +148,9 @@
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
       }
+      /* 等大占位 + 加载动画 */
+      item = '<div class="media-frame' + (isGrid ? ' media-frame--grid' : '') + '" data-frame>' +
+        '<span class="media-spinner" aria-hidden="true"><i></i></span>' + item + '</div>';
       return item;
     }).join('');
     return '<div class="' + cls + '">' + items + '</div>';
@@ -638,6 +641,9 @@
         return '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
       return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+    }).map(function (item) {
+      return '<div class="media-frame media-frame--grid" data-frame>' +
+        '<span class="media-spinner" aria-hidden="true"><i></i></span>' + item + '</div>';
     }).join('');
     wrap.insertAdjacentHTML('beforeend', extraHtml);
     var more = wrap.querySelector('.moment-media-more');
@@ -695,12 +701,37 @@
     }
   }, true);
 
-  /* 预览图 404 (旧数据无 preview 文件) → 回退原图 (error 不冒泡, 捕获阶段) */
+  /* 媒体加载状态: 隐藏 spinner (等大占位完成) + 单图锁定真实比例 + preview 404 回退原图
+     load/error 不冒泡 → 捕获阶段委托 */
+  listEl.addEventListener('load', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG') return;
+    var frame = el.closest('.media-frame');
+    if (frame) frame.classList.add('loaded');
+    /* 单图 (非网格): 加载完成锁定真实宽高比 — 占位与最终等大 */
+    if (frame && !frame.classList.contains('media-frame--grid') && el.naturalWidth) {
+      frame.style.aspectRatio = el.naturalWidth + ' / ' + el.naturalHeight;
+      frame.style.minHeight = '0';
+    }
+    markLongImages();
+  }, true);
+  /* 视频元数据就绪 → 隐藏 spinner */
+  listEl.addEventListener('loadeddata', function (e) {
+    var el = e.target;
+    if (el && el.tagName === 'VIDEO') {
+      var frame = el.closest('.media-frame');
+      if (frame) frame.classList.add('loaded');
+    }
+  }, true);
   listEl.addEventListener('error', function (e) {
-    var img = e.target;
-    if (img && img.tagName === 'IMG' && img.dataset.orig && (!img.src || img.src.indexOf('/preview-') >= 0)) {
-      img.src = img.dataset.orig;
-      delete img.dataset.orig;
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG') return;
+    var frame = el.closest('.media-frame');
+    if (frame) frame.classList.add('loaded');
+    /* 预览图 404 (旧数据无 preview 文件) → 回退原图 */
+    if (el.dataset.orig && (!el.src || el.src.indexOf('/preview-') >= 0)) {
+      el.src = el.dataset.orig;
+      delete el.dataset.orig;
     }
   }, true);
 
