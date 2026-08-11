@@ -687,26 +687,84 @@
   var momentMediaCache = {};
   var glightboxLibPromise = null;
   var loaderTimer = null;
-  var trackpadSwipeCleanup = null;
+    var trackpadSwipeCleanup = null;
 
-  /* 触控板横向手势: 双指左滑下一张/右滑上一张 (wheel deltaX, 节流防连发) */
+  /* ── 触控板手势 (lightbox 打开时启用):
+     横向: 手指左滑下一张/右滑上一张 (与触摸一致) + preventDefault 禁用浏览器历史手势
+     纵向下滑: 跟手下拉 (图片跟随 + 遮罩变亮) → 松手超过阈值飞离关闭 / 否则平滑回弹 */
   function enableTrackpadSwipe(lightbox) {
     var lastSwipe = 0;
-    function onWheel(e) {
-      var now = Date.now();
-      if (now - lastSwipe < 320) return;
-      var dx = e.deltaX;
-      var dy = e.deltaY;
-      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
-        lastSwipe = now;
-        /* 手指左滑(dx>0, 自然滚动内容右移) → 下一张 — 与触摸手势方向一致 */
-        if (dx > 0) lightbox.nextSlide();
-        else lightbox.prevSlide();
+    var drag = null;
+
+    function slideEl() {
+      var cur = document.querySelector('.gslide.current .gslide-inner-content');
+      return cur || document.querySelector('.gslide-inner-content');
+    }
+    function overlayEl() {
+      return document.querySelector('.goverlay');
+    }
+    function release() {
+      if (!drag) return;
+      var total = drag.total;
+      var slide = drag.slide;
+      var overlay = drag.overlay;
+      drag = null;
+      var close = total > 140;
+      var dur = close ? 0.3 : 0.38;
+      var ease = 'cubic-bezier(.16,1,.3,1)';
+      if (slide) { slide.style.transition = 'transform ' + dur + 's ' + ease; slide.style.transform = close ? 'translateY(120vh)' : 'translateY(0)'; }
+      if (overlay) { overlay.style.transition = 'opacity ' + dur + 's ' + ease; overlay.style.opacity = close ? '0' : ''; }
+      if (close) {
+        setTimeout(function () {
+          if (slide) { slide.style.transition = ''; slide.style.transform = ''; }
+          if (overlay) { overlay.style.transition = ''; overlay.style.opacity = ''; }
+          lightbox.close();
+        }, dur * 1000);
       }
     }
-    document.addEventListener('wheel', onWheel, { passive: true });
-    return function () { document.removeEventListener('wheel', onWheel); };
+
+    function onWheel(e) {
+      e.preventDefault();
+      var dx = e.deltaX;
+      var dy = e.deltaY;
+      var now = Date.now();
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+        if (now - lastSwipe > 320) {
+          lastSwipe = now;
+          /* 手指左滑(dx>0, 自然滚动内容右移) → 下一张 — 与触摸手势方向一致 */
+          if (dx > 0) lightbox.nextSlide();
+          else lightbox.prevSlide();
+        }
+        return;
+      }
+      if (dy > 0 && Math.abs(dy) >= Math.abs(dx)) {
+        if (!drag) {
+          var slide = slideEl();
+          var overlay = overlayEl();
+          drag = { total: 0, slide: slide, overlay: overlay };
+          if (slide) slide.style.transition = 'none';
+          if (overlay) overlay.style.transition = 'none';
+        }
+        drag.total += dy;
+        var off = Math.min(drag.total, 480);
+        if (drag.slide) drag.slide.style.transform = 'translateY(' + off.toFixed(1) + 'px)';
+        if (drag.overlay) drag.overlay.style.opacity = String(Math.max(0.3, 0.85 - off / 700)).slice(0, 4);
+        clearTimeout(drag.timer);
+        drag.timer = setTimeout(release, 160);
+      }
+    }
+
+    document.addEventListener('wheel', onWheel, { passive: false });
+    return function () {
+      document.removeEventListener('wheel', onWheel);
+      release();
+      var slide = slideEl();
+      var overlay = overlayEl();
+      if (slide) { slide.style.transition = ''; slide.style.transform = ''; }
+      if (overlay) { overlay.style.transition = ''; overlay.style.opacity = ''; }
+    };
   }
+
 
   function isVideoUrl(url) {
     var path = String(url).split('?')[0].split('#')[0];
