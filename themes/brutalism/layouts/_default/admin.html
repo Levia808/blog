@@ -240,9 +240,20 @@
               <button type="button" class="btn" data-admin-refresh="platform">刷新状态</button>
             </div>
           </div>
-          <div class="note">自动链路：<strong>账号密码登录</strong> → 获取登录态 Cookie → 用 Cookie <strong>爬取串文</strong>生成静态资源。Cookie 仅保存在你本机浏览器（localStorage）。</div>
+          <div class="note">自动链路：<strong>浏览器登录</strong> 或 <strong>账号密码登录</strong> → 获取登录态 Cookie → 用 Cookie <strong>爬取串文</strong>生成静态资源。Cookie 仅保存在你本机浏览器（localStorage）。</div>
 
-          <div class="panel-title">自动登录</div>
+          <div class="panel-title">浏览器登录（推荐 · 免输密码）</div>
+          <div class="settings-form">
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsBrowserLogin">打开浏览器登录</button>
+              <button type="button" class="btn" id="cfgThreadsBrowserCancel" hidden>取消等待</button>
+              <span class="hint" id="cfgThreadsBrowserHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsBrowserError" hidden></p>
+            <div class="note">点击按钮 → 在弹出的真实 Chrome 窗口中登录 Threads（支持验证码 / 双因素）→ 登录成功后 Cookie 自动读取并保存。首次使用需先运行一键启动器：<span class="mono">threads-repost/bridge/chrome-debug.sh</span>（Windows 用 <span class="mono">chrome-debug.bat</span>），它会启动调试 Chrome 与本机 Cookie 桥（端口 9222 / 8788，仅本机可访问）。</div>
+          </div>
+
+          <div class="panel-title">自动登录（账号密码）</div>
           <div class="settings-form">
             <label class="sf-field"><span>Threads / Instagram 账号</span><input type="text" id="cfgThreadsUser" placeholder="用户名或邮箱" autocomplete="username"></label>
             <label class="sf-field"><span>密码</span><input type="password" id="cfgThreadsPass" placeholder="密码" autocomplete="current-password"></label>

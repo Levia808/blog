@@ -55,11 +55,30 @@ THREADS_COOKIE="sessionid=xxx; ds_user_id=xxx" node fetch.mjs \
 
 后台新增「平台管理」侧栏页（`/admin/`，需 superadmin），实现最傻瓜式自动化链：
 
-1. **自动登录**：填账号密码 → 调 Edge Function `threads-login` → 自动保存 Cookie 到本机 localStorage
-2. **Cookie 管理**：可查看/手动粘贴/测试连接/清除（Cookie 失效时降级方案）
-3. **爬取串文**：填链接 → 调 Edge Function `threads-fetch` → 生成静态资源到 `threads-reposts` 桶
+1. **浏览器登录（推荐）**：点按钮 → 弹出真实 Chrome 窗口 → 登录 Threads → **自动读取 Cookie** 保存
+2. **自动登录（账号密码）**：填账号密码 → 调 Edge Function `threads-login` → 自动保存 Cookie
+3. **Cookie 管理**：可查看/手动粘贴/测试连接/清除（Cookie 失效时降级方案）
+4. **爬取串文**：填链接 → 调 Edge Function `threads-fetch` → 生成静态资源到 `threads-reposts` 桶
 
-Edge Function 部署：
+### 浏览器登录（一键启动器）
+
+后台页面无法直接读 HttpOnly 的 `sessionid`，也不允许跨域 iframe 嵌入 IG 登录页（X-Frame-Options: DENY）。
+因此采用 **本地 Cookie 桥**：在你本机启动一个调试 Chrome + 一个零依赖桥服务（Python 标准库），
+登录在真实浏览器中完成（验证码/双因素原生支持），桥通过 Chrome DevTools Protocol（`Network.getAllCookies`，
+可读 HttpOnly）自动提取 Cookie。
+
+```bash
+# Linux / macOS: 双击或执行 (自动启动调试 Chrome :9222 + Cookie 桥 :8788, 仅绑定本机)
+./threads-repost/bridge/chrome-debug.sh
+# Windows: 双击 chrome-debug.bat
+
+# 也可以在服务器上用 Playwright 替代本机桥 (桥协议一致)
+```
+
+之后后台「平台管理 → 浏览器登录」→ 弹出浏览器 → 登录 → 自动完成。桥端点
+（`GET /api/status · /api/open?url= · /api/cookies · /api/close`，均含 CORS + Private-Network 头）。
+
+### Edge Function 部署
 
 ```bash
 supabase functions deploy threads-login --no-verify-jwt
@@ -71,13 +90,24 @@ supabase functions deploy threads-fetch --no-verify-jwt
 （`#PWD_INSTAGRAM_BROWSER:0:<ts>:<password>`，instaloader 同款），被拒时自动降级为
 IG Web 官方加密格式（AES-256-GCM + NaCL sealed box，公钥从登录页动态提取）。
 返回 `sessionid=…; ds_user_id=…` 即为 Threads 爬取所需 Cookie。
-若账号触发验证码/双因素/Checkpoint，返回明确错误提示手动粘贴 Cookie。
+若账号触发验证码/双因素/Checkpoint，返回明确错误提示改用浏览器登录。
+
+### 方案调研结论（2026-08 实测）
+
+- **内嵌 iframe 反代登录页**：不可行。IG 登录 SPA 对非官方来源请求有深度反爬
+  （API 返回 `error 1357055`「无法处理你的请求」/ 登录页 HTML），且 `X-Frame-Options: DENY`
+  禁止直接嵌入。业界（instaloader / Playwright 生态）无一使用此方案。
+- **官方 Threads API OAuth**：仅支持自己的账号发帖/删帖，无法读取任意帖子，且需 Meta 开发者审核，不适用于转发爬取。
+- **第三方 session 服务**：存在但安全性与稳定性无保证，不推荐。
+- **浏览器自动化（本方案）**：Playwright / CDP 是唯一被广泛验证的可靠路径 —— 真实浏览器
+  自带全部反爬信号，登录后 `Network.getAllCookies` 读取 HttpOnly cookie。
 
 注意（2026-08 实测）：
 
 - `www.threads.net` 已 301 迁移至 `www.threads.com`，旧 `threads.net/api/v1/web/accounts/login/`
   端点已失效（404），登录统一走 IG 接口
 - IG 服务器对密码加密格式校验宽松：明文格式当前可用，加密格式亦被接受
+- Cookie 桥仅绑定 `127.0.0.1`，调试 Chrome 使用独立配置目录（不影响日常浏览器）
 
 ## 6. 扩展点
 
@@ -95,3 +125,4 @@ IG Web 官方加密格式（AES-256-GCM + NaCL sealed box，公钥从登录页�
 | 08-11 | Edge Function `threads-fetch` + 后台设置面板 Cookie/测试/爬取 |
 | 08-11 | Edge Function `threads-login`（IG Web 登录接口 + 密码加密，明文/密文双格式降级） |
 | 08-11 | 后台新增「平台管理」侧栏页：自动登录 → Cookie → 爬取 完整链路 |
+| 08-11 | 「浏览器登录」：本地 Cookie 桥（bridge.py + chrome-debug 启动器），真实 Chrome 登录后 CDP 自动读 HttpOnly Cookie；实测否决 iframe 反代方案（IG 反爬 error 1357055） |

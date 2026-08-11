@@ -24,12 +24,23 @@
     });
   }
 
-  /* ── Threads 串文转发: 正文链接识别 → 读静态 JSON 资源 → 自绘卡片 (降级为链接) ── */
+  /* ── Threads 串文转发: 正文链接识别 → 读静态 JSON 资源 → 复刻官方 embed 卡片 (降级为链接) ──
+     卡片 UI 复刻 Threads 官方 text-post-media embed: 白底 / 16px 圆角 / 头像+名字+时间 /
+     正文 / 互动数 / 底部 Threads logo + 「在 Threads 查看」 */
   var threadsStorageBase = null;
+
+  /* Threads 官方 logo (blockquote embed 同款) */
+  var THREADS_LOGO = '<svg aria-label="Threads" height="32px" role="img" viewBox="0 0 192 192" width="32px" xmlns="http://www.w3.org/2000/svg"><path d="M141.537 88.9883C140.71 88.5919 139.87 88.2104 139.019 87.8451C137.537 60.5382 122.616 44.905 97.5619 44.745C97.4484 44.7443 97.3355 44.7443 97.222 44.7443C82.2364 44.7443 69.7731 51.1409 62.102 62.7807L75.881 72.2328C81.6116 63.5383 90.6052 61.6848 97.2286 61.6848C97.3051 61.6848 97.3819 61.6848 97.4576 61.6855C105.707 61.7381 111.932 64.1366 115.961 68.814C118.893 72.2193 120.854 76.925 121.825 82.8638C114.511 81.6207 106.601 81.2385 98.145 81.7233C74.3247 83.0954 59.0111 96.9879 60.0396 116.292C60.5615 126.084 65.4397 134.508 73.775 140.011C80.8224 144.663 89.899 146.938 99.3323 146.423C111.79 145.74 121.563 140.987 128.381 132.296C133.559 125.696 136.834 117.143 138.28 106.366C144.217 109.949 148.617 114.664 151.047 120.332C155.179 129.967 155.42 145.8 142.501 158.708C131.182 170.016 117.576 174.908 97.0135 175.059C74.2042 174.89 56.9538 167.575 45.7381 153.317C35.2355 139.966 29.8077 120.682 29.6052 96C29.8077 71.3178 35.2355 52.0336 45.7381 38.6827C56.9538 24.4249 74.2039 17.11 97.0132 16.9405C119.988 17.1113 137.539 24.4614 149.184 38.788C154.894 45.8136 159.199 54.6488 162.037 64.9503L178.184 60.6422C174.744 47.9622 169.331 37.0357 161.965 27.974C147.036 9.60668 125.202 0.195148 97.0695 0H96.9569C68.8816 0.19447 47.2921 9.6418 32.7883 28.0793C19.8819 44.4864 13.2244 67.3157 13.0007 95.9325L13 96L13.0007 96.0675C13.2244 124.684 19.8819 147.514 32.7883 163.921C47.2921 182.358 68.8816 191.806 96.9569 192H97.0695C122.03 191.827 139.624 185.292 154.118 170.811C173.081 151.866 172.51 128.119 166.26 113.541C161.776 103.087 153.227 94.5962 141.537 88.9883ZM98.4405 129.507C88.0005 130.095 77.1544 125.409 76.6196 115.372C76.2232 107.93 81.9158 99.626 99.0812 98.6368C101.047 98.5234 102.976 98.468 104.871 98.468C111.106 98.468 116.939 99.0737 122.242 100.233C120.264 124.935 108.662 128.946 98.4405 129.507Z"/></svg>';
+
+  var THREADS_ICONS = {
+    heart: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5S4 15.7 4 10.2C4 7 6.3 5 8.9 5c1.3 0 2.4.6 3.1 1.5C12.7 5.6 13.8 5 15.1 5 17.7 5 20 7 20 10.2c0 5.5-8 10.3-8 10.3z"/></svg>',
+    comment: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3.5c-5 0-8.5 3.6-8.5 8.1 0 2.6 1.3 4.9 3.3 6.3V21l4.2-2.3c.3 0 .7.1 1 .1 5 0 8.5-3.6 8.5-8.1S17 3.5 12 3.5z"/></svg>',
+    repost: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17.5 3.8l3 3.1-3 3.1"/><path d="M3.5 6.9h17"/><path d="M6.5 20.2l-3-3.1 3-3.1"/><path d="M20.5 17.1h-17"/></svg>'
+  };
 
   function threadsInfo(url) {
     var u = String(url || '').replace(/[.。]$/, '').trim();
-    var m = u.match(/threads\.net\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
+    var m = u.match(/threads\.(?:net|com)\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
     return m ? { url: u, handle: m[1], id: m[2] } : null;
   }
 
@@ -37,13 +48,15 @@
     var info = threadsInfo(url);
     if (!info) return null;
     var card = document.createElement('a');
-    card.className = 'threads-card';
+    card.className = 'threads-card th-embed';
     card.href = info.url;
     card.target = '_blank';
     card.rel = 'noopener noreferrer';
+    /* 加载态: 复刻官方 embed 未渲染时的外观 (logo + 在 Threads 查看) */
     card.innerHTML =
-      '<span class="th-head"><span class="th-brand">THREADS · 转发的串文</span><span class="th-open">→</span></span>' +
-      '<span class="th-loading mono">正在加载串文…</span>';
+      '<span class="th-foot th-loading">' +
+      THREADS_LOGO +
+      '<span class="th-foot-text">在 Threads 查看</span></span>';
     loadThreadsData(card, info);
     return card;
   }
@@ -71,30 +84,52 @@
     });
   }
 
+  function formatCount(n) {
+    n = Number(n || 0);
+    if (n >= 10000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + '万';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
+
   function renderThreadsCard(card, d) {
+    var author = d.display_name || d.author || 'unknown';
+    var handle = d.handle || ('@' + String(d.author || ''));
+    var timeHtml = d.time
+      ? '<span class="th-time">' + escapeHtml(d.time) + '</span>'
+      : '';
     var replies = (d.replies || []).map(function (r) {
-      return '<div class="th-reply"><div class="th-author">' +
-        '<span class="th-avatar">' + escapeHtml((r.handle || '?').slice(0, 1).toUpperCase()) + '</span>' +
-        '<span class="th-aname">' + escapeHtml(r.author || '') + '</span>' +
-        '<span class="th-ahandle">' + escapeHtml(r.handle || '') + '</span></div>' +
-        '<div class="th-post">' + escapeHtml(r.text || '') + '</div></div>';
+      var ra = r.display_name || r.author || (r.handle || '?');
+      return '<span class="th-reply">' +
+        '<span class="th-reply-head">' +
+          '<span class="th-avatar th-avatar-sm">' + escapeHtml(String(ra).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="th-aname">' + escapeHtml(ra) + '</span>' +
+          '<span class="th-ahandle">' + escapeHtml(r.handle || '') + '</span>' +
+        '</span>' +
+        '<span class="th-post">' + escapeHtml(r.text || '') + '</span>' +
+      '</span>';
     }).join('');
     var stats = d.stats || {};
+    var statRows = [];
+    if (stats.likes > 0) statRows.push('<span class="th-stat">' + THREADS_ICONS.heart + '<b>' + formatCount(stats.likes) + '</b></span>');
+    if (stats.replies > 0) statRows.push('<span class="th-stat">' + THREADS_ICONS.comment + '<b>' + formatCount(stats.replies) + '</b></span>');
+    if (stats.reposts > 0) statRows.push('<span class="th-stat">' + THREADS_ICONS.repost + '<b>' + formatCount(stats.reposts) + '</b></span>');
     card.innerHTML =
-      '<span class="th-head"><span class="th-brand">THREADS · 转发的串文</span><span class="th-open">→</span></span>' +
-      '<span class="th-main">' +
+      '<span class="th-body">' +
         '<span class="th-author">' +
-          '<span class="th-avatar">' + escapeHtml((d.author || '?').slice(0, 1).toUpperCase()) + '</span>' +
-          '<span class="th-aname">' + escapeHtml(d.author || '') + '</span>' +
-          '<span class="th-ahandle">' + escapeHtml(d.handle || '') + '</span>' +
-          (d.time ? '<span class="th-time">' + escapeHtml(d.time) + '</span>' : '') +
+          '<span class="th-avatar">' + escapeHtml(String(author).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="th-author-meta">' +
+            '<span class="th-aname">' + escapeHtml(author) + '</span>' +
+            '<span class="th-meta-line">' + escapeHtml(handle) + (timeHtml ? ' · ' + timeHtml : '') + '</span>' +
+          '</span>' +
         '</span>' +
         '<span class="th-post">' + escapeHtml(d.text || '') + '</span>' +
         (replies ? '<span class="th-thread">' + replies + '</span>' : '') +
       '</span>' +
-      '<span class="th-stats"><span>❤ <b>' + (stats.likes || 0) + '</b></span>' +
-      '<span>💬 <b>' + (stats.replies || 0) + '</b></span>' +
-      '<span>↻ <b>' + (stats.reposts || 0) + '</b></span><span>THREADS.NET</span></span>';
+      (statRows.length ? '<span class="th-stats">' + statRows.join('') + '</span>' : '') +
+      '<span class="th-foot">' +
+        THREADS_LOGO +
+        '<span class="th-foot-text">在 Threads 查看</span>' +
+      '</span>';
     card.style.opacity = '0';
     card.style.transform = 'translateY(8px)';
     card.style.transition = 'opacity 0.4s cubic-bezier(.16,1,.3,1), transform 0.4s cubic-bezier(.16,1,.3,1)';
@@ -106,7 +141,7 @@
     });
   }
 
-  /* 正文扫描: threads.net 链接 → 转发卡片 */
+  /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */
   function transformThreadsLinks(container) {
     if (!container) return;
     var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
@@ -114,12 +149,12 @@
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(function (node) {
       var text = node.nodeValue;
-      if (!text || text.indexOf('threads.net') < 0) return;
-      var parts = text.split(/(https?:\/\/www\.threads\.net\/@[^\s]+)/gi);
+      if (!text || text.indexOf('threads.') < 0) return;
+      var parts = text.split(/(https?:\/\/www\.threads\.(?:net|com)\/@[^\s]+)/gi);
       if (parts.length <= 1) return;
       var frag = document.createDocumentFragment();
       parts.forEach(function (part, i) {
-        if (i % 2 === 1 && /threads\.net/i.test(part)) {
+        if (i % 2 === 1 && /threads\.(?:net|com)/i.test(part)) {
           var card = createThreadsCard(part.trim());
           if (card) frag.appendChild(card);
         } else if (part) {
@@ -217,7 +252,7 @@
   function avatarHtml(profile, cls, fallbackCls) {
     var name = (profile && (profile.display_name || profile.username)) || '?';
     if (profile && profile.avatar_url) {
-      return '<img class="' + cls + '" src="' + escapeHtml(profile.avatar_url) + '" alt="" loading="lazy">';
+      return '<img class="' + cls + '" src="' + escapeHtml(profile.avatar_url) + '" alt="" loading="lazy" decoding="async" data-fb="' + escapeHtml(name.slice(0, 1).toUpperCase()) + '">';
     }
     return '<span class="' + cls + ' ' + fallbackCls + '">' + escapeHtml(name.slice(0, 1)) + '</span>';
   }
@@ -512,16 +547,10 @@
       momentMediaCache = {};
       momentDataCache = {};
       moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
-      listEl.innerHTML = moments.length
-        ? moments.map(renderMoment).join('')
-        : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
-      transformThreadsLinks(listEl);
-      markLongImages();
-      preloadSingleImages();
+      diffRenderMoments(moments);
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
-      animateCardsIn(listEl.querySelectorAll('.moment-card'));
       hintEl.textContent = moments.length ? '共 ' + moments.length + ' 条动态' : '';
       hintEl.hidden = Boolean(moments.length);
     } catch (error) {
@@ -544,6 +573,103 @@
     selectedMedia = [];
   }
 
+  /* ── Diff 渲染: 只重渲染数据变化的卡片, 未变卡片保持原 DOM (图片/头像不重新加载, 杜绝闪烁) ── */
+  function momentKey(m) {
+    var p = m.profiles || {};
+    /* 用户上下文纳入 key: 登录/登出后点赞态与操作按钮需重新渲染 */
+    var uid = currentUser ? currentUser.id : '';
+    var role = currentProfile ? currentProfile.role : '';
+    return JSON.stringify({
+      u: uid + '|' + role,
+      c: m.content,
+      m: m.media,
+      v: m.visibility || 'public',
+      vt: m.visible_to || [],
+      hf: m.hidden_from || [],
+      a: p.avatar_url || '',
+      n: p.display_name || p.username || '',
+      t: m.created_at
+    });
+  }
+
+  function diffRenderMoments(moments) {
+    if (!moments.length) {
+      listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      return;
+    }
+    var nextIds = {};
+    moments.forEach(function (m) { nextIds[m.id] = true; });
+    /* 1. 移除已不存在的卡片 (删除/可见性过滤) */
+    listEl.querySelectorAll('.moment-card').forEach(function (card) {
+      var id = card.dataset.momentId;
+      if (!nextIds[id]) {
+        destroyEditSortable(id);
+        revokeEditMediaBlobs(card);
+        card.remove();
+      }
+    });
+    /* 2. 逐条对比: key 相同 → 复用 DOM; key 不同 → 重渲染; 不存在 → 插入 (保持 desc 顺序) */
+    var prevSibling = null;
+    var fresh = [];
+    moments.forEach(function (m) {
+      var id = m.id;
+      var key = momentKey(m);
+      var existing = listEl.querySelector('[data-moment-id="' + id + '"]');
+      if (existing && existing.dataset.ck === key) {
+        syncCardCounts(m, existing);
+        prevSibling = existing;
+        return;
+      }
+      var holder = document.createElement('div');
+      holder.innerHTML = renderMoment(m);
+      var node = holder.firstElementChild;
+      node.dataset.ck = key;
+      if (existing) {
+        destroyEditSortable(id);
+        revokeEditMediaBlobs(existing);
+        existing.replaceWith(node);
+      } else if (prevSibling) {
+        prevSibling.after(node);
+      } else {
+        listEl.prepend(node);
+      }
+      prevSibling = node;
+      fresh.push(node);
+    });
+    if (fresh.length) {
+      fresh.forEach(function (card) {
+        transformThreadsLinks(card);
+        preloadSingleImages(card);
+        markLongImages(card);
+      });
+      animateCardsIn(fresh);
+    }
+  }
+
+  /* 复用卡片: 仅同步点赞/评论数字与点赞态 (不重渲染, 图片零重载) */
+  function syncCardCounts(m, card) {
+    var liked = false;
+    if (currentUser && Array.isArray(m.moment_likes)) {
+      liked = m.moment_likes.some(function (l) { return l.user_id === currentUser.id; });
+    }
+    var likeCount = (m.moment_likes && m.moment_likes.length) || 0;
+    var commentCount = (m.moment_comments && m.moment_comments.length) || 0;
+    var likeBtn = card.querySelector('[data-moment-like]');
+    if (likeBtn) {
+      var countEl = likeBtn.querySelector('.ma-count');
+      if (countEl && (parseInt(countEl.textContent, 10) || 0) !== likeCount) countEl.textContent = likeCount;
+      if (likeBtn.classList.contains('is-liked') !== liked) {
+        likeBtn.classList.toggle('is-liked', liked);
+        var label = Array.prototype.find.call(likeBtn.childNodes, function (n) { return n.nodeType === 3; });
+        if (label) label.textContent = liked ? '已赞 ' : '点赞 ';
+      }
+    }
+    var toggle = card.querySelector('[data-moment-toggle-comments]');
+    if (toggle) {
+      var cc = toggle.querySelector('.ma-count');
+      if (cc && (parseInt(cc.textContent, 10) || 0) !== commentCount) cc.textContent = commentCount;
+    }
+  }
   function showComposer(show) {
     composer.hidden = !show;
     if (show) loginWall.hidden = true;
@@ -989,6 +1115,11 @@
   listEl.addEventListener('load', function (e) {
     var el = e.target;
     if (!el || el.tagName !== 'IMG') return;
+    /* 头像: 加载完成淡入 (尺寸固定, 零跳变) */
+    if (el.classList.contains('moment-avatar') || el.classList.contains('mc-avatar')) {
+      el.classList.add('is-loaded');
+      return;
+    }
     var frame = el.closest('.media-frame');
     if (frame) frame.classList.add('loaded');
     /* 持久化缓存: 加载完成后的预览图存入 Cache API */
@@ -1000,8 +1131,7 @@
     }
     /* 单图 (非网格): 加载完成锁定真实宽高比 — 占位与最终等大 */
     if (frame && !frame.classList.contains('media-frame--grid') && el.naturalWidth) {
-      frame.style.aspectRatio = el.naturalWidth + ' / ' + el.naturalHeight;
-      frame.style.minHeight = '0';
+      sizeFrame(frame, el.naturalWidth, el.naturalHeight);
     }
     markLongImages();
   }, true);
@@ -1041,6 +1171,13 @@
         hit.blob().then(function (blob) {
           var objUrl = URL.createObjectURL(blob);
           img.src = objUrl;
+          /* 缓存命中同样锁定真实比例 (blob 本地解码, 零网络零跳变) */
+          var probe = new Image();
+          probe.onload = function () {
+            var frame = img.closest('.media-frame');
+            sizeFrame(frame, probe.naturalWidth, probe.naturalHeight);
+          };
+          probe.src = objUrl;
           img.addEventListener('load', function () {
             setTimeout(function () { URL.revokeObjectURL(objUrl); }, 1000);
           }, { once: true });
@@ -1052,17 +1189,24 @@
     }).catch(function () { if (done) done(false); });
   }
 
-  /* 单图准确占位: 预读预览图得真实宽高比 → frame 占位准确 → 缓存命中立即显示 (零跳变) */
-  function preloadSingleImages() {
-    listEl.querySelectorAll('.media-frame:not(.media-frame--grid) img[data-src]').forEach(function (img) {
+  /* 单图准确占位: 预读真实宽高比 → frame 占位准确 → 缓存命中立即显示 (零跳变)
+     sizeFrame: aspect-ratio 不可动画, 显式 height(px) 参与过渡 → 120px 占位平滑展开到真实高度 */
+  function sizeFrame(frame, w, h) {
+    if (!frame || !w || !h || frame.classList.contains('media-frame--grid')) return;
+    var targetH = Math.max(1, Math.round(frame.clientWidth * h / w));
+    frame.style.aspectRatio = w + ' / ' + h;
+    frame.style.height = targetH + 'px';
+    frame.style.minHeight = '0';
+    frame.classList.add('sized');
+  }
+
+  function preloadSingleImages(root) {
+    (root || listEl).querySelectorAll('.media-frame:not(.media-frame--grid) img[data-src]').forEach(function (img) {
       function probe(url, done) {
         var p = new Image();
         p.onload = function () {
           var frame = img.closest('.media-frame');
-          if (frame && p.naturalWidth) {
-            frame.style.aspectRatio = p.naturalWidth + ' / ' + p.naturalHeight;
-            frame.classList.add('sized');
-          }
+          sizeFrame(frame, p.naturalWidth, p.naturalHeight);
           img.src = url;
           delete img.dataset.src;
           delete img.dataset.orig;
@@ -1166,6 +1310,15 @@
   listEl.addEventListener('error', function (e) {
     var el = e.target;
     if (!el || el.tagName !== 'IMG') return;
+    /* 头像加载失败 → 回退字母占位 (破图图标替换为同尺寸字母块) */
+    if (el.dataset.fb && !el.dataset.fbDone) {
+      el.dataset.fbDone = '1';
+      var span = document.createElement('span');
+      span.className = el.className + (el.classList.contains('moment-avatar') ? ' moment-avatar-fallback' : ' mc-avatar-fallback');
+      span.textContent = el.dataset.fb;
+      el.replaceWith(span);
+      return;
+    }
     var frame = el.closest('.media-frame');
     if (frame) frame.classList.add('loaded');
     /* 预览图 404 (旧数据无 preview 文件) → 回退原图 */
@@ -1558,19 +1711,33 @@
   }
 
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标
-     滚动性能: 滚动中加载完成的图不立即 wrap (布局跳动→卡顿), 滚动停止 150ms 后统一处理 */
+     滚动性能: 滚动中加载完成的图不立即 wrap (布局跳动→卡顿), 滚动停止 150ms 后统一处理
+     平滑收拢: 先按原比例全高渲染, 下一帧过渡到 280px — 消除 wrap 瞬间的高度跳变 */
   var pendingLongImages = [];
   var scrollIdleTimer = null;
 
   function wrapLongImage(img) {
+    var frame = img.closest('.media-frame');
     var wrap = document.createElement('div');
     wrap.className = 'moment-media-long';
     var tag = document.createElement('span');
     tag.className = 'moment-media-long-tag';
     tag.textContent = '长图';
-    img.parentNode.insertBefore(wrap, img);
+    if (frame) frame.replaceWith(wrap);
+    else img.parentNode.insertBefore(wrap, img);
     wrap.appendChild(img);
     wrap.appendChild(tag);
+    /* 平滑收拢: 先设原比例全高 → 双 rAF 后回落 CSS 280px (transition 接管) */
+    var fullH = 280;
+    if (img.naturalWidth) {
+      fullH = Math.max(1, Math.round(wrap.clientWidth * img.naturalHeight / img.naturalWidth));
+    }
+    wrap.style.height = fullH + 'px';
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        wrap.style.height = '';
+      });
+    });
   }
 
   function flushPendingLongImages() {
@@ -1580,8 +1747,8 @@
     imgs.forEach(wrapLongImage);
   }
 
-  function markLongImages() {
-    listEl.querySelectorAll('.moment-media img').forEach(function (img) {
+  function markLongImages(root) {
+    (root || listEl).querySelectorAll('.moment-media img').forEach(function (img) {
       /* 多图正方形网格不处理长图; 已包裹/已检查跳过 */
       if (img.closest('.moment-media-long') || img.closest('.moment-media-grid') || img.dataset.longChecked) return;
       function check() {

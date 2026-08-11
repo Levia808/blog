@@ -715,6 +715,91 @@
       });
   });
 
+  /* ── 浏览器登录 (本地 Cookie 桥: Chrome CDP 打开真实登录页 → 自动读取 HttpOnly Cookie) ──
+     桥端点: http://localhost:8788 (GET /api/status, /api/open?url=, /api/cookies, /api/close)
+     一键启动器: threads-repost/bridge/chrome-debug.sh / .bat */
+  var browserBridgeBase = 'http://localhost:8788';
+  var browserLoginBtn = document.getElementById('cfgThreadsBrowserLogin');
+  var browserCancelBtn = document.getElementById('cfgThreadsBrowserCancel');
+  var browserHintEl = document.getElementById('cfgThreadsBrowserHint');
+  var browserErrorEl = document.getElementById('cfgThreadsBrowserError');
+  var browserPollTimer = null;
+
+  function setBrowserHint(msg) {
+    if (browserHintEl) browserHintEl.textContent = msg || '';
+  }
+  function setBrowserError(msg) {
+    if (browserErrorEl) { browserErrorEl.textContent = msg || ''; browserErrorEl.hidden = !msg; }
+  }
+  function browserBridgeFetch(path) {
+    return fetch(browserBridgeBase + path, { cache: 'no-store' }).then(function (r) {
+      return r.json().catch(function () { throw new Error('桥响应异常 (HTTP ' + r.status + ')'); });
+    });
+  }
+
+  function stopBrowserPolling() {
+    if (browserPollTimer) { clearInterval(browserPollTimer); browserPollTimer = null; }
+    if (browserCancelBtn) browserCancelBtn.hidden = true;
+    if (browserLoginBtn) { browserLoginBtn.disabled = false; browserLoginBtn.textContent = '打开浏览器登录'; }
+  }
+
+  function startBrowserLogin() {
+    setBrowserError('');
+    setBrowserHint('');
+    browserBridgeFetch('/api/status').then(function (status) {
+      if (!status.chrome) {
+        setBrowserError('未检测到 Cookie 桥。请先运行一键启动器（threads-repost/bridge/chrome-debug.sh，Windows: chrome-debug.bat），启动后点「重试」。');
+        return;
+      }
+      browserLoginBtn.disabled = true;
+      browserLoginBtn.textContent = '等待登录…';
+      if (browserCancelBtn) browserCancelBtn.hidden = false;
+      return browserBridgeFetch('/api/open?url=' + encodeURIComponent('https://www.threads.com/'))
+        .then(function (open) {
+          if (!open.ok) throw new Error(open.error || '打开浏览器窗口失败');
+          setBrowserHint('浏览器已弹出，请在弹出的窗口中登录 Threads（登录完成后自动获取）');
+        });
+    }).then(function () {
+      var waited = 0;
+      browserPollTimer = setInterval(function () {
+        browserBridgeFetch('/api/cookies').then(function (r) {
+          if (!r.ok) return;
+          var c = r.cookies || {};
+          var sessionid = c.sessionid;
+          if (!sessionid) return;
+          stopBrowserPolling();
+          var cookie = 'sessionid=' + sessionid +
+            (c.ds_user_id ? '; ds_user_id=' + c.ds_user_id : '') +
+            (c.csrftoken ? '; csrftoken=' + c.csrftoken : '');
+          try { localStorage.setItem(threadsCookieKey, cookie); } catch (e) {}
+          if (threadsCookieInput) threadsCookieInput.value = cookie;
+          updatePlatformStatus();
+          setBrowserHint('登录成功 · Cookie 已自动保存');
+          showToast('浏览器登录成功，Cookie 已保存', 'success');
+          browserBridgeFetch('/api/close').catch(function () {});
+        }).catch(function () {});
+        waited += 2500;
+        if (waited > 300000) {
+          stopBrowserPolling();
+          setBrowserError('等待登录超时（5 分钟）。请在弹出的浏览器中完成登录后重新点击按钮。');
+        }
+      }, 2500);
+    }).catch(function (e) {
+      stopBrowserPolling();
+      setBrowserError((e && e.message) || '浏览器登录失败');
+    });
+  }
+
+  if (browserLoginBtn) browserLoginBtn.addEventListener('click', function () {
+    if (browserPollTimer) { stopBrowserPolling(); }
+    startBrowserLogin();
+  });
+  if (browserCancelBtn) browserCancelBtn.addEventListener('click', function () {
+    stopBrowserPolling();
+    browserBridgeFetch('/api/close').catch(function () {});
+    setBrowserHint('已取消');
+  });
+
   /* ── Threads 串文转发 (平台管理面板: 自动登录 + Cookie + 爬取) ── */
   var threadsCookieKey = 'blog_threads_cookie';
   var threadsSaveBtn = document.getElementById('cfgThreadsSave');
