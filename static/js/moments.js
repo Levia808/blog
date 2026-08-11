@@ -419,6 +419,12 @@
     closeLocPanel();
   }, true);
 
+  /* 滚轮隔离: 鼠标悬停地点面板时, 滚动事件只影响菜单内部 (不滚页面)
+     列表区域由 CSS overscroll-behavior: contain 兜底 (滚到边界不再外溢) */
+  mcLocPanel.addEventListener('wheel', function (e) {
+    if (!e.target.closest('.mlp-list')) e.preventDefault();
+  }, { passive: false });
+
   /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */
   function transformThreadsLinks(container) {
     if (!container) return;

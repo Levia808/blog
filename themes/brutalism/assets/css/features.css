@@ -874,7 +874,19 @@ body.admin-only { overflow: hidden; height: 100vh; }
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* 滚轮隔离: 列表滚动到边界不再滚页面 */
+  overscroll-behavior: contain;
+  /* 浅色极简滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 74, 55, 0.45) transparent;
 }
+.mlp-list::-webkit-scrollbar { width: 6px; }
+.mlp-list::-webkit-scrollbar-track { background: transparent; }
+.mlp-list::-webkit-scrollbar-thumb {
+  background: rgba(47, 74, 55, 0.35);
+  border-radius: 3px;
+}
+.mlp-list::-webkit-scrollbar-thumb:hover { background: rgba(47, 74, 55, 0.6); }
 .mlp-item {
   display: flex;
   align-items: center;
