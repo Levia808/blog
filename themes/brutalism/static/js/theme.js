@@ -1389,34 +1389,6 @@
       });
     }
 
-    /* 终端光标: 跟随输入文本插入位置 (canvas 精确测量文本宽度) */
-    var dollarEl = cmd ? cmd.querySelector('.search-dollar') : null;
-    var caretEl = cmd ? cmd.querySelector('.search-caret') : null;
-    var caretCanvas = null;
-    function measureTextWidth(text) {
-      if (!text) return 0;
-      var cs = window.getComputedStyle(input);
-      caretCanvas = caretCanvas || document.createElement('canvas');
-      var ctx = caretCanvas.getContext('2d');
-      ctx.font = cs.font;
-      return ctx.measureText(text).width;
-    }
-    function posCaret() {
-      if (!caretEl || !dollarEl) return;
-      var base = dollarEl.offsetWidth + 16;
-      var text = input.value.slice(0, input.selectionStart || input.value.length);
-      caretEl.style.left = (base + measureTextWidth(text)) + 'px';
-    }
-    posCaret();
-    var composing = false;
-    input.addEventListener('compositionstart', function () { composing = true; });
-    input.addEventListener('compositionend', function () { composing = false; posCaret(); });
-    input.addEventListener('input', function () { if (!composing) posCaret(); });
-    input.addEventListener('keyup', posCaret);
-    input.addEventListener('click', posCaret);
-    document.addEventListener('selectionchange', posCaret);
-    window.addEventListener('resize', posCaret);
-
     function esc(v) {
       return String(v || '').replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -1481,15 +1453,14 @@
       }
       results.innerHTML = list.map(function (d, i) { return itemHtml(d, i, query); }).join('');
       var nodes = results.querySelectorAll('.sr-item');
-      /* 双 rAF: 确保浏览器先渲染 opacity:0 初始态, 再触发过渡 (否则过渡被合并, 无动画)
-         搜索页设计稿动效强制启用 (不受系统 reduced-motion 影响) */
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          nodes.forEach(function (el, i) {
-            setTimeout(function () { el.classList.add('in'); }, i * 45);
-          });
-        });
+      /* stagger 入场: @keyframes 动画 + delay (浏览器必然播放, 不受初始态渲染影响) */
+      nodes.forEach(function (el, i) {
+        el.style.animationDelay = (i * 45) + 'ms';
+        el.classList.add('in');
       });
+      setTimeout(function () {
+        nodes.forEach(function (el) { el.style.animationDelay = ''; });
+      }, nodes.length * 45 + 600);
       if (status) {
         status.hidden = false;
         status.textContent = list.length + ' results' + (query.trim() ? ' · 关键词「' + query.trim() + '」' : ' · 全部内容');
