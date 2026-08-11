@@ -84,23 +84,41 @@
     var timeHtml = d.time
       ? '<span class="th-time">' + escapeHtml(d.time) + '</span>'
       : '';
+    var avatarHtml = d.avatar
+      ? '<img class="th-avatar-img" src="' + escapeHtml(d.avatar) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+      : '';
     var media = (d.media || []).map(function (m) {
       if (m.type === 'video') {
         return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" controls preload="metadata"></video></span>';
       }
       return '<span class="th-media-item"><img src="' + escapeHtml(m.url) + '" alt="" loading="lazy" decoding="async"></span>';
     }).join('');
+    var multi = (d.media || []).length > 1;
+    var mediaHtml = '';
+    if (media) {
+      mediaHtml =
+        '<span class="th-media-wrap">' +
+          '<span class="th-media' + (multi ? ' is-carousel' : '') + '">' + media + '</span>' +
+          (multi
+            ? '<button type="button" class="th-prev" aria-label="上一张">‹</button>' +
+              '<button type="button" class="th-next" aria-label="下一张">›</button>' +
+              '<span class="th-dots">' + (d.media || []).map(function (_, i) {
+                return '<i class="' + (i === 0 ? 'on' : '') + '" data-i="' + i + '"></i>';
+              }).join('') + '</span>'
+            : '') +
+        '</span>';
+    }
     card.innerHTML =
       '<span class="th-body">' +
         '<span class="th-author">' +
-          '<span class="th-avatar">' + escapeHtml(String(author).slice(0, 1).toUpperCase()) + '</span>' +
+          '<span class="th-avatar">' + avatarHtml + '<span class="th-avatar-fb">' + escapeHtml(String(author).slice(0, 1).toUpperCase()) + '</span></span>' +
           '<span class="th-author-meta">' +
             '<span class="th-aname">' + escapeHtml(author) + '</span>' +
             '<span class="th-meta-line">' + escapeHtml(handle) + (timeHtml ? ' · ' + timeHtml : '') + '</span>' +
           '</span>' +
         '</span>' +
         '<span class="th-post">' + escapeHtml(d.text || '') + '</span>' +
-        (media ? '<span class="th-media">' + media + '</span>' : '') +
+        mediaHtml +
       '</span>' +
       '<span class="th-foot">' +
         THREADS_LOGO +
@@ -116,6 +134,35 @@
       });
     });
   }
+
+  /* 串文卡片轮播: 左右箭头 + 圆点 (Threads 官网同款滑动交互) */
+  function scrollThreadsMedia(mediaEl, dir) {
+    if (!mediaEl) return;
+    var step = mediaEl.clientWidth || 1;
+    mediaEl.scrollTo({ left: Math.max(0, mediaEl.scrollLeft + dir * step), behavior: 'smooth' });
+  }
+
+  function syncThreadsDots(wrap) {
+    var mediaEl = wrap && wrap.querySelector('.th-media');
+    var dots = wrap && wrap.querySelector('.th-dots');
+    if (!mediaEl || !dots) return;
+    var idx = Math.round(mediaEl.scrollLeft / (mediaEl.clientWidth || 1));
+    Array.prototype.forEach.call(dots.children, function (dot, i) {
+      dot.classList.toggle('on', i === idx);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var prevBtn = e.target.closest('.th-prev');
+    if (prevBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(prevBtn.closest('.th-media-wrap').querySelector('.th-media'), -1); return; }
+    var nextBtn = e.target.closest('.th-next');
+    if (nextBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(nextBtn.closest('.th-media-wrap').querySelector('.th-media'), 1); return; }
+  });
+
+  document.addEventListener('scroll', function (e) {
+    var wrap = e.target && e.target.closest && e.target.closest('.th-media-wrap');
+    if (wrap) syncThreadsDots(wrap);
+  }, true);
 
   /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */
   function transformThreadsLinks(container) {

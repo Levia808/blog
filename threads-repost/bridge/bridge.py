@@ -251,10 +251,12 @@ EXTRACT_JS = r"""
   var text = textLines.join('\n');
   var media = [];
   var seen = {};
+  var avatar = '';
   Array.from(document.querySelectorAll('img')).forEach(function (img) {
     var alt = img.alt || '';
     var src = img.currentSrc || img.src || '';
-    var isAvatar = /头像|avatar/i.test(alt) || (img.naturalWidth === 150 && img.naturalHeight === 150);
+    if (/头像|avatar/i.test(alt) && src && !avatar) { avatar = src; return; }
+    var isAvatar = img.naturalWidth === 150 && img.naturalHeight === 150;
     if (!isAvatar && src && !seen[src]) { seen[src] = true; media.push({ type: 'image', url: src, width: img.naturalWidth, height: img.naturalHeight }); }
   });
   Array.from(document.querySelectorAll('video')).forEach(function (v) {
@@ -262,7 +264,7 @@ EXTRACT_JS = r"""
     if (src && !seen[src]) { seen[src] = true; media.push({ type: 'video', url: src }); }
   });
   if (media.length > 10) media = media.slice(0, 10);
-  return { ready: text.length > 0 || media.length > 0, author: author, time: time, text: text, likes: likes, replies: replies, media: media };
+  return { ready: text.length > 0 || media.length > 0, author: author, time: time, text: text, likes: likes, replies: replies, media: media, avatar: avatar };
 })()
 """
 
@@ -303,6 +305,7 @@ def fetch_post(url):
                     'handle': '@' + handle, 'time': val.get('time', ''),
                     'text': val.get('text', ''), 'replies': [],
                     'media': val.get('media', []),
+                    'avatar': val.get('avatar', ''),
                     'stats': {'likes': val.get('likes', 0), 'replies': val.get('replies', 0), 'reposts': 0},
                     'fetchedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                 }}

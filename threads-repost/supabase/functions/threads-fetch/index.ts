@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
         author: d.author || d.handle || '',
         handle: d.handle || '',
         display_name: d.display_name || '',
+        avatar: String(d.avatar || ''),
         time: d.time || '',
         text: String(d.text || '').slice(0, 2000),
         media: Array.isArray(d.media) ? d.media.map((m: any) => ({
@@ -104,7 +105,7 @@ Deno.serve(async (req) => {
   }
 });
 
-/** 写入 storage (公共桶 threads-reposts, 不存在则自动创建) */
+/** 写入 storage (公共桶 threads-reposts, 不存在则自动创建); 头像 fbcdn URL 浏览器端被 CORP 拦截 → 服务端代拉转存 */
 async function saveToStorage(result: any) {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -125,6 +126,31 @@ async function saveToStorage(result: any) {
       .upload(result.id + '.json', blob, { upsert: true, contentType: 'application/json' }));
   }
   if (upErr) return json({ error: '存储失败: ' + upErr.message }, 500);
+
+  // 头像转存: fbcdn 头像带 CORP: same-origin, 浏览器跨站加载被拦 → 服务端代拉后存桶 (公开可读)
+  if (result.avatar && /fbcdn/.test(result.avatar)) {
+    try {
+      const avRes = await fetch(result.avatar, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36' }
+      });
+      if (avRes.ok) {
+        const avBuf = await avRes.arrayBuffer();
+        const avName = result.id + '-avatar.jpg';
+        const avBlob = new Blob([avBuf], { type: avRes.headers.get('content-type') || 'image/jpeg' });
+        const { error: avErr } = await supabase.storage
+          .from('threads-reposts')
+          .upload(avName, avBlob, { upsert: true, contentType: 'image/jpeg' });
+        if (!avErr) {
+          result.avatar = supabase.storage.from('threads-reposts').getPublicUrl(avName).data.publicUrl;
+          // 更新 JSON 里的头像字段
+          const finalBlob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+          await supabase.storage.from('threads-reposts')
+            .upload(result.id + '.json', finalBlob, { upsert: true, contentType: 'application/json' });
+        }
+      }
+    } catch (e) { /* 头像代拉失败则保留原 URL */ }
+  }
+
   const publicUrl = supabase.storage.from('threads-reposts').getPublicUrl(result.id + '.json').data.publicUrl;
   return json({ ok: true, id: result.id, publicUrl, result });
 }
