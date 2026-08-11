@@ -37,6 +37,32 @@ def probe(path):
         return None
 
 
+def make_preview(path: Path, w: int, h: int):
+    """生成低码率预览版 (-preview.mp4): 480p 低码率无音轨 — 归档卡片 hover 封面用 (秒加载)"""
+    edge = max(w, h)
+    if edge <= 480:
+        return
+    out = path.with_name(path.stem + "-preview.mp4")
+    if out.exists():
+        return
+    vf = "scale=480:-2" if w >= h else "scale=-2:480"
+    cmd = [
+        "ffmpeg", "-y", "-v", "error", "-i", str(path),
+        "-vf", vf,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "32",
+        "-maxrate", "600k", "-bufsize", "1200k",
+        "-profile:v", "main", "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart",
+        "-an",
+        str(out),
+    ]
+    r = run(cmd)
+    if r.returncode != 0:
+        out.unlink(missing_ok=True)
+        return
+    print(f"  ✓ 预览版 480p ({out.stat().st_size / 1024 / 1024:.1f}MB)")
+
+
 def transcode(path: Path, codec: str, w: int, h: int):
     vf = ""
     edge = max(w, h)
@@ -78,7 +104,7 @@ def main():
     if not targets:
         print("未发现视频文件")
         return
-    done = skipped = 0
+    done = skipped = previews = 0
     for p in sorted(set(targets)):
         info = probe(p)
         if not info:
@@ -87,11 +113,14 @@ def main():
         codec, w, h = info
         if codec == "h264":
             skipped += 1
-            continue
-        print(f"转码: {p.name}")
-        if transcode(p, codec, w, h):
-            done += 1
-    print(f"完成: 转码 {done} 个, H.264 跳过 {skipped} 个")
+        else:
+            print(f"转码: {p.name}")
+            if transcode(p, codec, w, h):
+                done += 1
+        if codec == "h264":
+            make_preview(p, w, h)
+            previews += 1
+    print(f"完成: 转码 {done} 个, H.264 跳过 {skipped} 个, 预览版 {previews} 个")
 
 
 if __name__ == "__main__":

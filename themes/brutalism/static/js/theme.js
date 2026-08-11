@@ -1574,6 +1574,20 @@
 
       function playPreview() {
         if (reducedMotion) return;
+        /* 优先预览版 (低码率 -preview.mp4): 秒加载; 不存在时 error 回退原视频 */
+        if (video.dataset.previewSrc && !video.dataset.previewTried) {
+          video.dataset.previewTried = '1';
+          video.addEventListener('error', function () {
+            if (video.dataset.previewSrc) {
+              video.src = video.dataset.origSrc || video.getAttribute('src');
+              delete video.dataset.previewSrc;
+              video.load();
+            }
+          }, { once: true });
+          video.dataset.origSrc = video.getAttribute('src');
+          video.src = video.dataset.previewSrc;
+          video.load();
+        }
         var promise = video.play();
         if (promise) promise.catch(function () {});
       }
