@@ -24,6 +24,139 @@
     });
   }
 
+  /* ── 网易云音乐卡片: 正文链接自动识别 → 内嵌卡片 (去链接文本) ──
+     白名单: music.163.com (song/playlist/album), 元数据经 CORS 代理爬取 og 标签 */
+  function neteaseType(url) {
+    var u = String(url || '').replace(/[.。]$/, '').trim();
+    if (/music\.163\.com/i.test(u) || /163cn\.tv/i.test(u)) {
+      if (/\/(song|m\/song)(\?|\/|#)/i.test(u)) return { label: 'Single' };
+      if (/\/(playlist|m\/playlist)(\?|\/|#)/i.test(u)) return { label: 'Playlist' };
+      if (/\/(album|m\/album)(\?|\/|#)/i.test(u)) return { label: 'Album' };
+    }
+    return null;
+  }
+
+  function applyNeteaseDominant(infoEl, img) {
+    try {
+      var c = document.createElement('canvas');
+      c.width = 8; c.height = 8;
+      var ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, 8, 8);
+      var d = ctx.getImageData(0, 0, 8, 8).data;
+      var r = 0, g = 0, b = 0, n = d.length / 4;
+      for (var i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+      r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
+      var lum = (r * 299 + g * 587 + b * 114) / 1000;
+      infoEl.style.background = 'rgb(' + r + ',' + g + ',' + b + ')';
+      infoEl.style.color = lum > 150 ? '#11130f' : '#f7f8f4';
+    } catch (e) {
+      var fb = infoEl.dataset.type === 'Playlist' ? '#8e6a3f' : infoEl.dataset.type === 'Album' ? '#6a4f8e' : '#2f4a37';
+      infoEl.style.background = fb;
+      infoEl.style.color = '#f7f8f4';
+    }
+  }
+
+  function createNeteaseCard(url) {
+    var type = neteaseType(url);
+    if (!type) return null;
+    var card = document.createElement('a');
+    card.className = 'netease-card';
+    card.href = url.replace(/[.。]$/, '');
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+    card.innerHTML =
+      '<span class="nc-cover"><img alt="" crossorigin="anonymous"><span class="nc-play">▶</span></span>' +
+      '<span class="nc-info" data-type="' + type.label + '">' +
+        '<span class="nc-type">' + type.label + '</span>' +
+        '<span class="nc-title">' + escapeHtml(url.replace(/^https?:\/\//, '').slice(0, 40)) + '</span>' +
+        '<span class="nc-artist"></span>' +
+        '<span class="nc-meta"><span>网易云音乐</span></span>' +
+      '</span>' +
+      '<span class="nc-open">→</span>';
+    loadNeteaseMeta(card, url, type);
+    return card;
+  }
+
+  function loadNeteaseMeta(card, url, type) {
+    var proxies = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+      'https://corsproxy.io/?url=' + encodeURIComponent(url)
+    ];
+    (function tryFetch(i) {
+      if (i >= proxies.length) return;
+      fetch(proxies[i], { mode: 'cors' })
+        .then(function (r) { if (!r.ok) throw new Error('bad'); return r.text(); })
+        .then(function (html) {
+          var title = (html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]*)"/i) || [])[1]
+            || (html.match(/<meta[^>]+content="([^"]*)"[^>]+property="og:title"/i) || [])[1]
+            || (html.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1] || '';
+          var img = (html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]*)"/i) || [])[1]
+            || (html.match(/<meta[^>]+content="([^"]*)"[^>]+property="og:image"/i) || [])[1] || '';
+          var desc = (html.match(/<meta[^>]+property="og:description"[^>]+content="([^"]*)"/i) || [])[1] || '';
+          applyNeteaseMeta(card, { title: title, img: img, desc: desc });
+        })
+        .catch(function () { tryFetch(i + 1); });
+    })(0);
+  }
+
+  function applyNeteaseMeta(card, meta) {
+    if (meta.title) {
+      var t = meta.title.replace(/\s*-\s*网易云音乐\s*$/i, '').trim();
+      if (t) card.querySelector('.nc-title').textContent = t;
+    }
+    if (meta.desc) {
+      var d = meta.desc.replace(/\s*-\s*网易云音乐\s*$/i, '').trim();
+      if (d) card.querySelector('.nc-artist').textContent = d.slice(0, 60);
+    }
+    if (meta.img) {
+      var img = card.querySelector('.nc-cover img');
+      var src = meta.img.replace(/^http:/, 'https:');
+      img.src = src;
+      img.onload = function () { applyNeteaseDominant(card.querySelector('.nc-info'), img); };
+      img.onerror = function () {
+        var fb = card.querySelector('.nc-info').dataset.type === 'Playlist' ? '#8e6a3f' : card.querySelector('.nc-info').dataset.type === 'Album' ? '#6a4f8e' : '#2f4a37';
+        card.querySelector('.nc-info').style.background = fb;
+        card.querySelector('.nc-info').style.color = '#f7f8f4';
+      };
+    }
+  }
+
+  /* 正文扫描: music.163.com 链接 → 卡片 (去除链接文本) */
+  function transformNeteaseLinks(container) {
+    if (!container) return;
+    var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      var text = node.nodeValue;
+      if (!text || text.indexOf('music.163.com') < 0) return;
+      var parts = text.split(/(https?:\/\/music\.163\.com\/[^\s]+)/gi);
+      if (parts.length <= 1) return;
+      var frag = document.createDocumentFragment();
+      parts.forEach(function (part, i) {
+        if (i % 2 === 1 && /music\.163\.com/i.test(part)) {
+          var card = createNeteaseCard(part.trim());
+          if (card) frag.appendChild(card);
+        } else if (part) {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      node.parentNode.replaceChild(frag, node);
+    });
+    /* 卡片入场 */
+    container.querySelectorAll('.netease-card').forEach(function (card) {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(8px)';
+      card.style.transition = 'opacity 0.4s cubic-bezier(.16,1,.3,1), transform 0.4s cubic-bezier(.16,1,.3,1)';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          card.style.opacity = '1';
+          card.style.transform = 'none';
+        });
+      });
+    });
+  }
+
   function renderMarkdown(value) {
     var html = escapeHtml(value).replace(/`([^`]+)`/g, '<code>$1</code>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -409,6 +542,7 @@
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
+      transformNeteaseLinks(listEl);
       markLongImages();
       preloadSingleImages();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
