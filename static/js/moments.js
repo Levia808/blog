@@ -142,8 +142,8 @@
       var ext = String(url).split('?')[0].split('#')[0].split('.').pop().toLowerCase();
       var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
       var item = isVideo
-        ? '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
-        : '<img data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
+        ? '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
+        : '<img data-gallery="moment-' + momentId + '" src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
       if (extra > 0 && i === displayMedia.length - 1) {
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
@@ -399,8 +399,6 @@
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
       markLongImages();
-      lazyLoadImages();
-      lazyLoadMedia();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
@@ -637,9 +635,9 @@
     if (!wrap || allMedia.length <= 9) return false;
     var extraHtml = allMedia.slice(9).map(function (url) {
       if (isVideoUrl(url)) {
-        return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
+        return '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
-      return '<img data-gallery="moment-' + card.dataset.momentId + '" data-src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
+      return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
     }).join('');
     wrap.insertAdjacentHTML('beforeend', extraHtml);
     var more = wrap.querySelector('.moment-media-more');
@@ -648,8 +646,6 @@
       if (badge) badge.remove();
     }
     markLongImages();
-    lazyLoadImages();
-    lazyLoadMedia();
     flashNotice('已展开全部图片', 'success');
     return true;
   }
@@ -696,6 +692,15 @@
       e.stopPropagation();
       e.preventDefault();
       openMomentLightbox(mediaImg);
+    }
+  }, true);
+
+  /* 预览图 404 (旧数据无 preview 文件) → 回退原图 (error 不冒泡, 捕获阶段) */
+  listEl.addEventListener('error', function (e) {
+    var img = e.target;
+    if (img && img.tagName === 'IMG' && img.dataset.orig && (!img.src || img.src.indexOf('/preview-') >= 0)) {
+      img.src = img.dataset.orig;
+      delete img.dataset.orig;
     }
   }, true);
 
@@ -1050,160 +1055,6 @@
     setTimeout(function () {
       animated.forEach(function (c) { c.style.transitionDelay = ''; });
     }, 1200);
-  }
-
-  /* ── 图片分批懒加载: 同一卡片多图串行下载 (最多 2 张并发)
-     避免 9 张大图同时下载+解码导致滚动卡顿
-     业界模式 (vanilla-lazyload cancel_on_exit): 滚出视口的图立即取消下载,
-     快速滚动经过多图动态时只加载停留的图
-     双保险: IntersectionObserver + scroll 兜底 (部分环境 IO 回调不触发) */
-  var imageQueue = [];
-  var imageLoadingCount = 0;
-  var imageIO = null;
-  var loadingImages = {};
-  var MAX_CONCURRENT_IMAGES = 2;
-
-  function pumpImageQueue() {
-    while (imageLoadingCount < MAX_CONCURRENT_IMAGES && imageQueue.length) {
-      var img = imageQueue.shift();
-      if (!img.dataset.src || img.src) continue;
-      imageLoadingCount++;
-      loadingImages[img.__lazyId] = img;
-      img.src = img.dataset.src;
-      img.addEventListener('load', function () {
-        if (!loadingImages[this.__lazyId]) return;
-        delete loadingImages[this.__lazyId];
-        imageLoadingCount--;
-        markLongImages();
-        pumpImageQueue();
-      }, { once: true });
-      img.addEventListener('error', function () {
-        if (!loadingImages[this.__lazyId]) return;
-        delete loadingImages[this.__lazyId];
-        imageLoadingCount--;
-        /* 预览图 404 (旧数据无 preview 文件) → 回退原图直接加载 */
-        if (this.dataset.orig && (!this.src || this.src.indexOf('/preview-') >= 0)) {
-          this.src = this.dataset.orig;
-          delete this.dataset.orig;
-        }
-        pumpImageQueue();
-      }, { once: true });
-    }
-  }
-
-  /* 去重入队: 已在加载/队列中的不入队 (多路径入队防膨胀) */
-  function enqueueImage(img) {
-    if (!img || img.src || !img.dataset.src) return;
-    if (loadingImages[img.__lazyId]) return;
-    if (imageQueue.indexOf(img) >= 0) return;
-    imageQueue.push(img);
-    pumpImageQueue();
-  }
-
-  /* IO 兜底: 视口附近未加载的图直接入队 (scroll 时调用, rAF 节流) */
-  function loadVisibleImages() {
-    var imgs = listEl.querySelectorAll('.moment-media img[data-src]');
-    if (!imgs.length) return;
-    var vh = window.innerHeight || document.documentElement.clientHeight;
-    imgs.forEach(function (img) {
-      if (img.src || !img.dataset.src) return;
-      var r = img.getBoundingClientRect();
-      if (r.top < vh + 300 && r.bottom > -300) {
-        enqueueImage(img);
-      }
-    });
-  }
-
-  var scrollRafPending = false;
-  window.addEventListener('scroll', function () {
-    if (scrollRafPending) return;
-    scrollRafPending = true;
-    requestAnimationFrame(function () {
-      scrollRafPending = false;
-      loadVisibleImages();
-    });
-  }, { passive: true });
-
-  function lazyLoadImages() {
-    imageQueue = [];
-    loadingImages = {};
-    if (imageIO) { imageIO.disconnect(); imageIO = null; }
-    var imgs = listEl.querySelectorAll('.moment-media img[data-src]');
-    if (!imgs.length) return;
-    if (!('IntersectionObserver' in window)) {
-      imgs.forEach(function (img) { if (img.dataset.src) img.src = img.dataset.src; });
-      return;
-    }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        var img = en.target;
-        if (en.isIntersecting) {
-          enqueueImage(img);
-        } else {
-          /* 滚出视口取消下载: 仅当确实验证滚出很远 (600px 余量防误取消) */
-          var r2 = img.getBoundingClientRect();
-          var vh2 = window.innerHeight || document.documentElement.clientHeight;
-          if (r2.top > vh2 + 600 || r2.bottom < -600) {
-            if (loadingImages[img.__lazyId]) {
-              img.removeAttribute('src');
-              delete loadingImages[img.__lazyId];
-              imageLoadingCount--;
-            }
-            var qi = imageQueue.indexOf(img);
-            if (qi >= 0) imageQueue.splice(qi, 1);
-            pumpImageQueue();
-          } else {
-            /* 实际仍在视口附近: 确保入队加载 (IO 判定异常兜底) */
-            enqueueImage(img);
-          }
-        }
-      });
-    }, { rootMargin: '300px 0px' });
-    imageIO = io;
-    imgs.forEach(function (img) {
-      img.__lazyId = 'i' + (++editMediaSeq) + '_' + Math.random().toString(36).slice(2, 8);
-      io.observe(img);
-    });
-    /* IO 兜底: 首屏立即加载视口内图片 + 定时复查 (IO 回调不触发时保证图片可显示) */
-    loadVisibleImages();
-    setTimeout(loadVisibleImages, 500);
-    setTimeout(loadVisibleImages, 1500);
-  }
-
-  /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */
-  var mediaObserver = null;
-  function lazyLoadMedia() {
-    if (mediaObserver) { mediaObserver.disconnect(); mediaObserver = null; }
-    var videos = listEl.querySelectorAll('video[data-src]');
-    if (!videos.length) return;
-    /* play 兜底: 未进入视口被点击也立即加载 */
-    videos.forEach(function (v) {
-      v.addEventListener('play', function () {
-        if (v.dataset.src && !v.src) {
-          v.src = v.dataset.src;
-          delete v.dataset.src;
-        }
-      }, { once: true });
-    });
-    if (!('IntersectionObserver' in window)) {
-      videos.forEach(function (v) {
-        if (v.dataset.src) { v.src = v.dataset.src; delete v.dataset.src; }
-      });
-      return;
-    }
-    var obs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        var v = en.target;
-        if (v.dataset.src && !v.src) {
-          v.src = v.dataset.src;
-          delete v.dataset.src;
-        }
-        obs.unobserve(v);
-      });
-    }, { rootMargin: '200px 0px' });
-    mediaObserver = obs;
-    videos.forEach(function (v) { obs.observe(v); });
   }
 
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标

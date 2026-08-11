@@ -806,9 +806,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
   /* 入场动画: 渲染即隐藏 (opacity 0), 加 .moment-card-in 后平滑上浮 — 杜绝闪烁 */
   opacity: 0;
   transform: translateY(22px);
-  /* 滚动性能: 视口外卡片跳过渲染 (Chrome 85+/Safari 18+), 滚动经过不卡顿 */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
 }
 .moment-card.moment-card-in {
   opacity: 1;
