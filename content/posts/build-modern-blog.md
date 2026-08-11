@@ -2,7 +2,7 @@
 title: 构建现代化个人博客#1
 date: 2026-08-08T13:13:00+08:00
 draft: false
-card_style: feature
+card_style: fullscreen
 tags:
   - hugo
   - cloudflare
