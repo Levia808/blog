@@ -1155,7 +1155,7 @@ html.js [data-reveal].reveal-visible {
 
 /* ── 横向长条卡片 (后台可选样式) ── */
 .card-list { display: flex; flex-direction: column; gap: 16px; max-width: 760px; margin: 0 auto; }
-.card-list--feature { max-width: 1040px; gap: 20px; }
+.card-list--feature { max-width: 780px; gap: 20px; }
 .post-card-cover.horizontal { flex-direction: row; }
 .post-card-cover.horizontal .pc-link { flex-direction: row; }
 .post-card-cover.horizontal .pc-img {
