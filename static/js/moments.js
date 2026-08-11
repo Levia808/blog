@@ -141,9 +141,12 @@
     var items = displayMedia.map(function (url, i) {
       var ext = String(url).split('?')[0].split('#')[0].split('.').pop().toLowerCase();
       var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
+      var imgAttrs = isGrid
+        ? 'src="' + escapeHtml(mediaPreviewUrl(url)) + '" loading="lazy"'
+        : 'data-src="' + escapeHtml(mediaPreviewUrl(url)) + '"';
       var item = isVideo
         ? '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
-        : '<img data-gallery="moment-' + momentId + '" src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+        : '<img data-gallery="moment-' + momentId + '" ' + imgAttrs + ' data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
       if (extra > 0 && i === displayMedia.length - 1) {
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
@@ -402,6 +405,7 @@
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
       markLongImages();
+      preloadSingleImages();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
@@ -715,6 +719,48 @@
     }
     markLongImages();
   }, true);
+  /* 单图准确占位: 预读预览图得真实宽高比 → frame 占位准确 → 缓存命中立即显示 (零跳变) */
+  function preloadSingleImages() {
+    listEl.querySelectorAll('.media-frame:not(.media-frame--grid) img[data-src]').forEach(function (img) {
+      function probe(url, done) {
+        var p = new Image();
+        p.onload = function () {
+          var frame = img.closest('.media-frame');
+          if (frame && p.naturalWidth) {
+            frame.style.aspectRatio = p.naturalWidth + ' / ' + p.naturalHeight;
+            frame.classList.add('sized');
+          }
+          img.src = url;
+          delete img.dataset.src;
+          delete img.dataset.orig;
+          if (done) done(true);
+        };
+        p.onerror = function () { if (done) done(false); };
+        p.src = url;
+      }
+      var previewUrl = img.dataset.src;
+      if (img.dataset.orig) {
+        probe(previewUrl, function (ok) {
+          if (!ok) probe(img.dataset.orig, function (ok2) {
+            /* 预读全部失败兜底: 直接显示原图 (无准确占位但保证显示) */
+            if (!ok2 && img.dataset.orig) {
+              img.src = img.dataset.orig;
+              delete img.dataset.src;
+              delete img.dataset.orig;
+            }
+          });
+        });
+      } else {
+        probe(previewUrl, function (ok) {
+          if (!ok && img.dataset.src) {
+            img.src = img.dataset.src;
+            delete img.dataset.src;
+          }
+        });
+      }
+    });
+  }
+
   /* 视频元数据就绪 → 隐藏 spinner */
   listEl.addEventListener('loadeddata', function (e) {
     var el = e.target;

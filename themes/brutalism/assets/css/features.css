@@ -840,9 +840,11 @@ body.admin-only { overflow: hidden; height: 100vh; }
   position: relative;
   overflow: hidden;
   background: var(--bg);
-  min-height: 240px;
+  min-height: 120px;
 }
 .media-frame--grid { aspect-ratio: 1 / 1; min-height: 0; }
+/* 单图: 预读完成(JS 锁定 aspect-ratio)后 min-height 让位于准确比例 */
+.media-frame.sized { min-height: 0; }
 .media-frame .media-spinner {
   position: absolute;
   inset: 0;
