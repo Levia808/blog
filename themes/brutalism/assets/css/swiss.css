@@ -1691,7 +1691,15 @@ body.admin-only .btn-primary {
   font-size: clamp(48px, 7vw, 92px);
   letter-spacing: -0.035em;
   line-height: 0.98;
+  overflow: hidden;
+  padding-bottom: 0.08em;
 }
+.search-page .search-title .ln {
+  display: inline-block;
+  transform: translateY(108%);
+  transition: transform 0.8s var(--swiss-ease-out);
+}
+.search-page.ready .search-title .ln { transform: none; }
 .search-page .search-count {
   grid-column: 3;
   justify-self: end;
@@ -1699,7 +1707,15 @@ body.admin-only .btn-primary {
   font-variant-numeric: tabular-nums;
 }
 .search-page .search-count b { color: var(--swiss-moss); font-weight: 500; }
-.search-rule { height: 1px; background: var(--swiss-line-strong); margin-top: 6px; }
+.search-rule {
+  height: 1px;
+  background: var(--swiss-line-strong);
+  margin-top: 6px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s var(--swiss-ease-out);
+}
+.search-page.ready .search-rule { transform: scaleX(1); }
 
 .search-page .search-stage {
   max-width: 760px;
@@ -1742,6 +1758,7 @@ body.admin-only .btn-primary {
   padding: 2px 0;
 }
 .search-cmd input::placeholder { color: var(--swiss-faint); font-weight: 400; }
+.search-cmd input { caret-color: transparent; }
 .search-caret {
   position: absolute;
   left: 48px;
@@ -1955,4 +1972,6 @@ body.admin-only .btn-primary {
 @media (prefers-reduced-motion: reduce) {
   .search-caret { animation: none; }
   .search-results .sr-item { opacity: 1; transform: none; transition: none; }
+  .search-page .search-title .ln { transform: none; }
+  .search-rule { transform: none; }
 }

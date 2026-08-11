@@ -1379,6 +1379,16 @@
     var items = [];
     var sel = -1;
 
+    /* 入场: 标题上浮 + 规则线生长 (双 rAF 保证过渡触发) */
+    var pageEl = document.querySelector('.search-page');
+    if (pageEl) {
+      var h1 = pageEl.querySelector('.search-title');
+      if (h1) h1.innerHTML = '<span class="ln">' + h1.textContent + '</span>';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { pageEl.classList.add('ready'); });
+      });
+    }
+
     function esc(v) {
       return String(v || '').replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -1443,8 +1453,13 @@
       }
       results.innerHTML = list.map(function (d, i) { return itemHtml(d, i, query); }).join('');
       var nodes = results.querySelectorAll('.sr-item');
-      nodes.forEach(function (el, i) {
-        setTimeout(function () { el.classList.add('in'); }, reducedMotion ? 0 : i * 45);
+      /* 双 rAF: 确保浏览器先渲染 opacity:0 初始态, 再触发过渡 (否则过渡被合并, 无动画) */
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          nodes.forEach(function (el, i) {
+            setTimeout(function () { el.classList.add('in'); }, reducedMotion ? 0 : i * 45);
+          });
+        });
       });
       if (status) {
         status.hidden = false;
