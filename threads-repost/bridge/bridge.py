@@ -13,6 +13,7 @@
 import base64
 import json
 import os
+import re
 import socket
 import struct
 import threading
@@ -213,6 +214,89 @@ def close_tab():
             pass
 
 
+# ── 帖子抓取: 真实浏览器渲染后从 DOM 提取 (Threads 帖子内容为客户端渲染, 无 og 元数据) ──
+FETCH_POLL_INTERVAL = 1.5
+FETCH_TIMEOUT = 25
+
+EXTRACT_JS = r"""
+(function(){
+  var t = document.body.innerText || '';
+  var lines = t.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  var iViews = -1;
+  for (var i = 0; i < lines.length; i++) {
+    if (/次浏览|次查看/.test(lines[i])) { iViews = i; break; }
+  }
+  var start = iViews >= 0 ? iViews + 1 : 0;
+  if (!lines[start]) return { ready: false };
+  var author = lines[start] || '';
+  var time = lines[start + 1] || '';
+  var textLines = [];
+  var likes = 0, replies = 0;
+  for (var j = start + 2; j < lines.length; j++) {
+    var l = lines[j];
+    if (/^[\d.]+[万kK]?$/.test(l)) {
+      var n = parseFloat(l);
+      if (/万$/.test(l)) n = n * 10000;
+      else if (/[kK]$/.test(l)) n = n * 1000;
+      likes = n;
+      continue;
+    }
+    if (/^回复/.test(l)) { var m = l.match(/回复\s*([\d.]+[万kK]?)/); if (m) { var rn = parseFloat(m[1]); if (/万$/.test(m[1])) rn *= 10000; else if (/[kK]$/.test(m[1])) rn *= 1000; replies = rn; } break; }
+    if (/暂无回复/.test(l)) { break; }
+    textLines.push(l);
+  }
+  var text = textLines.join('\n');
+  return { ready: text.length > 0, author: author, time: time, text: text, likes: likes, replies: replies };
+})()
+"""
+
+
+def fetch_post(url):
+    """导航标签到帖子页 → 轮询渲染 → 提取帖子内容"""
+    with _lock:
+        tid = _opened_target.get('id')
+        ws_url = _opened_target.get('ws')
+    if not ws_url:
+        t = open_tab('about:blank')
+        tid, ws_url = t['id'], t['ws']
+    try:
+        client = CdpClient(ws_url, timeout=15)
+    except Exception as e:
+        return {'ok': False, 'error': '连接浏览器失败: ' + str(e)}
+    try:
+        client.call('Page.navigate', {'url': url})
+        deadline = time.time() + FETCH_TIMEOUT
+        last_err = None
+        while time.time() < deadline:
+            time.sleep(FETCH_POLL_INTERVAL)
+            res = client.call('Runtime.evaluate', {'expression': EXTRACT_JS, 'returnByValue': True})
+            try:
+                val = res['result']['result']['value']
+            except Exception:
+                continue
+            if not val:
+                continue
+            if val.get('ready'):
+                # 作者/句柄从 URL 取
+                import re as _re
+                m = _re.match(r'https?://(?:www\.)?threads\.(?:net|com)/@([^/]+)/post/([A-Za-z0-9_-]+)', url)
+                handle = m.group(1) if m else ''
+                pid = m.group(2) if m else ''
+                return {'ok': True, 'data': {
+                    'url': url, 'id': pid, 'author': val.get('author') or handle,
+                    'handle': '@' + handle, 'time': val.get('time', ''),
+                    'text': val.get('text', ''), 'replies': [],
+                    'stats': {'likes': val.get('likes', 0), 'replies': val.get('replies', 0), 'reposts': 0},
+                    'fetchedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                }}
+            last_err = '页面渲染超时'
+        return {'ok': False, 'error': '未能提取帖子内容（' + str(last_err or '渲染超时') + '）'}
+    except Exception as e:
+        return {'ok': False, 'error': '抓取失败: ' + str(e)}
+    finally:
+        client.close()
+
+
 # ── HTTP 服务 ──
 class Handler(BaseHTTPRequestHandler):
     def _send(self, obj, status=200):
@@ -244,6 +328,17 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 t = open_tab(url)
                 self._send({'ok': True, 'targetId': t['id']})
+            elif u.path == '/api/fetch':
+                q = urllib.parse.parse_qs(u.query)
+                url = (q.get('url') or [''])[0]
+                if not url or not re.match(r'https?://(?:www\.)?threads\.(?:net|com)/@[^/]+/post/', url):
+                    self._send({'ok': False, 'error': '无效的 Threads 帖子链接'}, 400)
+                    return
+                if not chrome_alive():
+                    self._send({'ok': False, 'error': 'Chrome 调试端口未开启 (请先运行 chrome-debug 启动器)'}, 400)
+                    return
+                r = fetch_post(url)
+                self._send(r, 200 if r['ok'] else 400)
             elif u.path == '/api/cookies':
                 r = read_cookies()
                 self._send({'ok': r['ok'], 'cookies': r.get('cookies', {}), 'error': r.get('error')}, 200 if r['ok'] else 400)

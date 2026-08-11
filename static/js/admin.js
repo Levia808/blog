@@ -918,12 +918,16 @@
       });
   });
   if (threadsTestBtn) threadsTestBtn.addEventListener('click', function () {
-    var cookie = threadsCookieInput.value.trim();
-    if (!cookie) { setThreadsError('请先填写 Cookie'); return; }
     setThreadsError('');
+    setThreadsHint('');
     threadsTestBtn.disabled = true;
-    var url = 'https://www.threads.net/@zuck/post/C6S6o1sx7Rn';
-    blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
+    /* 桥模式: 真实浏览器渲染提取 (Threads 帖子为客户端渲染, og 元数据已废弃) */
+    var testUrl = (threadsUrlInput.value || '').trim() || 'https://www.threads.com/@chaoliang_/post/Db5rr3Cm5Ht';
+    browserBridgeFetch('/api/fetch?url=' + encodeURIComponent(testUrl))
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.error || '抓取失败');
+        return blogSupabase.functions.invoke('threads-fetch', { body: { json: r.data } });
+      })
       .then(function (res) {
         var data = checkInvoke(res);
         setThreadsHint('连接成功 · 已生成资源: ' + (data.id || ''));
@@ -931,6 +935,25 @@
       })
       .catch(function (e) {
         describeInvokeError(e).then(function (msg) {
+          if (/桥|chrome-debug|浏览器/.test(msg)) {
+            /* 桥不可用 → 降级: 服务端直爬 */
+            var cookie = threadsCookieInput.value.trim();
+            if (!cookie) { setThreadsError('Cookie 桥不可用且未配置 Cookie：' + msg); return; }
+            blogSupabase.functions.invoke('threads-fetch', { body: { url: testUrl, cookie: cookie } })
+              .then(function (res2) {
+                var d2 = checkInvoke(res2);
+                setThreadsHint('连接成功（服务端直爬）· 资源: ' + (d2.id || ''));
+                showToast('Threads 连接成功', 'success');
+              })
+              .catch(function (e2) {
+                describeInvokeError(e2).then(function (msg2) {
+                  if (/Cookie|无效|过期|提取串文/i.test(msg2)) setThreadsError('Cookie 无效或已过期：' + msg2);
+                  else setThreadsError('测试失败：' + msg2);
+                });
+              })
+              .finally(function () { threadsTestBtn.disabled = false; });
+            return;
+          }
           if (/Cookie|无效|过期|提取串文/i.test(msg)) setThreadsError('Cookie 无效或已过期：' + msg);
           else setThreadsError('测试失败：' + msg);
         });
@@ -939,15 +962,18 @@
   });
   if (threadsFetchBtn) threadsFetchBtn.addEventListener('click', function () {
     var url = (threadsUrlInput.value || '').trim();
-    var cookie = threadsCookieInput.value.trim();
     if (!url) { setThreadsFetchError('请输入 Threads 链接'); return; }
-    if (!cookie) { setThreadsFetchError('请先保存 Cookie'); return; }
     if (!/threads\.(net|com)\/@[^/]+\/post\/[A-Za-z0-9_-]+/i.test(url)) { setThreadsFetchError('无效的 Threads 串文链接'); return; }
     setThreadsFetchError('');
     setThreadsHint('');
     threadsFetchBtn.disabled = true;
     threadsFetchBtn.textContent = '爬取中…';
-    blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
+    /* 桥模式: 真实浏览器渲染提取 → Edge 入库 */
+    browserBridgeFetch('/api/fetch?url=' + encodeURIComponent(url))
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.error || '抓取失败');
+        return blogSupabase.functions.invoke('threads-fetch', { body: { json: r.data } });
+      })
       .then(function (res) {
         var data = checkInvoke(res);
         setThreadsHint('已生成静态资源: ' + (data.publicUrl || ''));
@@ -955,6 +981,27 @@
       })
       .catch(function (e) {
         describeInvokeError(e).then(function (msg) {
+          if (/桥|chrome-debug|浏览器/.test(msg)) {
+            /* 桥不可用 → 降级: 服务端直爬 */
+            var cookie = threadsCookieInput.value.trim();
+            if (!cookie) { setThreadsFetchError('Cookie 桥不可用且未配置 Cookie：' + msg); return; }
+            blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
+              .then(function (res2) {
+                var d2 = checkInvoke(res2);
+                setThreadsHint('已生成静态资源（服务端直爬）: ' + (d2.publicUrl || ''));
+                showToast('串文资源已生成', 'success');
+              })
+              .catch(function (e2) {
+                describeInvokeError(e2).then(function (msg2) {
+                  setThreadsFetchError('爬取失败：' + msg2);
+                });
+              })
+              .finally(function () {
+                threadsFetchBtn.disabled = false;
+                threadsFetchBtn.textContent = '爬取并生成资源';
+              });
+            return;
+          }
           setThreadsFetchError('爬取失败：' + msg);
         });
       })
