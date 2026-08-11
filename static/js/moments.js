@@ -563,13 +563,16 @@
     }
   }
 
-  /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 (content 编辑保存后重渲染自动重建) */
+  /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 (content 编辑保存后重渲染自动重建)
+     注意: 必须跳过表单控件 (textarea/input) 内的文本节点 — 否则编辑面板里的链接文本会被替换成卡片 */
   function transformThreadsLinks(container) {
     if (!container) return;
     var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
     var nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(function (node) {
+      var parent = node.parentNode;
+      if (parent && (parent.tagName === 'TEXTAREA' || parent.tagName === 'INPUT' || parent.tagName === 'SELECT')) return;
       var text = node.nodeValue;
       if (!text || text.indexOf('threads.') < 0) return;
       var parts = text.split(/(https?:\/\/www\.threads\.(?:net|com)\/@[^\s]+)/gi);
