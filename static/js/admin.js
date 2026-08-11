@@ -763,11 +763,16 @@
       var waited = 0;
       browserPollTimer = setInterval(function () {
         browserBridgeFetch('/api/cookies').then(function (r) {
-          if (!r.ok) return;
+          if (!r.ok) {
+            /* 桥报错(未登录/验证失败): 持续等待但明确告知, 用户可重新登录或点取消 */
+            setBrowserError(r.error || '读取 Cookie 失败，请检查浏览器窗口');
+            return;
+          }
           var c = r.cookies || {};
           var sessionid = c.sessionid;
           if (!sessionid) return;
           stopBrowserPolling();
+          setBrowserError('');
           var cookie = 'sessionid=' + sessionid +
             (c.ds_user_id ? '; ds_user_id=' + c.ds_user_id : '') +
             (c.csrftoken ? '; csrftoken=' + c.csrftoken : '');
