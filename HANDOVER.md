@@ -104,6 +104,7 @@ push main
 
 | 文件 | 内容 | 状态 |
 |------|------|------|
+| `design-comment-tree.html` | **动态评论树状回复**：多层嵌套缩进+边线、内联回复输入条（发送/取消/Esc/点击外部自动收起隐藏）、可交互 demo（13 项自动化验证通过） | ✅ 已上线（集成 moments.js + features.css） |
 | `design-nav-hero.html` | 导航+标题+开屏欢迎（MOD × Odin's Crow：滚动变形/均分导航/渐变线组/标语栏/光标） | 设计稿 |
 | `design-loader.html` | 瑞士风加载屏 V2：描边 LEVIA 字符 stagger、进度补间、状态打字机、网格漂移、完成态动画组、分层退出 | 设计稿 |
 | `design-home.html` | **加载 → 首页联动**（描边标题填实、进度衔接线条组、导航均分就绪、滚动收拢） | 设计稿（站点优化参照） |
@@ -184,6 +185,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-11 | `本地` | 动态评论树状回复上线（design-comment-tree.html 集成）：回复的回复递归嵌套子树（缩进+边线，L3 起收紧）、内联回复输入条（发送成功/取消/Esc/点击外部自动收起隐藏）、appendCommentNode 树插入、commentNode 定位整节点（realtime 删除级联清空容器） |
 | 08-11 | `本地` | 动态页图片/头像加载防闪修复：① 列表 **diff 渲染**（按 id+数据 key 对比，未变卡片复用 DOM 零重载图，点赞/评论数仅同步数字）② 单图占位 `sizeFrame` 显式 height 参与过渡（aspect-ratio 不可动画导致 120px→真实高度瞬间跳变）③ 长图 wrap 替换 frame（原实现 frame 残留大空盒）+ 原比例全高→280px 平滑收拢动画 ④ 头像加载淡入 + 加载失败回退字母占位（破图图标消除） |
 | 08-11 | `本地` | 动态修复：评论 RLS 一键修复 SQL（含 Realtime 发布）+ 评论实时同步（postgres_changes，双向去重）+ 点赞按钮移动端换行修复（nowrap + 操作行 flex-wrap）+ 作者(author)可发动态（前端 + moments_insert 改 is_staff） |
 | 08-09 | `本次提交` | 移除文章页特殊效果：删除编辑器开关/类型字段、文章模板标记、懒加载逻辑、样式与特效 bundle |

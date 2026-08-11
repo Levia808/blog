@@ -110,9 +110,16 @@
     });
   }
 
-  /* 悬停串文卡片: 禁用浏览器横向历史手势 (双指左右滑) */
+  /* 悬停串文卡片: 禁用浏览器历史手势 (双指左右滑) — 但保留轮播图片的左右浏览手势 */
   document.addEventListener('wheel', function (e) {
     if (e.target.closest('.threads-card')) {
+      /* 轮播区域: 横向手势交给轮播原生滚动 (浏览图片), 不拦截 */
+      var wrap = e.target.closest('.th-media-wrap');
+      if (wrap) {
+        var mediaEl = wrap.querySelector('.th-media');
+        if (mediaEl && mediaEl.scrollWidth > mediaEl.clientWidth) return;
+      }
+      /* 卡片其他区域: 横向手势是浏览器历史手势 → 禁用 */
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) e.preventDefault();
     }
   }, { passive: false });
@@ -381,29 +388,32 @@
       '</div>';
   }
 
-  function renderComment(c, momentId, isReply) {
+  function renderComment(c, momentId, byParent) {
     var p = c.profiles || {};
     var name = p.display_name || p.username || '读者';
-    return '<div class="moment-comment' + (isReply ? ' is-reply' : '') + '">' +
+    var kids = (byParent[c.id] || []).map(function (k) { return renderComment(k, momentId, byParent); }).join('');
+    return '<div class="moment-comment" data-cmt-node="' + c.id + '">' +
       avatarHtml(p, 'mc-avatar', 'mc-avatar-fallback') +
       '<div class="mcc-body"><span class="mcc-author">' + escapeHtml(name) + '</span> ' +
       '<span class="mcc-text">' + escapeHtml(c.content) + '</span>' +
       '<div class="mcc-time">' + fmtTime(c.created_at) + '</div>' +
       commentActions(c, momentId) +
+      (kids ? '<div class="mc-replies">' + kids + '</div>' : '') +
       '</div></div>';
   }
 
   function renderComments(moment) {
     var all = moment.moment_comments || [];
     if (!all.length) return '';
-    var tops = all.filter(function (c) { return !c.parent_id; });
+    /* 树构建: 顶层评论 + 每条的回复子树 (回复的回复递归嵌套, 不再丢失) */
     var byParent = {};
-    all.forEach(function (c) { if (c.parent_id) { (byParent[c.parent_id] = byParent[c.parent_id] || []).push(c); } });
-    var html = '<div class="moment-comments">';
-    tops.forEach(function (c) {
-      html += renderComment(c, moment.id, false);
-      (byParent[c.id] || []).forEach(function (r) { html += renderComment(r, moment.id, true); });
+    var tops = [];
+    all.forEach(function (c) {
+      if (c.parent_id) { (byParent[c.parent_id] = byParent[c.parent_id] || []).push(c); }
+      else tops.push(c);
     });
+    var html = '<div class="moment-comments">';
+    tops.forEach(function (c) { html += renderComment(c, moment.id, byParent); });
     html += '</div>';
     return html;
   }
@@ -411,6 +421,82 @@
   function canManageMoment(moment) {
     if (!currentUser || !moment) return false;
     return currentUser.id === moment.user_id || (currentProfile && currentProfile.role === 'superadmin');
+  }
+
+  /* ── 内联回复输入条: 展开于目标评论下方, 发送/取消/Esc/点击外部自动收起隐藏 ── */
+  function closeReplyBar(wrap) {
+    if (!wrap || wrap.dataset.closing) return;
+    wrap.dataset.closing = '1';
+    wrap.classList.add('closing');
+    setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 400);
+  }
+
+  function closeAllReplyBars(except) {
+    listEl.querySelectorAll('.mc-reply-bar-wrap').forEach(function (wrap) {
+      if (wrap !== except) closeReplyBar(wrap);
+    });
+  }
+
+  function openReplyBar(replyBtn) {
+    var comment = replyBtn.closest('.moment-comment');
+    var momentId = replyBtn.dataset.cmtMoment;
+    var parentId = replyBtn.dataset.cmtReply;
+    if (!comment || !momentId || !parentId) return;
+    closeAllReplyBars();
+    var body = comment.querySelector('.mcc-body');
+    var existing = body && body.querySelector(':scope > .mc-reply-bar-wrap');
+    if (existing) {
+      delete existing.dataset.closing;
+      existing.classList.remove('closing');
+      var inp0 = existing.querySelector('input');
+      if (inp0) inp0.focus();
+      return;
+    }
+    var author = replyBtn.dataset.cmtAuthor || '';
+    var wrap = document.createElement('div');
+    wrap.className = 'mc-reply-bar-wrap';
+    wrap.innerHTML =
+      '<div class="mc-reply-bar">' +
+        '<input type="text" maxlength="2000" placeholder="回复 @' + escapeHtml(author) + '…" autocomplete="off">' +
+        '<button type="button" class="rbar-send" data-cmt-reply-send="' + parentId + '" data-cmt-reply-moment="' + momentId + '">回复</button>' +
+        '<button type="button" class="rbar-cancel" aria-label="取消">×</button>' +
+      '</div>';
+    var replies = body && body.querySelector(':scope > .mc-replies');
+    if (body) {
+      if (replies) body.insertBefore(wrap, replies);
+      else body.appendChild(wrap);
+    }
+    var input = wrap.querySelector('input');
+    if (input) {
+      input.focus();
+      try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+  }
+
+  function submitReplyComment(momentId, parentId, text, bar, btn) {
+    window.blogSupabase.from('moment_comments')
+      .insert({ moment_id: momentId, user_id: currentUser.id, content: text, parent_id: parentId })
+      .select('id, content, created_at, parent_id, profiles(display_name, username, avatar_url)')
+      .single()
+      .then(function (result) {
+        if (result.error) throw result.error;
+        var comment = result.data;
+        /* Realtime 事件可能先于本回调到达 → 已存在则跳过 */
+        if (commentNode(comment.moment_id, comment.id)) return;
+        var panel = listEl.querySelector('[data-moment-comments="' + momentId + '"]');
+        if (!panel) { loadMoments(); return; }
+        appendCommentNode(momentId, comment);
+        closeReplyBar(bar); /* 发送成功 → 输入条自动收起隐藏 */
+      })
+      .catch(function (error) {
+        var msg = (error && error.message) || String(error);
+        if (/permission|RLS|policy|row.?level|not allowed/i.test(msg)) {
+          flashNotice('回复失败：评论权限未配置（数据库 RLS）');
+        } else {
+          flashNotice('回复失败：' + msg);
+        }
+      })
+      .finally(function () { if (btn) btn.disabled = false; });
   }
 
   /* ── 编辑面板媒体编辑: 新增/替换/删除/排序 ── */
@@ -1626,15 +1712,28 @@
     var cmtReplyBtn = e.target.closest('[data-cmt-reply]');
     if (cmtReplyBtn) {
       if (!currentUser) { window.BlogAuth.open('login'); return; }
-      var replyCommentId = cmtReplyBtn.dataset.cmtReply;
-      var replyMomentId = cmtReplyBtn.dataset.cmtMoment;
-      var replyAuthor = cmtReplyBtn.dataset.cmtAuthor || '';
-      var input = listEl.querySelector('[data-moment-comment-input="' + replyMomentId + '"]');
-      if (!input) return;
-      input.focus();
-      input.placeholder = '回复 @' + replyAuthor + '…';
-      input.dataset.parentId = replyCommentId;
-      input.dataset.replyMode = '1';
+      /* 树状回复: 在目标评论下方展开内联输入条 */
+      openReplyBar(cmtReplyBtn);
+      return;
+    }
+
+    var replySendBtn = e.target.closest('[data-cmt-reply-send]');
+    if (replySendBtn) {
+      if (!currentUser) { window.BlogAuth.open('login'); return; }
+      var parentId = replySendBtn.dataset.cmtReplySend;
+      var replyMomentId = replySendBtn.dataset.cmtReplyMoment;
+      var bar = replySendBtn.closest('.mc-reply-bar-wrap');
+      var rInput = bar && bar.querySelector('input');
+      var text = rInput ? rInput.value.trim() : '';
+      if (!text) return;
+      replySendBtn.disabled = true;
+      submitReplyComment(replyMomentId, parentId, text, bar, replySendBtn);
+      return;
+    }
+
+    var replyCancelBtn = e.target.closest('.rbar-cancel');
+    if (replyCancelBtn) {
+      closeReplyBar(replyCancelBtn.closest('.mc-reply-bar-wrap'));
       return;
     }
 
@@ -1671,16 +1770,15 @@
       var text = input.value.trim();
       if (!text) return;
       submitBtn.disabled = true;
-      var parentId = input.dataset.parentId || null;
+      /* 底部常驻输入条仅发新评论 (顶层); 回复走各评论下方内联输入条 */
       var payload = { moment_id: momentId2, user_id: currentUser.id, content: text };
-      if (parentId) payload.parent_id = parentId;
       window.blogSupabase.from('moment_comments')
         .insert(payload)
         .select('id, content, created_at, parent_id, profiles(display_name, username, avatar_url)')
         .single()
         .then(function (result) {
           if (result.error) throw result.error;
-          // 本地追加评论 DOM + 评论数字 +1, 不重渲染
+          // 本地追加评论 DOM + 评论数字 +1, 不重渲染 (树状插入)
           var comment = result.data;
           /* Realtime 事件可能先于本回调到达 → 已存在则跳过 */
           if (commentNode(comment.moment_id, comment.id)) { cleanupCommentInput(input); return; }
@@ -1690,31 +1788,7 @@
             loadMoments();
             return;
           }
-          if (panel) {
-            var p = comment.profiles || {};
-            var name = p.display_name || p.username || '读者';
-            var node = document.createElement('div');
-            node.className = 'moment-comment' + (comment.parent_id ? ' is-reply' : '');
-            node.innerHTML = avatarHtml(p, 'mc-avatar', 'mc-avatar-fallback') +
-              '<div class="mcc-body"><span class="mcc-author">' + escapeHtml(name) + '</span> ' +
-              '<span class="mcc-text">' + escapeHtml(comment.content) + '</span>' +
-              '<div class="mcc-time">刚刚</div>' + commentActions(comment, momentId2) + '</div>';
-            var inputRow = panel.querySelector('.moment-comment-input');
-            if (comment.parent_id) {
-              // 回复: 插入到对应父评论后面
-              var parentNode = panel.querySelector('[data-cmt-like="' + comment.parent_id + '"]');
-              var anchor = parentNode ? parentNode.closest('.moment-comment').nextSibling : inputRow;
-              panel.insertBefore(node, anchor);
-            } else {
-              panel.insertBefore(node, inputRow);
-            }
-          }
-          var card = listEl.querySelector('[data-moment-id="' + momentId2 + '"]');
-          if (card) {
-            var toggle = card.querySelector('[data-moment-toggle-comments]');
-            var cc = toggle ? toggle.querySelector('.ma-count') : null;
-            if (cc) cc.textContent = (parseInt(cc.textContent, 10) || 0) + 1;
-          }
+          appendCommentNode(momentId2, comment);
           cleanupCommentInput(input);
         }).catch(function (error) {
           var msg = (error && error.message) || String(error);
@@ -1841,14 +1915,12 @@
     if (!input) return;
     input.value = '';
     input.placeholder = '写下你的评论…';
-    delete input.dataset.parentId;
-    delete input.dataset.replyMode;
   }
 
   function commentNode(momentId, commentId) {
     var card = listEl.querySelector('[data-moment-id="' + momentId + '"]');
     if (!card) return null;
-    return card.querySelector('[data-cmt-like="' + commentId + '"]');
+    return card.querySelector('[data-cmt-node="' + commentId + '"]');
   }
 
   function bumpCommentCount(momentId, delta) {
@@ -1864,7 +1936,8 @@
     var p = comment.profiles || {};
     var name = p.display_name || p.username || '读者';
     var node = document.createElement('div');
-    node.className = 'moment-comment' + (comment.parent_id ? ' is-reply' : '');
+    node.className = 'moment-comment mc-new';
+    node.dataset.cmtNode = comment.id;
     node.innerHTML = avatarHtml(p, 'mc-avatar', 'mc-avatar-fallback') +
       '<div class="mcc-body"><span class="mcc-author">' + escapeHtml(name) + '</span> ' +
       '<span class="mcc-text">' + escapeHtml(comment.content) + '</span>' +
@@ -1872,12 +1945,21 @@
       commentActions(comment, momentId) + '</div>';
     var inputRow = panel.querySelector('.moment-comment-input');
     if (comment.parent_id) {
-      var parentNode = panel.querySelector('[data-cmt-like="' + comment.parent_id + '"]');
-      var anchor = parentNode ? parentNode.closest('.moment-comment').nextSibling : inputRow;
-      panel.insertBefore(node, anchor);
-    } else {
-      panel.insertBefore(node, inputRow);
+      /* 树状插入: 挂入父评论的回复子树 (容器不存在时自动创建) */
+      var parentNode = panel.querySelector('[data-cmt-node="' + comment.parent_id + '"]');
+      if (parentNode) {
+        var body = parentNode.querySelector('.mcc-body');
+        var replies = body && body.querySelector(':scope > .mc-replies');
+        if (!replies) {
+          replies = document.createElement('div');
+          replies.className = 'mc-replies';
+          if (body) body.appendChild(replies);
+        }
+        if (replies) { replies.appendChild(node); bumpCommentCount(momentId, 1); return true; }
+      }
+      /* 父评论不在当前渲染 (兜底) */
     }
+    panel.insertBefore(node, inputRow);
     bumpCommentCount(momentId, 1);
     return true;
   }
@@ -1914,10 +1996,28 @@
     if (!row || !row.id) return;
     var node = commentNode(row.moment_id, row.id);
     if (node) {
+      var parentComment = node.closest('.moment-comment');
       node.remove();
+      /* 清理空回复容器 */
+      if (parentComment) {
+        var body = parentComment.querySelector('.mcc-body');
+        var replies = body && body.querySelector(':scope > .mc-replies');
+        if (replies && !replies.children.length) replies.remove();
+      }
       bumpCommentCount(row.moment_id, -1);
     }
   }
+
+  /* 回复输入条自动收起: Esc / 点击评论区域以外 */
+  listEl.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var bar = e.target.closest('.mc-reply-bar-wrap');
+    if (bar) closeReplyBar(bar);
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.mc-reply-bar-wrap') || e.target.closest('[data-cmt-reply]')) return;
+    closeAllReplyBars();
+  }, true);
 
   function subscribeRealtime() {
     if (!window.blogSupabase || typeof window.blogSupabase.channel !== 'function') return;

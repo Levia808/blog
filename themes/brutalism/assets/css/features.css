@@ -1030,6 +1030,85 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
   cursor: pointer;
 }
 .moment-comment-input button:hover { transform: scale(1.03); }
+
+/* ── 树状回复: 嵌套子树 (每层缩进 + 左侧边线, 第 3 层起收紧) ── */
+.moment-comment .mc-replies {
+  margin-top: 10px;
+  margin-left: 22px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.moment-comment .mc-replies .mc-replies .mc-replies {
+  margin-left: 10px;
+  padding-left: 10px;
+}
+
+/* ── 内联回复输入条: 展开 → 发送/取消/Esc/点击外部 → 自动收起隐藏 ── */
+.mc-reply-bar-wrap {
+  max-height: 60px;
+  opacity: 1;
+  overflow: hidden;
+  margin-top: 8px;
+  transition:
+    max-height 0.38s cubic-bezier(.16, 1, .3, 1),
+    opacity 0.3s cubic-bezier(.16, 1, .3, 1);
+}
+.mc-reply-bar-wrap.closing {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.mc-reply-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mc-reply-bar input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--fg);
+  outline: none;
+}
+.mc-reply-bar input::placeholder { color: var(--faint); }
+.mc-reply-bar input:focus { border-color: var(--accent); }
+.mc-reply-bar button {
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mc-reply-bar .rbar-send {
+  color: var(--bg);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+.mc-reply-bar .rbar-send:hover { filter: brightness(1.08); }
+.mc-reply-bar .rbar-cancel {
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+.mc-reply-bar .rbar-cancel:hover { color: var(--danger); border-color: var(--danger); }
+
+/* 新回复节点入场 */
+.mc-new { animation: mcReplyIn 0.4s cubic-bezier(.16, 1, .3, 1); }
+@keyframes mcReplyIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
 .moments-empty { border: 1px dashed var(--border); border-radius: 6px; padding: 48px 20px; text-align: center; color: var(--muted); }
 
 /* ── 动态列表加载动效 (刷新时静默加载, 不弹登录窗) ── */
@@ -1230,8 +1309,7 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
   .admin-drawer .drawer-menu a { min-height: 52px; font-size: 15px; }
 }
 
-/* ── 动态评论增强: 回复/点赞/删除 ── */
-.moment-comment.is-reply { margin-left: 36px; padding-left: 10px; border-left: 1px solid var(--border); }
+/* ── 动态评论增强: 回复/点赞/删除 (树状结构见 .mc-replies) ── */
 .mcc-actions { display: flex; gap: 10px; margin-top: 4px; }
 .mcc-act {
   background: none;
