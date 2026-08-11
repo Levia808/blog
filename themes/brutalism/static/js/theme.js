@@ -1366,8 +1366,139 @@
   }
 
   /* ── 搜索页 ── */
+  /* ── 搜索页 (瑞士风设计稿): 命令框 + 原文高亮 + stagger + 无选中态 ── */
   function initSearchPage() {
-    initSearchController('searchInputPage', 'searchResultsPage', 'searchStatusPage', false);
+    var input = document.getElementById('searchInputPage');
+    if (!input) return;
+    if (input.dataset.index) inputIndexUrl = input.dataset.index;
+    var results = document.getElementById('searchResultsPage');
+    var status = document.getElementById('searchStatusPage');
+    var cmd = document.getElementById('searchCmdPage');
+    var clearBtn = document.getElementById('searchClearPage');
+    var countEl = document.getElementById('searchCountPage');
+    var items = [];
+    var sel = -1;
+
+    function esc(v) {
+      return String(v || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      var p = function (n) { return String(n).padStart(2, '0'); };
+      return d.getFullYear() + ' · ' + p(d.getMonth() + 1) + ' · ' + p(d.getDate());
+    }
+
+    /* 原文选段关键词高亮 (占位符方案防嵌套, 保留原文大小写) */
+    function highlightExcerpt(text, query) {
+      if (!query || !text) return esc(text);
+      var words = query.toLowerCase().split(/\s+/).filter(function (w) { return w; })
+        .sort(function (a, b) { return b.length - a.length; });
+      if (!words.length) return esc(text);
+      var html = esc(text);
+      var tokens = [];
+      words.forEach(function (w) {
+        var re = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        html = html.replace(re, function (m) {
+          tokens.push(m);
+          return '\u0001' + (tokens.length - 1) + '\u0002';
+        });
+      });
+      return html.replace(/\u0001(\d+)\u0002/g, function (m, i) {
+        return '<mark class="hit-inline">' + tokens[Number(i)] + '</mark>';
+      });
+    }
+
+    function itemHtml(d, i, query) {
+      var section = String(d.section || '').toUpperCase();
+      var type = section === 'POST' || !section ? 'POST' : section;
+      var excerpt = d.summary || (d.content ? d.content.slice(0, 140) + '…' : '');
+      return '<a class="sr-item" data-i="' + i + '" href="' + esc(d.permalink || '#') + '">' +
+        '<span class="sr-arrow">→</span>' +
+        '<div class="sr-row"><span class="sr-no">[ ' + pad(i + 1) + ' ]</span>' +
+        '<span class="sr-title">' + esc(d.title) + '</span></div>' +
+        (excerpt ? '<p class="sr-ex">' + highlightExcerpt(excerpt, query) + '</p>' : '') +
+        '<div class="sr-meta">' +
+        '<span class="sr-type' + (type === 'MOMENT' ? ' is-moment' : '') + '">' + type + '</span>' +
+        (d.date ? '<span class="sr-date">' + fmtDate(d.date) + '</span>' : '') +
+        (d.tags && d.tags.length ? '<span class="sr-tags">' + d.tags.map(function (t) { return '<span class="sr-tag">' + esc(t) + '</span>'; }).join('') + '</span>' : '') +
+        '</div></a>';
+    }
+
+    function render(list, query) {
+      items = list;
+      sel = -1;
+      if (countEl) countEl.textContent = pad(list.length);
+      if (!list.length) {
+        results.innerHTML = '<div class="sr-empty show">[ EMPTY ] — 没有匹配「<b>' + esc(query.trim()) + '</b>」的内容</div>';
+        if (status) { status.hidden = false; status.textContent = '0 results · 换个关键词试试'; }
+        if (clearBtn) clearBtn.classList.toggle('show', Boolean(query.trim()));
+        return;
+      }
+      results.innerHTML = list.map(function (d, i) { return itemHtml(d, i, query); }).join('');
+      var nodes = results.querySelectorAll('.sr-item');
+      nodes.forEach(function (el, i) {
+        setTimeout(function () { el.classList.add('in'); }, reducedMotion ? 0 : i * 45);
+      });
+      if (status) {
+        status.hidden = false;
+        status.textContent = list.length + ' results' + (query.trim() ? ' · 关键词「' + query.trim() + '」' : ' · 全部内容');
+      }
+      if (clearBtn) clearBtn.classList.toggle('show', Boolean(query.trim()));
+    }
+
+    function doSearch(query) {
+      getFuse().then(function (fuse) {
+        if (!fuse) {
+          if (status) { status.hidden = false; status.textContent = '索引不可用：请确认已配置 outputs.home 的 JSON 输出。'; }
+          render([], query);
+          return;
+        }
+        var found = query.trim() ? fuse.search(query).slice(0, 8) : fuseIndexData.slice(0, 8);
+        render(found.map(function (r) { return r.item || r; }), query);
+      });
+    }
+
+    function move(delta) {
+      if (!items.length) return;
+      sel = Math.max(0, Math.min(items.length - 1, sel + delta));
+      var el = results.querySelector('.sr-item[data-i="' + sel + '"]');
+      if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'auto' : 'smooth' });
+    }
+
+    function go() {
+      if (sel < 0 || !items[sel]) return;
+      var href = items[sel].permalink || '#';
+      if (href === '#') return;
+      window.location.href = href;
+    }
+
+    input.addEventListener('input', function () { doSearch(input.value); });
+    input.addEventListener('focus', function () { cmd && cmd.classList.add('focused'); });
+    input.addEventListener('blur', function () { cmd && cmd.classList.remove('focused'); });
+    if (clearBtn) clearBtn.addEventListener('click', function () { input.value = ''; doSearch(''); input.focus(); });
+    if (results) results.addEventListener('click', function (e) {
+      var item = e.target.closest('.sr-item');
+      if (item) {
+        var href = item.getAttribute('href');
+        if (href && href !== '#') window.location.href = href;
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.target !== input) return;
+      if (e.key === 'Escape') { input.value = ''; doSearch(''); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+      else if (e.key === 'Enter') { e.preventDefault(); go(); }
+    });
+
+    doSearch('');
   }
 
   function initArchivePage() {

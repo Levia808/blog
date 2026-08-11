@@ -1,5 +1,5 @@
 [
-{{- $pages := where (where site.RegularPages "File.Path" "not in" (slice "profile.md" "admin.md")) "Params.archived" "ne" true -}}
+{{- $pages := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true -}}
 {{- range $index, $page := $pages -}}
 {{- if $index }},{{ end }}
 {
