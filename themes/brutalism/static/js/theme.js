@@ -1389,6 +1389,15 @@
       });
     }
 
+    /* 终端光标定位: 跟随 $ 前缀实际宽度 (固定 left 会因字体/字号错位) */
+    var dollarEl = cmd ? cmd.querySelector('.search-dollar') : null;
+    var caretEl = cmd ? cmd.querySelector('.search-caret') : null;
+    function posCaret() {
+      if (caretEl && dollarEl) caretEl.style.left = (dollarEl.offsetWidth + 16) + 'px';
+    }
+    posCaret();
+    window.addEventListener('resize', posCaret);
+
     function esc(v) {
       return String(v || '').replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -1453,11 +1462,12 @@
       }
       results.innerHTML = list.map(function (d, i) { return itemHtml(d, i, query); }).join('');
       var nodes = results.querySelectorAll('.sr-item');
-      /* 双 rAF: 确保浏览器先渲染 opacity:0 初始态, 再触发过渡 (否则过渡被合并, 无动画) */
+      /* 双 rAF: 确保浏览器先渲染 opacity:0 初始态, 再触发过渡 (否则过渡被合并, 无动画)
+         搜索页设计稿动效强制启用 (不受系统 reduced-motion 影响) */
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
           nodes.forEach(function (el, i) {
-            setTimeout(function () { el.classList.add('in'); }, reducedMotion ? 0 : i * 45);
+            setTimeout(function () { el.classList.add('in'); }, i * 45);
           });
         });
       });

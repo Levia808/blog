@@ -1761,7 +1761,6 @@ body.admin-only .btn-primary {
 .search-cmd input { caret-color: transparent; }
 .search-caret {
   position: absolute;
-  left: 48px;
   bottom: 8px;
   width: 3px;
   height: 0;
@@ -1969,9 +1968,4 @@ body.admin-only .btn-primary {
   .search-hint { flex-wrap: wrap; gap: 12px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .search-caret { animation: none; }
-  .search-results .sr-item { opacity: 1; transform: none; transition: none; }
-  .search-page .search-title .ln { transform: none; }
-  .search-rule { transform: none; }
-}
+
