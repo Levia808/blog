@@ -941,8 +941,6 @@ html.js [data-reveal].reveal-visible {
 .sr-title { color: var(--fg); font-weight: 500; }
 .sr-meta { font-family: var(--font-mono); font-size: 10px; color: var(--faint); }
 
-.search-page { padding: 48px 32px 96px; }
-.search-box--page { margin-top: 24px; }
 
 /* ── 404 ── */
 .notfound { padding: 96px 32px; }
