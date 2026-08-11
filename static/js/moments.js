@@ -64,19 +64,58 @@
       threadsStorageBase = base;
     }
     var jsonUrl = (base ? base + '/' : '') + info.id + '.json';
-    fetch(jsonUrl).then(function (r) {
-      if (!r.ok) throw new Error('no resource');
-      return r.json();
-    }).then(function (data) {
-      renderThreadsCard(card, data);
-    }).catch(function () {
+    var attempts = 0;
+    function fetchJson() {
+      return fetch(jsonUrl).then(function (r) {
+        if (!r.ok) throw new Error('no resource');
+        return r.json();
+      });
+    }
+    function finish(data) { renderThreadsCard(card, data); }
+    function fallback() {
       /* 降级: 保留链接文本 */
-      var fallback = document.createElement('span');
-      fallback.className = 'th-fallback mono';
-      fallback.textContent = 'Threads 串文 · ' + info.handle;
-      card.replaceWith(fallback);
+      var fb = document.createElement('span');
+      fb.className = 'th-fallback mono';
+      fb.textContent = 'Threads 串文 · ' + info.handle;
+      card.replaceWith(fb);
+    }
+    fetchJson().then(finish).catch(function () {
+      /* 资源缺失: 本机 Cookie 桥可达时自动爬取 (无需手动), 完成后轮询渲染 */
+      fetch('http://localhost:8788/api/status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .catch(function () { return null; })
+        .then(function (s) {
+          if (!s || !s.chrome) { fallback(); return; }
+          return fetch('http://localhost:8788/api/fetch?url=' + encodeURIComponent(info.url), { cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              if (!d || !d.ok) throw new Error((d && d.error) || '抓取失败');
+              return window.blogSupabase.functions.invoke('threads-fetch', { body: { json: d.data } });
+            })
+            .then(function (res) {
+              if (res && res.error) throw res.error;
+              /* 爬取完成: 轮询资源直到可读 */
+              return new Promise(function (resolve, reject) {
+                (function poll() {
+                  fetchJson().then(finish).then(resolve).catch(function () {
+                    attempts++;
+                    if (attempts < 10) setTimeout(poll, 2000);
+                    else reject(new Error('timeout'));
+                  });
+                })();
+              });
+            });
+        })
+        .catch(function () { fallback(); });
     });
   }
+
+  /* 悬停串文卡片: 禁用浏览器横向历史手势 (双指左右滑) */
+  document.addEventListener('wheel', function (e) {
+    if (e.target.closest('.threads-card')) {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) e.preventDefault();
+    }
+  }, { passive: false });
 
   function renderThreadsCard(card, d) {
     var author = d.display_name || d.author || 'unknown';
