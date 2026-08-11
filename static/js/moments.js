@@ -357,6 +357,7 @@
       (liked ? '已赞' : '点赞') + ' <span class="ma-count">' + likeCount + '</span></button>' +
       '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '">评论 <span class="ma-count">' + commentCount + '</span></button>' +
       (canManage ? '<button type="button" class="moment-action-btn" data-moment-edit="' + moment.id + '">编辑</button>' +
+      (currentProfile && currentProfile.role === 'superadmin' ? '<button type="button" class="moment-action-btn" data-moment-visibility="' + moment.id + '">可见性</button>' : '') +
       '<button type="button" class="moment-action-btn is-danger" data-moment-delete="' + moment.id + '">删除</button>' : '') +
       '</div>' +
       '<div class="moment-comments" data-moment-comments="' + moment.id + '">' +
@@ -403,7 +404,8 @@
       var moments = result.data || [];
       /* 媒体缓存: JS 内存传递 (避免 HTML 属性编码风险) */
       momentMediaCache = {};
-      moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; });
+      momentDataCache = {};
+      moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
       listEl.innerHTML = moments.length
         ? moments.map(renderMoment).join('')
         : '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
@@ -551,6 +553,100 @@
       renderSelectedMedia();
     }
   });
+
+  var momentDataCache = {};
+
+  /* ── 动态可见性 (管理员): 公开 / 只让谁看 / 不让谁看 ──
+     成熟模式: 服务端 RLS 强制过滤 (moments_select 策略), 前端仅选择用户 */
+  function openMomentVisibility(moment) {
+    var vis = moment.visibility || 'public';
+    var visibleTo = Array.isArray(moment.visible_to) ? moment.visible_to : [];
+    var hiddenFrom = Array.isArray(moment.hidden_from) ? moment.hidden_from : [];
+    var overlay = document.createElement('div');
+    overlay.className = 'moment-vis-overlay';
+    overlay.innerHTML =
+      '<div class="moment-vis-panel">' +
+        '<div class="mv-head"><span class="mono mv-title">[ 动态可见性 ]</span>' +
+        '<button type="button" class="mv-close" aria-label="关闭">×</button></div>' +
+        '<div class="mv-mode">' +
+          '<label class="mv-mode-opt' + (vis === 'public' ? ' on' : '') + '"><input type="radio" name="mv-mode" value="public"' + (vis === 'public' ? ' checked' : '') + '>公开</label>' +
+          '<label class="mv-mode-opt' + (vis === 'whitelist' ? ' on' : '') + '"><input type="radio" name="mv-mode" value="whitelist"' + (vis === 'whitelist' ? ' checked' : '') + '>只让谁看</label>' +
+          '<label class="mv-mode-opt' + (vis === 'blacklist' ? ' on' : '') + '"><input type="radio" name="mv-mode" value="blacklist"' + (vis === 'blacklist' ? ' checked' : '') + '>不让谁看</label>' +
+        '</div>' +
+        '<div class="mv-hint mono">公开 = 所有人可见 · 只让谁看 = 仅选中用户 · 不让谁看 = 除选中用户外</div>' +
+        '<div class="mv-list" data-mv-list><div class="mv-loading mono">加载用户列表…</div></div>' +
+        '<div class="mv-foot"><button type="button" class="mv-save">保存</button><button type="button" class="mv-cancel">取消</button></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    var listEl = overlay.querySelector('[data-mv-list]');
+    function renderUsers(users) {
+      listEl.innerHTML = users.map(function (u) {
+        var id = u.id;
+        var name = u.display_name || u.username || u.email || '用户';
+        var onV = visibleTo.indexOf(id) >= 0;
+        var onH = hiddenFrom.indexOf(id) >= 0;
+        return '<div class="mv-user' + (onV ? ' v-on' : '') + (onH ? ' h-on' : '') + '" data-uid="' + escapeHtml(id) + '">' +
+          '<div class="mv-uin"><span class="mv-name">' + escapeHtml(name) + '</span>' +
+          '<span class="mv-mail mono">' + escapeHtml(u.email || '') + '</span></div>' +
+          '<div class="mv-acts">' +
+          '<button type="button" class="mv-act mv-act-v" data-mv-allow title="只让此用户看">只让</button>' +
+          '<button type="button" class="mv-act mv-act-h" data-mv-block title="不让此用户看">不让</button>' +
+          '</div></div>';
+      }).join('') || '<div class="mv-empty mono">无用户</div>';
+    }
+    window.Admin.getAllUsers().then(function (users) {
+      renderUsers(users || []);
+    }).catch(function (e) {
+      listEl.innerHTML = '<div class="mv-empty mono">用户列表加载失败：' + escapeHtml(e.message || e) + '</div>';
+    });
+
+    function toggleUser(row, kind) {
+      if (kind === 'v') {
+        var nowV = row.classList.toggle('v-on');
+        row.classList.toggle('h-on', false);
+        if (nowV && listEl.querySelector('.mv-user.v-on.h-on')) { }
+      } else {
+        row.classList.toggle('h-on');
+        row.classList.toggle('v-on', false);
+      }
+    }
+    function close() { overlay.remove(); }
+    function save() {
+      var modeEl = overlay.querySelector('input[name="mv-mode"]:checked');
+      var mode = modeEl ? modeEl.value : 'public';
+      var vUsers = [], hUsers = [];
+      listEl.querySelectorAll('.mv-user').forEach(function (row) {
+        if (row.classList.contains('v-on')) vUsers.push(row.dataset.uid);
+        if (row.classList.contains('h-on')) hUsers.push(row.dataset.uid);
+      });
+      var payload = {
+        visibility: mode,
+        visible_to: vUsers,
+        hidden_from: hUsers,
+        updated_at: new Date().toISOString()
+      };
+      window.blogSupabase.from('moments').update(payload).eq('id', moment.id)
+        .then(function (r) {
+          if (r.error) throw r.error;
+          flashNotice('可见性已更新', 'success');
+          close();
+          loadMoments();
+        })
+        .catch(function (err) {
+          flashNotice('保存失败：' + (err.message || err));
+        });
+    }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) { close(); return; }
+      if (e.target.closest('.mv-close') || e.target.closest('.mv-cancel')) { close(); return; }
+      var allowBtn = e.target.closest('[data-mv-allow]');
+      if (allowBtn) { toggleUser(allowBtn.closest('.mv-user'), 'v'); return; }
+      var blockBtn = e.target.closest('[data-mv-block]');
+      if (blockBtn) { toggleUser(blockBtn.closest('.mv-user'), 'h'); return; }
+      if (e.target.closest('.mv-save')) { save(); return; }
+    });
+  }
 
   /* ── 动态图片放大: 独立 GLightbox 实例 (selector: null, 纯 JS API 驱动)
      官方文档模式: setElements([{href,type}]) + openAt(index)
@@ -1014,6 +1110,15 @@
         }).finally(function () {
           saveBtn.disabled = false;
         });
+      return;
+    }
+
+    var visBtn = e.target.closest('[data-moment-visibility]');
+    if (visBtn) {
+      if (!currentUser) { window.BlogAuth.open('login'); return; }
+      var visId = visBtn.dataset.momentVisibility;
+      var visMoment = momentDataCache[visId];
+      if (visMoment) openMomentVisibility(visMoment);
       return;
     }
 
