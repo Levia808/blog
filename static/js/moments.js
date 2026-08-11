@@ -687,6 +687,25 @@
   var momentMediaCache = {};
   var glightboxLibPromise = null;
   var loaderTimer = null;
+  var trackpadSwipeCleanup = null;
+
+  /* 触控板横向手势: 双指左滑下一张/右滑上一张 (wheel deltaX, 节流防连发) */
+  function enableTrackpadSwipe(lightbox) {
+    var lastSwipe = 0;
+    function onWheel(e) {
+      var now = Date.now();
+      if (now - lastSwipe < 320) return;
+      var dx = e.deltaX;
+      var dy = e.deltaY;
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+        lastSwipe = now;
+        if (dx < 0) lightbox.nextSlide();
+        else lightbox.prevSlide();
+      }
+    }
+    document.addEventListener('wheel', onWheel, { passive: true });
+    return function () { document.removeEventListener('wheel', onWheel); };
+  }
 
   function isVideoUrl(url) {
     var path = String(url).split('?')[0].split('#')[0];
@@ -735,6 +754,13 @@
         zoomable: true,
         draggable: true,
         preload: true
+      });
+      /* 触控板横滑: 打开时启用, 关闭时移除 */
+      momentsLightbox.on('open', function () {
+        if (!trackpadSwipeCleanup) trackpadSwipeCleanup = enableTrackpadSwipe(momentsLightbox);
+      });
+      momentsLightbox.on('close', function () {
+        if (trackpadSwipeCleanup) { trackpadSwipeCleanup(); trackpadSwipeCleanup = null; }
       });
       /* 加载动画条件控制: 仅在放大查看且图片未加载完成时显示, 否则强制关闭 */
       momentsLightbox.on('slide_before_load', function () {

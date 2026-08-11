@@ -401,7 +401,26 @@
     window.addEventListener('scroll', highlight, { passive: true });
   }
 
-  /* ── 图片点击放大 (GLightbox 开源库: 缩放/淡入淡出动效 + 触摸手势) ── */
+  /* ── 触控板横向手势: 图片 lightbox 打开时, 双指左滑下一张/右滑上一张 (wheel deltaX) ── */
+  var trackpadSwipeCleanup = null;
+  function enableTrackpadSwipe(lightbox) {
+    var lastSwipe = 0;
+    function onWheel(e) {
+      var now = Date.now();
+      if (now - lastSwipe < 320) return;
+      var dx = e.deltaX;
+      var dy = e.deltaY;
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+        lastSwipe = now;
+        if (dx < 0) lightbox.nextSlide();
+        else lightbox.prevSlide();
+      }
+    }
+    document.addEventListener('wheel', onWheel, { passive: true });
+    return function () { document.removeEventListener('wheel', onWheel); };
+  }
+
+  /* ── 图片点击放大 (GLightbox 开源库: 缩放/淡入淡出动效 + 触摸手势 + 触控板横滑) ── */
   var glightboxInstance = null;
   function initLightbox() {
     if (typeof window.GLightbox !== 'function') return;
@@ -416,6 +435,12 @@
         closeEffect: 'zoom'
       });
       window.__blogLightbox = glightboxInstance;
+      glightboxInstance.on('open', function () {
+        if (!trackpadSwipeCleanup) trackpadSwipeCleanup = enableTrackpadSwipe(glightboxInstance);
+      });
+      glightboxInstance.on('close', function () {
+        if (trackpadSwipeCleanup) { trackpadSwipeCleanup(); trackpadSwipeCleanup = null; }
+      });
     } catch (e) { /* GLightbox 未就绪时忽略 */ }
   }
 
