@@ -244,7 +244,8 @@ EXTRACT_JS = r"""
       continue;
     }
     if (/^回复/.test(l)) { var m = l.match(/回复\s*([\d.]+[万kK]?)/); if (m) { var rn = parseFloat(m[1]); if (/万$/.test(m[1])) rn *= 10000; else if (/[kK]$/.test(m[1])) rn *= 1000; replies = rn; } break; }
-    if (/暂无回复/.test(l)) { break; }
+    if (/^(暂无回复|热门|查看动态|分享|复制链接|关注|更多|收起|展开)$/.test(l)) { break; }
+    if (textLines.length >= 12) { break; }
     textLines.push(l);
   }
   var text = textLines.join('\n');
