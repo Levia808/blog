@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{{ "fonts/Space_Grotesk.css" | relURL }}">
-<link rel="stylesheet" href="{{ "fonts/title-fonts.css" | relURL }}">
+<link rel="stylesheet" href="{{ "fonts/title-fonts.css" | relURL }}?v={{ now.Unix }}">
 <link rel="stylesheet" href="{{ "fonts/JetBrains_Mono.css" | relURL }}">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
 <link rel="stylesheet" href="{{ $css.RelPermalink }}"{{ if hugo.IsProduction }} integrity="{{ $css.Data.Integrity }}"{{ end }}>
