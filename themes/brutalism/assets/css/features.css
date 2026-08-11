@@ -782,8 +782,9 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .mc-actions { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
 
-/* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 ── */
-.mc-loc { position: relative; margin-top: 8px; }
+/* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 (按钮与发布键同行动态) ── */
+.mc-loc { position: relative; display: inline-flex; align-items: center; }
+.mc-loc-add { white-space: nowrap; }
 .mc-loc-chip {
   display: inline-flex;
   align-items: center;
@@ -809,7 +810,8 @@ body.admin-only { overflow: hidden; height: 100vh; }
 
 .mc-loc-panel {
   position: absolute;
-  left: 0; right: 0;
+  left: 0;
+  width: min(340px, 82vw);
   top: calc(100% + 8px);
   z-index: 50;
   background: var(--surface);
