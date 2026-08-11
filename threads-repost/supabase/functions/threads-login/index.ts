@@ -19,6 +19,18 @@ const LOGIN_URL = 'https://www.instagram.com/api/v1/web/accounts/login/ajax/';
 const CONFIG_URL = 'https://www.instagram.com/accounts/login/';
 
 Deno.serve(async (req) => {
+  // CORS 预检: 浏览器跨域调用必须 (否则 FunctionsFetchError)
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, apikey, x-client-info, content-type',
+        'Access-Control-Max-Age': '86400'
+      }
+    });
+  }
   const body = await req.json().catch(() => ({}));
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
@@ -205,5 +217,11 @@ function bytesToString(bytes: Uint8Array): string {
 }
 
 function json(obj: unknown, status = 200) {
-  return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
 }

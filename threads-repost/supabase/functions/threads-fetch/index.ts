@@ -5,6 +5,18 @@
 // 行为: 写入 storage (threads-reposts/<id>.json) → 返回 publicUrl
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 Deno.serve(async (req) => {
+  // CORS 预检: 浏览器跨域调用必须 (否则 FunctionsFetchError)
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, apikey, x-client-info, content-type',
+        'Access-Control-Max-Age': '86400'
+      }
+    });
+  }
   const body = await req.json().catch(() => ({}));
 
   // 模式一: 桥已用真实浏览器渲染提取好的帖子 JSON → 直接入库
@@ -116,5 +128,11 @@ function decode(s: string) {
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#\d+;/g, '');
 }
 function json(obj: unknown, status = 200) {
-  return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
 }
