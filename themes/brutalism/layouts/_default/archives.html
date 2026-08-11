@@ -92,12 +92,34 @@
                 <span class="archive-cover-type mono">NO COVER</span>
                 {{- end }}
               </div>
+              {{- /* 标题字体/颜色 (与首页卡片同一后台设置) */}}
+              {{- $fontVal := .Params.entry_title_font | default "display" }}
+              {{- $fontClass := $fontVal }}
+              {{- $fontIsPath := findRE "\\.(ttf|otf|woff2?|eot)$" $fontVal }}
+              {{- if $fontIsPath }}{{ $fontClass = "custom" }}{{ end }}
+              {{- $fontCustom := "" }}
+              {{- if or (eq $fontVal "custom") $fontIsPath }}
+                {{- if $fontIsPath }}{{ $fontCustom = $fontVal }}{{ else }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
+                {{- with $fontCustom }}
+                  {{- $fcRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+                  {{- with resources.Get $fcRel }}{{ $fontCustom = .RelPermalink }}{{ end }}
+                {{- end }}
+              {{- end }}
+              {{- $tStyle := "" }}
+              {{- if $fontCustom }}
+                {{- $fontName := .Params.entry_title_font_name | default "Custom Title" }}
+                {{- $fontFormat := "woff2" }}{{ if strings.HasSuffix $fontCustom ".ttf" }}{{ $fontFormat = "truetype" }}{{ else if strings.HasSuffix $fontCustom ".otf" }}{{ $fontFormat = "opentype" }}{{ else if strings.HasSuffix $fontCustom ".woff" }}{{ $fontFormat = "woff" }}{{ end }}
+                <style>@font-face { font-family: '{{ $fontName }}'; src: url('{{ $fontCustom | relURL }}') format('{{ $fontFormat }}'); font-display: swap; }</style>
+                {{- $tStyle = printf "font-family:'%s', Georgia, serif;" $fontName }}
+              {{- end }}
+              {{- with .Params.entry_title_color }}{{ $tStyle = printf "%s color:%s;" $tStyle . }}{{ end }}
+              {{- with .Params.entry_title_opacity }}{{ $tStyle = printf "%s opacity:%.2f;" $tStyle (div (float .) 100) }}{{ end }}
               <div class="archive-card-body">
                 <div class="archive-card-meta mono">
                   <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006 · 01 · 02" }}</time>
                   <span>{{ .ReadingTime }} min</span>
                 </div>
-                <h3 class="archive-card-title">{{ $title | safeHTML }}</h3>
+                <h3 class="archive-card-title pcf-font-{{ $fontClass }}"{{ if $tStyle }} style="{{ $tStyle | safeCSS }}"{{ end }}>{{ $title | safeHTML }}</h3>
                 {{- with .Description }}
                 <p class="archive-card-summary">{{ . | plainify | truncate 136 }}</p>
                 {{- else }}

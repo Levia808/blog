@@ -1489,14 +1489,14 @@ html.js [data-reveal].reveal-visible {
 }
 
 /* ── 全屏入口标题字体 / 隐藏 (同时作用于文章页标题) ── */
-.pcf-font-display .pcf-title, .pcf-font-display.article-title, .article-title.pcf-font-display { font-family: 'Playfair Display', Georgia, serif; }
-.pcf-font-grotesk .pcf-title, .article-title.pcf-font-grotesk { font-family: 'Space Grotesk', var(--font-display); }
-.pcf-font-mono .pcf-title, .article-title.pcf-font-mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
-.pcf-font-serif .pcf-title, .article-title.pcf-font-serif { font-family: Georgia, 'Times New Roman', 'Songti SC', serif; }
-.pcf-font-sans .pcf-title, .article-title.pcf-font-sans { font-family: var(--font-body), system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-.pcf-font-song .pcf-title, .article-title.pcf-font-song { font-family: 'Songti SC', 'Noto Serif SC', 'SimSun', 'STSong', serif; }
-.pcf-font-kai .pcf-title, .article-title.pcf-font-kai { font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', '楷体', serif; }
-.pcf-font-black .pcf-title, .article-title.pcf-font-black { font-family: 'Space Grotesk', var(--font-display); font-weight: 900; letter-spacing: -0.02em; }
+.pcf-font-display .pcf-title, .pcf-font-display.article-title, .article-title.pcf-font-display, .archive-card-title.pcf-font-display { font-family: 'Playfair Display', Georgia, serif; }
+.pcf-font-grotesk .pcf-title, .article-title.pcf-font-grotesk, .archive-card-title.pcf-font-grotesk { font-family: 'Space Grotesk', var(--font-display); }
+.pcf-font-mono .pcf-title, .article-title.pcf-font-mono, .archive-card-title.pcf-font-mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+.pcf-font-serif .pcf-title, .article-title.pcf-font-serif, .archive-card-title.pcf-font-serif { font-family: Georgia, 'Times New Roman', 'Songti SC', serif; }
+.pcf-font-sans .pcf-title, .article-title.pcf-font-sans, .archive-card-title.pcf-font-sans { font-family: var(--font-body), system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+.pcf-font-song .pcf-title, .article-title.pcf-font-song, .archive-card-title.pcf-font-song { font-family: 'Songti SC', 'Noto Serif SC', 'SimSun', 'STSong', serif; }
+.pcf-font-kai .pcf-title, .article-title.pcf-font-kai, .archive-card-title.pcf-font-kai { font-family: 'Kaiti SC', 'KaiTi', 'STKaiti', '楷体', serif; }
+.pcf-font-black .pcf-title, .article-title.pcf-font-black, .archive-card-title.pcf-font-black { font-family: 'Space Grotesk', var(--font-display); font-weight: 900; letter-spacing: -0.02em; }
 .pcf-hide-title .pcf-title { display: none; }
 
 /* ── 卡片封面: hover 放大 + 鼠标跟随 ── */
