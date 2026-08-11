@@ -1963,3 +1963,50 @@ body.admin-only .btn-primary {
 }
 
 
+
+/* ══════════ 头像下拉菜单 (浅色瑞士极简) ══════════ */
+.dropdown-menu {
+  background: var(--swiss-surface);
+  border: 1px solid var(--swiss-line-strong);
+  border-radius: 2px;
+  padding: 4px 0;
+  box-shadow: var(--swiss-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.dropdown-menu a,
+.dropdown-menu button {
+  color: var(--swiss-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 9px 16px;
+  transition: color 0.2s, transform 0.2s, background-color 0.2s;
+}
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  color: var(--swiss-moss);
+  background: rgba(47, 74, 55, 0.05);
+  transform: translateX(3px);
+}
+.dm-head {
+  border-bottom: 1px solid var(--swiss-line);
+  margin-bottom: 4px;
+  padding: 11px 16px 12px;
+}
+.dm-avatar {
+  border-radius: 2px;
+  border-color: var(--swiss-line);
+}
+.dm-head strong {
+  color: var(--swiss-ink);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.dm-email {
+  color: var(--swiss-faint);
+  font-size: 10px;
+}
+.dm-divider {
+  background: var(--swiss-line);
+}
