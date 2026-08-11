@@ -419,19 +419,20 @@
     closeLocPanel();
   }, true);
 
-  /* 滚轮隔离: 鼠标悬停地点面板时, 滚动事件只影响菜单内部 (不滚页面)
-     列表可滚动时放行内部滚动, 滚到顶/底拦截外溢; 列表不可滚动或非列表区域一律拦截
-     (不依赖 overscroll-behavior 兼容性, CSS contain 仅作增强) */
+  /* ── 滚轮隔离 (捕获阶段, 先于 Lenis window 冒泡监听执行):
+     ① data-lenis-prevent-wheel 属性 → Lenis 官方放行该区域
+     ② 捕获阶段 preventDefault + stopPropagation → 彻底阻断传播到 Lenis/页面
+     ③ 手动驱动列表滚动 (scrollTop += deltaY, 边界自动 clamp, 无滚动链外溢) */
   mcLocPanel.addEventListener('wheel', function (e) {
-    var list = e.target.closest('.mlp-list');
-    if (list && list.scrollHeight > list.clientHeight) {
-      var atTop = e.deltaY < 0 && list.scrollTop <= 0;
-      var atBottom = e.deltaY > 0 && list.scrollTop + list.clientHeight >= list.scrollHeight - 1;
-      if (atTop || atBottom) e.preventDefault();
-    } else {
-      e.preventDefault();
-    }
-  }, { passive: false });
+    e.preventDefault();
+    e.stopPropagation();
+    var list = mcLocList;
+    if (!e.target.closest('.mlp-list') || list.scrollHeight <= list.clientHeight) return;
+    var dy = e.deltaY;
+    if (e.deltaMode === 1) dy *= 16;
+    else if (e.deltaMode === 2) dy *= list.clientHeight;
+    list.scrollTop += dy;
+  }, { capture: true, passive: false });
 
   /* 正文扫描: threads.net / threads.com 链接 → 转发卡片 */
   function transformThreadsLinks(container) {
