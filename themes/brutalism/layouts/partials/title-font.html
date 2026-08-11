@@ -1,0 +1,30 @@
+{{- /* 标题字体推导 (单一权威: 首页文章卡片 / 归档卡片 / 任何标题共用)
+   直接复用博客主页文章卡片的字体设置 (entry_title_font 权威, file 兜底)
+   返回: dict "class" 内置字体类 | "style" inline 样式 (静态字体名 f-文件名) */}}
+{{- $fontVal := .entry_title_font | default "display" }}
+{{- $fontClass := $fontVal }}
+{{- $fontIsPath := findRE "\\.(ttf|otf|woff2?|eot)$" $fontVal }}
+{{- if $fontIsPath }}{{ $fontClass = "custom" }}{{ end }}
+{{- $fontCustom := "" }}
+{{- if or (eq $fontVal "custom") $fontIsPath }}
+  {{- if $fontIsPath }}{{ $fontCustom = $fontVal }}{{ else }}{{ $fontCustom = .entry_title_font_file }}{{ end }}
+  {{- with $fontCustom }}
+    {{- $fcRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+    {{- with resources.Get $fcRel }}{{ $fontCustom = .RelPermalink }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- $tStyle := "" }}
+{{- if $fontCustom }}
+  {{- /* 静态字体: 唯一名 f-文件名 (title-fonts.css 预存); 原始路径推导防 URL 编码 */}}
+  {{- $fcSrc := "" }}
+  {{- if $fontIsPath }}{{ $fcSrc = $fontVal }}{{ else }}{{ $fcSrc = .entry_title_font_file | default "" }}{{ end }}
+  {{- if not $fcSrc }}{{ $fcSrc = $fontCustom }}{{ end }}
+  {{- $fcBase := path.Base $fcSrc }}
+  {{- $fcSlug := strings.TrimSuffix (path.Ext $fcBase) $fcBase }}
+  {{- $fcSlug = replaceRE "[^\\w\\p{Han}-]" "-" $fcSlug }}
+  {{- $fcSlug = lower $fcSlug }}
+  {{- $tStyle = printf "font-family:'f-%s', Georgia, serif;" $fcSlug }}
+{{- end }}
+{{- with .entry_title_color }}{{ $tStyle = printf "%s color:%s;" $tStyle . }}{{ end }}
+{{- with .entry_title_opacity }}{{ $tStyle = printf "%s opacity:%.2f;" $tStyle (div (float .) 100) }}{{ end }}
+{{- return (dict "class" $fontClass "style" $tStyle) }}

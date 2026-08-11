@@ -64,37 +64,14 @@
 {{- if $f }}{{ $bgImg = "" }}{{ end }}
 {{- end }}
 
-{{- $fontCustom := "" }}
-{{- $fontVal := .Params.entry_title_font | default "display" }}
-{{- $fontClass := $fontVal }}
+{{- /* 标题字体: 直接复用博客主页文章卡片的字体推导 (title-font partial 单一权威) */}}
+{{- $fontInfo := partial "title-font" .Params }}
+{{- $fontClass := $fontInfo.class }}
+{{- $tStyle := $fontInfo.style }}
 {{- $titleSize := .Params.entry_title_size | default 100 }}
 {{- $titleScale := div (float $titleSize) 100 }}
 {{- $titleEffect := .Params.entry_title_effect | default "none" }}
 {{- if not (in (slice "none" "blur" "reveal" "shiny" "shuffle") $titleEffect) }}{{ $titleEffect = "none" }}{{ end }}
-{{- $fontIsPath := findRE "\\.(ttf|otf|woff2?|eot)$" $fontVal }}
-{{- if $fontIsPath }}{{ $fontClass = "custom" }}{{ end }}
-{{- if or (eq $fontVal "custom") $fontIsPath }}
-{{- if $fontIsPath }}{{ $fontCustom = $fontVal }}{{ else }}{{ $fontCustom = .Params.entry_title_font_file }}{{ end }}
-{{- with $fontCustom }}
-{{- $fcRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
-{{- with resources.Get $fcRel }}{{ $fontCustom = .RelPermalink }}{{ end }}
-{{- end }}
-{{- end }}
-{{- $tStyle := "" }}
-{{- if $fontCustom }}
-{{- /* 静态字体: 唯一名 f-文件名 (title-fonts.css 预存, 运行时零演算, 避免同名覆盖)
-     权威值 = entry_title_font (编辑器保存的当前选择); entry_title_font_file 仅 'custom' 时兜底 */}}
-{{- $fcSrc := "" }}
-{{- if $fontIsPath }}{{ $fcSrc = $fontVal }}{{ else }}{{ $fcSrc = .Params.entry_title_font_file | default "" }}{{ end }}
-{{- if not $fcSrc }}{{ $fcSrc = $fontCustom }}{{ end }}
-{{- $fcBase := path.Base $fcSrc }}
-{{- $fcSlug := strings.TrimSuffix (path.Ext $fcBase) $fcBase }}
-{{- $fcSlug = replaceRE "[^\\w\\p{Han}-]" "-" $fcSlug }}
-{{- $fcSlug = lower $fcSlug }}
-{{- $tStyle = printf "font-family:'f-%s', Georgia, serif;" $fcSlug }}
-{{- end }}
-{{- with .Params.entry_title_color }}{{ $tStyle = printf "%s color:%s;" $tStyle . }}{{ end }}
-{{- with .Params.entry_title_opacity }}{{ $tStyle = printf "%s opacity:%.2f;" $tStyle (div (float .) 100) }}{{ end }}
 {{- $tStyle = printf "%s --pcf-title-scale:%.2f;" $tStyle $titleScale }}
 
 {{- if $f }}
