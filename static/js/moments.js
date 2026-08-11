@@ -580,6 +580,8 @@
     document.body.appendChild(overlay);
 
     var listEl = overlay.querySelector('[data-mv-list]');
+    var saveBtn = overlay.querySelector('.mv-save');
+
     function renderUsers(users) {
       listEl.innerHTML = users.map(function (u) {
         var id = u.id;
@@ -594,6 +596,15 @@
           '<button type="button" class="mv-act mv-act-h" data-mv-block title="不让此用户看">不让</button>' +
           '</div></div>';
       }).join('') || '<div class="mv-empty mono">无用户</div>';
+      /* 用户行 stagger 入场 */
+      var rows = listEl.querySelectorAll('.mv-user');
+      rows.forEach(function (row, i) {
+        row.style.transitionDelay = (i * 26) + 'ms';
+        requestAnimationFrame(function () { row.classList.add('in'); });
+      });
+      setTimeout(function () {
+        rows.forEach(function (row) { row.style.transitionDelay = ''; });
+      }, rows.length * 26 + 400);
     }
     window.Admin.getAllUsers().then(function (users) {
       renderUsers(users || []);
@@ -603,16 +614,19 @@
 
     function toggleUser(row, kind) {
       if (kind === 'v') {
-        var nowV = row.classList.toggle('v-on');
+        row.classList.toggle('v-on');
         row.classList.toggle('h-on', false);
-        if (nowV && listEl.querySelector('.mv-user.v-on.h-on')) { }
       } else {
         row.classList.toggle('h-on');
         row.classList.toggle('v-on', false);
       }
     }
-    function close() { overlay.remove(); }
+    function close() {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.remove(); }, 240);
+    }
     function save() {
+      if (saveBtn.disabled) return;
       var modeEl = overlay.querySelector('input[name="mv-mode"]:checked');
       var mode = modeEl ? modeEl.value : 'public';
       var vUsers = [], hUsers = [];
@@ -626,6 +640,8 @@
         hidden_from: hUsers,
         updated_at: new Date().toISOString()
       };
+      saveBtn.disabled = true;
+      saveBtn.textContent = '保存中…';
       window.blogSupabase.from('moments').update(payload).eq('id', moment.id)
         .then(function (r) {
           if (r.error) throw r.error;
@@ -635,8 +651,22 @@
         })
         .catch(function (err) {
           flashNotice('保存失败：' + (err.message || err));
+          saveBtn.disabled = false;
+          saveBtn.textContent = '保存';
         });
     }
+    /* 入场: 双 rAF 保证过渡触发 */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    });
+    /* 模式切换: 高亮跟随 */
+    overlay.addEventListener('change', function (e) {
+      if (e.target && e.target.name === 'mv-mode') {
+        overlay.querySelectorAll('.mv-mode-opt').forEach(function (l) {
+          l.classList.toggle('on', !!l.querySelector('input').checked);
+        });
+      }
+    });
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) { close(); return; }
       if (e.target.closest('.mv-close') || e.target.closest('.mv-cancel')) { close(); return; }

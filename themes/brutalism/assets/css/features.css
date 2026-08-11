@@ -1516,14 +1516,29 @@ body.admin-only { overflow: hidden; height: 100vh; }
   position: fixed;
   inset: 0;
   z-index: 600;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(17, 19, 15, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  opacity: 0;
+  transition: opacity 0.22s ease;
 }
+.moment-vis-overlay.show { opacity: 1; }
 /* 瑞士极简浅色: 米白纸底 #f7f8f4 · 墨黑 #11130f · 苔绿 #2f4a37 · 1px 线 · 直角克制 */
 .moment-vis-panel {
+  opacity: 0;
+  transform: translateY(16px) scale(0.98);
+  transition:
+    opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.moment-vis-overlay.show .moment-vis-panel {
+  opacity: 1;
+  transform: none;
+}
   width: min(560px, 92vw);
   max-height: 80vh;
   display: flex;
@@ -1610,8 +1625,14 @@ body.admin-only { overflow: hidden; height: 100vh; }
   align-items: center;
   gap: 12px;
   padding: 10px 18px;
-  transition: background-color 0.2s;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.34s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.2s;
 }
+.mv-user.in { opacity: 1; transform: none; }
 .mv-user:hover { background: rgba(47, 74, 55, 0.05); }
 .mv-uin { min-width: 0; }
 .mv-name { font-size: 13px; font-weight: 550; color: var(--swiss-ink); display: block; letter-spacing: -0.01em; }
@@ -1631,8 +1652,6 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .mv-act-v.on, .mv-user.v-on .mv-act-v { color: var(--swiss-moss); border-color: var(--swiss-moss); background: rgba(47, 74, 55, 0.08); }
 .mv-act-h.on, .mv-user.h-on .mv-act-h { color: var(--swiss-danger); border-color: var(--swiss-danger); background: rgba(142, 63, 55, 0.07); }
-.mv-user.v-on { background: rgba(47, 74, 55, 0.05); }
-.mv-user.h-on { background: rgba(142, 63, 55, 0.04); }
 .mv-foot {
   display: flex;
   justify-content: flex-end;
