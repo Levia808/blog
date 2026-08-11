@@ -712,6 +712,9 @@
     if (!el || el.tagName !== 'IMG') return;
     var frame = el.closest('.media-frame');
     if (frame) frame.classList.add('loaded');
+    /* 持久化缓存: 加载完成后的预览图存入 Cache API */
+    if (!el.src || el.src.indexOf('blob:') === 0) return;
+    cachePreviewImage(el);
     /* 单图 (非网格): 加载完成锁定真实宽高比 — 占位与最终等大 */
     if (frame && !frame.classList.contains('media-frame--grid') && el.naturalWidth) {
       frame.style.aspectRatio = el.naturalWidth + ' / ' + el.naturalHeight;
@@ -719,6 +722,52 @@
     }
     markLongImages();
   }, true);
+  /* ── 预览图缓存: 加载完成后持久化 (Cache API), 滚动经过/刷新不再重复下载卡顿 ── */
+  var previewCacheName = 'media-previews-v1';
+
+  function getPreviewCache() {
+    if (!('caches' in window)) return null;
+    return caches.open(previewCacheName);
+  }
+
+  /* 图片加载完成后存入缓存 */
+  function cachePreviewImage(img) {
+    var url = img.currentSrc || img.src;
+    if (!url || url.indexOf('blob:') === 0 || !('caches' in window)) return;
+    getPreviewCache().then(function (cache) {
+      cache.match(url).then(function (hit) {
+        if (hit) return;
+        fetch(url).then(function (res) {
+          if (res.ok) cache.put(url, res);
+        }).catch(function () {});
+      });
+    }).catch(function () {});
+  }
+
+  /* 加载前先查缓存: 命中则用 blob URL 直接显示 (零网络) */
+  function servePreviewFromCache(img, done) {
+    var url = img.dataset.src || img.src;
+    if (!url || url.indexOf('blob:') === 0 || !('caches' in window)) {
+      if (done) done(false);
+      return;
+    }
+    getPreviewCache().then(function (cache) {
+      cache.match(url).then(function (hit) {
+        if (!hit) { if (done) done(false); return; }
+        hit.blob().then(function (blob) {
+          var objUrl = URL.createObjectURL(blob);
+          img.src = objUrl;
+          img.addEventListener('load', function () {
+            setTimeout(function () { URL.revokeObjectURL(objUrl); }, 1000);
+          }, { once: true });
+          var frame = img.closest('.media-frame');
+          if (frame) frame.classList.add('loaded');
+          if (done) done(true);
+        }).catch(function () { if (done) done(false); });
+      }).catch(function () { if (done) done(false); });
+    }).catch(function () { if (done) done(false); });
+  }
+
   /* 单图准确占位: 预读预览图得真实宽高比 → frame 占位准确 → 缓存命中立即显示 (零跳变) */
   function preloadSingleImages() {
     listEl.querySelectorAll('.media-frame:not(.media-frame--grid) img[data-src]').forEach(function (img) {
@@ -739,6 +788,12 @@
         p.src = url;
       }
       var previewUrl = img.dataset.src;
+      /* 缓存优先: 命中则零网络显示, 否则正常预读 */
+      servePreviewFromCache(img, function (cached) {
+        if (cached) return;
+        probeChain();
+      });
+      function probeChain() {
       if (img.dataset.orig) {
         probe(previewUrl, function (ok) {
           if (!ok) probe(img.dataset.orig, function (ok2) {
@@ -757,6 +812,7 @@
             delete img.dataset.src;
           }
         });
+      }
       }
     });
   }
