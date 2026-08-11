@@ -18,6 +18,7 @@ import socket
 import struct
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -147,8 +148,8 @@ def open_tab(url):
 
 
 def validate_cookie(cookie_str):
-    """用真实爬取验证 cookie 是否有效 (无效 sessionid → Threads 返回 500)"""
-    url = 'https://www.threads.com/@zuck/post/C6S6o1sx7Rn'
+    """验证 cookie 是否有效: 有效 sessionid → Threads 返回 200; 无效 → 500 (帖页已改为客户端渲染, 不再有 og 元数据)"""
+    url = 'https://www.threads.com/@chaoliang_/post/Db5rr3Cm5Ht'
     req = urllib.request.Request(url, headers={
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36',
         'Accept-Language': 'zh-CN,zh;q=0.9',
@@ -156,9 +157,10 @@ def validate_cookie(cookie_str):
     })
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
-            html = r.read().decode('utf-8', 'ignore')
-            i = html.find('og:description')
-            return i >= 0 and 'content=' in html[i:i + 300]
+            r.read()
+            return True
+    except urllib.error.HTTPError as e:
+        return False
     except Exception:
         return False
 
