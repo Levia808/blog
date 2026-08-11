@@ -1408,7 +1408,10 @@
       caretEl.style.left = (base + measureTextWidth(text)) + 'px';
     }
     posCaret();
-    input.addEventListener('input', posCaret);
+    var composing = false;
+    input.addEventListener('compositionstart', function () { composing = true; });
+    input.addEventListener('compositionend', function () { composing = false; posCaret(); });
+    input.addEventListener('input', function () { if (!composing) posCaret(); });
     input.addEventListener('keyup', posCaret);
     input.addEventListener('click', posCaret);
     document.addEventListener('selectionchange', posCaret);
