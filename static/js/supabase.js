@@ -321,7 +321,7 @@ var Admin = window.Admin = {
   async deleteMedia(mediaId) {
     // 1. 查记录取 storage 路径
     const { data: rec, error: e1 } = await blogSupabase
-      .from('media')
+      .from('media_assets')
       .select('id, storage_path')
       .eq('id', mediaId)
       .maybeSingle();

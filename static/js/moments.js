@@ -1168,7 +1168,12 @@
             listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
           }
         }).catch(function (error) {
-          flashNotice('删除失败：' + (error.message || error));
+          var msg = (error && error.message) || String(error);
+          if (/permission|RLS|policy|row.?level|not allowed|relation/i.test(msg)) {
+            flashNotice('删除失败：数据库权限未配置，请在 Supabase SQL Editor 执行 supabase-moments-visibility.sql');
+          } else {
+            flashNotice('删除失败：' + msg);
+          }
         }).finally(function () {
           deleteBtn.disabled = false;
         });
