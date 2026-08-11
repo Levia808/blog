@@ -841,6 +841,11 @@ body.admin-only { overflow: hidden; height: 100vh; }
   overflow: hidden;
   background: var(--bg);
   min-height: 120px;
+  /* 加载状态 → 完成状态: 占位高度平滑展开 */
+  transition:
+    aspect-ratio 0.45s var(--swiss-ease),
+    min-height 0.45s var(--swiss-ease),
+    height 0.45s var(--swiss-ease);
 }
 .media-frame--grid { aspect-ratio: 1 / 1; min-height: 0; }
 /* 单图: 预读完成(JS 锁定 aspect-ratio)后 min-height 让位于准确比例 */
@@ -870,6 +875,15 @@ body.admin-only { overflow: hidden; height: 100vh; }
   z-index: 1;
   width: 100%;
   display: block;
+  /* 加载完成展开: 淡入 + 轻微位移/缩放 */
+  opacity: 0;
+  transform: translateY(6px) scale(0.99);
+  transition: opacity 0.4s var(--swiss-ease), transform 0.4s var(--swiss-ease);
+}
+.media-frame.loaded img,
+.media-frame.loaded video {
+  opacity: 1;
+  transform: none;
 }
 .moment-media img, .moment-media video {
   width: 100%;
