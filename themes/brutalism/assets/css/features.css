@@ -781,6 +781,123 @@ body.admin-only { overflow: hidden; height: 100vh; }
   display: flex; align-items: center; justify-content: center;
 }
 .mc-actions { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+
+/* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 ── */
+.mc-loc { position: relative; margin-top: 8px; }
+.mc-loc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-size: 12px;
+  color: var(--muted);
+}
+.mc-loc-chip b { color: var(--fg); font-weight: 500; }
+.mc-loc-remove {
+  background: none;
+  border: none;
+  color: var(--faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.mc-loc-remove:hover { color: var(--danger); }
+
+.mc-loc-panel {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: mlpIn 0.3s cubic-bezier(.16, 1, .3, 1);
+}
+@keyframes mlpIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+.mlp-row { display: flex; align-items: center; gap: 10px; }
+.mlp-locate {
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mlp-locate:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.mlp-status {
+  font-size: 10px;
+  color: var(--faint);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mlp-status.ok { color: var(--accent); }
+.mlp-status.err { color: var(--danger); }
+.mlp-search {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--fg);
+  outline: none;
+}
+.mlp-search::placeholder { color: var(--faint); }
+.mlp-search:focus { border-color: var(--accent); }
+.mlp-list {
+  max-height: 224px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mlp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--fg);
+}
+.mlp-item:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.mlp-item-ico { font-size: 12px; opacity: 0.7; }
+.mlp-item-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mlp-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--faint); }
+.mlp-attr { font-size: 9px; color: var(--faint); text-align: right; }
+
+/* 卡片地点: 正文左下角灰色小字 (紧随内容, 卡片 gap 12px 抵消后约 4px) */
+.moment-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  margin: -8px 0 0;
+}
 .moments-login-wall {
   border: 1px dashed var(--border);
   border-radius: 6px;

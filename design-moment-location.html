@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design · 动态发布地点（GPS / 附近 / 指定）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8f4;
+    --surface: #ffffff;
+    --ink: #11130f;
+    --text: #252a22;
+    --muted: #687064;
+    --faint: #9aa196;
+    --line: rgba(17, 19, 15, 0.15);
+    --line-strong: rgba(17, 19, 15, 0.36);
+    --moss: #2f4a37;
+    --moss-veil: rgba(47, 74, 55, 0.08);
+    --danger: #a03d2e;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); -webkit-font-smoothing: antialiased; padding: 0 24px 120px; }
+  .mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; }
+  .doc { max-width: 640px; margin: 0 auto; }
+  .doc-head { padding: 60px 0 28px; border-bottom: 1px solid var(--line-strong); margin-bottom: 28px; }
+  .doc-head .tag { color: var(--moss); text-transform: uppercase; font-weight: 600; }
+  .doc-head h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 650; letter-spacing: -0.03em; color: var(--ink); margin: 10px 0 8px; line-height: 1; }
+  .doc-head p { font-size: 13px; color: var(--muted); line-height: 1.8; max-width: 56ch; }
+  .doc-section { margin: 40px 0; }
+  .doc-section h2 { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .doc-section .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.8; }
+  .note {
+    margin-top: 18px; padding: 12px 16px;
+    border: 1px dashed var(--line-strong); border-radius: 8px;
+    font-size: 12px; color: var(--muted); line-height: 1.9;
+  }
+  .note b { color: var(--moss); }
+  .kbd {
+    font-family: var(--font-mono); font-size: 10px;
+    border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px;
+    background: var(--surface);
+  }
+
+  /* ══════════ 模拟动态卡片 ══════════ */
+  .moment {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .m-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .m-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #b8c4b6, var(--moss));
+    color: #f7f8f4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; flex: none;
+  }
+  .m-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .m-time { font-family: var(--font-mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .m-body { font-size: 14px; line-height: 1.9; color: var(--text); margin-bottom: 10px; }
+
+  /* 地点展示: 内容左下角, 灰色小字 */
+  .m-loc {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+  .m-loc .pin { font-size: 11px; }
+
+  /* ══════════ 发布器 (模拟 composer) ══════════ */
+  .composer {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .cp-input {
+    width: 100%;
+    min-height: 76px;
+    border: none;
+    background: none;
+    resize: none;
+    font-family: var(--font-display);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--ink);
+    outline: none;
+  }
+  .cp-input::placeholder { color: var(--faint); }
+  .cp-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+  .cp-actions { display: flex; align-items: center; gap: 8px; }
+
+  .cp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .cp-btn:hover { border-color: var(--moss); color: var(--moss); }
+  .cp-publish {
+    padding: 7px 18px;
+    color: #f7f8f4;
+    background: var(--moss);
+    border: 1px solid var(--moss);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .cp-publish:hover { filter: brightness(1.12); }
+
+  /* 已选地点 chip */
+  .loc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px 4px 10px;
+    border: 1px solid var(--moss);
+    border-radius: 6px;
+    background: var(--moss-veil);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--moss);
+  }
+  .loc-chip .lc-x {
+    border: none; background: none;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+  }
+  .loc-chip .lc-x:hover { color: var(--danger); }
+
+  /* ══════════ 地点选择面板 ══════════ */
+  .loc-bar { position: relative; margin-top: 10px; }
+  .loc-panel {
+    position: absolute;
+    left: 0; right: 0;
+    top: calc(100% + 8px);
+    z-index: 30;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 20px 48px rgba(17, 19, 15, 0.14);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lp-row { display: flex; align-items: center; gap: 10px; }
+  .lp-locate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--moss);
+    background: none;
+    border: 1px solid var(--moss);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .lp-locate:hover { background: var(--moss-veil); }
+  .lp-status { font-size: 10px; color: var(--faint); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lp-status.ok { color: var(--moss); }
+  .lp-status.err { color: var(--danger); }
+  .lp-search {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+  }
+  .lp-search::placeholder { color: var(--faint); }
+  .lp-search:focus { border-color: var(--moss); }
+  .lp-list {
+    max-height: 224px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .lp-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .lp-item:hover { background: var(--moss-veil); }
+  .lp-item .lp-ico { font-size: 12px; opacity: 0.7; }
+  .lp-item .lp-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lp-item .lp-ctx { font-family: var(--font-mono); font-size: 9px; color: var(--faint); flex: none; }
+  .lp-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--faint); }
+  .lp-attr { font-size: 9px; color: var(--faint); text-align: right; }
+
+  /* 面板入场 */
+  .loc-panel { animation: lpIn 0.3s var(--ease-out); }
+  @keyframes lpIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .demo-hint {
+    margin-top: 14px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--moss);
+  }
+  .demo-hint .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--moss); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  /* 新动态入场 */
+  .new-moment { animation: mcIn 0.45s var(--ease-out); }
+  @keyframes mcIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="doc-head">
+    <div class="mono tag">DESIGN · 动态发布地点</div>
+    <h1>地点选择：GPS / 附近 / 指定</h1>
+    <p>发布动态时可选地点：① 使用当前位置（浏览器定位 + 反向地理编码）② 附近地点列表（定位成功后自动载入）③ 搜索指定地点。选中后以 chip 显示在发布器内，卡片正文左下角灰色小字展示。</p>
+  </header>
+
+  <!-- ───────────────── 发布器交互演示 ───────────────── -->
+  <section class="doc-section">
+    <h2>01 · 发布地点选择器</h2>
+    <p class="sub">可交互 demo（mock 数据，非真实 GPS/API）。点「📍 添加地点」→ 面板自动发起定位 → 载入附近地点；也可直接搜索。</p>
+
+    <div class="composer" id="composer">
+      <textarea class="cp-input" id="cpInput" placeholder="分享此刻…（支持 Markdown）"></textarea>
+      <div class="loc-bar" id="locBar">
+        <button type="button" class="cp-btn" id="locAdd">📍 添加地点</button>
+        <span class="loc-chip" id="locChip" hidden>
+          📍 <b id="locName"></b>
+          <button type="button" class="lc-x" id="locRemove" aria-label="移除地点">✕</button>
+        </span>
+        <div class="loc-panel" id="locPanel" hidden>
+          <div class="lp-row">
+            <button type="button" class="lp-locate" id="locateBtn">◎ 使用当前位置</button>
+            <span class="lp-status" id="locStatus"></span>
+          </div>
+          <input type="text" class="lp-search" id="locSearch" placeholder="搜索地点…" autocomplete="off">
+          <div class="lp-list" id="locList"></div>
+          <div class="lp-attr mono">地点数据 © OpenStreetMap · Photon</div>
+        </div>
+      </div>
+      <div class="cp-foot">
+        <span class="mono" style="color:var(--faint);">已选：<span id="locSelectedLabel">—</span></span>
+        <button type="button" class="cp-publish" id="publishBtn">发布</button>
+      </div>
+    </div>
+
+    <div class="demo-hint"><span class="dot"></span>定位（模拟）→ 附近地点 → 选中 → 发布 → 卡片左下角显示地点</div>
+  </section>
+
+  <!-- ───────────────── 卡片展示 ───────────────── -->
+  <section class="doc-section">
+    <h2>02 · 卡片展示形态</h2>
+    <p class="sub">地点显示在正文左下角：灰色 mono 小字，emoji 圆钉前缀，紧随内容、位于媒体之上；无地点时整行隐藏。</p>
+
+    <div class="moment">
+      <div class="m-head">
+        <div class="m-avatar">L</div>
+        <div>
+          <div class="m-name">Levia</div>
+          <div class="m-time">26/08/11 14:30</div>
+        </div>
+      </div>
+      <div class="m-body">下午在外滩散步，风很舒服。</div>
+      <div class="m-loc"><span class="pin">📍</span> 外滩 · 黄浦区 · 上海</div>
+      <!-- 媒体占位示意 -->
+      <div style="height:140px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px;" class="mono">[ 媒体区 ]</div>
+    </div>
+
+    <div class="moment" style="margin-top:16px;">
+      <div class="m-head">
+        <div class="m-avatar">L</div>
+        <div>
+          <div class="m-name">Levia</div>
+          <div class="m-time">26/08/11 11:02</div>
+        </div>
+      </div>
+      <div class="m-body">只有文字、没有地点的动态：左下角不渲染地点行。</div>
+    </div>
+  </section>
+
+  <!-- ───────────────── 说明 ───────────────── -->
+  <section class="doc-section">
+    <h2>03 · 数据与规则</h2>
+    <div class="note">
+      <b>存储：</b>moments 表新增 <code>location</code>（jsonb）：<code>{ "name": "外滩 · 黄浦区 · 上海", "lat": 31.24, "lng": 121.49 }</code>——名称用于展示，坐标留作地图跳转/聚合。<br>
+      <b>三通道：</b>① GPS 识别 = 浏览器定位 → Photon 反向地理编码（reverse）；② 附近地点 = 定位成功后 Photon 无关键词查询（lat/lon 半径排序）；③ 指定地点 = 搜索框防抖 300ms → Photon 关键词查询（lang=zh）。<br>
+      <b>降级：</b>定位被拒/超时 → 状态栏提示「可手动搜索」，附近列表自动收起，搜索仍可用；API 失败 → 面板内错误提示。<br>
+      <b>交互：</b>选中 → 面板收起 + chip 显示；✕ 移除；点击面板以外收起；发布成功/取消发布 → 状态重置。<br>
+      <b>合规：</b>数据源 © OpenStreetMap（Photon 免费无 key），面板内署名。
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── mock: 模拟 Photon 响应与 GPS 定位 (真实集成时替换为 API) ── */
+  var MOCK_PLACES = [
+    { name: '外滩 · 黄浦区 · 上海', ctx: '31.2406, 121.4906', lat: 31.2406, lng: 121.4906 },
+    { name: '人民广场 · 黄浦区 · 上海', ctx: '31.2317, 121.4713', lat: 31.2317, lng: 121.4713 },
+    { name: '南京路步行街 · 黄浦区 · 上海', ctx: '31.2366, 121.4772', lat: 31.2366, lng: 121.4772 },
+    { name: '静安寺 · 静安区 · 上海', ctx: '31.2236, 121.4451', lat: 31.2236, lng: 121.4451 },
+    { name: '陆家嘴 · 浦东新区 · 上海', ctx: '31.2397, 121.4998', lat: 31.2397, lng: 121.4998 },
+    { name: '武康大楼 · 徐汇区 · 上海', ctx: '31.2059, 121.4373', lat: 31.2059, lng: 121.4373 },
+    { name: '豫园 · 黄浦区 · 上海', ctx: '31.2272, 121.4928', lat: 31.2272, lng: 121.4928 },
+    { name: '苏州河 · 普陀区 · 上海', ctx: '31.2420, 121.4270', lat: 31.242, lng: 121.427 }
+  ];
+  var MOCK_CURRENT = { name: '外滩 · 黄浦区 · 上海', ctx: '31.2406, 121.4906', lat: 31.2406, lng: 121.4906 };
+
+  var locAdd = document.getElementById('locAdd');
+  var locChip = document.getElementById('locChip');
+  var locName = document.getElementById('locName');
+  var locRemove = document.getElementById('locRemove');
+  var locPanel = document.getElementById('locPanel');
+  var locateBtn = document.getElementById('locateBtn');
+  var locStatus = document.getElementById('locStatus');
+  var locSearch = document.getElementById('locSearch');
+  var locList = document.getElementById('locList');
+  var locSelectedLabel = document.getElementById('locSelectedLabel');
+  var publishBtn = document.getElementById('publishBtn');
+  var cpInput = document.getElementById('cpInput');
+  var composer = document.getElementById('composer');
+
+  var selected = null;
+  var gpsFixed = false;
+  var searchTimer = null;
+
+  function setStatus(text, tone) {
+    locStatus.textContent = text || '';
+    locStatus.className = 'lp-status' + (tone === 'ok' ? ' ok' : tone === 'err' ? ' err' : '');
+  }
+
+  function renderList(items, note) {
+    if (!items || !items.length) {
+      locList.innerHTML = '<div class="lp-empty">' + (note || '无结果') + '</div>';
+      return;
+    }
+    locList.innerHTML = items.map(function (p) {
+      return '<button type="button" class="lp-item" data-name="' + p.name.replace(/"/g, '&quot;') + '" data-lat="' + p.lat + '" data-lng="' + p.lng + '">' +
+        '<span class="lp-ico">📍</span><span class="lp-main">' + p.name + '</span>' +
+        '<span class="lp-ctx">' + p.ctx + '</span></button>';
+    }).join('');
+  }
+
+  function mockLocate() {
+    setStatus('正在定位…');
+    setTimeout(function () {
+      gpsFixed = true;
+      setStatus('当前位置：' + MOCK_CURRENT.name, 'ok');
+      renderList(MOCK_PLACES.slice(0, 5), '附近没有地点');
+    }, 600);
+  }
+
+  function mockSearch(q) {
+    setStatus('搜索中…');
+    setTimeout(function () {
+      var kw = q.toLowerCase();
+      var hits = MOCK_PLACES.filter(function (p) {
+        return p.name.toLowerCase().indexOf(kw) >= 0 || q === '';
+      }).slice(0, 6);
+      setStatus('');
+      renderList(hits, '未找到相关地点');
+    }, 350);
+  }
+
+  function openPanel() {
+    locPanel.hidden = false;
+    if (!gpsFixed) mockLocate();
+    locSearch.focus();
+  }
+  function closePanel() { locPanel.hidden = true; }
+
+  function selectPlace(name, lat, lng) {
+    selected = { name: name, lat: lat, lng: lng };
+    locName.textContent = name;
+    locChip.hidden = false;
+    locAdd.hidden = true;
+    locSelectedLabel.textContent = name;
+    closePanel();
+  }
+  function clearPlace() {
+    selected = null;
+    locChip.hidden = true;
+    locAdd.hidden = false;
+    locSelectedLabel.textContent = '—';
+  }
+
+  locAdd.addEventListener('click', openPanel);
+  locRemove.addEventListener('click', clearPlace);
+  locateBtn.addEventListener('click', mockLocate);
+  locList.addEventListener('click', function (e) {
+    var item = e.target.closest('.lp-item');
+    if (item) selectPlace(item.dataset.name, parseFloat(item.dataset.lat), parseFloat(item.dataset.lng));
+  });
+  locSearch.addEventListener('input', function (e) {
+    clearTimeout(searchTimer);
+    var q = (e.target && e.target.value || '').trim();
+    searchTimer = setTimeout(function () { mockSearch(q); }, 300);
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.loc-panel') || e.target.closest('#locAdd') ||
+        e.target.closest('#locChip') || e.target.closest('.lp-item')) return;
+    closePanel();
+  }, true);
+
+  /* 发布 → 生成新卡片 (带地点) */
+  publishBtn.addEventListener('click', function () {
+    var text = cpInput.value.trim();
+    if (!text) return;
+    var card = document.createElement('div');
+    card.className = 'moment new-moment';
+    var locHtml = selected
+      ? '<div class="m-loc"><span class="pin">📍</span> ' + selected.name + '</div>'
+      : '';
+    card.innerHTML =
+      '<div class="m-head"><div class="m-avatar">L</div><div><div class="m-name">Levia</div>' +
+      '<div class="m-time">26/08/11 15:0' + Math.floor(Math.random() * 9) + '</div></div></div>' +
+      '<div class="m-body">' + text.replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      }) + '</div>' + locHtml +
+      '<div style="height:120px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px;" class="mono">[ 媒体区 ]</div>';
+    composer.parentNode.insertBefore(card, composer.nextSibling);
+    cpInput.value = '';
+    clearPlace();
+  });
+})();
+</script>
+</body>
+</html>

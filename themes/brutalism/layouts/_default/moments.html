@@ -14,6 +14,23 @@
       </div>
       <textarea id="mcInput" rows="3" maxlength="2000" placeholder="分享此刻…（支持 Markdown）" aria-label="动态内容"></textarea>
       <div class="mc-media-list" id="mcMediaList"></div>
+      <div class="mc-loc" id="mcLocBar">
+        <button type="button" class="btn" id="mcLocAdd" style="font-size:12px;">📍 添加地点</button>
+        <span class="mc-loc-chip" id="mcLocChip" hidden>
+          <span class="mc-loc-dot">📍</span>
+          <b id="mcLocName"></b>
+          <button type="button" class="mc-loc-remove" id="mcLocRemove" aria-label="移除地点">✕</button>
+        </span>
+        <div class="mc-loc-panel" id="mcLocPanel" hidden>
+          <div class="mlp-row">
+            <button type="button" class="mlp-locate" id="mcLocateBtn">◎ 使用当前位置</button>
+            <span class="mlp-status mono" id="mcLocStatus"></span>
+          </div>
+          <input type="text" class="mlp-search" id="mcLocSearch" placeholder="搜索地点…" autocomplete="off">
+          <div class="mlp-list" id="mcLocList"></div>
+          <div class="mlp-attr mono">地点数据 © OpenStreetMap</div>
+        </div>
+      </div>
       <div class="mc-actions">
         <label class="btn" style="cursor:pointer;">+ 添加图片 / 视频<input type="file" id="mcFileInput" accept="image/*,video/*" multiple hidden></label>
         <button type="button" class="btn btn-primary" id="mcPublishBtn">发布</button>
