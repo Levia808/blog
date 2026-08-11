@@ -6,9 +6,9 @@ Deno.serve(async (req) => {
   const { url, cookie } = await req.json();
   if (!url) return json({ error: '缺少 url' }, 400);
 
-  const m = String(url).match(/threads\.net\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
+  const m = String(url).match(/threads\.(net|com)\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
   if (!m) return json({ error: '无效的 Threads 链接' }, 400);
-  const [, handle, id] = m;
+  const [, , handle, id] = m;
 
   if (!cookie) return json({ error: '缺少 Threads Cookie（后台设置中配置）' }, 400);
 
@@ -45,7 +45,6 @@ Deno.serve(async (req) => {
       stats: { likes: 0, replies: 0, reposts: 0 },
       fetchedAt: new Date().toISOString()
     };
-
     // 写入 storage (公共桶 threads-reposts)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,

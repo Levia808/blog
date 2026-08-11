@@ -23,6 +23,7 @@
       <a href="#" data-admin-section="users"><span class="dm-idx">05</span>用户管理<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="settings"><span class="dm-idx">07</span>系统设置<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="platform"><span class="dm-idx">08</span>平台管理<span class="dm-arr">›››</span></a>
     </nav>
     <div class="drawer-user">
       <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
@@ -44,6 +45,7 @@
           <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>用户管理</a>
           <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
           <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>系统设置</a>
+          <a href="#" class="an-item" data-admin-section="platform"><span class="an-dot"></span>平台管理</a>
         </nav>
         <div class="an-user">
           <img src="{{ "favicon.svg" | relURL }}" alt="" id="adminUserAvatar">
@@ -191,20 +193,7 @@
           </div>
 
           <div class="panel-title">Threads 串文转发</div>
-          <div class="settings-form">
-            <label class="sf-field sf-wide"><span>Threads Cookie（登录 Threads 后从浏览器复制，用于后端爬取串文）</span><input type="password" id="cfgThreadsCookie" placeholder="sessionid=…; ds_user_id=…" autocomplete="off"></label>
-            <div class="sf-actions">
-              <button type="button" class="btn btn-primary" id="cfgThreadsSave">保存 Cookie</button>
-              <button type="button" class="btn" id="cfgThreadsTest">测试连接</button>
-            </div>
-            <label class="sf-field sf-wide"><span>爬取串文（输入 Threads 链接，生成静态资源）</span><input type="text" id="cfgThreadsUrl" placeholder="https://www.threads.net/@user/post/xxx"></label>
-            <div class="sf-actions">
-              <button type="button" class="btn btn-primary" id="cfgThreadsFetch">爬取并生成资源</button>
-              <span class="hint" id="cfgThreadsHint" style="margin:0;align-self:center;"></span>
-            </div>
-            <p class="auth-error" id="cfgThreadsError" hidden></p>
-            <div class="note">说明：Threads 无开放 OAuth，需浏览器登录后复制 Cookie（F12 → Network → 任意请求头）。爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，动态渲染读取。</div>
-          </div>
+          <div class="note">已迁移至「<strong>平台管理</strong>」侧栏页：自动登录 / Cookie 管理 / 串文爬取统一在那里操作。</div>
 
           <div class="panel-title">样式预览</div>
           <div class="card-preview">
@@ -241,6 +230,50 @@
           </div>
 
           <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="platform" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">Threads 自动转发链</p><h3>平台管理</h3></div>
+            <div class="an-actions">
+              <span class="hint" id="pltStatus" style="margin:0;align-self:center;"></span>
+              <button type="button" class="btn" data-admin-refresh="platform">刷新状态</button>
+            </div>
+          </div>
+          <div class="note">自动链路：<strong>账号密码登录</strong> → 获取登录态 Cookie → 用 Cookie <strong>爬取串文</strong>生成静态资源。Cookie 仅保存在你本机浏览器（localStorage）。</div>
+
+          <div class="panel-title">自动登录</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>Threads / Instagram 账号</span><input type="text" id="cfgThreadsUser" placeholder="用户名或邮箱" autocomplete="username"></label>
+            <label class="sf-field"><span>密码</span><input type="password" id="cfgThreadsPass" placeholder="密码" autocomplete="current-password"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsLogin">自动登录</button>
+              <span class="hint" id="cfgThreadsLoginHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsLoginError" hidden></p>
+          </div>
+
+          <div class="panel-title">登录态 Cookie</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Cookie（自动登录后自动填充；手动登录时可从浏览器复制 <span class="mono">sessionid=…; ds_user_id=…</span>）</span><input type="password" id="cfgThreadsCookie" placeholder="sessionid=…; ds_user_id=…" autocomplete="off"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsSave">保存 Cookie</button>
+              <button type="button" class="btn" id="cfgThreadsTest">测试连接</button>
+              <button type="button" class="btn" id="cfgThreadsClear">清除</button>
+            </div>
+            <p class="auth-error" id="cfgThreadsError" hidden></p>
+          </div>
+
+          <div class="panel-title">爬取串文</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Threads 链接</span><input type="text" id="cfgThreadsUrl" placeholder="https://www.threads.net/@user/post/xxx 或 https://www.threads.com/@user/post/xxx"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsFetch">爬取并生成资源</button>
+              <span class="hint" id="cfgThreadsHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsFetchError" hidden></p>
+            <div class="note">爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，文章中的串文链接会自动渲染成转发卡片。</div>
+          </div>
         </section>
 
         <div class="auth-error" id="adminError" hidden></div>

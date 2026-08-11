@@ -86,7 +86,7 @@
   }
 
   /* ── 面板切换 ── */
-  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings'];
+  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings', 'platform'];
 
   function switchSection(name) {
     sections.forEach(function (section) {
@@ -715,7 +715,7 @@
       });
   });
 
-  /* ── Threads 串文转发设置 (Cookie localStorage 保存 + 测试 + 爬取) ── */
+  /* ── Threads 串文转发 (平台管理面板: 自动登录 + Cookie + 爬取) ── */
   var threadsCookieKey = 'blog_threads_cookie';
   var threadsSaveBtn = document.getElementById('cfgThreadsSave');
   var threadsTestBtn = document.getElementById('cfgThreadsTest');
@@ -723,21 +723,84 @@
   var threadsCookieInput = document.getElementById('cfgThreadsCookie');
   var threadsUrlInput = document.getElementById('cfgThreadsUrl');
   var threadsErrorEl = document.getElementById('cfgThreadsError');
+  var threadsFetchErrorEl = document.getElementById('cfgThreadsFetchError');
   var threadsHintEl = document.getElementById('cfgThreadsHint');
+  var threadsLoginBtn = document.getElementById('cfgThreadsLogin');
+  var threadsLoginUser = document.getElementById('cfgThreadsUser');
+  var threadsLoginPass = document.getElementById('cfgThreadsPass');
+  var threadsLoginHintEl = document.getElementById('cfgThreadsLoginHint');
+  var threadsLoginErrorEl = document.getElementById('cfgThreadsLoginError');
+  var threadsClearBtn = document.getElementById('cfgThreadsClear');
+  var platformStatusEl = document.getElementById('pltStatus');
 
   function setThreadsError(msg) {
     if (threadsErrorEl) { threadsErrorEl.textContent = msg || ''; threadsErrorEl.hidden = !msg; }
   }
+  function setThreadsFetchError(msg) {
+    if (threadsFetchErrorEl) { threadsFetchErrorEl.textContent = msg || ''; threadsFetchErrorEl.hidden = !msg; }
+  }
   function setThreadsHint(msg) {
     if (threadsHintEl) threadsHintEl.textContent = msg || '';
+  }
+  function setThreadsLoginHint(msg) {
+    if (threadsLoginHintEl) threadsLoginHintEl.textContent = msg || '';
+  }
+  function setThreadsLoginError(msg) {
+    if (threadsLoginErrorEl) { threadsLoginErrorEl.textContent = msg || ''; threadsLoginErrorEl.hidden = !msg; }
+  }
+  function updatePlatformStatus() {
+    if (!platformStatusEl) return;
+    var cookie = '';
+    try { cookie = localStorage.getItem(threadsCookieKey) || ''; } catch (e) {}
+    if (!cookie) { platformStatusEl.textContent = ''; return; }
+    var sid = (cookie.match(/sessionid=([^;\s]+)/) || [])[1] || '';
+    platformStatusEl.innerHTML = '<span class="status-dot status-published"></span>Cookie 已配置' +
+      (sid ? ' · sessionid ' + sid.slice(0, 8) + '…' : '');
   }
   if (threadsCookieInput) {
     try { threadsCookieInput.value = localStorage.getItem(threadsCookieKey) || ''; } catch (e) {}
   }
+  updatePlatformStatus();
   if (threadsSaveBtn) threadsSaveBtn.addEventListener('click', function () {
     try { localStorage.setItem(threadsCookieKey, threadsCookieInput.value.trim()); } catch (e) {}
     setThreadsError('');
+    updatePlatformStatus();
     showToast('Threads Cookie 已保存（存于本机浏览器）', 'success');
+  });
+  if (threadsClearBtn) threadsClearBtn.addEventListener('click', function () {
+    try { localStorage.removeItem(threadsCookieKey); } catch (e) {}
+    if (threadsCookieInput) threadsCookieInput.value = '';
+    setThreadsError('');
+    updatePlatformStatus();
+    showToast('Cookie 已清除', 'success');
+  });
+  if (threadsLoginBtn) threadsLoginBtn.addEventListener('click', function () {
+    var username = (threadsLoginUser.value || '').trim();
+    var password = threadsLoginPass.value;
+    if (!username || !password) { setThreadsLoginError('请输入账号和密码'); return; }
+    setThreadsLoginError('');
+    setThreadsLoginHint('');
+    threadsLoginBtn.disabled = true;
+    threadsLoginBtn.textContent = '登录中…';
+    blogSupabase.functions.invoke('threads-login', { body: { username: username, password: password } })
+      .then(function (res) {
+        var data = res && res.data;
+        if (!data || data.error) throw new Error((data && data.error) || '调用失败');
+        try { localStorage.setItem(threadsCookieKey, data.cookie); } catch (e) {}
+        if (threadsCookieInput) threadsCookieInput.value = data.cookie;
+        updatePlatformStatus();
+        setThreadsLoginHint('登录成功 · 已自动保存 Cookie');
+        showToast('登录成功，Cookie 已自动保存', 'success');
+        threadsLoginPass.value = '';
+      })
+      .catch(function (e) {
+        var msg = (e && e.message) || String(e);
+        setThreadsLoginError(msg + '（如需验证码/双因素，请用浏览器登录后手动粘贴 Cookie）');
+      })
+      .finally(function () {
+        threadsLoginBtn.disabled = false;
+        threadsLoginBtn.textContent = '自动登录';
+      });
   });
   if (threadsTestBtn) threadsTestBtn.addEventListener('click', function () {
     var cookie = threadsCookieInput.value.trim();
@@ -762,10 +825,11 @@
   if (threadsFetchBtn) threadsFetchBtn.addEventListener('click', function () {
     var url = (threadsUrlInput.value || '').trim();
     var cookie = threadsCookieInput.value.trim();
-    if (!url) { setThreadsError('请输入 Threads 链接'); return; }
-    if (!cookie) { setThreadsError('请先保存 Cookie'); return; }
-    if (!/threads\.net\/@[^/]+\/post\/[A-Za-z0-9_-]+/i.test(url)) { setThreadsError('无效的 Threads 串文链接'); return; }
-    setThreadsError('');
+    if (!url) { setThreadsFetchError('请输入 Threads 链接'); return; }
+    if (!cookie) { setThreadsFetchError('请先保存 Cookie'); return; }
+    if (!/threads\.(net|com)\/@[^/]+\/post\/[A-Za-z0-9_-]+/i.test(url)) { setThreadsFetchError('无效的 Threads 串文链接'); return; }
+    setThreadsFetchError('');
+    setThreadsHint('');
     threadsFetchBtn.disabled = true;
     threadsFetchBtn.textContent = '爬取中…';
     blogSupabase.functions.invoke('threads-fetch', { body: { url: url, cookie: cookie } })
@@ -777,7 +841,7 @@
       })
       .catch(function (e) {
         var msg = (e && e.message) || String(e);
-        setThreadsError('爬取失败：' + msg + '（Cookie 失效请重新获取；确认已部署 Edge Function 与 threads-reposts 桶）');
+        setThreadsFetchError('爬取失败：' + msg + '（Cookie 失效请重新自动登录；确认已部署 Edge Function 与 threads-reposts 桶）');
       })
       .finally(function () {
         threadsFetchBtn.disabled = false;
@@ -1047,6 +1111,7 @@
           var count = await loadMedia();
         }
         if (refresh.dataset.adminRefresh === 'archive') await refreshPosts();
+        if (refresh.dataset.adminRefresh === 'platform') updatePlatformStatus();
       } catch (error) {
         showError(errorText(error));
       } finally {
