@@ -107,9 +107,11 @@
               {{- end }}
               {{- $tStyle := "" }}
               {{- if $fontCustom }}
-                {{- /* 静态字体: 唯一名 f-文件名 (title-fonts.css 预存) */}}
-                {{- $fcFile := .Params.entry_title_font_file | default $fontCustom }}
-                {{- $fcBase := path.Base $fcFile }}
+                {{- /* 静态字体: 唯一名 f-文件名 (权威值 = entry_title_font 当前选择) */}}
+                {{- $fcSrc := "" }}
+                {{- if $fontIsPath }}{{ $fcSrc = $fontVal }}{{ else }}{{ $fcSrc = .Params.entry_title_font_file | default "" }}{{ end }}
+                {{- if not $fcSrc }}{{ $fcSrc = $fontCustom }}{{ end }}
+                {{- $fcBase := path.Base $fcSrc }}
                 {{- $fcSlug := strings.TrimSuffix (path.Ext $fcBase) $fcBase }}
                 {{- $fcSlug = replaceRE "[^\\w\\p{Han}-]" "-" $fcSlug }}
                 {{- $fcSlug = lower $fcSlug }}
