@@ -326,9 +326,14 @@ var Admin = window.Admin = {
       .eq('id', mediaId)
       .maybeSingle();
     if (e1) throw e1;
-    // 2. 用 Storage API 删除文件 (禁止直接删 storage 表)
+    // 2. 用 Storage API 删除文件 (禁止直接删 storage 表, 含 preview 副本)
     if (rec && rec.storage_path) {
-      const { error: e2 } = await blogSupabase.storage.from('media').remove([rec.storage_path]);
+      var removePaths = [rec.storage_path];
+      var slash = rec.storage_path.lastIndexOf('/');
+      if (slash > 0) {
+        removePaths.push(rec.storage_path.slice(0, slash + 1) + 'preview-' + rec.storage_path.slice(slash + 1));
+      }
+      const { error: e2 } = await blogSupabase.storage.from('media').remove(removePaths);
       if (e2) throw e2;
     }
     // 3. 删除媒体记录 (storage 文件已删, RPC 无副作用)
@@ -339,6 +344,8 @@ var Admin = window.Admin = {
 
   /* 图片上传前压缩: canvas → webp ≤1600px, 大图体积降 80%+ (预览加载提速)
      GIF/SVG/其他格式保留原文件 */
+  /* 图片双版本压缩: original(≤2560px q0.88, 放大查看) + preview(≤600px q0.7, 预览提速)
+     GIF/SVG 保留原文件 */
   compressImage(file) {
     if (!file || !file.type.startsWith('image/')) return Promise.resolve(file);
     if (file.type === 'image/gif' || file.type === 'image/svg+xml') return Promise.resolve(file);
@@ -346,21 +353,28 @@ var Admin = window.Admin = {
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        var maxW = 1600;
-        var scale = Math.min(1, maxW / img.naturalWidth);
-        var w = Math.max(1, Math.round(img.naturalWidth * scale));
-        var h = Math.max(1, Math.round(img.naturalHeight * scale));
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        canvas.toBlob(function (blob) {
+        var nw = img.naturalWidth, nh = img.naturalHeight;
+        function render(maxW, quality) {
+          var scale = Math.min(1, maxW / nw);
+          var w = Math.max(1, Math.round(nw * scale));
+          var h = Math.max(1, Math.round(nh * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          return new Promise(function (done) {
+            canvas.toBlob(function (blob) { done(blob); }, 'image/webp', quality);
+          });
+        }
+        Promise.all([render(2560, 0.88), render(600, 0.7)]).then(function (blobs) {
           URL.revokeObjectURL(url);
-          if (!blob) { resolve(file); return; }
           var name = file.name.replace(/\.[^.]+$/, '.webp');
-          resolve(new File([blob], name, { type: 'image/webp' }));
-        }, 'image/webp', 0.82);
+          if (!blobs[0] && !blobs[1]) { resolve(file); return; }
+          resolve({
+            original: blobs[0] ? new File([blobs[0]], name, { type: 'image/webp' }) : file,
+            preview: blobs[1] ? new File([blobs[1]], 'preview-' + name, { type: 'image/webp' }) : null
+          });
+        });
       };
       img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
       img.src = url;
@@ -376,11 +390,16 @@ var Admin = window.Admin = {
     if (file.size > 100 * 1024 * 1024) {
       throw new Error('媒体文件不能超过 100 MB');
     }
-    /* 图片压缩 (仅在可压缩时, 保持原类型判断基于压缩后文件) */
+    /* 图片双版本 (原图 + 预览), 预览文件名约定 preview- 前缀供前端推导 */
     var uploadFile = file;
+    var previewFile = null;
     var isImage = file.type.startsWith('image/');
     if (isImage) {
-      uploadFile = await this.compressImage(file);
+      var pair = await this.compressImage(file);
+      if (pair && pair.original) {
+        uploadFile = pair.original;
+        previewFile = pair.preview;
+      }
     }
     var safeName = uploadFile.name.replace(/[^\w.\-]+/g, '-').replace(/^-+|-+$/g, '');
     var filePath = user.id + '/' + Date.now() + '-' + safeName;
@@ -391,6 +410,15 @@ var Admin = window.Admin = {
       onUploadProgress: onProgress || undefined
     });
     if (upload.error) throw upload.error;
+    /* 预览图上传 (不注册媒体库记录) */
+    if (previewFile) {
+      var previewPath = user.id + '/' + Date.now() + '-preview-' + safeName;
+      await blogSupabase.storage.from('media').upload(previewPath, previewFile, {
+        upsert: false,
+        contentType: 'image/webp',
+        cacheControl: '3600'
+      }).catch(function () {});
+    }
     var publicUrl = blogSupabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
     try {
       return await this.registerMedia(filePath, uploadFile, publicUrl);

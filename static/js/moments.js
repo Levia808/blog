@@ -143,7 +143,7 @@
       var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
       var item = isVideo
         ? '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
-        : '<img data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(url) + '" alt="" decoding="async">';
+        : '<img data-gallery="moment-' + momentId + '" data-src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
       if (extra > 0 && i === displayMedia.length - 1) {
         item = '<div class="moment-media-more">' + item +
           '<span class="mm-more-badge">+' + extra + '</span></div>';
@@ -210,7 +210,7 @@
     var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
     var preview = isVideo
       ? '<video src="' + escapeHtml(url) + '" muted playsinline preload="metadata"></video>'
-      : '<img src="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+      : '<img src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
     return '<div class="mem-item" data-url="' + escapeHtml(url) + '">' +
       '<div class="mem-preview">' + preview +
       '<button type="button" class="mem-remove" data-edit-media-remove title="删除">×</button>' +
@@ -560,6 +560,14 @@
     return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
   }
 
+  /* 预览图 URL: 上传时约定 preview- 前缀 (旧数据无预览文件时 404 回退原图) */
+  function mediaPreviewUrl(url) {
+    var u = String(url);
+    var i = u.lastIndexOf('/');
+    if (i < 0) return u;
+    return u.slice(0, i + 1) + 'preview-' + u.slice(i + 1);
+  }
+
   function loadGlightboxLib() {
     if (window.GLightbox) return Promise.resolve(window.GLightbox);
     if (glightboxLibPromise) return glightboxLibPromise;
@@ -631,7 +639,7 @@
       if (isVideoUrl(url)) {
         return '<video data-src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
-      return '<img data-gallery="moment-' + card.dataset.momentId + '" data-src="' + escapeHtml(url) + '" alt="" decoding="async">';
+      return '<img data-gallery="moment-' + card.dataset.momentId + '" data-src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
     }).join('');
     wrap.insertAdjacentHTML('beforeend', extraHtml);
     var more = wrap.querySelector('.moment-media-more');
@@ -1073,6 +1081,11 @@
         if (!loadingImages[this.__lazyId]) return;
         delete loadingImages[this.__lazyId];
         imageLoadingCount--;
+        /* 预览图 404 (旧数据无 preview 文件) → 回退原图直接加载 */
+        if (this.dataset.orig && (!this.src || this.src.indexOf('/preview-') >= 0)) {
+          this.src = this.dataset.orig;
+          delete this.dataset.orig;
+        }
         pumpImageQueue();
       }, { once: true });
     }
