@@ -141,9 +141,12 @@
     var items = displayMedia.map(function (url, i) {
       var ext = String(url).split('?')[0].split('#')[0].split('.').pop().toLowerCase();
       var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
+      /* 1-3 张: 原图显示 (不压缩); ≥4 张: 预览图压缩显示 */
+      var useOriginal = media.length <= 3;
+      var imgUrl = useOriginal ? url : mediaPreviewUrl(url);
       var imgAttrs = isGrid
-        ? 'src="' + escapeHtml(mediaPreviewUrl(url)) + '" loading="lazy"'
-        : 'data-src="' + escapeHtml(mediaPreviewUrl(url)) + '"';
+        ? 'src="' + escapeHtml(imgUrl) + '" loading="lazy"'
+        : 'data-src="' + escapeHtml(imgUrl) + '"';
       var item = isVideo
         ? '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>'
         : '<img data-gallery="moment-' + momentId + '" ' + imgAttrs + ' data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
@@ -644,7 +647,8 @@
       if (isVideoUrl(url)) {
         return '<video src="' + escapeHtml(url) + '" controls preload="metadata"></video>';
       }
-      return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
+      var useOriginal2 = allMedia.length <= 3;
+      return '<img data-gallery="moment-' + card.dataset.momentId + '" src="' + escapeHtml(useOriginal2 ? url : mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" loading="lazy" decoding="async">';
     }).map(function (item) {
       return '<div class="media-frame media-frame--grid" data-frame>' +
         '<span class="media-spinner" aria-hidden="true"><i></i></span>' + item + '</div>';
@@ -737,7 +741,8 @@
   /* 图片加载完成后存入缓存 */
   function cachePreviewImage(img) {
     var url = img.currentSrc || img.src;
-    if (!url || url.indexOf('blob:') === 0 || !('caches' in window)) return;
+    /* 仅缓存预览图 (1-3 张原图体积大, 不入缓存) */
+    if (!url || url.indexOf('blob:') === 0 || url.indexOf('/preview-') < 0 || !('caches' in window)) return;
     getPreviewCache().then(function (cache) {
       cache.match(url).then(function (hit) {
         if (hit) return;
@@ -826,6 +831,10 @@
      管理员浏览时后台压缩原图并上传 preview (600px webp), 一次性, 之后全部优化生效 */
   function buildPreviewForLegacy(img) {
     if (!window.blogSupabase || !currentProfile || currentProfile.role !== 'superadmin') return;
+    /* 仅 ≥4 张的动态补建 (1-3 张保持原图不压缩) */
+    var card = img.closest('.moment-card');
+    var mediaLen = card ? (momentMediaCache[card.dataset.momentId] || []).length : 0;
+    if (mediaLen <= 3) return;
     var url = img.currentSrc || img.src;
     if (!url || url.indexOf('blob:') === 0 || url.indexOf('/preview-') >= 0) return;
     if (img.dataset.previewBuilt) return;
