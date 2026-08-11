@@ -1047,7 +1047,8 @@
   /* ── 图片分批懒加载: 同一卡片多图串行下载 (最多 2 张并发)
      避免 9 张大图同时下载+解码导致滚动卡顿
      业界模式 (vanilla-lazyload cancel_on_exit): 滚出视口的图立即取消下载,
-     快速滚动经过多图动态时只加载停留的图 */
+     快速滚动经过多图动态时只加载停留的图
+     双保险: IntersectionObserver + scroll 兜底 (部分环境 IO 回调不触发) */
   var imageQueue = [];
   var imageLoadingCount = 0;
   var imageIO = null;
@@ -1077,6 +1078,39 @@
     }
   }
 
+  /* 去重入队: 已在加载/队列中的不入队 (多路径入队防膨胀) */
+  function enqueueImage(img) {
+    if (!img || img.src || !img.dataset.src) return;
+    if (loadingImages[img.__lazyId]) return;
+    if (imageQueue.indexOf(img) >= 0) return;
+    imageQueue.push(img);
+    pumpImageQueue();
+  }
+
+  /* IO 兜底: 视口附近未加载的图直接入队 (scroll 时调用, rAF 节流) */
+  function loadVisibleImages() {
+    var imgs = listEl.querySelectorAll('.moment-media img[data-src]');
+    if (!imgs.length) return;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    imgs.forEach(function (img) {
+      if (img.src || !img.dataset.src) return;
+      var r = img.getBoundingClientRect();
+      if (r.top < vh + 300 && r.bottom > -300) {
+        enqueueImage(img);
+      }
+    });
+  }
+
+  var scrollRafPending = false;
+  window.addEventListener('scroll', function () {
+    if (scrollRafPending) return;
+    scrollRafPending = true;
+    requestAnimationFrame(function () {
+      scrollRafPending = false;
+      loadVisibleImages();
+    });
+  }, { passive: true });
+
   function lazyLoadImages() {
     imageQueue = [];
     loadingImages = {};
@@ -1091,19 +1125,24 @@
       entries.forEach(function (en) {
         var img = en.target;
         if (en.isIntersecting) {
-          if (!img.dataset.src || img.src) return;
-          imageQueue.push(img);
-          pumpImageQueue();
+          enqueueImage(img);
         } else {
-          /* 滚出视口: 取消下载 + 移出队列 (快速滚动经过时不无谓下载) */
-          if (loadingImages[img.__lazyId]) {
-            img.removeAttribute('src');
-            delete loadingImages[img.__lazyId];
-            imageLoadingCount--;
+          /* 滚出视口取消下载: 仅当确实验证滚出很远 (600px 余量防误取消) */
+          var r2 = img.getBoundingClientRect();
+          var vh2 = window.innerHeight || document.documentElement.clientHeight;
+          if (r2.top > vh2 + 600 || r2.bottom < -600) {
+            if (loadingImages[img.__lazyId]) {
+              img.removeAttribute('src');
+              delete loadingImages[img.__lazyId];
+              imageLoadingCount--;
+            }
+            var qi = imageQueue.indexOf(img);
+            if (qi >= 0) imageQueue.splice(qi, 1);
+            pumpImageQueue();
+          } else {
+            /* 实际仍在视口附近: 确保入队加载 (IO 判定异常兜底) */
+            enqueueImage(img);
           }
-          var qi = imageQueue.indexOf(img);
-          if (qi >= 0) imageQueue.splice(qi, 1);
-          pumpImageQueue();
         }
       });
     }, { rootMargin: '300px 0px' });
@@ -1112,6 +1151,10 @@
       img.__lazyId = 'i' + (++editMediaSeq) + '_' + Math.random().toString(36).slice(2, 8);
       io.observe(img);
     });
+    /* IO 兜底: 首屏立即加载视口内图片 + 定时复查 (IO 回调不触发时保证图片可显示) */
+    loadVisibleImages();
+    setTimeout(loadVisibleImages, 500);
+    setTimeout(loadVisibleImages, 1500);
   }
 
   /* ── 视频懒加载: 进入视口附近才加载视频数据 (省带宽/内存) ── */

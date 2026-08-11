@@ -337,6 +337,36 @@ var Admin = window.Admin = {
     return Boolean(data);
   },
 
+  /* 图片上传前压缩: canvas → webp ≤1600px, 大图体积降 80%+ (预览加载提速)
+     GIF/SVG/其他格式保留原文件 */
+  compressImage(file) {
+    if (!file || !file.type.startsWith('image/')) return Promise.resolve(file);
+    if (file.type === 'image/gif' || file.type === 'image/svg+xml') return Promise.resolve(file);
+    return new Promise(function (resolve) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var maxW = 1600;
+        var scale = Math.min(1, maxW / img.naturalWidth);
+        var w = Math.max(1, Math.round(img.naturalWidth * scale));
+        var h = Math.max(1, Math.round(img.naturalHeight * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(function (blob) {
+          URL.revokeObjectURL(url);
+          if (!blob) { resolve(file); return; }
+          var name = file.name.replace(/\.[^.]+$/, '.webp');
+          resolve(new File([blob], name, { type: 'image/webp' }));
+        }, 'image/webp', 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  },
+
   async uploadMedia(file, onProgress) {
     var user = await Auth.user();
     if (!user) throw new Error('请先登录');
@@ -346,18 +376,24 @@ var Admin = window.Admin = {
     if (file.size > 100 * 1024 * 1024) {
       throw new Error('媒体文件不能超过 100 MB');
     }
-    var safeName = file.name.replace(/[^\w.\-]+/g, '-').replace(/^-+|-+$/g, '');
+    /* 图片压缩 (仅在可压缩时, 保持原类型判断基于压缩后文件) */
+    var uploadFile = file;
+    var isImage = file.type.startsWith('image/');
+    if (isImage) {
+      uploadFile = await this.compressImage(file);
+    }
+    var safeName = uploadFile.name.replace(/[^\w.\-]+/g, '-').replace(/^-+|-+$/g, '');
     var filePath = user.id + '/' + Date.now() + '-' + safeName;
-    var upload = await blogSupabase.storage.from('media').upload(filePath, file, {
+    var upload = await blogSupabase.storage.from('media').upload(filePath, uploadFile, {
       upsert: false,
-      contentType: file.type,
+      contentType: uploadFile.type,
       cacheControl: '3600',
       onUploadProgress: onProgress || undefined
     });
     if (upload.error) throw upload.error;
     var publicUrl = blogSupabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
     try {
-      return await this.registerMedia(filePath, file, publicUrl);
+      return await this.registerMedia(filePath, uploadFile, publicUrl);
     } catch (error) {
       await blogSupabase.storage.from('media').remove([filePath]).catch(function () {});
       throw error;
