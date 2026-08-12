@@ -188,7 +188,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-12 | `本地` | 文章评论区 UI 优化：**底部容器** `.comments-shell`（浅灰 `--swiss-soft` 壳 + 边框圆角内边距，避免全浅色影响阅读）+ 评论项改**白卡**（背景/边框/圆角/hover 苔绿边+轻阴影）、头像 36px 圆形、深灰文字全部 swiss 变量（不随主题，保证浅底对比度） |
+| 08-12 | `本地` | 文章评论区改**复用动态评论区样式**（无卡紧凑行式：头像+作者/时间/正文/操作，正文与操作缩进对齐头像列），容器内优化：hover 苔绿左边线+微亮背景、头像 32px 圆形、作者 13px 600、操作右对齐、正文 13.5px/1.75 |
 | 08-12 | `本地` | 关于页打包：`about-page/` 文件夹（design-about.html + README.md 完整文档——结构/光标系统/动效清单/验证/集成步骤/注意事项/日志） |
 | 08-12 | `本地` | 关于页光标重构二轮：**全站自定义光标**（用户否决 Win11 混合方案）——平时透明轮廓环 36px+中心点（lerp 0.18 跟随）、hover 0.5s 平滑转实心圆（scale 1.28 + moss 填充）+ 12% 吸附、按下反馈、**打断动画**（形态全 CSS transition 可打断、位置 lerp 无 transition 防拖尾）、`* { cursor:none }` 无原生指针、触屏禁用（24 项 puppeteer 冒烟通过） |
 | 08-11 | `本地` | **修复 threads 链接不可编辑（根因：`transformThreadsLinks` 的 TreeWalker 遍历整卡时把编辑面板 textarea 内的链接文本也替换成卡片 DOM，textarea 内容丢失）**——转换时跳过 TEXTAREA/INPUT/SELECT 内的文本节点；用 puppeteer+Chrome 真实浏览器复现验证（编辑框原文含链接 → 改链接保存 → 卡片 href 更新为新链接） |

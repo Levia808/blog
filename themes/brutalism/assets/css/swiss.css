@@ -2025,78 +2025,111 @@ body.admin-only .btn-primary {
     visibility 0s linear;
 }
 
-/* ══════════ 评论区底部容器 (瑞士浅灰壳 + 白卡, 深灰文字固定 — 避免全浅色影响阅读) ══════════ */
+/* ══════════ 评论区 (复用动态评论区样式 · 容器内优化):
+   行式紧凑 (头像+作者/时间/正文/操作), 无白卡 — 与动态评论同视觉语言
+   优化: 头像 32px 圆形 / 评论项 hover 苔绿左边线+微亮 / 作者 13px 600 / 操作右对齐 */
 .site-main .comments-shell {
   margin-top: 26px;
   background: var(--swiss-soft);
   border: 1px solid var(--swiss-line);
   border-radius: 8px;
-  padding: 16px;
+  padding: 16px 18px;
 }
 .site-main .comments-list {
   margin-top: 0;
-  gap: 12px;
+  gap: 14px;
 }
 .site-main .comment-card {
+  display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: var(--swiss-surface);
-  border: 1px solid var(--swiss-line);
-  border-radius: 6px;
-  padding: 14px 16px;
+  gap: 6px;
+  padding: 6px 10px 8px;
+  border-left: 2px solid transparent;
+  border-radius: 4px;
   transition:
     border-color 0.2s var(--swiss-ease),
-    box-shadow 0.2s var(--swiss-ease),
-    transform 0.2s var(--swiss-ease);
+    background 0.2s var(--swiss-ease);
 }
 .site-main .comment-card:hover {
-  border-color: var(--swiss-moss);
-  box-shadow: 0 8px 24px rgba(47, 74, 55, 0.08);
+  border-left-color: var(--swiss-moss);
+  background: rgba(47, 74, 55, 0.04);
 }
 .site-main .comment-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border-color: var(--swiss-line-strong);
+  flex-shrink: 0;
 }
 .site-main .comment-avatar-fallback {
   background: var(--swiss-moss-soft);
   color: var(--swiss-moss);
   font-size: 13px;
 }
+.site-main .comment-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .site-main .comment-card-head strong {
-  color: var(--swiss-ink);
+  color: var(--swiss-moss);
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 13px;
 }
 .site-main .comment-card-head time {
   color: var(--swiss-faint);
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
 }
 .site-main .comment-body {
   color: var(--swiss-text);
   font-size: 13.5px;
   line-height: 1.75;
+  padding-left: 42px;
 }
+.site-main .comment-body p { margin-bottom: 8px; }
+.site-main .comment-body p:last-child { margin-bottom: 0; }
 .site-main .comment-body code {
   background: var(--swiss-soft);
-  border-color: var(--swiss-line);
+  border: 1px solid var(--swiss-line);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 12px;
   color: var(--swiss-ink);
 }
 .site-main .comment-body blockquote {
-  border-left-color: var(--swiss-line-strong);
+  border-left: 1px solid var(--swiss-line-strong);
+  padding: 4px 12px;
   color: var(--swiss-muted);
+  font-size: 12.5px;
+  margin: 8px 0;
+}
+.site-main .comment-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-left: 42px;
 }
 .site-main .comment-action {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
   color: var(--swiss-faint);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.2s var(--swiss-ease), transform 0.2s var(--swiss-ease);
 }
 .site-main .comment-action:hover {
   color: var(--swiss-moss);
+  transform: scale(1.05);
 }
 .site-main .comments-empty {
-  border-color: var(--swiss-line-strong);
+  border: 1px dashed var(--swiss-line-strong);
+  border-radius: 6px;
   background: var(--swiss-surface);
   color: var(--swiss-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
