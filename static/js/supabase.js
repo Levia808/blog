@@ -533,20 +533,22 @@ var Comments = window.CommentService = {
   async list(postPath) {
     var result = await blogSupabase
       .from('comments')
-      .select('id, content, created_at, updated_at, user_id, moderation_status, profiles!comments_user_id_fkey(display_name, username, avatar_url)')
+      .select('id, content, created_at, updated_at, user_id, parent_id, moderation_status, profiles!comments_user_id_fkey(display_name, username, avatar_url)')
       .eq('post_path', postPath)
       .order('created_at', { ascending: true });
     if (result.error) throw result.error;
     return result.data || [];
   },
 
-  async create(postPath, content) {
+  async create(postPath, content, parentId) {
     var user = await Auth.user();
     if (!user) throw new Error('请先登录后再发表评论');
+    var payload = { post_path: postPath, content: content, user_id: user.id };
+    if (parentId) payload.parent_id = parentId;
     var result = await blogSupabase
       .from('comments')
-      .insert({ post_path: postPath, content: content, user_id: user.id })
-      .select('id, content, created_at, updated_at, user_id, moderation_status, profiles!comments_user_id_fkey(display_name, username, avatar_url)')
+      .insert(payload)
+      .select('id, content, created_at, updated_at, user_id, parent_id, moderation_status, profiles!comments_user_id_fkey(display_name, username, avatar_url)')
       .single();
     if (result.error) throw result.error;
     return result.data;

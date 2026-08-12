@@ -2025,72 +2025,61 @@ body.admin-only .btn-primary {
     visibility 0s linear;
 }
 
-/* ══════════ 评论区 (复用动态评论区样式 · 容器内优化):
-   行式紧凑 (头像+作者/时间/正文/操作), 无白卡 — 与动态评论同视觉语言
-   优化: 头像 32px 圆形 / 评论项 hover 苔绿左边线+微亮 / 作者 13px 600 / 操作右对齐 */
+/* ══════════ 评论区 (复用动态评论区样式 · 白色容器 · 树状回复 · 动效):
+   行式紧凑 (头像+作者/时间/正文/操作) 与动态评论同视觉语言
+   容器白色 (--swiss-surface); 树状嵌套/回复条/入场出场/悬停动效 */
 .site-main .comments-shell {
   margin-top: 26px;
-  background: var(--swiss-soft);
+  background: var(--swiss-surface);
   border: 1px solid var(--swiss-line);
   border-radius: 8px;
-  padding: 16px 18px;
+  padding: 18px;
 }
 .site-main .comments-list {
   margin-top: 0;
-  gap: 14px;
-}
-.site-main .comment-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 10px 8px;
-  border-left: 2px solid transparent;
-  border-radius: 4px;
-  transition:
-    border-color 0.2s var(--swiss-ease),
-    background 0.2s var(--swiss-ease);
+  gap: 4px;
 }
-.site-main .comment-card:hover {
+/* 评论项: hover 苔绿左边线 + 微亮 */
+.site-main .comments-list .moment-comment {
+  padding: 8px 10px;
+  border-left: 2px solid transparent;
+  border-radius: 6px;
+  transition:
+    border-color 0.25s var(--swiss-ease),
+    background 0.25s var(--swiss-ease),
+    transform 0.25s var(--swiss-ease);
+}
+.site-main .comments-list .moment-comment:hover {
   border-left-color: var(--swiss-moss);
   background: rgba(47, 74, 55, 0.04);
+  transform: translateX(3px);
 }
-.site-main .comment-avatar {
+/* 头像 */
+.site-main .comments-list .mc-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   border-color: var(--swiss-line-strong);
-  flex-shrink: 0;
-}
-.site-main .comment-avatar-fallback {
   background: var(--swiss-moss-soft);
   color: var(--swiss-moss);
   font-size: 13px;
 }
-.site-main .comment-card-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.site-main .comment-card-head strong {
+/* 作者/文本/时间 */
+.site-main .comments-list .mcc-author {
   color: var(--swiss-moss);
   font-weight: 600;
   font-size: 13px;
 }
-.site-main .comment-card-head time {
-  color: var(--swiss-faint);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.04em;
-}
-.site-main .comment-body {
+.site-main .comments-list .mcc-text {
   color: var(--swiss-text);
   font-size: 13.5px;
   line-height: 1.75;
-  padding-left: 42px;
 }
-.site-main .comment-body p { margin-bottom: 8px; }
-.site-main .comment-body p:last-child { margin-bottom: 0; }
-.site-main .comment-body code {
+.site-main .comments-list .mcc-text p { margin-bottom: 8px; }
+.site-main .comments-list .mcc-text p:last-child { margin-bottom: 0; }
+.site-main .comments-list .mcc-text code {
   background: var(--swiss-soft);
   border: 1px solid var(--swiss-line);
   border-radius: 3px;
@@ -2098,37 +2087,123 @@ body.admin-only .btn-primary {
   font-size: 12px;
   color: var(--swiss-ink);
 }
-.site-main .comment-body blockquote {
+.site-main .comments-list .mcc-text blockquote {
   border-left: 1px solid var(--swiss-line-strong);
   padding: 4px 12px;
   color: var(--swiss-muted);
   font-size: 12.5px;
   margin: 8px 0;
 }
-.site-main .comment-card-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-left: 42px;
-}
-.site-main .comment-action {
-  background: none;
-  border: none;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+.site-main .comments-list .mcc-time {
   color: var(--swiss-faint);
-  cursor: pointer;
-  transition: color 0.2s var(--swiss-ease), transform 0.2s var(--swiss-ease);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
 }
-.site-main .comment-action:hover {
-  color: var(--swiss-moss);
-  transform: scale(1.05);
+/* 操作: 默认淡, hover 评论项时浮现 */
+.site-main .comments-list .mcc-actions {
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.25s var(--swiss-ease), transform 0.25s var(--swiss-ease);
+}
+.site-main .comments-list .moment-comment:hover .mcc-actions,
+.site-main .comments-list .mcc-actions:focus-within {
+  opacity: 1;
+  transform: none;
+}
+.site-main .comments-list .mcc-act {
+  color: var(--swiss-faint);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  min-height: 24px;
+}
+.site-main .comments-list .mcc-act:hover { color: var(--swiss-moss); }
+.site-main .comments-list .mcc-act.is-danger:hover { color: var(--swiss-danger); }
+/* 回复子树 (复用动态树状缩进) */
+.site-main .comments-list .mc-replies {
+  border-left-color: var(--swiss-line);
+}
+/* 回复输入条 (复用动态) */
+.site-main .comments-list .mc-reply-bar-wrap {
+  margin-top: 6px;
+}
+.site-main .comments-list .mc-reply-bar input {
+  background: var(--swiss-soft);
+  border: 1px solid var(--swiss-line-strong);
+  border-radius: 4px;
+  padding: 7px 11px;
+  font-size: 13px;
+  color: var(--swiss-ink);
+  outline: none;
+}
+.site-main .comments-list .mc-reply-bar input:focus { border-color: var(--swiss-moss); }
+.site-main .comments-list .mc-reply-bar input::placeholder { color: var(--swiss-faint); }
+.site-main .comments-list .rbar-send {
+  background: var(--swiss-moss);
+  border: 1px solid var(--swiss-moss);
+  color: #f7f8f4;
+  border-radius: 4px;
+  padding: 7px 14px;
+}
+.site-main .comments-list .rbar-send:hover { filter: brightness(1.1); }
+.site-main .comments-list .rbar-cancel {
+  border: 1px solid var(--swiss-line-strong);
+  color: var(--swiss-faint);
+  background: none;
+  border-radius: 4px;
+  padding: 7px 10px;
+}
+.site-main .comments-list .rbar-cancel:hover { color: var(--swiss-danger); border-color: var(--swiss-danger); }
+/* 行内编辑框 */
+.site-main .mc-edit-box {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0;
+}
+.site-main .mc-edit-box textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  background: var(--swiss-soft);
+  border: 1px solid var(--swiss-line-strong);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--swiss-ink);
+  font-family: inherit;
+  line-height: 1.7;
+  outline: none;
+}
+.site-main .mc-edit-box textarea:focus { border-color: var(--swiss-moss); }
+.site-main .mc-edit-actions { display: flex; gap: 8px; }
+/* 动效: 入场 (新评论/回复) + 出场 (删除收拢) */
+.site-main .comments-list .mc-new { animation: mcReplyIn 0.45s var(--swiss-ease); }
+.site-main .comments-list .mc-leave {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  transition:
+    opacity 0.32s var(--swiss-ease),
+    transform 0.32s var(--swiss-ease),
+    max-height 0.32s var(--swiss-ease),
+    padding 0.32s var(--swiss-ease);
+}
+@keyframes mcReplyIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+/* 列表更新微动 (整体淡入) */
+.site-main .comments-list.is-updated { animation: commentsFade 0.3s var(--swiss-ease); }
+@keyframes commentsFade {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
 }
 .site-main .comments-empty {
   border: 1px dashed var(--swiss-line-strong);
   border-radius: 6px;
-  background: var(--swiss-surface);
+  background: var(--swiss-soft);
   color: var(--swiss-muted);
   font-family: var(--font-mono);
   font-size: 11px;
