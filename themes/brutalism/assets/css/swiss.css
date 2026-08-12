@@ -2024,3 +2024,79 @@ body.admin-only .btn-primary {
     transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
     visibility 0s linear;
 }
+
+/* ══════════ 评论区底部容器 (瑞士浅灰壳 + 白卡, 深灰文字固定 — 避免全浅色影响阅读) ══════════ */
+.site-main .comments-shell {
+  margin-top: 26px;
+  background: var(--swiss-soft);
+  border: 1px solid var(--swiss-line);
+  border-radius: 8px;
+  padding: 16px;
+}
+.site-main .comments-list {
+  margin-top: 0;
+  gap: 12px;
+}
+.site-main .comment-card {
+  flex-direction: column;
+  gap: 8px;
+  background: var(--swiss-surface);
+  border: 1px solid var(--swiss-line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  transition:
+    border-color 0.2s var(--swiss-ease),
+    box-shadow 0.2s var(--swiss-ease),
+    transform 0.2s var(--swiss-ease);
+}
+.site-main .comment-card:hover {
+  border-color: var(--swiss-moss);
+  box-shadow: 0 8px 24px rgba(47, 74, 55, 0.08);
+}
+.site-main .comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-color: var(--swiss-line-strong);
+}
+.site-main .comment-avatar-fallback {
+  background: var(--swiss-moss-soft);
+  color: var(--swiss-moss);
+  font-size: 13px;
+}
+.site-main .comment-card-head strong {
+  color: var(--swiss-ink);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.site-main .comment-card-head time {
+  color: var(--swiss-faint);
+  font-size: 10px;
+}
+.site-main .comment-body {
+  color: var(--swiss-text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+.site-main .comment-body code {
+  background: var(--swiss-soft);
+  border-color: var(--swiss-line);
+  color: var(--swiss-ink);
+}
+.site-main .comment-body blockquote {
+  border-left-color: var(--swiss-line-strong);
+  color: var(--swiss-muted);
+}
+.site-main .comment-action {
+  color: var(--swiss-faint);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+.site-main .comment-action:hover {
+  color: var(--swiss-moss);
+}
+.site-main .comments-empty {
+  border-color: var(--swiss-line-strong);
+  background: var(--swiss-surface);
+  color: var(--swiss-muted);
+}
