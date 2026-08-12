@@ -172,12 +172,12 @@ def cookie_string(c):
 
 
 def read_cookies():
-    with _lock:
-        t = dict(_opened_target)
-    if not t.get('ws'):
-        return {'ok': False, 'error': '尚未打开浏览器标签'}
     try:
-        client = CdpClient(t['ws'], timeout=10)
+        ws_url = ensure_target()
+    except Exception as e:
+        return {'ok': False, 'error': '连接浏览器失败: ' + str(e)}
+    try:
+        client = CdpClient(ws_url, timeout=10)
         try:
             res = client.call('Network.getAllCookies')
         finally:
@@ -244,7 +244,8 @@ EXTRACT_JS = r"""
       continue;
     }
     if (/^回复/.test(l)) { var m = l.match(/回复\s*([\d.]+[万kK]?)/); if (m) { var rn = parseFloat(m[1]); if (/万$/.test(m[1])) rn *= 10000; else if (/[kK]$/.test(m[1])) rn *= 1000; replies = rn; } break; }
-    if (/^(暂无回复|热门|查看动态|分享|复制链接|关注|更多|收起|展开)$/.test(l)) { break; }
+    if (/^(暂无回复|热门|查看动态|分享|复制链接|关注|更多|收起|展开|翻译|查看翻译|查看原文|语音朗读|朗读|表情|喜欢|分享到|举报|屏蔽|不感兴趣|保存|复制|链接)$/.test(l)) { break; }
+    if (/^回复\s*@/.test(l)) { break; }
     if (textLines.length >= 12) { break; }
     textLines.push(l);
   }
@@ -269,14 +270,29 @@ EXTRACT_JS = r"""
 """
 
 
+def ensure_target():
+    """返回可用的调试目标 ws (校验存活, 失效自动重开标签)"""
+    with _lock:
+        ws_url = _opened_target.get('ws')
+    if ws_url:
+        try:
+            client = CdpClient(ws_url, timeout=5)
+            client.close()
+            return ws_url
+        except Exception:
+            pass
+    t = open_tab('about:blank')
+    with _lock:
+        _opened_target.update(t)
+    return t['ws']
+
+
 def fetch_post(url):
     """导航标签到帖子页 → 轮询渲染 → 提取帖子内容"""
-    with _lock:
-        tid = _opened_target.get('id')
-        ws_url = _opened_target.get('ws')
-    if not ws_url:
-        t = open_tab('about:blank')
-        tid, ws_url = t['id'], t['ws']
+    try:
+        ws_url = ensure_target()
+    except Exception as e:
+        return {'ok': False, 'error': '连接浏览器失败: ' + str(e)}
     try:
         client = CdpClient(ws_url, timeout=15)
     except Exception as e:
