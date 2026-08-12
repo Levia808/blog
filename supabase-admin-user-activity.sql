@@ -48,9 +48,9 @@ BEGIN
   UNION ALL
   /* 审计日志 (登录/角色/状态变更等) */
   SELECT a.created_at, 'audit'::TEXT, COALESCE(a.action, ''),
-         COALESCE(a.details::TEXT, '')
+         COALESCE(a.metadata::TEXT, '')
   FROM public.audit_logs a
-  WHERE a.actor_id = p_user_id OR a.target_id = p_user_id
+  WHERE a.actor_id = p_user_id OR a.entity_id = p_user_id
   ORDER BY at DESC;
 END;
 $$;
