@@ -51,7 +51,7 @@ BEGIN
          COALESCE(a.metadata::TEXT, '')
   FROM public.audit_logs a
   WHERE a.actor_id = p_user_id OR a.entity_id = p_user_id::TEXT
-  ORDER BY at DESC;
+  ORDER BY 1 DESC;
 END;
 $$;
 
