@@ -138,6 +138,13 @@
     }
   }, { passive: false });
 
+  /* Threads CDN 缩略参数 → 原图: 移除 width/height 尺寸限制 (保留编码参数, 避免 403) */
+  function originalImageUrl(url) {
+    var u = String(url || '');
+    if (u.indexOf('width=') < 0 && u.indexOf('height=') < 0) return u;
+    return u.replace(/&?(?:width|height|_nc_?[a-z]*|resize)[^&]*/gi, '');
+  }
+
   function renderThreadsCard(card, d) {
     var author = d.display_name || d.author || 'unknown';
     var handle = d.handle || ('@' + String(d.author || ''));
@@ -149,9 +156,11 @@
       : '';
     var media = (d.media || []).map(function (m) {
       if (m.type === 'video') {
-        return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" controls preload="metadata"></video></span>';
+        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载 */
+        return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" muted playsinline autoplay loop preload="auto" aria-hidden="true"></video></span>';
       }
-      return '<span class="th-media-item"><img src="' + escapeHtml(m.url) + '" alt="" loading="lazy" decoding="async"></span>';
+      /* 图片: 使用原图 (去除 CDN 尺寸参数) */
+      return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async"></span>';
     }).join('');
     var multi = (d.media || []).length > 1;
     var mediaHtml = '';

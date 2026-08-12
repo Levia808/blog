@@ -2109,8 +2109,10 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 .th-media::-webkit-scrollbar { display: none; }
 .th-media.is-carousel .th-media-item { flex: 0 0 100%; scroll-snap-align: center; }
 .th-media-item { display: block; overflow: hidden; border-radius: 12px; background: #F2F3F5; }
-.th-media-item img, .th-media-item video { display: block; width: 100%; height: auto; max-height: 560px; object-fit: cover; }
+/* 原图完整预览 (contain 不裁切); 视频静音自动播放无控件 */
+.th-media-item img, .th-media-item video { display: block; width: 100%; height: auto; max-height: 560px; object-fit: contain; }
 .th-media-item.is-video { flex: 0 0 100%; }
+.th-media-item.is-video video { background: #000; }
 .th-prev, .th-next {
   position: absolute; top: 50%; transform: translateY(-50%);
   width: 30px; height: 30px; border-radius: 50%;
