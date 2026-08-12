@@ -304,7 +304,21 @@ var Admin = window.Admin = {
         role: opts.role || 'user'
       }
     });
-    if (error) throw error;
+    if (error) {
+      /* FunctionsHttpError: 从响应体提取函数返回的具体错误 (否则只显示无意义的 FunctionsHttpError) */
+      if (data && data.error) throw new Error(data.error);
+      if (error.context && typeof error.context.text === 'function') {
+        try {
+          var text = await error.context.text();
+          var parsed = JSON.parse(text);
+          if (parsed && parsed.error) throw new Error(parsed.error);
+        } catch (e) {
+          if (e instanceof SyntaxError) { /* 非 JSON, 走默认 */ }
+          else throw e;
+        }
+      }
+      throw error;
+    }
     if (data && data.error) throw new Error(data.error);
     return data;
   },

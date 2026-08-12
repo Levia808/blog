@@ -38,13 +38,17 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: `Bearer ${token}` } }
     });
     const { data: { user }, error: userErr } = await caller.auth.getUser(token);
-    if (userErr || !user) return json({ error: '登录态无效' }, 401);
+    if (userErr || !user) {
+      console.error('admin-create-user: getUser failed', userErr?.message || 'no user');
+      return json({ error: '登录态无效' }, 401);
+    }
 
-    const { data: profile } = await caller
+    const { data: profile, error: profileErr } = await caller
       .from('profiles')
       .select('role, account_status')
       .eq('id', user.id)
       .single();
+    if (profileErr) console.error('admin-create-user: profile query failed', profileErr.message);
     if (!profile || profile.role !== 'superadmin' || profile.account_status !== 'active') {
       return json({ error: '需要超级管理员权限' }, 403);
     }
@@ -74,7 +78,10 @@ Deno.serve(async (req) => {
         user_name: username || null
       }
     });
-    if (createErr) return json({ error: createErr.message }, 400);
+    if (createErr) {
+      console.error('admin-create-user: createUser failed', createErr.message, 'email=', email);
+      return json({ error: createErr.message }, 400);
+    }
     if (!created.user) return json({ error: '创建失败' }, 500);
 
     /* 4. 设置角色 (触发器已建 profiles, role 默认 user) */
