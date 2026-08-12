@@ -44,9 +44,11 @@ Deno.serve(async (req) => {
     }
 
     /* 角色校验: 走 get_my_profile RPC (SECURITY DEFINER) —
-       profiles 表列级权限仅暴露公开字段, role/account_status 列直查会被拒 (403 根源) */
-    const { data: profile, error: profileErr } = await caller.rpc('get_my_profile');
+       profiles 表列级权限仅暴露公开字段, role/account_status 列直查会被拒 (403 根源)
+       注意: RPC 返回 TABLE → data 为数组, 取 [0] */
+    const { data: rpcRows, error: profileErr } = await caller.rpc('get_my_profile');
     if (profileErr) console.error('admin-create-user: profile rpc failed', profileErr.message);
+    const profile = rpcRows && rpcRows[0] ? rpcRows[0] : null;
     if (!profile || profile.role !== 'superadmin' || profile.account_status !== 'active') {
       return json({ error: '需要超级管理员权限' }, 403);
     }
