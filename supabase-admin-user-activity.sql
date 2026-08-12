@@ -50,7 +50,7 @@ BEGIN
   SELECT a.created_at, 'audit'::TEXT, COALESCE(a.action, ''),
          COALESCE(a.metadata::TEXT, '')
   FROM public.audit_logs a
-  WHERE a.actor_id = p_user_id OR a.entity_id = p_user_id
+  WHERE a.actor_id = p_user_id OR a.entity_id = p_user_id::TEXT
   ORDER BY at DESC;
 END;
 $$;
