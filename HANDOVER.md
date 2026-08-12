@@ -188,7 +188,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-12 | `本地` | 超管账号管理：新增账号（Edge Function `admin-create-user`，service_role + JWT 超管校验 + email_confirm 免验证 + 角色设置）+ 后台「＋ 新增账号」瑞士风弹窗表单（邮箱/密码/显示名/角色，错误内联提示）；注销已具备（用户管理状态下拉 active/suspended/deleted 走 `admin_update_account_status`）（9 项 happy-dom 端到端通过） |
+| 08-12 | `本地` | 账号管理二轮：① **新增账号失败已解决**——Edge Function `admin-create-user` 已部署（CLI `supabase functions deploy --no-verify-jwt`，验证鉴权 401/CORS 204 正常）② 权限/状态编辑改**弹出小菜单**（瑞士浅色下拉，角色 4 项/状态 3 项+说明+当前项 ✓ 高亮），**点选即直接保存**（updateRole/updateAccountStatus 即时生效 + toast + 刷新），移除行内 select 与保存按钮；点击外部收起、菜单互斥（21 项 happy-dom 端到端通过） |
 | 08-12 | `本地` | 关于页打包：`about-page/` 文件夹（design-about.html + README.md 完整文档——结构/光标系统/动效清单/验证/集成步骤/注意事项/日志） |
 | 08-12 | `本地` | 关于页光标重构二轮：**全站自定义光标**（用户否决 Win11 混合方案）——平时透明轮廓环 36px+中心点（lerp 0.18 跟随）、hover 0.5s 平滑转实心圆（scale 1.28 + moss 填充）+ 12% 吸附、按下反馈、**打断动画**（形态全 CSS transition 可打断、位置 lerp 无 transition 防拖尾）、`* { cursor:none }` 无原生指针、触屏禁用（24 项 puppeteer 冒烟通过） |
 | 08-11 | `本地` | **修复 threads 链接不可编辑（根因：`transformThreadsLinks` 的 TreeWalker 遍历整卡时把编辑面板 textarea 内的链接文本也替换成卡片 DOM，textarea 内容丢失）**——转换时跳过 TEXTAREA/INPUT/SELECT 内的文本节点；用 puppeteer+Chrome 真实浏览器复现验证（编辑框原文含链接 → 改链接保存 → 卡片 href 更新为新链接） |

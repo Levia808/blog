@@ -1090,33 +1090,91 @@
   function renderUsers(users) {
     var table = document.getElementById('adminUserTable');
     if (!users.length) {
-      table.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="es-glyph">👥</span><span class="es-title">暂无用户</span><span class="es-desc">用户注册后会显示在这里</span></div></td></tr>';
+      table.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="es-glyph">👥</span><span class="es-title">暂无用户</span><span class="es-desc">用户注册后会显示在这里</span></div></td></tr>';
       return;
     }
+    var roleNames = { user: '用户', author: '作者', admin: '管理员', superadmin: '超级管理员' };
+    var statusNames = { active: '正常', suspended: '停用', deleted: '已删除' };
+    var canChangeRole = adminProfile && adminProfile.role === 'superadmin';
     table.innerHTML = users.map(function (user) {
       var avatar = user.avatar_url || '';
       var name = user.display_name || user.username || '—';
-      var roleNames = { user: '用户', author: '作者', admin: '管理员', superadmin: '超级管理员' };
-      var statusNames = { active: '正常', suspended: '停用', deleted: '已删除' };
-      var canChangeRole = adminProfile && adminProfile.role === 'superadmin';
+      /* 弹出菜单按钮: 点击展开选项, 点选即直接保存 (无需额外保存按钮) */
       var roleControl = canChangeRole
-        ? '<select class="admin-row-select" data-user-role="' + escapeHtml(user.id) + '">' +
-          ['user', 'author', 'admin', 'superadmin'].map(function (role) {
-            return '<option value="' + role + '"' + (user.role === role ? ' selected' : '') + '>' + (roleNames[role] || role) + '</option>';
-          }).join('') + '</select>'
+        ? '<button type="button" class="admin-menu-btn" data-user-menu="role" data-user-id="' + escapeHtml(user.id) + '" data-user-value="' + escapeHtml(user.role) + '">' +
+          escapeHtml(roleNames[user.role] || user.role) + '<i class="am-arrow">▾</i></button>'
         : '<span class="admin-role">' + escapeHtml(roleNames[user.role] || user.role) + '</span>';
-      var statusControl = '<select class="admin-row-select" data-user-status="' + escapeHtml(user.id) + '">' +
-        ['active', 'suspended', 'deleted'].map(function (status) {
-          return '<option value="' + status + '"' + (user.account_status === status ? ' selected' : '') + '>' + (statusNames[status] || status) + '</option>';
-        }).join('') + '</select>';
+      var statusControl = '<button type="button" class="admin-menu-btn" data-user-menu="status" data-user-id="' + escapeHtml(user.id) + '" data-user-value="' + escapeHtml(user.account_status) + '">' +
+        escapeHtml(statusNames[user.account_status] || user.account_status) + '<i class="am-arrow">▾</i></button>';
       return '<tr>' +
         '<td>' + (avatar ? '<img class="admin-avatar" src="' + escapeHtml(avatar) + '" alt="" loading="lazy">' : '—') + '</td>' +
         '<td><strong>' + escapeHtml(name) + '</strong><br><code>' + escapeHtml(user.username || '') + '</code></td>' +
         '<td>' + escapeHtml(user.email || '—') + '</td>' +
         '<td>' + roleControl + '</td><td>' + statusControl + '</td>' +
-        '<td><button type="button" class="admin-row-action" data-user-save="' + escapeHtml(user.id) + '">保存</button></td>' +
         '</tr>';
     }).join('');
+  }
+
+  /* 弹出小菜单: 瑞士极简浅色, 点选即保存 (角色/状态) */
+  var roleMenuOptions = [
+    { value: 'user', label: '用户' },
+    { value: 'author', label: '作者' },
+    { value: 'admin', label: '管理员' },
+    { value: 'superadmin', label: '超级管理员' }
+  ];
+  var statusMenuOptions = [
+    { value: 'active', label: '正常', hint: '可正常登录使用' },
+    { value: 'suspended', label: '停用', hint: '禁止登录 (可恢复)' },
+    { value: 'deleted', label: '已删除', hint: '账号标记删除' }
+  ];
+
+  function closeUserMenus(exceptBtn) {
+    document.querySelectorAll('.admin-pop-menu').forEach(function (m) {
+      if (m._trigger !== exceptBtn) m.remove();
+    });
+  }
+
+  function openUserMenu(btn) {
+    var kind = btn.dataset.userMenu;
+    var userId = btn.dataset.userId;
+    var current = btn.dataset.userValue;
+    closeUserMenus(btn);
+    var options = kind === 'role' ? roleMenuOptions : statusMenuOptions;
+    var menu = document.createElement('div');
+    menu.className = 'admin-pop-menu';
+    menu._trigger = btn;
+    var title = kind === 'role' ? '修改角色' : '修改状态';
+    menu.innerHTML =
+      '<div class="apm-head mono">' + title + '</div>' +
+      options.map(function (opt) {
+        var active = opt.value === current ? ' is-active' : '';
+        return '<button type="button" class="apm-item' + active + '" data-user-menu-apply="' + kind + '" data-user-id="' + escapeHtml(userId) + '" data-user-value="' + opt.value + '">' +
+          '<span class="apm-label">' + opt.label + '</span>' +
+          (opt.hint ? '<span class="apm-hint">' + opt.hint + '</span>' : '') +
+          (active ? '<i class="apm-check">✓</i>' : '') +
+          '</button>';
+      }).join('');
+    document.body.appendChild(menu);
+    var r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 6 + window.scrollY) + 'px';
+    menu.style.left = Math.max(8, Math.min(r.left + window.scrollX, window.innerWidth - 220)) + 'px';
+    /* 入场 */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { menu.classList.add('show'); });
+    });
+  }
+
+  function applyUserMenu(kind, userId, value) {
+    var label = kind === 'role'
+      ? (roleMenuOptions.filter(function (o) { return o.value === value; })[0] || {}).label
+      : (statusMenuOptions.filter(function (o) { return o.value === value; })[0] || {}).label;
+    var action = kind === 'role'
+      ? Admin.updateRole(userId, value)
+      : Admin.updateAccountStatus(userId, value);
+    return action.then(function () {
+      showToast((kind === 'role' ? '角色已更新：' : '状态已更新：') + (label || value), 'success');
+      return loadUsers();
+    });
   }
 
   function renderComments(comments) {
@@ -1321,6 +1379,10 @@
   });
 
   document.addEventListener('click', async function (event) {
+    /* 点击弹出菜单/触发按钮以外 → 收起 */
+    if (!event.target.closest('.admin-pop-menu') && !event.target.closest('[data-user-menu]')) {
+      closeUserMenus(null);
+    }
     var refresh = event.target.closest('[data-admin-refresh]');
     if (refresh) {
       var btn = document.getElementById('adminRefreshBtn');
@@ -1432,21 +1494,22 @@
       return;
     }
 
-    var saveUser = event.target.closest('[data-user-save]');
-    if (saveUser) {
-      var userId = saveUser.dataset.userSave;
-      var statusSelect = document.querySelector('[data-user-status="' + userId + '"]');
-      var roleSelect = document.querySelector('[data-user-role="' + userId + '"]');
-      try {
-        saveUser.disabled = true;
-        await Admin.updateAccountStatus(userId, statusSelect.value);
-        if (roleSelect && adminProfile.role === 'superadmin') await Admin.updateRole(userId, roleSelect.value);
-        await loadUsers();
-      } catch (error) {
+    var userMenuBtn = event.target.closest('[data-user-menu]');
+    if (userMenuBtn) {
+      openUserMenu(userMenuBtn);
+      return;
+    }
+
+    var userMenuApply = event.target.closest('[data-user-menu-apply]');
+    if (userMenuApply) {
+      var umKind = userMenuApply.dataset.userMenuApply;
+      var umUserId = userMenuApply.dataset.userId;
+      var umValue = userMenuApply.dataset.userValue;
+      closeUserMenus(null);
+      applyUserMenu(umKind, umUserId, umValue).catch(function (error) {
         showError(errorText(error));
-      } finally {
-        saveUser.disabled = false;
-      }
+        loadUsers();
+      });
       return;
     }
 
