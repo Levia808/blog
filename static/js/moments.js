@@ -187,6 +187,7 @@
           '</span>' +
         '</span>' +
         '<span class="th-post">' + escapeHtml(d.text || '') + '</span>' +
+        (d.text ? '<button type="button" class="th-translate">翻译</button>' : '') +
         mediaHtml +
       '</span>' +
       '<span class="th-foot">' +
@@ -203,6 +204,36 @@
       });
     });
   }
+
+  /* 串文卡片翻译: 点「翻译」→ 正文译成中文, 再点切回原文 (复用免费翻译端点) */
+  document.addEventListener('click', function (e) {
+    var trBtn = e.target.closest('.th-translate');
+    if (!trBtn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var card = trBtn.closest('.threads-card');
+    var postEl = card && card.querySelector('.th-post');
+    if (!card || !postEl) return;
+    if (card.dataset.thOrig !== undefined) {
+      postEl.textContent = card.dataset.thOrig;
+      delete card.dataset.thOrig;
+      trBtn.textContent = '翻译';
+      return;
+    }
+    var text = postEl.textContent;
+    if (!text) return;
+    trBtn.textContent = '翻译中…';
+    trBtn.disabled = true;
+    translateTo(text, 'zh-CN').then(function (zh) {
+      if (zh && zh !== text) {
+        card.dataset.thOrig = text;
+        postEl.textContent = zh;
+        trBtn.textContent = '原文';
+      } else {
+        trBtn.textContent = '翻译';
+      }
+    }).finally(function () { trBtn.disabled = false; });
+  });
 
   /* 串文卡片轮播: 左右箭头 + 圆点 (Threads 官网同款滑动交互) */
   function scrollThreadsMedia(mediaEl, dir) {
