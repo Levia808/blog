@@ -293,6 +293,22 @@ var Admin = window.Admin = {
     return data;
   },
 
+  /* 超管新增账号: Edge Function (service_role, email_confirm 免验证) */
+  async createUser(opts) {
+    const { data, error } = await blogSupabase.functions.invoke('admin-create-user', {
+      body: {
+        email: opts.email,
+        password: opts.password,
+        display_name: opts.displayName || '',
+        username: opts.username || '',
+        role: opts.role || 'user'
+      }
+    });
+    if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
+
   async getAuditLogs(limit) {
     const { data, error } = await blogSupabase.rpc('admin_list_audit_logs', { p_limit: limit || 100 });
     if (error) throw error;

@@ -113,7 +113,10 @@
         <section class="admin-panel" data-admin-panel="users" hidden>
           <div class="an-head">
             <div><p class="an-head-sub">账号管理</p><h3>用户管理</h3></div>
-            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="users">刷新</button></div>
+            <div class="an-actions">
+              <button type="button" class="btn" data-admin-refresh="users">刷新</button>
+              <button type="button" class="btn is-primary" id="adminAddUserBtn" hidden>＋ 新增账号</button>
+            </div>
           </div>
           <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="adminUserTable"></tbody></table></div>
         </section>

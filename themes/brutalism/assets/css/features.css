@@ -1755,6 +1755,20 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
   transition: opacity 0.22s ease;
 }
 .moment-vis-overlay.show { opacity: 1; }
+/* ── 后台新增账号表单 (瑞士极简浅色) ── */
+.au-form { display: grid; gap: 10px; padding: 4px 0 8px; }
+.au-form label { display: grid; gap: 5px; font-size: 11px; color: var(--muted); }
+.au-input {
+  background: #f7f8f4;
+  border: 1px solid rgba(17, 19, 15, 0.36);
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #11130f;
+  outline: none;
+  width: 100%;
+}
+.au-input:focus { border-color: #2f4a37; }
 /* 瑞士极简浅色: 米白纸底 #f7f8f4 · 墨黑 #11130f · 苔绿 #2f4a37 · 1px 线 · 直角克制 */
 .moment-vis-panel {
   opacity: 0;

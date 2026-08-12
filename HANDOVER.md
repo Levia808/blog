@@ -104,6 +104,7 @@ push main
 
 | 文件 | 内容 | 状态 |
 |------|------|------|
+| `design-about.html` | **关于页 V3（精简版）**：仅保留开屏 hero（字符级 stagger 入场、LOCATION=江苏南京）+ 页末 LET'S TALK ↗（磁吸+箭头位移+变色）；背景粒子已去除；光标改为 **Win11 风格混合光标**（平时原生指针、hover 交互元素平滑 morph 圆形 + lerp 缓动跟随 + 12% 向元素中心吸附、点击收缩、触屏禁用）——方案调研：imsyy/home cursor.js / vue-cursor-fx 成熟模式（22 项 puppeteer 冒烟通过） | ✅ 已打包至 `about-page/`（含 README 文档，待确认后集成上线） |
 | `design-moment-location.html` | **动态发布地点**：三通道选择（GPS 定位识别 / 附近地点 / 搜索指定）+ 面板/chip/卡片左下角灰色小字展示，可交互 demo（17 项自动化验证通过） | ✅ 已上线（SQL `supabase-moments-location.sql` 需用户执行后发布才可存地点） |
 | `design-comment-tree.html` | **动态评论树状回复**：多层嵌套缩进+边线、内联回复输入条（发送/取消/Esc/点击外部自动收起隐藏）、可交互 demo（13 项自动化验证通过） | ✅ 已上线（集成 moments.js + features.css） |
 | `design-nav-hero.html` | 导航+标题+开屏欢迎（MOD × Odin's Crow：滚动变形/均分导航/渐变线组/标语栏/光标） | 设计稿 |
@@ -171,6 +172,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ## 8. 待办（下一步任务建议）
 
+- [ ] **P0** 用户部署 Edge Function：`supabase functions deploy admin-create-user --no-verify-jwt`（在 `threads-repost/supabase/` 目录执行）——否则后台「新增账号」会报 functions 错误
 - [ ] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）——**当前仅在本地**
 - [ ] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
 - [ ] **P1** 设计稿（design-loader/design-home）确认后集成到站点（当前站点加载动画已应用 d52268d 优化）
@@ -186,6 +188,9 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | 超管账号管理：新增账号（Edge Function `admin-create-user`，service_role + JWT 超管校验 + email_confirm 免验证 + 角色设置）+ 后台「＋ 新增账号」瑞士风弹窗表单（邮箱/密码/显示名/角色，错误内联提示）；注销已具备（用户管理状态下拉 active/suspended/deleted 走 `admin_update_account_status`）（9 项 happy-dom 端到端通过） |
+| 08-12 | `本地` | 关于页打包：`about-page/` 文件夹（design-about.html + README.md 完整文档——结构/光标系统/动效清单/验证/集成步骤/注意事项/日志） |
+| 08-12 | `本地` | 关于页光标重构二轮：**全站自定义光标**（用户否决 Win11 混合方案）——平时透明轮廓环 36px+中心点（lerp 0.18 跟随）、hover 0.5s 平滑转实心圆（scale 1.28 + moss 填充）+ 12% 吸附、按下反馈、**打断动画**（形态全 CSS transition 可打断、位置 lerp 无 transition 防拖尾）、`* { cursor:none }` 无原生指针、触屏禁用（24 项 puppeteer 冒烟通过） |
 | 08-11 | `本地` | **修复 threads 链接不可编辑（根因：`transformThreadsLinks` 的 TreeWalker 遍历整卡时把编辑面板 textarea 内的链接文本也替换成卡片 DOM，textarea 内容丢失）**——转换时跳过 TEXTAREA/INPUT/SELECT 内的文本节点；用 puppeteer+Chrome 真实浏览器复现验证（编辑框原文含链接 → 改链接保存 → 卡片 href 更新为新链接） |
 | 08-11 | `本地` | 动态编辑增强：① 编辑面板新增**地点可编辑**（复用 mlp-* 选择器，每卡独立状态；保存仅 dirty 时写 location，移除→置 null，未操作→保留原值，取消→丢弃）② **threads 链接随 content 编辑**（原文进 textarea，保存后 diff 重渲染重建卡片）③ 自定义地点规则：location 完全使用所选条目的 {name,lat,lng}，**不混入 GPS 定位数据**（GPS 仅用于反向编码与附近列表）④ wheel 隔离委托化（document 捕获覆盖全部地点面板） |
 | 08-11 | `本地` | **滚轮隔离重做（根因：Lenis 平滑滚动接管 wheel，冒泡阶段 preventDefault 无法阻止其 window 监听）**——成熟方案三保险：① `data-lenis-prevent-wheel` 属性（Lenis 官方支持，1.3.26 验证）② 捕获阶段 `preventDefault + stopPropagation`（先于 Lenis 冒泡监听执行）③ 手动驱动列表滚动（scrollTop += deltaY，deltaMode 换算，边界自然 clamp 无链外溢） |

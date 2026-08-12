@@ -1207,6 +1207,73 @@
     renderUsers(await Admin.getAllUsers());
   }
 
+  /* ── 超管新增账号 (Edge Function: admin-create-user, email_confirm 免验证) ── */
+  function openAddUserDialog() {
+    var overlay = document.createElement('div');
+    overlay.className = 'moment-vis-overlay';
+    var roleOptions = ['user', 'author', 'admin', 'superadmin'].map(function (r) {
+      var names = { user: '用户', author: '作者', admin: '管理员', superadmin: '超级管理员' };
+      return '<option value="' + r + '">' + (names[r] || r) + '</option>';
+    }).join('');
+    overlay.innerHTML =
+      '<div class="moment-vis-panel">' +
+        '<div class="mv-head"><span class="mono mv-title">[ 新增账号 ]</span>' +
+        '<button type="button" class="mv-close" data-au-close aria-label="关闭">×</button></div>' +
+        '<div class="au-form">' +
+          '<label>邮箱<input type="email" class="au-input" id="auEmail" placeholder="name@example.com" autocomplete="off"></label>' +
+          '<label>密码<input type="password" class="au-input" id="auPassword" placeholder="至少 6 位" autocomplete="new-password"></label>' +
+          '<label>显示名<input type="text" class="au-input" id="auName" placeholder="可选" autocomplete="off"></label>' +
+          '<label>角色<select class="au-input" id="auRole">' + roleOptions + '</select></label>' +
+        '</div>' +
+        '<p class="auth-error" id="auError" hidden></p>' +
+        '<div class="mv-foot">' +
+          '<button type="button" class="mv-cancel" data-au-close>取消</button>' +
+          '<button type="button" class="mv-save" id="auSubmit">创建</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    });
+    var emailInput = overlay.querySelector('#auEmail');
+    if (emailInput) emailInput.focus();
+
+    function close() {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.remove(); }, 240);
+    }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) { close(); return; }
+      if (e.target.closest('[data-au-close]')) { close(); return; }
+      var submit = e.target.closest('#auSubmit');
+      if (!submit) return;
+      submit.disabled = true;
+      submit.textContent = '创建中…';
+      var errEl = overlay.querySelector('#auError');
+      if (errEl) errEl.hidden = true;
+      Admin.createUser({
+        email: overlay.querySelector('#auEmail').value,
+        password: overlay.querySelector('#auPassword').value,
+        displayName: overlay.querySelector('#auName').value,
+        role: overlay.querySelector('#auRole').value
+      }).then(function (result) {
+        close();
+        showToast('账号已创建：' + (result.email || ''), 'success');
+        loadUsers();
+      }).catch(function (error) {
+        if (errEl) {
+          errEl.textContent = errorText(error);
+          errEl.hidden = false;
+        } else {
+          showError(errorText(error));
+        }
+      }).finally(function () {
+        submit.disabled = false;
+        submit.textContent = '创建';
+      });
+    });
+  }
+
   async function loadComments() {
     var filter = document.getElementById('adminCommentFilter').value || null;
     renderComments(await Admin.getComments(filter));
@@ -1580,6 +1647,12 @@
         if (emailEl) emailEl.textContent = user.email;
         if (avatarEl && avatar) avatarEl.src = avatar;
         if (roleEl) roleEl.textContent = String(adminProfile.role || 'user').toUpperCase();
+        /* 超管可新增账号 (后台本身仅 superadmin 可进, 按钮兜底显示) */
+        var addUserBtn = document.getElementById('adminAddUserBtn');
+        if (addUserBtn) {
+          addUserBtn.hidden = false;
+          addUserBtn.addEventListener('click', openAddUserDialog);
+        }
         var logoutBtn = document.getElementById('adminLogoutBtn');
         var drawerLogout = document.getElementById('adminDrawerLogout');
         var doLogout = function () {
