@@ -188,7 +188,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-12 | `本地` | **新增账号 403 根因修复**：profiles 表列级权限仅暴露公开字段（`REVOKE ALL` + 只 GRANT id/username/display_name 等），`role`/`account_status` 列直查被拒——后台一直走 `get_my_profile` RPC（SECURITY DEFINER）。函数改用该 RPC 校验超管身份（已部署）；前端错误透传（FunctionsHttpError → 具体文案） |
+| 08-12 | `本地` | 后台用户管理扩展：① **编辑头像/昵称**——行内「编辑」弹窗（头像预览+canvas 压缩 256px webp 上传+昵称），Edge Function `admin-update-profile`（service role 写 avatars 桶 `{userId}/avatar.webp` + `?v=` 缓存破坏 + 更新 profiles，JWT→get_my_profile 校验超管，已部署）② **查看全站行为**——行内「行为」弹窗时间线（动态/点赞/动态评论/文章评论/审计日志聚合），SQL `supabase-admin-user-activity.sql` 新增 RPC `admin_list_user_activity`（**需用户执行**）（35 项 happy-dom 端到端通过） |
 | 08-12 | `本地` | 关于页打包：`about-page/` 文件夹（design-about.html + README.md 完整文档——结构/光标系统/动效清单/验证/集成步骤/注意事项/日志） |
 | 08-12 | `本地` | 关于页光标重构二轮：**全站自定义光标**（用户否决 Win11 混合方案）——平时透明轮廓环 36px+中心点（lerp 0.18 跟随）、hover 0.5s 平滑转实心圆（scale 1.28 + moss 填充）+ 12% 吸附、按下反馈、**打断动画**（形态全 CSS transition 可打断、位置 lerp 无 transition 防拖尾）、`* { cursor:none }` 无原生指针、触屏禁用（24 项 puppeteer 冒烟通过） |
 | 08-11 | `本地` | **修复 threads 链接不可编辑（根因：`transformThreadsLinks` 的 TreeWalker 遍历整卡时把编辑面板 textarea 内的链接文本也替换成卡片 DOM，textarea 内容丢失）**——转换时跳过 TEXTAREA/INPUT/SELECT 内的文本节点；用 puppeteer+Chrome 真实浏览器复现验证（编辑框原文含链接 → 改链接保存 → 卡片 href 更新为新链接） |

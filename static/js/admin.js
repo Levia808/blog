@@ -1090,7 +1090,7 @@
   function renderUsers(users) {
     var table = document.getElementById('adminUserTable');
     if (!users.length) {
-      table.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="es-glyph">👥</span><span class="es-title">暂无用户</span><span class="es-desc">用户注册后会显示在这里</span></div></td></tr>';
+      table.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="es-glyph">👥</span><span class="es-title">暂无用户</span><span class="es-desc">用户注册后会显示在这里</span></div></td></tr>';
       return;
     }
     var roleNames = { user: '用户', author: '作者', admin: '管理员', superadmin: '超级管理员' };
@@ -1107,12 +1107,168 @@
       var statusControl = '<button type="button" class="admin-menu-btn" data-user-menu="status" data-user-id="' + escapeHtml(user.id) + '" data-user-value="' + escapeHtml(user.account_status) + '">' +
         escapeHtml(statusNames[user.account_status] || user.account_status) + '<i class="am-arrow">▾</i></button>';
       return '<tr>' +
-        '<td>' + (avatar ? '<img class="admin-avatar" src="' + escapeHtml(avatar) + '" alt="" loading="lazy">' : '—') + '</td>' +
+        '<td>' + (avatar
+          ? '<img class="admin-avatar" src="' + escapeHtml(avatar) + '" alt="" loading="lazy" title="' + escapeHtml(name) + '">'
+          : '—') + '</td>' +
         '<td><strong>' + escapeHtml(name) + '</strong><br><code>' + escapeHtml(user.username || '') + '</code></td>' +
         '<td>' + escapeHtml(user.email || '—') + '</td>' +
         '<td>' + roleControl + '</td><td>' + statusControl + '</td>' +
+        '<td><div class="admin-action-group">' +
+          '<button type="button" class="admin-row-action" data-user-edit="' + escapeHtml(user.id) + '" title="编辑头像/昵称">编辑</button>' +
+          '<button type="button" class="admin-row-action" data-user-activity="' + escapeHtml(user.id) + '" title="查看全站行为">行为</button>' +
+        '</div></td>' +
         '</tr>';
     }).join('');
+  }
+
+  /* ── 编辑用户: 头像上传(压缩 256px webp) + 昵称 ── */
+  function openUserEditDialog(userId) {
+    var overlay = document.createElement('div');
+    overlay.className = 'moment-vis-overlay';
+    overlay.innerHTML =
+      '<div class="moment-vis-panel">' +
+        '<div class="mv-head"><span class="mono mv-title">[ 编辑用户 ]</span>' +
+        '<button type="button" class="mv-close" data-ue-close aria-label="关闭">×</button></div>' +
+        '<div class="ue-avatar">' +
+          '<img id="ueAvatarPreview" alt="头像" hidden>' +
+          '<span class="ue-avatar-empty mono" id="ueAvatarEmpty">无头像</span>' +
+        '</div>' +
+        '<label class="ue-upload">上传头像 (方形, 自动压缩为 256px webp)' +
+          '<input type="file" id="ueAvatarFile" accept="image/*" hidden></label>' +
+        '<div class="au-form">' +
+          '<label>昵称<input type="text" class="au-input" id="ueName" placeholder="显示名称" autocomplete="off"></label>' +
+        '</div>' +
+        '<p class="auth-error" id="ueError" hidden></p>' +
+        '<div class="mv-foot">' +
+          '<button type="button" class="mv-cancel" data-ue-close>取消</button>' +
+          '<button type="button" class="mv-save" id="ueSubmit">保存</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    });
+
+    var user = (usersCache || []).filter(function (u) { return u.id === userId; })[0] || {};
+    var nameInput = overlay.querySelector('#ueName');
+    var preview = overlay.querySelector('#ueAvatarPreview');
+    var empty = overlay.querySelector('#ueAvatarEmpty');
+    if (user.display_name || user.username) nameInput.value = user.display_name || user.username || '';
+    if (user.avatar_url) {
+      preview.src = user.avatar_url;
+      preview.hidden = false;
+      empty.hidden = true;
+    }
+    var avatarBase64 = '';
+
+    overlay.querySelector('#ueAvatarFile').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var canvas = document.createElement('canvas');
+        var size = 256;
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        var s = Math.min(img.naturalWidth, img.naturalHeight);
+        ctx.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size);
+        canvas.toBlob(function (blob) {
+          URL.revokeObjectURL(url);
+          if (!blob) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            avatarBase64 = String(reader.result);
+            preview.src = avatarBase64;
+            preview.hidden = false;
+            empty.hidden = true;
+          };
+          reader.readAsDataURL(blob);
+        }, 'image/webp', 0.85);
+      };
+      img.src = url;
+    });
+
+    function close() {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.remove(); }, 240);
+    }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay || e.target.closest('[data-ue-close]')) { close(); return; }
+      var submit = e.target.closest('#ueSubmit');
+      if (!submit) return;
+      submit.disabled = true;
+      submit.textContent = '保存中…';
+      var errEl = overlay.querySelector('#ueError');
+      if (errEl) errEl.hidden = true;
+      Admin.updateProfileOf({
+        userId: userId,
+        displayName: nameInput.value.trim(),
+        avatarBase64: avatarBase64
+      }).then(function (result) {
+        close();
+        showToast('用户已更新：' + ((result.profile && result.profile.display_name) || ''), 'success');
+        loadUsers();
+      }).catch(function (error) {
+        if (errEl) { errEl.textContent = errorText(error); errEl.hidden = false; }
+        else showError(errorText(error));
+      }).finally(function () {
+        submit.disabled = false;
+        submit.textContent = '保存';
+      });
+    });
+  }
+
+  /* ── 用户全站行为时间线 ── */
+  var usersCache = [];
+  function openUserActivityDialog(userId) {
+    var user = usersCache.filter(function (u) { return u.id === userId; })[0] || {};
+    var overlay = document.createElement('div');
+    overlay.className = 'moment-vis-overlay';
+    overlay.innerHTML =
+      '<div class="moment-vis-panel ua-panel">' +
+        '<div class="mv-head"><span class="mono mv-title">[ 行为记录 ] ' + escapeHtml(user.display_name || user.username || '') + '</span>' +
+        '<button type="button" class="mv-close" data-ua-close aria-label="关闭">×</button></div>' +
+        '<div class="ua-list" id="uaList"><div class="ua-loading mono">加载中…</div></div>' +
+        '<div class="mv-foot"><button type="button" class="mv-cancel" data-ua-close>关闭</button></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add('show'); });
+    });
+    var listEl = overlay.querySelector('#uaList');
+    function close() {
+      overlay.classList.remove('show');
+      setTimeout(function () { overlay.remove(); }, 240);
+    }
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay || e.target.closest('[data-ua-close]')) close();
+    });
+    Admin.getUserActivity(userId).then(function (rows) {
+      if (!rows || !rows.length) {
+        listEl.innerHTML = '<div class="ua-empty mono">该用户暂无行为记录</div>';
+        return;
+      }
+      var kindMeta = {
+        moment: { icon: '◇', cls: 'is-moment' },
+        moment_like: { icon: '♥', cls: 'is-like' },
+        comment: { icon: '▸', cls: 'is-comment' },
+        post_comment: { icon: '✎', cls: 'is-comment' },
+        audit: { icon: '●', cls: 'is-audit' }
+      };
+      listEl.innerHTML = rows.map(function (row) {
+        var meta = kindMeta[row.kind] || { icon: '·', cls: '' };
+        return '<div class="ua-item ' + meta.cls + '">' +
+          '<span class="ua-ico">' + meta.icon + '</span>' +
+          '<div class="ua-body">' +
+            '<div class="ua-title">' + escapeHtml(row.title || row.kind) + '</div>' +
+            (row.detail ? '<div class="ua-detail">' + escapeHtml(row.detail) + '</div>' : '') +
+            '<div class="ua-time mono">' + formatDate(row.at) + '</div>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function (error) {
+      listEl.innerHTML = '<div class="ua-empty mono">加载失败：' + escapeHtml(errorText(error)) + '</div>';
+    });
   }
 
   /* 弹出小菜单: 瑞士极简浅色, 点选即保存 (角色/状态) */
@@ -1262,7 +1418,8 @@
   }
 
   async function loadUsers() {
-    renderUsers(await Admin.getAllUsers());
+    usersCache = await Admin.getAllUsers();
+    renderUsers(usersCache);
   }
 
   /* ── 超管新增账号 (Edge Function: admin-create-user, email_confirm 免验证) ── */
@@ -1512,6 +1669,12 @@
       });
       return;
     }
+
+    var userEditBtn = event.target.closest('[data-user-edit]');
+    if (userEditBtn) { openUserEditDialog(userEditBtn.dataset.userEdit); return; }
+
+    var userActivityBtn = event.target.closest('[data-user-activity]');
+    if (userActivityBtn) { openUserActivityDialog(userActivityBtn.dataset.userActivity); return; }
 
     var moderationButton = event.target.closest('[data-comment-action]');
     if (moderationButton) {

@@ -293,6 +293,43 @@ var Admin = window.Admin = {
     return data;
   },
 
+  /* 超管修改用户头像/昵称: Edge Function (service role 上传 avatars + 更新 profiles) */
+  async updateProfileOf(opts) {
+    const { data, error } = await blogSupabase.functions.invoke('admin-update-profile', {
+      body: {
+        user_id: opts.userId,
+        display_name: opts.displayName,
+        avatar_base64: opts.avatarBase64 || '',
+        avatar_url: opts.avatarUrl || ''
+      }
+    });
+    if (error) {
+      if (data && data.error) throw new Error(data.error);
+      if (error.context && typeof error.context.text === 'function') {
+        try {
+          var text = await error.context.text();
+          var parsed = JSON.parse(text);
+          if (parsed && parsed.error) throw new Error(parsed.error);
+        } catch (e) {
+          if (e instanceof SyntaxError) { /* 非 JSON */ }
+          else throw e;
+        }
+      }
+      throw error;
+    }
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
+
+  /* 超管查看用户全站行为时间线 */
+  async getUserActivity(userId) {
+    const { data, error } = await blogSupabase.rpc('admin_list_user_activity', {
+      p_user_id: userId
+    });
+    if (error) throw error;
+    return data || [];
+  },
+
   /* 超管新增账号: Edge Function (service_role, email_confirm 免验证) */
   async createUser(opts) {
     const { data, error } = await blogSupabase.functions.invoke('admin-create-user', {
