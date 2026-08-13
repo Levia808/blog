@@ -62,6 +62,25 @@ function extractMeta(html) {
   };
 }
 
+/* 候选质量档: stp=dst-jpg_e35 = 原图档 (3) > 其他 dst-jpg (2) > 带 width 预览 (1) > 无标记 (0) */
+function candidateQuality(c) {
+  const u = String((c && c.url) || '');
+  if (u.indexOf('stp=dst-jpg_e35') >= 0) return 3;
+  if (u.indexOf('dst-jpg') >= 0) return 2;
+  if (/[?&]width=\d+/.test(u)) return 1;
+  return 0;
+}
+
+/* 选最佳: 质量档优先 (e35 原图 > e15 预览, 即使 e15 分辨率更高), 同档比分辨率 */
+function pickBest(list) {
+  if (!Array.isArray(list) || !list.length) return null;
+  return list.slice().sort((a, b) => {
+    const q = candidateQuality(b) - candidateQuality(a);
+    if (q !== 0) return q;
+    return ((b.width || 0) * (b.height || 0)) - ((a.width || 0) * (a.height || 0));
+  })[0];
+}
+
 /* 从页面内嵌 JSON 提取媒体 (原图/最高码率视频) */
 function extractMedia(html) {
   const media = [];
@@ -100,16 +119,17 @@ function extractMedia(html) {
           });
         }
       }
-      /* 图片候选 */
+      /* 图片候选: 质量档优先 (e35 原图), 其次分辨率 */
       if (key === 'image_versions2' && obj && Array.isArray(obj.candidates)) {
-        const best = obj.candidates.slice().sort((a, b) => (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0))[0];
+        const best = pickBest(obj.candidates);
         if (best && best.url && !seen.has(best.url)) {
           seen.add(best.url);
           media.push({
             type: 'image',
             url: cleanImageUrl(best.url),
             width: best.width || 0,
-            height: best.height || 0
+            height: best.height || 0,
+            quality: candidateQuality(best) >= 3 ? 'original' : 'preview'
           });
         }
       }
@@ -124,10 +144,16 @@ function extractMedia(html) {
               media.push({ type: 'video', url: best.url, width: best.width || 0, height: best.height || 0 });
             }
           } else if (item.image_versions2 && Array.isArray(item.image_versions2.candidates)) {
-            const best = item.image_versions2.candidates.slice().sort((a, b) => (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0))[0];
+            const best = pickBest(item.image_versions2.candidates);
             if (best && best.url && !seen.has(best.url)) {
               seen.add(best.url);
-              media.push({ type: 'image', url: cleanImageUrl(best.url), width: best.width || 0, height: best.height || 0 });
+              media.push({
+                type: 'image',
+                url: cleanImageUrl(best.url),
+                width: best.width || 0,
+                height: best.height || 0,
+                quality: candidateQuality(best) >= 3 ? 'original' : 'preview'
+              });
             }
           }
         });
