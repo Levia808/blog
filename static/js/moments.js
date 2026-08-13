@@ -154,15 +154,31 @@
     var avatarHtml = d.avatar
       ? '<img class="th-avatar-img" src="' + escapeHtml(d.avatar) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
       : '';
-    var media = (d.media || []).map(function (m) {
+    var mediaList = d.media || [];
+    /* 分页: 视频单独一页, 图片两两一页 (一视窗两张) */
+    var pages = [];
+    var cur = [];
+    mediaList.forEach(function (m) {
       if (m.type === 'video') {
-        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载 */
-        return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" muted playsinline autoplay loop preload="auto" aria-hidden="true"></video></span>';
+        if (cur.length) { pages.push(cur); cur = []; }
+        pages.push([m]);
+      } else {
+        cur.push(m);
+        if (cur.length === 2) { pages.push(cur); cur = []; }
       }
-      /* 图片: 使用原图 (去除 CDN 尺寸参数) */
-      return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></span>';
+    });
+    if (cur.length) pages.push(cur);
+    var media = pages.map(function (pg) {
+      if (pg.length === 1 && pg[0].type === 'video') {
+        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载 */
+        return '<span class="th-media-item is-video"><video src="' + escapeHtml(pg[0].url) + '" muted playsinline autoplay loop preload="auto" aria-hidden="true"></video></span>';
+      }
+      return '<span class="th-pair">' + pg.map(function (m) {
+        /* 图片: 使用原图 (去除 CDN 尺寸参数), 宽高比备用数据 */
+        return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></span>';
+      }).join('') + '</span>';
     }).join('');
-    var multi = (d.media || []).length > 1;
+    var multi = mediaList.length > 1;
     var mediaHtml = '';
     if (media) {
       mediaHtml =
@@ -171,7 +187,7 @@
           (multi
             ? '<button type="button" class="th-prev" aria-label="上一张">‹</button>' +
               '<button type="button" class="th-next" aria-label="下一张">›</button>' +
-              '<span class="th-dots">' + (d.media || []).map(function (_, i) {
+              '<span class="th-dots">' + pages.map(function (_, i) {
                 return '<i class="' + (i === 0 ? 'on' : '') + '" data-i="' + i + '"></i>';
               }).join('') + '</span>'
             : '') +
@@ -208,9 +224,10 @@
     });
   }
 
-  /* 串文卡片媒体: 等高校对布局 (Google Photos 同款算法)
-     多图一视窗两张并排, 按宽高比计算共同高度 h = (W - gap) / (ar1 + ar2),
-     大图自动缩小预览尺寸, 不裁切无灰边 */
+  /* 串文卡片媒体: 统一高度布局 (Google Photos 同款)
+     多图分页 (一页两张并排), 全部图片统一一个合适高度:
+     按最宽的一页计算 h = (W - gap) / max(页内宽高比之和), 限幅 [180, 520],
+     比例不一致时大图自动缩小, 页内居中, 不裁切无灰边 */
   var threadsMediaGap = 8;
   var threadsResizeTimer = null;
 
@@ -219,28 +236,26 @@
     if (!media || !media.classList.contains('is-carousel')) return;
     var W = media.clientWidth;
     if (!W) return;
-    var items = Array.prototype.slice.call(media.children);
-    for (var i = 0; i < items.length; i += 2) {
-      var a = items[i], b = items[i + 1];
-      if (a.classList.contains('is-video') || (b && b.classList.contains('is-video'))) continue;
-      var arA = threadsImageRatio(a);
-      var arB = b ? threadsImageRatio(b) : 0;
-      var h = Math.max(60, Math.round((W - threadsMediaGap) / (arA + arB)));
-      a.style.height = h + 'px';
-      if (b) b.style.height = h + 'px';
-    }
+    var pages = Array.prototype.slice.call(media.children);
+    var maxSum = 0;
+    pages.forEach(function (page) {
+      var imgs = page.querySelectorAll('.th-media-item img');
+      if (!imgs.length) return;
+      var sum = 0;
+      Array.prototype.forEach.call(imgs, function (img) { sum += threadsImageRatio(img); });
+      maxSum = Math.max(maxSum, sum);
+    });
+    if (!maxSum) return;
+    var h = Math.round((W - threadsMediaGap) / maxSum);
+    h = Math.max(180, Math.min(520, h));
+    media.style.setProperty('--th-media-h', h + 'px');
   }
 
-  function threadsImageRatio(item) {
-    var img = item && item.querySelector('img');
+  function threadsImageRatio(img) {
     if (img && img.naturalWidth > 0) return img.naturalWidth / img.naturalHeight;
-    /* 图片未加载时用 JSON 里的宽高 */
-    var m = item && item.querySelector('img');
-    if (m) {
-      var w = parseFloat(m.dataset.ratioW || '') || 0;
-      var h = parseFloat(m.dataset.ratioH || '') || 0;
-      if (w && h) return w / h;
-    }
+    var w = parseFloat(img && img.dataset ? (img.dataset.ratioW || '') : '') || 0;
+    var h = parseFloat(img && img.dataset ? (img.dataset.ratioH || '') : '') || 0;
+    if (w && h) return w / h;
     return 1;
   }
 
