@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-11 · opencode · 远端 HEAD `c7015ab` · 本地 HEAD `d52268d`（含未推送改动）
+> 最后更新：2026-08-12 · opencode · 远端/本地 HEAD `270a50c`
 
 ---
 
@@ -17,7 +17,7 @@
 | 框架 | Hugo **v0.164.0 extended**（webp 图像处理必须 extended） |
 | 主题 | **brutalism**（自制独立主题 `themes/brutalism/`，无正式版本号） |
 | 内容管理 | **Sveltia CMS**（`/admin-cms/`）+ **自定义后台**（`/admin/`） |
-| 后端 | Supabase（Auth / DB / Storage `media`+`avatars` 桶） |
+| 后端 | Supabase（Auth / DB / Storage `media`+`avatars`+`threads-reposts` 桶）+ 2 个 Edge Function |
 | 语言 | zh-cn ｜ 作者 Levia（GitHub: Levia808） |
 
 **git 凭证**：`~/.git-credentials`（token，python 可提取用于 GitHub API）。
@@ -63,7 +63,87 @@ push main
 
 ---
 
-## 3. 数据 / 配置（全部后台可编辑）
+## 3. Threads 串文转发系统（动态转发卡片）
+
+> 动态正文粘贴 Threads 链接 → 自动渲染官方 embed 风格卡片（头像/正文/图片/翻译）。
+> 卡片数据存 `threads-reposts` 桶的 `<postId>.json`，由「本地 Cookie 桥」+ Edge Function 生成。
+
+### 3.1 架构
+
+```
+动态页 (moments.js)
+ ├─ 正文识别 threads 链接 → 读桶 <id>.json → 渲染卡片
+ │    └─ 资源缺失时: 检测本机桥 (localhost:8788) → 自动爬取生成 (无需手动)
+ ├─ 卡片: 头像 / 正文+翻译按钮 / 多图(2张/页统一高度轮播, 点击放大) / 仅页脚跳转
+ └─ 地点搜索: Nominatim (accept-language=zh-CN 中文地理编码) + Photon 附近POI兜底
+
+本地 Cookie 桥 (threads-repost/bridge/) —— 必须本机运行
+ ├─ bridge.py        : 零依赖 Python (标准库+自研最小WS客户端), 端口 8788 仅绑 127.0.0.1
+ │    ├─ /api/status · /api/open · /api/cookies · /api/fetch · /api/close (均 CORS+Private-Network 头)
+ │    ├─ /api/cookies : 读调试 Chrome 的 HttpOnly cookie (CDP Network.getAllCookies), 用真实爬取验证有效性
+ │    └─ /api/fetch   : 导航标签→等渲染→DOM 提取 (正文/时间/媒体/头像/互动), 目标失效自动重开标签
+ ├─ chrome-debug.sh/.bat : 一键启动 调试Chrome(:9222, 独立profile) + 桥
+ └─ 浏览器登录 = 真实 Chrome 登录 threads.com (2FA/验证码原生支持)
+
+Edge Functions (threads-repost/supabase/functions/, 已部署至 iyquixzprfwkglaqptxj)
+ ├─ threads-fetch  : 两种模式
+ │    ① {json: 桥提取的数据} → 校验+入库 (推荐, 头像 fbcdn 被 CORP 拦 → 服务端代拉转存桶内公开URL)
+ │    ② {url, cookie} → 服务端直爬 og 解析 (已废弃: Threads 改客户端渲染无 og, 仅兜底)
+ │    桶缺失自动创建(public), 响应含 CORS 头
+ └─ threads-login  : IG Web 登录接口取 sessionid (明文格式优先, AES-GCM+NaCL sealedbox 降级)
+```
+
+### 3.2 文件与部署
+
+```
+threads-repost/
+├── supabase/functions/threads-fetch/index.ts    # 入库函数 (CORS+桶自愈+头像转存)
+├── supabase/functions/threads-login/index.ts    # 账号密码登录 (双格式加密)
+├── bridge/bridge.py                             # 本地 Cookie 桥 (端口 8788)
+├── bridge/chrome-debug.sh / chrome-debug.bat    # 一键启动器
+└── README.md                                    # 完整方案文档
+static/js/moments.js                             # 卡片渲染/轮播/翻译/自动爬取/地点
+themes/brutalism/assets/css/features.css         # 卡片样式 (.th-*)
+themes/brutalism/layouts/partials/scripts.html   # moments.js/admin.js 已加 ?v= 版本号防缓存
+```
+
+部署命令（**link 状态会丢失，必须与 deploy 合并同一条命令执行**）：
+```bash
+cd threads-repost
+supabase link --project-ref iyquixzprfwkglaqptxj && supabase functions deploy threads-fetch --no-verify-jwt
+supabase functions deploy threads-login --no-verify-jwt
+```
+
+### 3.3 使用流程
+
+1. 双击 `bridge/chrome-debug.sh`（自动开调试 Chrome + 桥，登录态存 `~/.threads-debug-chrome`）
+2. 后台「平台管理」→「浏览器登录」：弹真实 Chrome → 登录 threads.com → 自动读取并验证 Cookie
+3. 动态页发布含 Threads 链接的动态 → 卡片自动生成（桥在跑时无需任何手动操作）
+4. 后台也可手动「测试连接 / 爬取串文」（链接支持 threads.net 与 threads.com）
+
+### 3.4 技术要点 / 踩坑记录（重要）
+
+- **iframe 反代登录不可行**：IG 登录 SPA 对非官方来源 API 返回 `error 1357055`，且 `X-Frame-Options: DENY`——业界一致走真实浏览器自动化
+- **og:description 已废弃**：Threads 帖页无论登录与否都不再输出 og 元数据（纯客户端渲染）——必须浏览器渲染后 DOM 提取；服务端 GraphQL 复刻被拒（1357004，需大量运行时状态参数）
+- **supabase-js v2 对非 2xx 不 reject**：resolve 成 `{data:null, error: FunctionsHttpError}`——调用方须先查 `res.error`，真实原因在 `await error.context.json()`
+- **Edge Function CORS**：预检 OPTIONS 会被路由进函数，必须显式返回 204 + CORS 头；所有响应加 `Access-Control-Allow-Origin: *`
+- **`createClient` 不自动注入**：须 `import { createClient } from 'jsr:@supabase/supabase-js@2'`
+- **fbcdn 头像带 CORP: same-origin**：浏览器跨站加载必被拦 → Edge 端代拉后转存桶内公开 URL
+- **桥目标失效**（No such target id）：自动重开标签（曾导致自动爬取静默失败）
+- **Photon 不支持 lang=zh**（返回空）；**Nominatim 支持 `accept-language=zh-CN`** 原生中文地理编码（限速 1 请求/秒，需 User-Agent + 串行节流）
+- **多图布局**：2 张/页 + 统一高度（`h=(宽-间距)/max(页内宽高比之和)`，限幅 180–520px）；圆点按页数生成
+- **浏览器缓存**：moments.js/admin.js 已加 `?v={{now.Unix}}`，否则部署后旧 JS 滞留（曾致自动爬取"没生效"）
+
+### 3.5 已知限制
+
+- 自动爬取依赖**本机桥**（localhost:8788）——访客/其他设备浏览时缺失资源降级为链接文本；桥不可达时后台「测试连接」自动降级服务端直爬（多已失效）
+- threads 图片为 fbcdn 临时签名 URL（会过期）——过期后需重新爬取
+- 卡片正文截断 UI 噪音（翻译/热门/查看动态等）为黑名单式，Threads UI 改版后可能需补充
+- 繁简变体地点（涩谷/澀谷）保留为两条不合并（防误并同区域不同地点）
+
+---
+
+## 4. 数据 / 配置（全部后台可编辑）
 
 | 文件 | 内容 | 后台入口 |
 |------|------|----------|
@@ -78,7 +158,7 @@ push main
 
 ---
 
-## 4. 功能清单（当前全量）
+## 5. 功能清单（当前全量）
 
 ### 前端
 - 终端欢迎页：打字机、VariableProximity 字重插值、ShapeBlur(THREE)、火花、**管理员头像**（Supabase `profiles` 动态查询，居中 280px 圆形，标题 `mix-blend-mode: difference` 重合反相，磁性吸附 ±18px）
@@ -100,7 +180,7 @@ push main
 
 ---
 
-## 4.5 设计稿清单（仓库根 design-*.html，浏览器直接打开预览）
+## 5.5 设计稿清单（仓库根 design-*.html，浏览器直接打开预览）
 
 | 文件 | 内容 | 状态 |
 |------|------|------|
@@ -113,7 +193,7 @@ push main
 
 > 站点已实现：加载动画优化（d52268d 本地）+ 首页 hero（LEVIA 描边→实心、线条组、变形导航均分→收拢）。
 
-## 5. 代码地图
+## 6. 代码地图
 
 ```
 themes/brutalism/
@@ -144,7 +224,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 6. 开发约定（务必遵守）
+## 7. 开发约定（务必遵守）
 
 1. **改动后**：`hugo --minify` 验证 0 ERROR，再 `git push`
 2. **提交前**：`git pull --rebase origin main`（远端常有用户 CMS 提交）
@@ -157,7 +237,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 7. 已知问题 / 风险
+## 8. 已知问题 / 风险
 
 | # | 问题 | 状态/建议 |
 |---|------|-----------|
@@ -170,10 +250,11 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 8. 待办（下一步任务建议）
+## 9. 待办（下一步任务建议）
 
-- [ ] **P0** 用户部署 Edge Function：`supabase functions deploy admin-create-user --no-verify-jwt`（在 `threads-repost/supabase/` 目录执行）——否则后台「新增账号」会报 functions 错误
-- [ ] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）——**当前仅在本地**
+- [x] **P0** 部署 Edge Function `threads-fetch` / `threads-login`（已部署, `--no-verify-jwt`）
+- [ ] **P1** 部署 Edge Function `admin-create-user --no-verify-jwt`（`threads-repost/supabase/` 目录）——否则后台「新增账号」报错
+- [x] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）
 - [ ] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
 - [ ] **P1** 设计稿（design-loader/design-home）确认后集成到站点（当前站点加载动画已应用 d52268d 优化）
 - [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS（`moment_comments` insert 策略）、`avatars` 桶上传策略、`profiles` 更新策略——**动态修复见 `supabase-moments-fix.sql`（一键幂等，含 Realtime 发布）**
@@ -184,10 +265,30 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 9. 工作日志（最近）
+## 10. 工作日志（最近）
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `270a50c` | **Threads 转发卡片多图终版**：底部进度圆点按页数显示（10图→5页5点）+ 多图统一高度至合适值（`h=(宽-gap)/max(页内宽高比之和)`，限幅180–520px，大图自动缩小、页内居中、不裁切无灰边）；媒体重构为页结构 `.th-media > .th-pair > item` |
+| 08-12 | `2f0040f` | **多图一视窗两张并排 + 点击图片放大 + 仅页脚跳转**：等高校对（Google Photos 同款算法）、点图 GLightbox 放大原图不跳转、卡片仅「在 Threads 查看」页脚可跳转（捕获阶段 preventDefault）、图片宽高比备用 data-ratio + 加载/缩放重排 |
+| 08-12 | `a652a14` | 去除转载图片左右浅灰遮罩（移除 contain+限高，自然比例显示） |
+| 08-12 | `b7a320d` | 地点结果合并同一地点（同名忽略大小写 + 坐标~1km 内去重；繁简变体保留区分） |
+| 08-12 | `6f41502` | **地点中文搜索改用 Nominatim 官方地理编码**（调研后定案）：`accept-language=zh-CN` 原生中文（涩谷→东京涩谷区、东京塔→東京鐵塔），失败回退 Photon；附近POI 保留 Photon+结果中文化；1 请求/秒串行节流 + User-Agent |
+| 08-12 | `184286d` | 移除自拼的"地点搜索地名中文化"（翻译查询+合并方案脆弱，东京塔会漏），保留 translateTo 供卡片翻译 |
+| 08-12 | `da9fb77` | **串文卡片翻译组件**：点「翻译」正文译中文、再点「原文」还原（gtx 免费端点，缓存/超时/失败回退，按钮在卡片链接内已拦截跳转） |
+| 08-12 | `94d8fa6` | 转发正文排除翻译/查看原文/朗读等 UI 字段（桥提取黑名单）+ 桥目标失效自愈（No such target id → 自动重开标签，此 bug 曾致自动爬取静默失败） |
+| 08-12 | `7c80009` | **moments.js/admin.js 加 ?v= 版本号防缓存**（浏览器缓存旧 JS 曾致自动爬取"未生效"） |
+| 08-12 | `eb34ca0` | **串文链接自动爬取**（卡片加载发现资源缺失→检测本机桥→自动抓取→轮询渲染，零手动）+ 悬停卡片禁用浏览器历史手势（后细化：轮播区横向手势保留给图片浏览） |
+| 08-12 | `ec5a7e5` | 卡片作者头像（fbcdn 头像 CORP 拦截 → Edge 服务端代拉转存桶内公开 URL）+ Threads 官网式左右滑动轮播（箭头/圆点/触摸） |
+| 08-12 | `03e672b` | 卡片显示帖子图片/视频（桥提取媒体 → json 模式透传 → 卡片网格渲染） |
+| 08-12 | `0996f0e` | 卡片去除点赞/评论/回复 UI（仅作者+正文+页脚） |
+| 08-12 | `8fd132e` | **Edge Function CORS 修复**（预检 OPTIONS 被路由进函数返回 400 无 CORS 头、实际响应也无 ACAO → 浏览器全拦 "Failed to send a request"；OPTIONS 204 + 全响应 ACAO *） |
+| 08-12 | `2978a92` | 桥 cookie 验证改 HTTP 200/500 判定（og 已废弃，原逻辑有效 cookie 也判失败） |
+| 08-12 | `1d7f2b0` | **Threads 帖页客户端渲染**（无 og 元数据）→ 桥内真实浏览器渲染 DOM 提取（/api/fetch）；threads-fetch 新增 json 模式（修复 createClient 未导入的隐藏 bug）；测试/爬取优先走桥、降级服务端直爬 |
+| 08-12 | `524eac3` | **修复"调用失败"误报**（supabase-js v2 非 2xx 不 reject，原代码吞掉真实错误）+ 桥端 cookie 域名优先（threads.com 优先于 instagram.com）+ 真实爬取验证 |
+| 08-12 | `be83f59` | threads-fetch 桶缺失自动创建（public）+ 后台报错直指未部署（404） |
+| 08-12 | `ebec4dd` | **浏览器登录取 Cookie**：本地 Cookie 桥（bridge.py 零依赖 + chrome-debug 启动器），CDP 读 HttpOnly sessionid；恢复被误 revert 的 embed 卡片代码 |
+| 08-12 | `0907fc6` | **Threads 自动登录链 + 平台管理面板**：threads-login Edge Function（IG Web 登录接口，明文/AES-GCM+sealedbox 双格式加密）、后台「平台管理」侧栏（自动登录→Cookie→爬取）、卡片复刻官方 text-post-media embed UI |
 | 08-12 | `本地` | 文章评论区四项升级：① 容器改**白色**（--swiss-surface）② **树状回复**（comments 表加 parent_id + SQL `supabase-comments-thread.sql`，渲染复用动态树状结构+内联回复条展开/发送/取消/Esc/外部收起）③ **自己/管理员可编辑删除**（行内 textarea 编辑、瑞士确认弹窗删除、RLS 加管理员 update/delete 策略）④ **动效**（新评论 `.mc-new` 入场、删除 `.mc-leave` 收拢出场、评论项 hover 苔绿边线+位移、操作按钮 hover 浮现、列表更新微淡入）（15 项 happy-dom 端到端通过） |
 | 08-12 | `本地` | 关于页打包：`about-page/` 文件夹（design-about.html + README.md 完整文档——结构/光标系统/动效清单/验证/集成步骤/注意事项/日志） |
 | 08-12 | `本地` | 关于页光标重构二轮：**全站自定义光标**（用户否决 Win11 混合方案）——平时透明轮廓环 36px+中心点（lerp 0.18 跟随）、hover 0.5s 平滑转实心圆（scale 1.28 + moss 填充）+ 12% 吸附、按下反馈、**打断动画**（形态全 CSS transition 可打断、位置 lerp 无 transition 防拖尾）、`* { cursor:none }` 无原生指针、触屏禁用（24 项 puppeteer 冒烟通过） |
