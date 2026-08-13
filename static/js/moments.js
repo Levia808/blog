@@ -170,12 +170,15 @@
     if (cur.length) pages.push(cur);
     var media = pages.map(function (pg) {
       if (pg.length === 1 && pg[0].type === 'video') {
-        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载 */
-        return '<span class="th-media-item is-video"><video src="' + escapeHtml(pg[0].url) + '" muted playsinline autoplay loop preload="auto" aria-hidden="true"></video></span>';
+        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载; 附播放/暂停开关 */
+        return '<span class="th-media-item is-video"><video src="' + escapeHtml(pg[0].url) + '" muted playsinline autoplay loop preload="auto"></video>' +
+          '<button type="button" class="th-video-toggle" aria-label="暂停" aria-pressed="true"><span class="th-video-icon"></span></button></span>';
       }
       return '<span class="th-pair">' + pg.map(function (m) {
-        /* 图片: 使用原图 (去除 CDN 尺寸参数), 宽高比备用数据 */
-        return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></span>';
+        /* 图片: 优先预览图 (低分辨率, 载入快), data-orig 存原图供放大查看; 宽高比备用数据 */
+        var orig = originalImageUrl(m.url);
+        var disp = m.preview || orig;
+        return '<span class="th-media-item"><img src="' + escapeHtml(disp) + '" data-orig="' + escapeHtml(orig) + '" alt="" loading="lazy" decoding="async" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></span>';
       }).join('') + '</span>';
     }).join('');
     var multi = mediaList.length > 1;
@@ -218,8 +221,10 @@
         card.style.opacity = '1';
         card.style.transform = 'none';
         layoutThreadsMedia(card);
+        var thWrap = card.querySelector('.th-media-wrap');
+        if (thWrap) syncThreadsNav(thWrap);
         /* 容器宽度可能未稳定 (动画/懒布局): 延迟再排一次 */
-        setTimeout(function () { layoutThreadsMedia(card); }, 300);
+        setTimeout(function () { layoutThreadsMedia(card); syncThreadsNav(thWrap); }, 300);
       });
     });
   }
@@ -279,10 +284,10 @@
     var card = img.closest('.threads-card');
     if (!card) return;
     var urls = Array.prototype.map.call(card.querySelectorAll('.th-media-item img'), function (i) {
-      return i.currentSrc || i.src;
+      return i.dataset.orig || i.currentSrc || i.src;
     });
     if (!urls.length) return;
-    var startAt = Math.max(0, urls.indexOf(img.currentSrc || img.src));
+    var startAt = Math.max(0, urls.indexOf(img.dataset.orig || img.currentSrc || img.src));
     function open() {
       var lb = getMomentsLightbox();
       if (!lb) return;
@@ -364,34 +369,105 @@
     }).finally(function () { trBtn.disabled = false; });
   });
 
-  /* 串文卡片轮播: 左右箭头 + 圆点 (Threads 官网同款滑动交互) */
-  function scrollThreadsMedia(mediaEl, dir) {
-    if (!mediaEl) return;
-    var step = mediaEl.clientWidth || 1;
-    mediaEl.scrollTo({ left: Math.max(0, mediaEl.scrollLeft + dir * step), behavior: 'smooth' });
+  /* 串文卡片轮播: 左右箭头 + 可点圆点 + 键盘方向键 (Threads 官网同款滑动交互)
+     边界状态: 首/末页禁用对应箭头 (视觉反馈 + 不可点), 圆点可点跳转对应页 */
+  function threadsPageCount(mediaEl) {
+    return mediaEl ? mediaEl.children.length : 0;
   }
 
-  function syncThreadsDots(wrap) {
+  function threadsCurrentPage(mediaEl) {
+    if (!mediaEl) return 0;
+    var max = mediaEl.scrollWidth - mediaEl.clientWidth;
+    if (max <= 0) return 0;
+    return Math.min(threadsPageCount(mediaEl) - 1, Math.round(mediaEl.scrollLeft / (mediaEl.clientWidth || 1)));
+  }
+
+  function scrollThreadsMediaTo(wrap, index) {
     var mediaEl = wrap && wrap.querySelector('.th-media');
-    var dots = wrap && wrap.querySelector('.th-dots');
-    if (!mediaEl || !dots) return;
-    var idx = Math.round(mediaEl.scrollLeft / (mediaEl.clientWidth || 1));
-    Array.prototype.forEach.call(dots.children, function (dot, i) {
-      dot.classList.toggle('on', i === idx);
-    });
+    if (!mediaEl) return;
+    var count = threadsPageCount(mediaEl);
+    if (index < 0) index = 0;
+    if (index > count - 1) index = count - 1;
+    var max = Math.max(0, mediaEl.scrollWidth - mediaEl.clientWidth);
+    mediaEl.scrollTo({ left: Math.min(max, index * (mediaEl.clientWidth || 1)), behavior: 'smooth' });
+  }
+
+  function scrollThreadsMedia(wrap, dir) {
+    var mediaEl = wrap && wrap.querySelector('.th-media');
+    if (!mediaEl) return;
+    scrollThreadsMediaTo(wrap, threadsCurrentPage(mediaEl) + dir);
+  }
+
+  function syncThreadsNav(wrap) {
+    var mediaEl = wrap && wrap.querySelector('.th-media');
+    if (!mediaEl) return;
+    var idx = threadsCurrentPage(mediaEl);
+    var last = Math.max(0, threadsPageCount(mediaEl) - 1);
+    var dots = wrap.querySelector('.th-dots');
+    if (dots) {
+      Array.prototype.forEach.call(dots.children, function (dot, i) {
+        dot.classList.toggle('on', i === idx);
+      });
+    }
+    var prev = wrap.querySelector('.th-prev');
+    var next = wrap.querySelector('.th-next');
+    if (prev) prev.disabled = idx <= 0;
+    if (next) next.disabled = idx >= last;
   }
 
   document.addEventListener('click', function (e) {
+    var wrap = e.target.closest && e.target.closest('.th-media-wrap');
+    if (!wrap) return;
     var prevBtn = e.target.closest('.th-prev');
-    if (prevBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(prevBtn.closest('.th-media-wrap').querySelector('.th-media'), -1); return; }
+    if (prevBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(wrap, -1); return; }
     var nextBtn = e.target.closest('.th-next');
-    if (nextBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(nextBtn.closest('.th-media-wrap').querySelector('.th-media'), 1); return; }
+    if (nextBtn) { e.preventDefault(); e.stopPropagation(); scrollThreadsMedia(wrap, 1); return; }
+    var dot = e.target.closest('.th-dots i');
+    if (dot) {
+      e.preventDefault(); e.stopPropagation();
+      scrollThreadsMediaTo(wrap, Array.prototype.indexOf.call(dot.parentNode.children, dot));
+      return;
+    }
+    /* 视频: 点击开关静音循环视频的播放/暂停 (autoplay 状态与图标同步) */
+    var vt = e.target.closest('.th-video-toggle');
+    if (vt) {
+      e.preventDefault(); e.stopPropagation();
+      var video = wrap.querySelector('video');
+      if (video) {
+        if (video.paused) {
+          video.play();
+          vt.setAttribute('aria-pressed', 'true');
+          vt.setAttribute('aria-label', '暂停');
+          vt.classList.remove('is-paused');
+        } else {
+          video.pause();
+          vt.setAttribute('aria-pressed', 'false');
+          vt.setAttribute('aria-label', '播放');
+          vt.classList.add('is-paused');
+        }
+      }
+      return;
+    }
   });
 
   document.addEventListener('scroll', function (e) {
     var wrap = e.target && e.target.closest && e.target.closest('.th-media-wrap');
-    if (wrap) syncThreadsDots(wrap);
+    if (wrap) syncThreadsNav(wrap);
   }, true);
+
+  /* 键盘: 焦点在串文卡片上时, 左右方向键翻页 (与箭头一致, 提升可访问性) */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var card = e.target.closest && e.target.closest('.threads-card');
+    if (!card) return;
+    var wrap = card.querySelector('.th-media-wrap');
+    var mediaEl = wrap && wrap.querySelector('.th-media');
+    if (!mediaEl || threadsPageCount(mediaEl) <= 1) return;
+    /* 仅当存在横向溢出时拦截 (单页不抢走页面横向滚动手势) */
+    if (mediaEl.scrollWidth <= mediaEl.clientWidth + 1) return;
+    e.preventDefault();
+    scrollThreadsMedia(wrap, e.key === 'ArrowRight' ? 1 : -1);
+  });
 
   /* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 (Photon·OSM, 免费无 key, © OpenStreetMap)
      注意: lang 参数仅支持 default/de/en/fr — 省略时浏览器自动带 Accept-Language (zh-CN) */
@@ -1812,6 +1888,34 @@
     loaderTimer = setTimeout(hideMomentsLoader, 12000);
   }
 
+  /* 放大查看页码计数 (1 / N): 注入到 glightbox 容器左上角, 随翻页更新 */
+  function updateLightboxCounter() {
+    var body = document.getElementById('glightbox-body');
+    if (!body) return;
+    var total = momentsLightbox && momentsLightbox.elements ? momentsLightbox.elements.length : 0;
+    var c = body.querySelector('.gcounter');
+    if (total <= 1) {
+      if (c) c.style.display = 'none';
+      return;
+    }
+    if (!c) {
+      c = document.createElement('div');
+      c.className = 'gcounter';
+      var g = body.querySelector('.gcontainer');
+      (g || body).appendChild(c);
+    }
+    var idx = (typeof momentsLightbox.getActiveSlideIndex === 'function'
+      ? momentsLightbox.getActiveSlideIndex() : 0) + 1;
+    c.textContent = idx + ' / ' + total;
+    c.style.display = '';
+  }
+
+  function hideLightboxCounter() {
+    var body = document.getElementById('glightbox-body');
+    var c = body && body.querySelector('.gcounter');
+    if (c) c.style.display = 'none';
+  }
+
   function getMomentsLightbox() {
     if (window.GLightbox && !momentsLightbox) {
       momentsLightbox = window.GLightbox({
@@ -1821,14 +1925,22 @@
         loop: false,
         zoomable: true,
         draggable: true,
-        preload: true
+        preload: true,
+        openEffect: 'zoom',
+        closeEffect: 'zoom'
       });
       /* 触控板横滑: 打开时启用, 关闭时移除 */
       momentsLightbox.on('open', function () {
         if (!trackpadSwipeCleanup) trackpadSwipeCleanup = enableTrackpadSwipe(momentsLightbox);
+        updateLightboxCounter();
       });
       momentsLightbox.on('close', function () {
         if (trackpadSwipeCleanup) { trackpadSwipeCleanup(); trackpadSwipeCleanup = null; }
+        hideLightboxCounter();
+      });
+      /* 翻页: 同步右下角页码计数 (1 / N) */
+      momentsLightbox.on('slide_changed', function () {
+        updateLightboxCounter();
       });
       /* 加载动画条件控制: 仅在放大查看且图片未加载完成时显示, 否则强制关闭 */
       momentsLightbox.on('slide_before_load', function () {
@@ -1944,8 +2056,9 @@
   listEl.addEventListener('load', function (e) {
     var el = e.target;
     if (!el || el.tagName !== 'IMG') return;
-    /* 串文卡片媒体: 加载完成后重排等高校对 */
+    /* 串文卡片媒体: 加载完成后标记已载 (淡入) 并重排等高校对 */
     if (el.closest('.threads-card')) {
+      el.classList.add('is-loaded');
       layoutThreadsMedia(el.closest('.threads-card'));
       return;
     }
@@ -1968,6 +2081,15 @@
       sizeFrame(frame, el.naturalWidth, el.naturalHeight);
     }
     markLongImages();
+  }, true);
+
+  /* 串文卡片图片加载失败兜底: 结束骨架脉动 (fbcdn 签名 URL 过期属已知情况), 不无限闪烁 */
+  listEl.addEventListener('error', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG') return;
+    if (el.closest('.threads-card')) {
+      el.classList.add('is-loaded', 'is-broken');
+    }
   }, true);
   /* ── 预览图缓存: 加载完成后持久化 (Cache API), 滚动经过/刷新不再重复下载卡顿 ── */
   var previewCacheName = 'media-previews-v1';

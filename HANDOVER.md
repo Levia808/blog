@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-12 · opencode · 远端/本地 HEAD `270a50c`
+> 最后更新：2026-08-13 · opencode（本地未提交：串文卡片多图预览/查看优化 + 图片持久化/预览图生成）
 
 ---
 
@@ -74,7 +74,9 @@ push main
 动态页 (moments.js)
  ├─ 正文识别 threads 链接 → 读桶 <id>.json → 渲染卡片
  │    └─ 资源缺失时: 检测本机桥 (localhost:8788) → 自动爬取生成 (无需手动)
- ├─ 卡片: 头像 / 正文+翻译按钮 / 多图(2张/页统一高度轮播, 点击放大) / 仅页脚跳转
+  ├─ 卡片: 头像 / 正文+翻译按钮 / 多图(2张/页统一高度轮播, 点击放大) / 仅页脚跳转
+  │    └─ 图片: 卡片显示低分辨率预览图 (media[].preview), 放大查看用原图 (media[].url=data-orig)
+  │       原图/预览均由 Edge Function 服务端代拉转存桶内 (解决 fbcdn 签名 URL 过期)
  └─ 地点搜索: Nominatim (accept-language=zh-CN 中文地理编码) + Photon 附近POI兜底
 
 本地 Cookie 桥 (threads-repost/bridge/) —— 必须本机运行
@@ -86,8 +88,10 @@ push main
  └─ 浏览器登录 = 真实 Chrome 登录 threads.com (2FA/验证码原生支持)
 
 Edge Functions (threads-repost/supabase/functions/, 已部署至 iyquixzprfwkglaqptxj)
- ├─ threads-fetch  : 两种模式
- │    ① {json: 桥提取的数据} → 校验+入库 (推荐, 头像 fbcdn 被 CORP 拦 → 服务端代拉转存桶内公开URL)
+  ├─ threads-fetch  : 两种模式
+  │    ① {json: 桥提取的数据} → 校验+入库 (推荐, 头像 fbcdn 被 CORP 拦 → 服务端代拉转存桶内公开URL)
+  │       图片同样服务端代拉: 下载原图转存 `media/<id>/<i>.<ext>` + 预览用 Storage 图像转换按需生成
+  │       (media[].url=原图公开URL, media[].preview=render/image URL?width=640&quality=80&resize=contain; 卡片用预览/放大用原图)
  │    ② {url, cookie} → 服务端直爬 og 解析 (已废弃: Threads 改客户端渲染无 og, 仅兜底)
  │    桶缺失自动创建(public), 响应含 CORS 头
  └─ threads-login  : IG Web 登录接口取 sessionid (明文格式优先, AES-GCM+NaCL sealedbox 降级)
@@ -133,11 +137,12 @@ supabase functions deploy threads-login --no-verify-jwt
 - **Photon 不支持 lang=zh**（返回空）；**Nominatim 支持 `accept-language=zh-CN`** 原生中文地理编码（限速 1 请求/秒，需 User-Agent + 串行节流）
 - **多图布局**：2 张/页 + 统一高度（`h=(宽-间距)/max(页内宽高比之和)`，限幅 180–520px）；圆点按页数生成
 - **浏览器缓存**：moments.js/admin.js 已加 `?v={{now.Unix}}`，否则部署后旧 JS 滞留（曾致自动爬取"没生效"）
+- **图片预览用 Storage 图像转换（render/image）**：Edge Function 只下载原图转存（fetch+upload，零图像库依赖），预览用 `object/public` → `render/image/public` URL + `?width=640&quality=80&resize=contain` 按需生成（项目已启用 Image Transformations，CDN 缓存）。⚠️ **踩坑**：最初用 `npm:@imagemagick/magick-wasm@0.0.8`（wasm 内嵌 base64 约 9.8MB）在 Edge Function 生成预览，部署成功但运行时报 `BOOT_ERROR (Function failed to start)`——emscripten 模块在 Supabase Edge Runtime 启动即崩，已弃用改用 render/image
 
 ### 3.5 已知限制
 
 - 自动爬取依赖**本机桥**（localhost:8788）——访客/其他设备浏览时缺失资源降级为链接文本；桥不可达时后台「测试连接」自动降级服务端直爬（多已失效）
-- threads 图片为 fbcdn 临时签名 URL（会过期）——过期后需重新爬取
+- threads 图片为 fbcdn 临时签名 URL（会过期）——**已缓解**：新增爬取时 Edge Function 服务端代拉原图+预览转存桶内（永不过期）；仅「旧存量帖子」（已存 JSON、未重新爬取）仍可能保留过期 fbcdn URL，需重新爬取一次才迁移
 - 卡片正文截断 UI 噪音（翻译/热门/查看动态等）为黑名单式，Threads UI 改版后可能需补充
 - 繁简变体地点（涩谷/澀谷）保留为两条不合并（防误并同区域不同地点）
 
@@ -269,6 +274,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-13 | `本地` | **串文卡片多图预览/查看全量优化（交互设计视角）+ 图片持久化/预览生成**：① 轮播圆点可点击跳页（扩大热区）、首/末页箭头禁用态、键盘 ←/→ 翻页（仅横向溢出时拦截）、视频播放/暂停开关（图标同步）② 图片加载骨架脉动→淡入、加载失败兜底（fbcdn 过期停止闪烁降灰占位）、`cursor: zoom-in`+悬停微缩放可供性 ③ 放大查看 GLightbox Swiss 风格覆盖（磨砂遮罩/圆形按钮/苔绿/页码计数 1/N）+ 计数随翻页更新 ④ **爬取原图+预览**：threads-fetch 服务端代拉原图转存 `media/<id>/<i>.<ext>` + 预览用 Storage render/image（`?width=640&quality=80&resize=contain`）；卡片显示 `media[].preview`，放大查看用 `data-orig` 原图（`media[].url`）。已部署验证（magick-wasm 方案 BOOT_ERROR 弃用，改用 render/image）|
 | 08-12 | `270a50c` | **Threads 转发卡片多图终版**：底部进度圆点按页数显示（10图→5页5点）+ 多图统一高度至合适值（`h=(宽-gap)/max(页内宽高比之和)`，限幅180–520px，大图自动缩小、页内居中、不裁切无灰边）；媒体重构为页结构 `.th-media > .th-pair > item` |
 | 08-12 | `2f0040f` | **多图一视窗两张并排 + 点击图片放大 + 仅页脚跳转**：等高校对（Google Photos 同款算法）、点图 GLightbox 放大原图不跳转、卡片仅「在 Threads 查看」页脚可跳转（捕获阶段 preventDefault）、图片宽高比备用 data-ratio + 加载/缩放重排 |
 | 08-12 | `a652a14` | 去除转载图片左右浅灰遮罩（移除 contain+限高，自然比例显示） |
