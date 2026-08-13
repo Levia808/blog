@@ -160,7 +160,7 @@
         return '<span class="th-media-item is-video"><video src="' + escapeHtml(m.url) + '" muted playsinline autoplay loop preload="auto" aria-hidden="true"></video></span>';
       }
       /* 图片: 使用原图 (去除 CDN 尺寸参数) */
-      return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async"></span>';
+      return '<span class="th-media-item"><img src="' + escapeHtml(originalImageUrl(m.url)) + '" alt="" loading="lazy" decoding="async" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></span>';
     }).join('');
     var multi = (d.media || []).length > 1;
     var mediaHtml = '';
@@ -201,9 +201,90 @@
       requestAnimationFrame(function () {
         card.style.opacity = '1';
         card.style.transform = 'none';
+        layoutThreadsMedia(card);
+        /* 容器宽度可能未稳定 (动画/懒布局): 延迟再排一次 */
+        setTimeout(function () { layoutThreadsMedia(card); }, 300);
       });
     });
   }
+
+  /* 串文卡片媒体: 等高校对布局 (Google Photos 同款算法)
+     多图一视窗两张并排, 按宽高比计算共同高度 h = (W - gap) / (ar1 + ar2),
+     大图自动缩小预览尺寸, 不裁切无灰边 */
+  var threadsMediaGap = 8;
+  var threadsResizeTimer = null;
+
+  function layoutThreadsMedia(card) {
+    var media = card && card.querySelector('.th-media');
+    if (!media || !media.classList.contains('is-carousel')) return;
+    var W = media.clientWidth;
+    if (!W) return;
+    var items = Array.prototype.slice.call(media.children);
+    for (var i = 0; i < items.length; i += 2) {
+      var a = items[i], b = items[i + 1];
+      if (a.classList.contains('is-video') || (b && b.classList.contains('is-video'))) continue;
+      var arA = threadsImageRatio(a);
+      var arB = b ? threadsImageRatio(b) : 0;
+      var h = Math.max(60, Math.round((W - threadsMediaGap) / (arA + arB)));
+      a.style.height = h + 'px';
+      if (b) b.style.height = h + 'px';
+    }
+  }
+
+  function threadsImageRatio(item) {
+    var img = item && item.querySelector('img');
+    if (img && img.naturalWidth > 0) return img.naturalWidth / img.naturalHeight;
+    /* 图片未加载时用 JSON 里的宽高 */
+    var m = item && item.querySelector('img');
+    if (m) {
+      var w = parseFloat(m.dataset.ratioW || '') || 0;
+      var h = parseFloat(m.dataset.ratioH || '') || 0;
+      if (w && h) return w / h;
+    }
+    return 1;
+  }
+
+  function layoutAllThreadsMedia() {
+    listEl.querySelectorAll('.threads-card').forEach(function (card) { layoutThreadsMedia(card); });
+  }
+
+  window.addEventListener('resize', function () {
+    if (threadsResizeTimer) clearTimeout(threadsResizeTimer);
+    threadsResizeTimer = setTimeout(layoutAllThreadsMedia, 150);
+  });
+
+  /* 串文卡片交互: 仅页脚「在 Threads 查看」跳转, 其余点击不跳转 (图片放大/翻译/轮播) */
+  document.addEventListener('click', function (e) {
+    var card = e.target.closest('.threads-card');
+    if (card && !e.target.closest('.th-foot')) e.preventDefault();
+  }, true);
+
+  /* 串文卡片图片: 点击放大查看原图 (复用动态 GLightbox, 不跳转) */
+  function openThreadsLightbox(img) {
+    var card = img.closest('.threads-card');
+    if (!card) return;
+    var urls = Array.prototype.map.call(card.querySelectorAll('.th-media-item img'), function (i) {
+      return i.currentSrc || i.src;
+    });
+    if (!urls.length) return;
+    var startAt = Math.max(0, urls.indexOf(img.currentSrc || img.src));
+    function open() {
+      var lb = getMomentsLightbox();
+      if (!lb) return;
+      lb.setElements(urls.map(function (u) { return { href: u, type: 'image' }; }));
+      lb.openAt(startAt);
+    }
+    if (window.GLightbox) open();
+    else loadGlightboxLib().then(open);
+  }
+
+  document.addEventListener('click', function (e) {
+    var mediaImg = e.target.closest('.threads-card .th-media-item img');
+    if (!mediaImg) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openThreadsLightbox(mediaImg);
+  });
 
   /* 串文卡片翻译: 点「翻译」→ 正文译成中文, 再点切回原文 (复用免费翻译端点) */
   var TRANS_API = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t';
@@ -1848,6 +1929,11 @@
   listEl.addEventListener('load', function (e) {
     var el = e.target;
     if (!el || el.tagName !== 'IMG') return;
+    /* 串文卡片媒体: 加载完成后重排等高校对 */
+    if (el.closest('.threads-card')) {
+      layoutThreadsMedia(el.closest('.threads-card'));
+      return;
+    }
     /* 头像: 加载完成淡入 (尺寸固定, 零跳变) */
     if (el.classList.contains('moment-avatar') || el.classList.contains('mc-avatar')) {
       el.classList.add('is-loaded');

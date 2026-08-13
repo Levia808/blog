@@ -2120,10 +2120,12 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 .th-media-wrap { position: relative; margin-top: 12px; }
 .th-media { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-radius: 12px; }
 .th-media::-webkit-scrollbar { display: none; }
-.th-media.is-carousel .th-media-item { flex: 0 0 100%; scroll-snap-align: center; }
+/* 多图: 一视窗两张并排, 等高校对 (大图自动缩小, 不裁切无灰边) — 高度由 JS 按宽高比计算 */
+.th-media.is-carousel .th-media-item { flex: 0 0 auto; scroll-snap-align: start; }
 .th-media-item { display: block; overflow: hidden; border-radius: 12px; background: #F2F3F5; }
-/* 原图完整预览: 自然比例显示, 无左右灰边 (contain+限高会产生留白) */
-.th-media-item img, .th-media-item video { display: block; width: 100%; height: auto; }
+/* 图片: 高度撑满 JS 计算出的等高校对, 宽度按原比例自动 (不裁切) */
+.th-media.is-carousel .th-media-item img { display: block; height: 100%; width: auto; max-width: 100%; }
+.th-media:not(.is-carousel) .th-media-item img, .th-media-item video { display: block; width: 100%; height: auto; }
 .th-media-item.is-video { flex: 0 0 100%; }
 .th-media-item.is-video video { background: #000; }
 .th-prev, .th-next {
