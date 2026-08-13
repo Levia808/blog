@@ -416,12 +416,12 @@
     return { name: placeLabel(f.properties || {}), lat: g[1], lng: g[0] };
   }
 
-  /* 过滤空名 + 同名同坐标去重 (Photon 会对同一 POI 返回多条) */
+  /* 过滤空名 + 同一地点合并: 同名(忽略大小写)且坐标在 ~1km 内视为同一地点 (如 涩谷站的多个站台条目) */
   function dedupeLocations(items) {
     var seen = {};
     return (items || []).filter(function (it) {
       if (!it || !it.name) return false;
-      var k = it.name + '|' + it.lat.toFixed(4) + '|' + it.lng.toFixed(4);
+      var k = it.lat.toFixed(2) + '|' + it.lng.toFixed(2) + '|' + String(it.name).toLowerCase().replace(/\s+/g, '');
       if (seen[k]) return false;
       seen[k] = true;
       return true;
