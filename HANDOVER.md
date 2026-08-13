@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-13 · opencode（本地未提交：串文卡片多图预览/查看优化 + 图片持久化/预览图生成）
+> 最后更新：2026-08-13 · opencode（本地未提交：串文卡片多图预览/查看优化 + 图片持久化/预览图生成；新增「感知」页设计稿 `perception-page/`）
 
 ---
 
@@ -195,6 +195,7 @@ supabase functions deploy threads-login --no-verify-jwt
 | `design-nav-hero.html` | 导航+标题+开屏欢迎（MOD × Odin's Crow：滚动变形/均分导航/渐变线组/标语栏/光标） | 设计稿 |
 | `design-loader.html` | 瑞士风加载屏 V2：描边 LEVIA 字符 stagger、进度补间、状态打字机、网格漂移、完成态动画组、分层退出 | 设计稿 |
 | `design-home.html` | **加载 → 首页联动**（描边标题填实、进度衔接线条组、导航均分就绪、滚动收拢） | 设计稿（站点优化参照） |
+| `perception-page/design-perception.html` | **感知页（音乐/电影/书籍）**：左文右卡分屏（44/56）+ CardSwap 式 3D 卡组 + 滚轮/点击交互（连续相位模型可打断、`power2.out` 缓动、文字延后到新卡落位才切） | ✅ 设计稿就绪（`perception-page/`，含 README，待集成） |
 
 > 站点已实现：加载动画优化（d52268d 本地）+ 首页 hero（LEVIA 描边→实心、线条组、变形导航均分→收拢）。
 
@@ -259,6 +260,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 - [x] **P0** 部署 Edge Function `threads-fetch` / `threads-login`（已部署, `--no-verify-jwt`）
 - [ ] **P1** 部署 Edge Function `admin-create-user --no-verify-jwt`（`threads-repost/supabase/` 目录）——否则后台「新增账号」报错
+- [ ] **P1** 感知页集成：设计稿 `perception-page/design-perception.html` 迁入 `perception.html` + 数据 `data/perception.yaml` + Lenis 滚轮冲突协调（`data-lenis-prevent-wheel` 或局部停用）
 - [x] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）
 - [ ] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
 - [ ] **P1** 设计稿（design-loader/design-home）确认后集成到站点（当前站点加载动画已应用 d52268d 优化）
@@ -274,6 +276,8 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | **Threads 媒体爬取质量升级**：① `fetch.mjs` 重构——解析页面内嵌 JSON（carousel_media/video_versions/image_versions2），图片取**最大候选+去 CDN 尺寸参数原图**、视频取**最大码率**（宽高排序）、url 级去重防重复、`?&` 双符号修复、补充 taken_at 时间 ② Edge Function threads-fetch 桥模式同样做图片原图规范化（已部署）（7 项媒体提取单测通过） |
+| 08-13 | `本地` | **新增「感知」页（音乐/电影/书籍分享）**：① 导航菜单 `hugo.yaml` 加「感知」(`perception/`，weight 6) ② 内容 `content/perception.md` + 模板 `themes/brutalism/layouts/_default/perception.html`（空壳 list-header）③ `swiss.css` 纳入 `.perception-page` ④ 设计稿 `perception-page/design-perception.html`（左文右卡分屏 + CardSwap 式 3D 卡组 + 滚轮/点击交互；连续相位模型可打断、`power2.out` 缓动、文字延后 ~58% 切换、自动播放仅首交互前）+ `perception-page/README.md` 交接文档 |
 | 08-13 | `本地` | **串文卡片多图预览/查看全量优化（交互设计视角）+ 图片持久化/预览生成**：① 轮播圆点可点击跳页（扩大热区）、首/末页箭头禁用态、键盘 ←/→ 翻页（仅横向溢出时拦截）、视频播放/暂停开关（图标同步）② 图片加载骨架脉动→淡入、加载失败兜底（fbcdn 过期停止闪烁降灰占位）、`cursor: zoom-in`+悬停微缩放可供性 ③ 放大查看 GLightbox Swiss 风格覆盖（磨砂遮罩/圆形按钮/苔绿/页码计数 1/N）+ 计数随翻页更新 ④ **爬取原图+预览**：threads-fetch 服务端代拉原图转存 `media/<id>/<i>.<ext>` + 预览用 Storage render/image（`?width=640&quality=80&resize=contain`）；卡片显示 `media[].preview`，放大查看用 `data-orig` 原图（`media[].url`）。已部署验证（magick-wasm 方案 BOOT_ERROR 弃用，改用 render/image）|
 | 08-12 | `270a50c` | **Threads 转发卡片多图终版**：底部进度圆点按页数显示（10图→5页5点）+ 多图统一高度至合适值（`h=(宽-gap)/max(页内宽高比之和)`，限幅180–520px，大图自动缩小、页内居中、不裁切无灰边）；媒体重构为页结构 `.th-media > .th-pair > item` |
 | 08-12 | `2f0040f` | **多图一视窗两张并排 + 点击图片放大 + 仅页脚跳转**：等高校对（Google Photos 同款算法）、点图 GLightbox 放大原图不跳转、卡片仅「在 Threads 查看」页脚可跳转（捕获阶段 preventDefault）、图片宽高比备用 data-ratio + 加载/缩放重排 |

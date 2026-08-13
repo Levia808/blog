@@ -35,12 +35,19 @@ Deno.serve(async (req) => {
         avatar: String(d.avatar || ''),
         time: d.time || '',
         text: String(d.text || '').slice(0, 2000),
-        media: Array.isArray(d.media) ? d.media.map((m: any) => ({
-          type: m.type === 'video' ? 'video' : 'image',
-          url: String(m.url || ''),
-          width: Number(m.width) || 0,
-          height: Number(m.height) || 0
-        })).slice(0, 10) : [],
+        media: Array.isArray(d.media) ? d.media.map((m: any) => {
+          /* 图片: 去除 CDN 尺寸参数 → 原图 (与 fetch.mjs 一致) */
+          let url = String(m.url || '');
+          if (m.type !== 'video' && /[?&](?:width|height|resize)=/.test(url)) {
+            url = url.replace(/&?(?:width|height|resize|_nc_?[a-z]*)[^&]*/gi, '').replace(/\?&/, '?');
+          }
+          return {
+            type: m.type === 'video' ? 'video' : 'image',
+            url,
+            width: Number(m.width) || 0,
+            height: Number(m.height) || 0
+          };
+        }).slice(0, 10) : [],
         replies: Array.isArray(d.replies) ? d.replies : [],
         stats: {
           likes: (d.stats && d.stats.likes) || 0,
