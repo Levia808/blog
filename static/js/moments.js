@@ -287,32 +287,27 @@
     if (card && !e.target.closest('.th-foot')) e.preventDefault();
   }, true);
 
-  /* 串文卡片图片: 点击放大查看原图 (复用动态 GLightbox, 不跳转) */
-  function openThreadsLightbox(img) {
-    var card = img.closest('.threads-card');
+  /* 串文卡片媒体: 点击放大查看原图/视频 (复用动态 GLightbox, 不跳转) */
+  function openThreadsLightbox(mediaEl) {
+    var card = mediaEl.closest('.threads-card');
     if (!card) return;
-    var urls = Array.prototype.map.call(card.querySelectorAll('.th-media-item img'), function (i) {
-      return i.dataset.orig || i.currentSrc || i.src;
+    var nodes = Array.prototype.slice.call(card.querySelectorAll('.th-media-item img, .th-media-item video'));
+    var elements = nodes.map(function (node) {
+      var url = node.dataset.orig || node.currentSrc || node.src;
+      if (node.tagName === 'VIDEO') return { href: url, type: 'video', source: 'local', width: '90vw' };
+      return { href: url, type: 'image' };
     });
-    if (!urls.length) return;
-    var startAt = Math.max(0, urls.indexOf(img.dataset.orig || img.currentSrc || img.src));
+    if (!elements.length) return;
+    var startAt = Math.max(0, nodes.indexOf(mediaEl));
     function open() {
       var lb = getMomentsLightbox();
       if (!lb) return;
-      lb.setElements(urls.map(function (u) { return { href: u, type: 'image' }; }));
+      lb.setElements(elements);
       lb.openAt(startAt);
     }
     if (window.GLightbox) open();
     else loadGlightboxLib().then(open);
   }
-
-  document.addEventListener('click', function (e) {
-    var mediaImg = e.target.closest('.threads-card .th-media-item img');
-    if (!mediaImg) return;
-    e.preventDefault();
-    e.stopPropagation();
-    openThreadsLightbox(mediaImg);
-  });
 
   /* 串文卡片翻译: 点「翻译」→ 正文译成中文, 再点切回原文 (复用免费翻译端点) */
   var TRANS_API = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t';
@@ -477,28 +472,13 @@
       scrollThreadsMediaTo(wrap, Array.prototype.indexOf.call(dot.parentNode.children, dot));
       return;
     }
-    /* 视频: 点击播放 (带声音) / 再点暂停 — 按钮与视频本体均可触发, 播放态图标同步 */
-    var vt = e.target.closest('.th-video-play');
-    var videoEl = e.target.closest('.th-media-item.is-video video');
-    if (vt || videoEl) {
+    /* 图片/视频统一点击放大查看; 视频播放仅作为 hover 静音预览存在 */
+    var mediaItem = e.target.closest('.threads-card .th-media-item');
+    if (mediaItem) {
       e.preventDefault(); e.stopPropagation();
-      var video = (vt ? vt.closest('.th-media-item') : videoEl.closest('.th-media-item')).querySelector('video');
-      var btn = video && video.closest('.th-media-item').querySelector('.th-video-play');
-      if (video) {
-        if (video.paused || video.dataset.hoverPreview === '1') {
-          video.dataset.hoverPreview = '';
-          video.dataset.manualPlaying = '1';
-          video.loop = false;
-          video.muted = false;
-          video.play().then(function () {
-            var item = video.closest('.th-media-item');
-            if (item) item.classList.add('is-manual-playing');
-            if (btn) { btn.classList.add('is-playing'); btn.setAttribute('aria-label', '暂停'); }
-          }).catch(function () {});
-        } else {
-          setThreadsVideoPosterState(video);
-        }
-      }
+      var node = mediaItem.querySelector('img, video');
+      if (node && node.tagName === 'VIDEO') setThreadsVideoPosterState(node);
+      if (node) openThreadsLightbox(node);
       return;
     }
   });
