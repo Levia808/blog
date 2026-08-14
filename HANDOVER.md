@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-14 · opencode（修复动态页脚本/样式被错误覆盖导致动态不显示；Threads 混排轮播改为 JS 写入明确百分比位移，放大查看改为独立图片/视频查看器）
+> 最后更新：2026-08-14 · opencode（Threads 混排媒体最终修复：动态页恢复完整模块；串文图片/视频两两预览；轮播用 JS 明确位移；放大查看改独立图片/视频查看器；真实 Chrome CDP 验证通过）
 
 ---
 
@@ -77,9 +77,11 @@ push main
 动态页 (moments.js)
  ├─ 正文识别 threads 链接 → 读桶 <id>.json → 渲染卡片
  │    └─ 资源缺失时: 检测本机桥 (localhost:8788) → 自动爬取生成 (无需手动)
-  ├─ 卡片: 头像 / 正文+翻译按钮 / 多图(2张/页统一高度轮播, 点击放大) / 仅页脚跳转
-  │    └─ 图片: 卡片显示低分辨率预览图 (media[].preview), 放大查看用原图 (media[].url=data-orig)
-  │       原图/预览均由 Edge Function 服务端代拉转存桶内 (解决 fbcdn 签名 URL 过期)
+  ├─ 卡片: 头像 / 正文+翻译按钮 / 图片+视频混排两两预览 / 仅页脚跳转
+  │    ├─ 预览: 图片用 media[].preview, 视频显示首帧+居中播放图标; hover 静音自动播放, 移出回首帧
+  │    ├─ 轮播: JS 页码状态 + --th-page-x 明确百分比位移 (不用 scrollLeft/scroll-snap/CSS 乘法)
+  │    └─ 放大查看: 独立 .th-viewer 图片/视频查看器 (不用 GLightbox 处理 Threads 混排视频)
+  │       原图/预览/视频均由 Edge Function 服务端代拉转存桶内 (解决 fbcdn 签名 URL 过期)
  └─ 地点搜索: Nominatim (accept-language=zh-CN 中文地理编码) + Photon 附近POI兜底
 
 本地 Cookie 桥 (threads-repost/bridge/) —— 必须本机运行
@@ -138,7 +140,10 @@ supabase functions deploy threads-login --no-verify-jwt
 - **fbcdn 头像带 CORP: same-origin**：浏览器跨站加载必被拦 → Edge 端代拉后转存桶内公开 URL
 - **桥目标失效**（No such target id）：自动重开标签（曾导致自动爬取静默失败）
 - **Photon 不支持 lang=zh**（返回空）；**Nominatim 支持 `accept-language=zh-CN`** 原生中文地理编码（限速 1 请求/秒，需 User-Agent + 串行节流）
-- **多图布局**：2 张/页 + 统一高度（`h=(宽-间距)/max(页内宽高比之和)`，限幅 180–520px）；圆点按页数生成
+- **多图/视频混排布局**：图片与视频统一两两成页；统一高度算法仍为 `h=(宽-间距)/max(页内宽高比之和)`（限幅 180–520px），但每个 `.th-media-item` 由 JS 显式写入 `width/height`，子元素 `width/height:100%; object-fit:cover`
+- **Threads 混排轮播不要再用 `scrollLeft/scrollTo` 或 CSS 变量乘法**：真实修复方案是 `data-page` + JS 写 `--th-page-x: -100%/-200%...`，CSS 只做 `transform: translateX(var(--th-page-x,0%))`；原因是 video/scroll-snap/原生控件会干扰滚动，`calc(var(--x) * -100%)` 兼容性也不可靠
+- **Threads 放大查看不要再复用 GLightbox**：GLightbox 本地视频曾出现「进度条动但画面静止」、混排画廊左右切换状态异常；当前用独立 `.th-viewer`，图片/视频同一数组，按钮/键盘/触摸左右切换，视频渲染为 `<video controls autoplay muted playsinline>` 并显式 `play()`
+- **真实浏览器验证方法**：本地 `hugo server --bind 127.0.0.1 --port 1313 --disableFastRender` + Chrome `--remote-debugging-port=9223`，通过 CDP 注入混排卡片测试；已验证卡片轮播 `page=1/x=-100%`、查看器 `1/3→2/3→3/3→1/3`、视频 hover `paused=false currentTime≈0.9`、切回查看器视频 `paused=false readyState=4 currentTime>0`
 - **浏览器缓存**：moments.js/admin.js 已加 `?v={{now.Unix}}`，否则部署后旧 JS 滞留（曾致自动爬取"没生效"）
 - **图片预览用 Storage 图像转换（render/image）**：Edge Function 只下载原图转存（fetch+upload，零图像库依赖），预览用 `object/public` → `render/image/public` URL + `?width=640&quality=80&resize=contain` 按需生成（项目已启用 Image Transformations，CDN 缓存）。⚠️ **踩坑**：最初用 `npm:@imagemagick/magick-wasm@0.0.8`（wasm 内嵌 base64 约 9.8MB）在 Edge Function 生成预览，部署成功但运行时报 `BOOT_ERROR (Function failed to start)`——emscripten 模块在 Supabase Edge Runtime 启动即崩，已弃用改用 render/image
 
@@ -214,7 +219,7 @@ supabase functions deploy threads-login --no-verify-jwt
 - 列表：**diff 渲染**（id+数据 key 对比，未变卡复用 DOM 零重载图）、单图等大占位、preview 缩略图 Cache API 持久化、长图 280px 收拢动画
 - 互动：点赞(anime 心形迸发)/评论（**树状回复**：嵌套子树+边线、内联回复条自动收起）/评论赞/实时同步（postgres_changes 双向去重）
 - 管理：编辑（媒体排序/增删/替换 + 地点 + 内容）、删除、**可见性**（公开/只让谁看/不让谁看，RLS 强制）
-- **Threads 串文卡片**：正文链接识别→读桶 JSON→渲染官方 embed 风格卡（头像/正文/翻译按钮/多图轮播 2张/页统一高度/点击放大 GLightbox/仅页脚跳转）；资源缺失时检测本机桥自动爬取（详见 §3）
+- **Threads 串文卡片**：正文链接识别→读桶 JSON→渲染官方 embed 风格卡（头像/正文/翻译按钮/图片+视频混排两两预览/hover 视频静音播放/独立图片视频查看器/仅页脚跳转）；资源缺失时检测本机桥自动爬取（详见 §3）
 
 ### 后台（admin.js + admin.html）
 - 仪表盘（统计/最近文章）、文章管理（GitHub 发布/草稿/归档/删除，GitHub OAuth 经 Worker）、内容归档、评论审核、用户管理（角色/状态）、媒体库（上传进度/嵌入代码/删除）
@@ -334,12 +339,13 @@ design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
-| 08-14 | `本地` | **继续修复 Threads 混排轮播与放大查看**：前版显式切页使用 `transform: translateX(calc(var(--th-page) * -100%))`，CSS 变量乘法兼容性不可靠，导致页码变但视觉不动。已改为 JS 写入明确百分比 `--th-page-x: -100%/-200%...`，CSS 只读 `translateX(var(--th-page-x,0%))`。同时彻底移除 Threads 媒体对 GLightbox 的依赖，新增独立 `.th-viewer`：图片/视频同一数组、按钮/键盘/触摸左右切换、视频用原生 `<video controls autoplay muted playsinline>` 渲染并显式调用 `play()`，避免 GLightbox 本地视频封装导致进度条走但画面静止及箭头不可用。真实 Chrome CDP 注入测试通过：卡片轮播 `page=1/x=-100%`，查看器 `1/3→2/3→3/3→1/3` 可切换，视频切回后 `paused=false readyState=4 currentTime>0`。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
-| 08-14 | `本地` | **修复 Threads 混排轮播/放大查看无法左右切换与视频静帧问题**：卡片内轮播不再依赖浏览器 `scrollLeft/scrollTo`（易被 video/scroll-snap/原生控件干扰），改为 `data-page` + CSS `transform: translateX(calc(var(--th-page) * -100%))` 显式切页；箭头/圆点/键盘/触控板横滑统一调用 `scrollThreadsMediaTo`，`syncThreadsNav` 读取页码状态。放大查看视频不再使用 GLightbox `type:'video'` 本地封装，改用 `content: '<video class="th-lightbox-video" controls autoplay playsinline>'` 原生视频内容，避免出现进度条动但画面静止；图片/视频统一在同一个 `setElements` 画廊中，可左右切换。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
-| 08-14 | `本地` | **修复 Threads 图片+视频混排串文卡住与无法查看视频**：根因是预览 `video` 元素和视频点击播放逻辑截获了轮播/点击交互，且 Threads lightbox 只收集图片。已改为图片/视频统一媒体项：预览层 video `pointer-events:none`，不再抢拖拽/滑动；点击 `.th-media-item` 统一打开 GLightbox，媒体集合同时包含图片 `{type:'image'}` 和本地视频 `{type:'video', source:'local', width:'90vw'}`；视频播放只作为 hover 静音预览存在，进入查看器后由 GLightbox 播放。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
-| 08-14 | `本地` | **再次优化 Threads 视频预览稳定性**：视频/图片混排不再依赖元素自然尺寸撑开，`layoutThreadsMedia` 会按图片 `naturalWidth` / 视频 `videoWidth` / 入库 `data-ratio-*` 计算比例，并为每个 `.th-media-item` 显式写入统一高度与对应宽度；`.th-pair` 内图片和视频统一 `width/height:100%; object-fit:cover`，使首帧预览、骨架、淡入、hover 缩放和两两排版表现一致。视频预载从 `metadata` 改为 `auto`，首帧就绪后轻微 seek 到 `0.001s`，降低黑帧概率；移出同样回到 `0.001s` 展示首帧。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
-| 08-14 | `本地` | **修正 Threads 视频预览分页语义**：用户明确要求视频和照片一样保持「一屏两个」预览，而不是视频单独占一页。已改 `moments.js` 媒体分页为图片/视频统一两两成页；`features.css` 中 `.th-pair` 内 video 与 img 共用统一高度/比例/骨架/淡入规则；视频悬停进入 `.is-previewing` 时自动静音循环播放并隐藏居中播放键，鼠标移出暂停回首帧并恢复播放图标。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
-| 08-14 | `本地` | **修复动态页无法显示动态 + Threads 视频预览交互**：根因是提交 `7a23d7e` 将 `static/js/moments.js` 从完整动态模块覆盖成 82 行补丁片段，并将 `themes/brutalism/assets/css/features.css` 从完整样式覆盖成末尾片段，导致 Supabase 动态加载/渲染逻辑缺失。已恢复二者到 `d409abf` 完整基线，并仅增量修改 Threads 媒体：视频预览继承图片卡片的圆角/骨架/淡入/缩放/统一高度逻辑；鼠标悬停静音循环预览，鼠标移出暂停并回到第一帧，同时恢复居中播放图标；点击仍可切换播放。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
+| 08-14 | `82d3bdd` | **真实 Chrome 验证并补齐 Threads 媒体最终修复**：本地 Hugo + Chrome CDP 注入混排卡片测试。验证结果：卡片轮播 `page=1/x=-100%`，圆点/按钮状态同步；独立查看器可 `1/3→2/3→3/3→1/3`；视频 hover `paused=false currentTime≈0.9 readyState=4` 且播放键 opacity=0，移出 `paused=true currentTime=0.001`；查看器切回视频 `paused=false readyState=4 currentTime>0`。补充查看器视频 `muted` + 显式 `play()`。`node --check static/js/moments.js` 与 `hugo --minify` 通过并已推送。 |
+| 08-14 | `70c7db7` | **重做 Threads 混排媒体查看器**：前版显式切页使用 `transform: translateX(calc(var(--th-page) * -100%))`，CSS 变量乘法兼容性不可靠，导致页码变但视觉不动。已改为 JS 写入明确百分比 `--th-page-x: -100%/-200%...`，CSS 只读 `translateX(var(--th-page-x,0%))`。同时彻底移除 Threads 媒体对 GLightbox 的依赖，新增独立 `.th-viewer`：图片/视频同一数组、按钮/键盘/触摸左右切换、视频用原生 `<video controls autoplay playsinline>` 渲染，避免 GLightbox 本地视频封装导致进度条走但画面静止及箭头不可用。 |
+| 08-14 | `eb3009a` | **修复 Threads 混排轮播/放大查看无法左右切换与视频静帧问题**：卡片内轮播不再依赖浏览器 `scrollLeft/scrollTo`（易被 video/scroll-snap/原生控件干扰），改为 `data-page` + transform 显式切页；箭头/圆点/键盘/触控板横滑统一调用 `scrollThreadsMediaTo`，`syncThreadsNav` 读取页码状态。此版仍尝试用 GLightbox `content` slide 承载本地视频，后续由 `70c7db7` 改为独立查看器。 |
+| 08-14 | `6af7c74` | **修复 Threads 图片+视频混排串文卡住与无法查看视频**：根因是预览 `video` 元素和视频点击播放逻辑截获了轮播/点击交互，且 Threads lightbox 只收集图片。已改为图片/视频统一媒体项：预览层 video `pointer-events:none`，不再抢拖拽/滑动；点击 `.th-media-item` 统一打开媒体查看；视频播放只作为 hover 静音预览存在。 |
+| 08-14 | `0311adf` | **再次优化 Threads 视频预览稳定性**：视频/图片混排不再依赖元素自然尺寸撑开，`layoutThreadsMedia` 会按图片 `naturalWidth` / 视频 `videoWidth` / 入库 `data-ratio-*` 计算比例，并为每个 `.th-media-item` 显式写入统一高度与对应宽度；`.th-pair` 内图片和视频统一 `width/height:100%; object-fit:cover`，使首帧预览、骨架、淡入、hover 缩放和两两排版表现一致。视频预载从 `metadata` 改为 `auto`，首帧就绪后轻微 seek 到 `0.001s`，降低黑帧概率；移出同样回到 `0.001s` 展示首帧。 |
+| 08-14 | `510f3e0` | **修正 Threads 视频预览分页语义**：用户明确要求视频和照片一样保持「一屏两个」预览，而不是视频单独占一页。已改 `moments.js` 媒体分页为图片/视频统一两两成页；`features.css` 中 `.th-pair` 内 video 与 img 共用统一高度/比例/骨架/淡入规则；视频悬停进入 `.is-previewing` 时自动静音循环播放并隐藏居中播放键，鼠标移出暂停回首帧并恢复播放图标。 |
+| 08-14 | `aaf1ada` | **修复动态页无法显示动态 + Threads 视频预览交互**：根因是提交 `7a23d7e` 将 `static/js/moments.js` 从完整动态模块覆盖成 82 行补丁片段，并将 `themes/brutalism/assets/css/features.css` 从完整样式覆盖成末尾片段，导致 Supabase 动态加载/渲染逻辑缺失。已恢复二者到 `d409abf` 完整基线，并仅增量修改 Threads 媒体。 |
 | 08-14 | `d409abf` | **修复 Threads 视频爬取与播放**：① 桥新增单视频帖顶层 `video_versions` / 单图帖 `image_versions2.candidates` JSON 提取（原只认 carousel_media，单视频帖提取为空；单图帖 DOM 兜底被相关推荐帖污染成 10 张垃圾图）；DOM 兜底限主帖 6 张 + 过滤 blob URL ② 播放改点击播放（带声音）/再点暂停，居中大播放按钮播放中淡出，移除静音自动循环，preload=metadata；加载失败「视频暂不可用」兜底 ③ 视频由 Edge 自动转存桶内永久 URL（fbcdn 签名链接 1-2h 过期问题消除）——受信任点击实测播放/暂停/按钮态全通过 |
 | 08-14 | `8198aa2` | 新增公网播放器音乐 API 服务 `music-api/`（Node 后端，render.yaml 可部署 Render；端点 status/login/qr/check/logout/playlist；替代本地双进程方案） |
 | 08-14 | `dc5c04d` | 新增网易云播放器一键启动脚本 `scripts/start-netease-player.js` + `start-netease-player.cmd` |
