@@ -1621,10 +1621,17 @@
       loginWall.hidden = true;
       try {
         currentProfile = await window.Profile.get(currentUser.id);
-      } catch (e) { currentProfile = null; }
+      } catch (e) {
+        /* 网络抖动兜底: 重试一次 — 仍失败则不强制隐藏发送框 (修复输入框偶尔消失) */
+        try {
+          currentProfile = await window.Profile.get(currentUser.id);
+        } catch (e2) {
+          currentProfile = null;
+        }
+      }
       var canPublish = currentProfile && (currentProfile.role === 'superadmin' || currentProfile.role === 'author');
       if (canPublish) showComposer(true);
-      else composer.hidden = true;
+      else if (currentProfile !== null) composer.hidden = true;
     } else {
       currentUser = null;
       currentProfile = null;
@@ -2935,6 +2942,46 @@
         onRealtimeCommentDelete(payload.old);
       })
       .subscribe();
+  }
+
+  /* ── 发动态悬浮按键: 滚动弹性回弹动效 (复用文章页目录悬浮面板 rAF lerp 模式)
+     滚动超过 260px 显示; 点击 → 平滑滚回顶部 + 发送框显现 + 聚焦 */
+  var fabEl = document.getElementById('momentsFab');
+  if (fabEl) {
+    var fabCur = 0, fabTarget = 0, fabLastY = window.scrollY, fabRaf = null;
+    function fabFrame() {
+      fabCur += (fabTarget - fabCur) * 0.16;
+      fabTarget *= 0.86;
+      fabEl.style.transform = 'translateY(' + fabCur + 'px)';
+      if (Math.abs(fabCur) < 0.1 && Math.abs(fabTarget) < 0.1 && Math.abs(window.scrollY - fabLastY) < 0.5) {
+        fabEl.style.transform = '';
+        fabRaf = null;
+        return;
+      }
+      fabRaf = requestAnimationFrame(fabFrame);
+    }
+    function fabKick() {
+      var dy = window.scrollY - fabLastY;
+      fabLastY = window.scrollY;
+      var speed = Math.max(-1, Math.min(1, dy / 10));
+      fabTarget = Math.max(-18, Math.min(18, speed * 18));
+      if (!fabRaf) fabRaf = requestAnimationFrame(fabFrame);
+      fabEl.classList.toggle('is-visible', window.scrollY > 260);
+    }
+    window.addEventListener('scroll', fabKick, { passive: true });
+    fabEl.addEventListener('click', function () {
+      /* 平滑滚回顶部 (Lenis 优先, 原生兜底) */
+      if (window.__lenis && typeof window.__lenis.scrollTo === 'function') {
+        window.__lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+      }
+      /* 发送框显现 + 聚焦 */
+      showComposer(true);
+      setTimeout(function () {
+        try { mcInput.focus(); } catch (e) {}
+      }, 520);
+    });
   }
 
   function whenAuthReady(cb) {

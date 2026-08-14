@@ -782,6 +782,49 @@ body.admin-only { overflow: hidden; height: 100vh; }
 }
 .mc-actions { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
 
+/* ── 动态页: 发动态悬浮按键 (瑞士极简胶囊, 滚动弹性回弹) ── */
+.moments-fab {
+  position: fixed;
+  right: 26px;
+  bottom: 30px;
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px 12px 18px;
+  border-radius: 999px;
+  background: var(--swiss-moss);
+  color: #f7f8f4;
+  border: 1px solid var(--swiss-moss);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(47, 74, 55, 0.32);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s cubic-bezier(.16, 1, .3, 1), background 0.2s, box-shadow 0.2s;
+  will-change: transform;
+}
+.moments-fab.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.moments-fab:hover {
+  background: #3b5c45;
+  box-shadow: 0 14px 40px rgba(47, 74, 55, 0.4);
+}
+.moments-fab .moments-fab-ico {
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(.16, 1, .3, 1);
+}
+.moments-fab:hover .moments-fab-ico { transform: rotate(90deg); }
+.moments-fab .moments-fab-label { white-space: nowrap; }
+@media (max-width: 640px) {
+  .moments-fab { right: 16px; bottom: 20px; padding: 11px 18px 11px 15px; }
+}
+
 /* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 (按钮与发布键同行动态, 最左侧) ──
    下拉面板固定瑞士极简浅色样式 (不随站点深浅主题), 参考 design-moment-location.html */
 .mc-loc { position: relative; display: inline-flex; align-items: center; }

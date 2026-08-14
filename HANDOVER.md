@@ -276,6 +276,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | 动态页修复 + 发动态悬浮按键：① 修复输入框偶尔消失——syncAuth 的 Profile.get 失败重试一次，仍失败不强制隐藏 composer（保留可见性）② 「＋ 发动态」FAB——滚动 >260px 显示（顶部隐藏）、点击 Lenis 平滑滚回顶部 + 发送框显现 + 聚焦 ③ **FAB 滚动弹性回弹动效复用文章页目录悬浮面板**（rAF lerp 0.16 + 惯性衰减 0.86，±18px）④ 瑞士极简胶囊样式（89 项 happy-dom + 5 项 puppeteer 真实验证） |
 | 08-12 | `本地` | **Threads 前三张低分辨率根因修复（桥端）**：根因是桥从页面 `<img>` 取 `currentSrc`——前几张轮播图初始加载为 `stp=dst-jpg_e35_s480x480`（480 预览变体），后续才加载原图变体。修复：桥改为**解析页面内嵌 JSON `carousel_media` 的 image_versions2 候选**，`pickBest` 选原图档（stp 无 `_sNNNxNNN` 尺寸变体）优先、其次最大分辨率（bridge.py 已重启生效）；已重新入库 Db-45PqAZh_（10/10 全部 1840×1232 原图，线上验证） |
 | 08-12 | `本地` | **Threads "前三张低分辨率" bug 根因修复**：诊断 Db-45PqAZh_ 转存文件 0,1,2 = 480×321（桥给预览档 url）、3-9 = 1840×1232——桥对前几张给预览链接。修复：`downloadImageWithFallback`——下载后若 <800px 自动附加 `stp=dst-jpg_e35`（IG CDN 原图质量档）重试取更高分辨率（已部署）；**已转存的旧帖需重新爬取（桥）覆盖** |
 | 08-12 | `本地` | **Threads 原图分辨率修复（诊断+已处理）**：诊断发现转存文件实为 4096×2730 原图，低分辨率在显示层——JSON 宽高为空（前端比例失效）+ 预览固定 640px。修复：① Edge Function 新增 `imageSizeFromBytes`（JPEG SOF/PNG/WebP 字节解析）转存后回填真实宽高 ② 预览 640→1080 高清 ③ 已为帖子 Db-xCLvESnY 重新 invoke 入库（宽高 4096×2730 + 1080 预览 + ?v/&t 缓存破坏，线上验证通过）（已部署） |
