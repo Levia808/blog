@@ -19,8 +19,50 @@
     smoothing: 190,
     inset: 80
   };
-  var cfg = Object.assign({}, defaults, window.__FLOAT_PLAYER_CONFIG || {});
-  if (cfg.enabled === false || document.querySelector('.fp-wheel-player')) return;
+  function parseConfigScalar(raw) {
+    var value = String(raw == null ? '' : raw).trim();
+    if (!value) return '';
+    if ((value[0] === '"' && value[value.length - 1] === '"') || (value[0] === "'" && value[value.length - 1] === "'")) {
+      value = value.slice(1, -1);
+    }
+    value = value.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    if (value === 'true' || value === 'false') return value === 'true';
+    if (value !== '' && !Number.isNaN(Number(value))) return Number(value);
+    return value;
+  }
+
+  function parseSimpleYaml(text) {
+    var out = {};
+    String(text || '').split(/\r?\n/).forEach(function (line) {
+      var match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(.*?)\s*$/);
+      if (!match || match[2][0] === '#') return;
+      out[match[1]] = parseConfigScalar(match[2]);
+    });
+    return out;
+  }
+
+  function loadRuntimeConfig() {
+    var url = window.__FLOAT_PLAYER_CONFIG_URL || 'https://raw.githubusercontent.com/Levia808/blog/main/data/player.yaml';
+    var controller = window.AbortController ? new AbortController() : null;
+    var timer = controller ? window.setTimeout(function () { controller.abort(); }, 2200) : 0;
+    var requestUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now();
+    return fetch(requestUrl, {
+      cache: 'no-store',
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      if (!response.ok) throw new Error('Float player config HTTP ' + response.status);
+      return response.text();
+    }).then(parseSimpleYaml).catch(function () {
+      return {};
+    }).finally(function () {
+      if (timer) window.clearTimeout(timer);
+    });
+  }
+
+  loadRuntimeConfig().then(function (runtimeConfig) {
+    var cfg = Object.assign({}, defaults, window.__FLOAT_PLAYER_CONFIG || {}, runtimeConfig || {});
+    window.__FLOAT_PLAYER_RUNTIME_CONFIG = cfg;
+    if (cfg.enabled === false || document.querySelector('.fp-wheel-player')) return;
 
   var fallbackTracks = [
     { name: 'Prism Drift', artist: 'Night Tape Unit', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
@@ -456,4 +498,5 @@
       console.error(error);
     });
   }
+  });
 })();
