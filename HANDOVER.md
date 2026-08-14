@@ -17,7 +17,9 @@
 | 框架 | Hugo **v0.164.0 extended**（webp 图像处理必须 extended） |
 | 主题 | **brutalism**（自制独立主题 `themes/brutalism/`，无正式版本号） |
 | 内容管理 | **Sveltia CMS**（`/admin-cms/`）+ **自定义后台**（`/admin/`） |
-| 后端 | Supabase（Auth / DB / Storage `media`+`avatars`+`threads-reposts` 桶）+ 2 个 Edge Function |
+| 后端 | Supabase（Auth / DB / Storage `media`+`avatars`+`threads-reposts` 桶）+ Edge Functions `threads-fetch`/`threads-login`（已部署） |
+| Threads 转发 | 动态正文贴链接→自动渲染官方 embed 风格卡片；本地 Cookie 桥（`threads-repost/bridge/`）+ 自动爬取 |
+| 动态页 | 发布/点赞/评论树/地点/可见性/编辑/实时同步 + Threads 串文卡片 |
 | 语言 | zh-cn ｜ 作者 Levia（GitHub: Levia808） |
 
 **git 凭证**：`~/.git-credentials`（token，python 可提取用于 GitHub API）。
@@ -148,7 +150,34 @@ supabase functions deploy threads-login --no-verify-jwt
 
 ---
 
-## 4. 数据 / 配置（全部后台可编辑）
+## 4. 数据库（Supabase）
+
+| 项 | 值 |
+|----|-----|
+| 项目 ref | `iyquixzprfwkglaqptxj`（`static/js/supabase.js` 内 URL + anon key） |
+| Edge Functions | `threads-fetch` / `threads-login`（`--no-verify-jwt` 部署；CORS 已在函数内处理） |
+| 存储桶 | `media`（媒体库）· `avatars`（头像）· `threads-reposts`（串文 JSON，public，缺失自动创建） |
+
+**核心表**（对应 `supabase-*.sql`，仓库根）：
+
+| 表 | 说明 | 相关 SQL |
+|----|------|----------|
+| `profiles` | 用户资料（display_name/role/account_status/github 等） | `supabase-setup.sql` |
+| `moments` | 动态（content/media/location{name,lat,lng}/visibility/visible_to/hidden_from） | `supabase-moments.sql` + `-fix` + `-location` + `-visibility` |
+| `moment_likes` | 点赞 | 同上 |
+| `moment_comments` | 评论（含 `parent_id` 树状回复） | `supabase-moments-fix.sql` + `supabase-comments-thread.sql` |
+| `moment_comment_likes` | 评论赞 | 同上 |
+| `media` | 媒体库资产 | `supabase-setup.sql` |
+| `comments` | 文章评论区（树状回复，独立于动态） | `supabase-comments-thread.sql` |
+
+**注意**：
+- 前端查询有多级降级链（新版表关系 → 旧表），未执行的 SQL 会导致部分功能缺失（评论 RLS/地点字段/Realtime），见待办
+- RPC：`admin_*`（后台管理）、`get_my_profile` 等定义于 `supabase-setup.sql`
+- `threads-reposts` 桶 public 读取无需策略（存储服务按 bucket.public 放行）
+
+---
+
+## 5. 数据 / 配置（全部后台可编辑）
 
 | 文件 | 内容 | 后台入口 |
 |------|------|----------|
@@ -163,7 +192,7 @@ supabase functions deploy threads-login --no-verify-jwt
 
 ---
 
-## 5. 功能清单（当前全量）
+## 6. 功能清单（当前全量）
 
 ### 前端
 - 终端欢迎页：打字机、VariableProximity 字重插值、ShapeBlur(THREE)、火花、**管理员头像**（Supabase `profiles` 动态查询，居中 280px 圆形，标题 `mix-blend-mode: difference` 重合反相，磁性吸附 ±18px）
@@ -178,6 +207,18 @@ supabase functions deploy threads-login --no-verify-jwt
 - 关键函数：`uploadFontToGitHub` / `updateFontList` / `ensureSelectOption` / `optionValues(value)` / `ensureFontFace(path, family, version)`
 - **陷阱**：`dispatchEvent` 必须 `bubbles: true`（React onChange）；select 赋值前 `ensureOption`；模板 `$fontCustom` 判定支持「值=路径」(`findRE` 扩展名)；style 需 `safeCSS`（否则 ZgotmplZ）
 
+### 动态页（moments.js，全站交互最重模块）
+- 发布：正文(markdown 轻渲染) + 多图/视频（grid 3:3 裁切、>9 收起 +N、GLightbox 放大、触控板横滑/双指下滑手势）+ **地点**（Nominatim 中文地理编码 / Photon 附近 POI，三通道选择，`location {name,lat,lng}`）
+- 列表：**diff 渲染**（id+数据 key 对比，未变卡复用 DOM 零重载图）、单图等大占位、preview 缩略图 Cache API 持久化、长图 280px 收拢动画
+- 互动：点赞(anime 心形迸发)/评论（**树状回复**：嵌套子树+边线、内联回复条自动收起）/评论赞/实时同步（postgres_changes 双向去重）
+- 管理：编辑（媒体排序/增删/替换 + 地点 + 内容）、删除、**可见性**（公开/只让谁看/不让谁看，RLS 强制）
+- **Threads 串文卡片**：正文链接识别→读桶 JSON→渲染官方 embed 风格卡（头像/正文/翻译按钮/多图轮播 2张/页统一高度/点击放大 GLightbox/仅页脚跳转）；资源缺失时检测本机桥自动爬取（详见 §3）
+
+### 后台（admin.js + admin.html）
+- 仪表盘（统计/最近文章）、文章管理（GitHub 发布/草稿/归档/删除，GitHub OAuth 经 Worker）、内容归档、评论审核、用户管理（角色/状态）、媒体库（上传进度/嵌入代码/删除）
+- 系统设置：欢迎页配置、导航行为、卡片样式、字体预览（GitHub 读写 data/*.yaml）
+- **平台管理**（§3）：浏览器登录（本地桥）/账号密码登录（threads-login）/Cookie 管理/爬取串文
+
 ### 媒体/上传
 - 后台媒体库上传（Supabase `media`，类型白名单含字体 font/* + 扩展名兜底，进度条）
 - 后台/编辑器上传字体 → 同步 GitHub `assets/images` + 更新 fonts.json
@@ -185,7 +226,7 @@ supabase functions deploy threads-login --no-verify-jwt
 
 ---
 
-## 5.5 设计稿清单（仓库根 design-*.html，浏览器直接打开预览）
+## 6.5 设计稿清单（仓库根 design-*.html，浏览器直接打开预览）
 
 | 文件 | 内容 | 状态 |
 |------|------|------|
@@ -199,7 +240,7 @@ supabase functions deploy threads-login --no-verify-jwt
 
 > 站点已实现：加载动画优化（d52268d 本地）+ 首页 hero（LEVIA 描边→实心、线条组、变形导航均分→收拢）。
 
-## 6. 代码地图
+## 7. 代码地图
 
 ```
 themes/brutalism/
@@ -226,11 +267,15 @@ static/
 data/                          site.yaml/cards.yaml/welcome.yaml
 supabase-*.sql                 数据库(RLS/RPC/表结构)——**未执行的部分见待办**
 Dockerfile + docker-compose.yml  Windows 开发环境
+threads-repost/                Threads 转发系统 (bridge/ + supabase/functions/, 详见 §3)
+about-page/ · perception-page/  设计稿打包 (design-*.html + README)
+float-player/                  悬浮播放器实验 (aplayer 主题 + player.js)
+design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 ```
 
 ---
 
-## 7. 开发约定（务必遵守）
+## 8. 开发约定（务必遵守）
 
 1. **改动后**：`hugo --minify` 验证 0 ERROR，再 `git push`
 2. **提交前**：`git pull --rebase origin main`（远端常有用户 CMS 提交）
@@ -243,11 +288,11 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 8. 已知问题 / 风险
+## 9. 已知问题 / 风险
 
 | # | 问题 | 状态/建议 |
 |---|------|-----------|
-| 1 | **CF Pages 主站停更**（14:35 后未更新） | ⚠️ **用户需查 CF 面板构建**；临时用 GH Pages 验证 |
+| 1 | ~~CF Pages 主站停更~~ | ✅ 已恢复（近期多次部署正常，`blog-go3.pages.dev` 与 GH Pages 均最新） |
 | 2 | 楷体预览依赖系统字体（mac 无 KaiTi → 回退衬线） | 需楷体请上传自定义字体 |
 | 3 | 动态评论/头像上传可能 RLS 缺失 | 数据库 SQL 见 `supabase-*.sql` 与待办 |
 | 4 | 文章页无 front matter 标题（只显示 md 内容） | 设计如此；正文写 `# 标题` 即显示 |
@@ -256,15 +301,15 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 9. 待办（下一步任务建议）
+## 10. 待办（下一步任务建议）
 
 - [x] **P0** 部署 Edge Function `threads-fetch` / `threads-login`（已部署, `--no-verify-jwt`）
 - [ ] **P1** 部署 Edge Function `admin-create-user --no-verify-jwt`（`threads-repost/supabase/` 目录）——否则后台「新增账号」报错
 - [ ] **P1** 感知页集成：设计稿 `perception-page/design-perception.html` 迁入 `perception.html` + 数据 `data/perception.yaml` + Lenis 滚轮冲突协调（`data-lenis-prevent-wheel` 或局部停用）
 - [x] **P0** 推送本地未推送提交 `d52268d`（加载动画优化 + 导航收集修复）
-- [ ] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
+- [x] **P0** 用户确认 Cloudflare Pages 构建已恢复（此前字体 25MiB 超限已修复：南西油墨宋/寒蝉拙楷体已子集化）
 - [ ] **P1** 设计稿（design-loader/design-home）确认后集成到站点（当前站点加载动画已应用 d52268d 优化）
-- [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS（`moment_comments` insert 策略）、`avatars` 桶上传策略、`profiles` 更新策略——**动态修复见 `supabase-moments-fix.sql`（一键幂等，含 Realtime 发布）**
+- [ ] **P1** 执行数据库 SQL（若未执行）：动态评论 RLS（`moment_comments` insert 策略）、`avatars` 桶上传策略、`profiles` 更新策略——**动态修复见 `supabase-moments-fix.sql`（一键幂等，含 Realtime 发布）**；地点字段需 `supabase-moments-location.sql`（发布才可存地点）
 - [ ] **P1** 用户验收：编辑器字体上传→预览→封面生效全链路；欢迎页头像随个人主页更新
 - [ ] **P2** 主题加 `version` 字段（便于版本追踪）
 - [ ] **P2** 楷体等中文系统字体预览降级提示优化
@@ -272,10 +317,12 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 ---
 
-## 10. 工作日志（最近）
+## 11. 工作日志（最近）
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `274c558` | 动态页发动态悬浮按键（复用文章目录弹性回弹动效）+ 修复输入框偶尔消失（Profile 重试不强制隐藏） |
+| 08-12 | `6a34a03` | 交接文档：Threads 串文转发系统章节 + 工作日志全量（见 §3） |
 | 08-12 | `本地` | 动态页修复 + 发动态悬浮按键：① 修复输入框偶尔消失——syncAuth 的 Profile.get 失败重试一次，仍失败不强制隐藏 composer（保留可见性）② 「＋ 发动态」FAB——滚动 >260px 显示（顶部隐藏）、点击 Lenis 平滑滚回顶部 + 发送框显现 + 聚焦 ③ **FAB 滚动弹性回弹动效复用文章页目录悬浮面板**（rAF lerp 0.16 + 惯性衰减 0.86，±18px）④ 瑞士极简胶囊样式（89 项 happy-dom + 5 项 puppeteer 真实验证） |
 | 08-12 | `本地` | **Threads 前三张低分辨率根因修复（桥端）**：根因是桥从页面 `<img>` 取 `currentSrc`——前几张轮播图初始加载为 `stp=dst-jpg_e35_s480x480`（480 预览变体），后续才加载原图变体。修复：桥改为**解析页面内嵌 JSON `carousel_media` 的 image_versions2 候选**，`pickBest` 选原图档（stp 无 `_sNNNxNNN` 尺寸变体）优先、其次最大分辨率（bridge.py 已重启生效）；已重新入库 Db-45PqAZh_（10/10 全部 1840×1232 原图，线上验证） |
 | 08-12 | `本地` | **Threads "前三张低分辨率" bug 根因修复**：诊断 Db-45PqAZh_ 转存文件 0,1,2 = 480×321（桥给预览档 url）、3-9 = 1840×1232——桥对前几张给预览链接。修复：`downloadImageWithFallback`——下载后若 <800px 自动附加 `stp=dst-jpg_e35`（IG CDN 原图质量档）重试取更高分辨率（已部署）；**已转存的旧帖需重新爬取（桥）覆盖** |
