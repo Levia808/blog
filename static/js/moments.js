@@ -127,11 +127,18 @@
   /* 悬停串文卡片: 禁用浏览器历史手势 (双指左右滑) — 但保留轮播图片的左右浏览手势 */
   document.addEventListener('wheel', function (e) {
     if (e.target.closest('.threads-card')) {
-      /* 轮播区域: 横向手势交给轮播原生滚动 (浏览图片), 不拦截 */
       var wrap = e.target.closest('.th-media-wrap');
       if (wrap) {
         var mediaEl = wrap.querySelector('.th-media');
-        if (mediaEl && mediaEl.scrollWidth > mediaEl.clientWidth) return;
+        if (mediaEl && threadsPageCount(mediaEl) > 1 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          e.preventDefault();
+          var now = Date.now();
+          if (now - (Number(mediaEl.dataset.wheelAt) || 0) > 320) {
+            mediaEl.dataset.wheelAt = String(now);
+            scrollThreadsMedia(wrap, e.deltaX > 0 ? 1 : -1);
+          }
+          return;
+        }
       }
       /* 卡片其他区域: 横向手势是浏览器历史手势 → 禁用 */
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) e.preventDefault();
@@ -294,7 +301,12 @@
     var nodes = Array.prototype.slice.call(card.querySelectorAll('.th-media-item img, .th-media-item video'));
     var elements = nodes.map(function (node) {
       var url = node.dataset.orig || node.currentSrc || node.src;
-      if (node.tagName === 'VIDEO') return { href: url, type: 'video', source: 'local', width: '90vw' };
+      if (node.tagName === 'VIDEO') {
+        return {
+          content: '<video class="th-lightbox-video" src="' + escapeHtml(url) + '" controls autoplay playsinline></video>',
+          width: '90vw'
+        };
+      }
       return { href: url, type: 'image' };
     });
     if (!elements.length) return;
@@ -380,9 +392,9 @@
 
   function threadsCurrentPage(mediaEl) {
     if (!mediaEl) return 0;
-    var max = mediaEl.scrollWidth - mediaEl.clientWidth;
-    if (max <= 0) return 0;
-    return Math.min(threadsPageCount(mediaEl) - 1, Math.round(mediaEl.scrollLeft / (mediaEl.clientWidth || 1)));
+    var page = parseInt(mediaEl.dataset.page || '0', 10);
+    if (!isFinite(page)) page = 0;
+    return Math.max(0, Math.min(threadsPageCount(mediaEl) - 1, page));
   }
 
   function scrollThreadsMediaTo(wrap, index) {
@@ -391,8 +403,9 @@
     var count = threadsPageCount(mediaEl);
     if (index < 0) index = 0;
     if (index > count - 1) index = count - 1;
-    var max = Math.max(0, mediaEl.scrollWidth - mediaEl.clientWidth);
-    mediaEl.scrollTo({ left: Math.min(max, index * (mediaEl.clientWidth || 1)), behavior: 'smooth' });
+    mediaEl.dataset.page = String(index);
+    mediaEl.style.setProperty('--th-page', String(index));
+    syncThreadsNav(wrap);
   }
 
   function scrollThreadsMedia(wrap, dir) {
@@ -502,6 +515,27 @@
     if (wrap) syncThreadsNav(wrap);
   }, true);
 
+  var threadsTouch = null;
+  document.addEventListener('touchstart', function (e) {
+    var wrap = e.target.closest && e.target.closest('.threads-card .th-media-wrap');
+    if (!wrap) return;
+    var mediaEl = wrap.querySelector('.th-media');
+    if (!mediaEl || threadsPageCount(mediaEl) <= 1 || !e.touches || !e.touches.length) return;
+    threadsTouch = { wrap: wrap, x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+
+  document.addEventListener('touchend', function (e) {
+    if (!threadsTouch) return;
+    var changed = e.changedTouches && e.changedTouches[0];
+    if (!changed) { threadsTouch = null; return; }
+    var dx = changed.clientX - threadsTouch.x;
+    var dy = changed.clientY - threadsTouch.y;
+    var wrap = threadsTouch.wrap;
+    threadsTouch = null;
+    if (Math.abs(dx) < 36 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    scrollThreadsMedia(wrap, dx < 0 ? 1 : -1);
+  }, { passive: true });
+
   /* 键盘: 焦点在串文卡片上时, 左右方向键翻页 (与箭头一致, 提升可访问性) */
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -510,8 +544,6 @@
     var wrap = card.querySelector('.th-media-wrap');
     var mediaEl = wrap && wrap.querySelector('.th-media');
     if (!mediaEl || threadsPageCount(mediaEl) <= 1) return;
-    /* 仅当存在横向溢出时拦截 (单页不抢走页面横向滚动手势) */
-    if (mediaEl.scrollWidth <= mediaEl.clientWidth + 1) return;
     e.preventDefault();
     scrollThreadsMedia(wrap, e.key === 'ArrowRight' ? 1 : -1);
   });

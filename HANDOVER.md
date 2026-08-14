@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-14 · opencode（修复动态页脚本/样式被错误覆盖导致动态不显示；Threads 图片/视频统一两两一页预览，视频不再截获轮播拖拽，悬停静音播放，点击统一进入图片/视频查看器）
+> 最后更新：2026-08-14 · opencode（修复动态页脚本/样式被错误覆盖导致动态不显示；Threads 混排轮播改为显式页码 transform 切换，放大查看用原生视频内容，图片/视频画廊可左右切换）
 
 ---
 
@@ -334,6 +334,7 @@ design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-14 | `本地` | **修复 Threads 混排轮播/放大查看无法左右切换与视频静帧问题**：卡片内轮播不再依赖浏览器 `scrollLeft/scrollTo`（易被 video/scroll-snap/原生控件干扰），改为 `data-page` + CSS `transform: translateX(calc(var(--th-page) * -100%))` 显式切页；箭头/圆点/键盘/触控板横滑统一调用 `scrollThreadsMediaTo`，`syncThreadsNav` 读取页码状态。放大查看视频不再使用 GLightbox `type:'video'` 本地封装，改用 `content: '<video class="th-lightbox-video" controls autoplay playsinline>'` 原生视频内容，避免出现进度条动但画面静止；图片/视频统一在同一个 `setElements` 画廊中，可左右切换。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `本地` | **修复 Threads 图片+视频混排串文卡住与无法查看视频**：根因是预览 `video` 元素和视频点击播放逻辑截获了轮播/点击交互，且 Threads lightbox 只收集图片。已改为图片/视频统一媒体项：预览层 video `pointer-events:none`，不再抢拖拽/滑动；点击 `.th-media-item` 统一打开 GLightbox，媒体集合同时包含图片 `{type:'image'}` 和本地视频 `{type:'video', source:'local', width:'90vw'}`；视频播放只作为 hover 静音预览存在，进入查看器后由 GLightbox 播放。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `本地` | **再次优化 Threads 视频预览稳定性**：视频/图片混排不再依赖元素自然尺寸撑开，`layoutThreadsMedia` 会按图片 `naturalWidth` / 视频 `videoWidth` / 入库 `data-ratio-*` 计算比例，并为每个 `.th-media-item` 显式写入统一高度与对应宽度；`.th-pair` 内图片和视频统一 `width/height:100%; object-fit:cover`，使首帧预览、骨架、淡入、hover 缩放和两两排版表现一致。视频预载从 `metadata` 改为 `auto`，首帧就绪后轻微 seek 到 `0.001s`，降低黑帧概率；移出同样回到 `0.001s` 展示首帧。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `本地` | **修正 Threads 视频预览分页语义**：用户明确要求视频和照片一样保持「一屏两个」预览，而不是视频单独占一页。已改 `moments.js` 媒体分页为图片/视频统一两两成页；`features.css` 中 `.th-pair` 内 video 与 img 共用统一高度/比例/骨架/淡入规则；视频悬停进入 `.is-previewing` 时自动静音循环播放并隐藏居中播放键，鼠标移出暂停回首帧并恢复播放图标。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |

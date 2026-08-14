@@ -2201,10 +2201,10 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 .th-translate:hover { color: rgb(15, 20, 25); border-color: rgb(15, 20, 25); background: rgb(240, 242, 245); }
 .th-translate:disabled { opacity: 0.55; cursor: default; }
 .th-media-wrap { position: relative; margin-top: 12px; }
-.th-media { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-radius: 12px; }
+.th-media { display: flex; overflow: hidden; scrollbar-width: none; border-radius: 12px; }
 .th-media::-webkit-scrollbar { display: none; }
 /* 多图: 每页一视窗 (两张并排), 页宽 = 视窗宽 */
-.th-media.is-carousel > * { flex: 0 0 100%; scroll-snap-align: start; }
+.th-media.is-carousel > * { flex: 0 0 100%; transform: translateX(calc(var(--th-page, 0) * -100%)); transition: transform 0.38s cubic-bezier(.16, 1, .3, 1); }
 .th-pair { display: flex; gap: 8px; justify-content: center; align-items: flex-start; }
 .th-media-item { display: block; overflow: hidden; border-radius: 12px; background: #F2F3F5; position: relative; }
 /* 图片加载骨架: 未载入时占位底微微脉动, 载入后淡入 */
@@ -2246,6 +2246,13 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 .th-video-fallback {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: rgba(255, 255, 255, 0.75); font-size: 13px; background: rgba(0, 0, 0, 0.6); z-index: 1;
+}
+.th-lightbox-video {
+  display: block;
+  width: min(90vw, 1100px);
+  max-height: 82vh;
+  background: #000;
+  border-radius: 6px;
 }
 .th-prev, .th-next {
   position: absolute; top: 50%; transform: translateY(-50%);
