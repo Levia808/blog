@@ -164,8 +164,10 @@ async function saveToStorage(result: any) {
   }
 
   // 图片转存 + 预览 URL: 下载原图持久化 (解决 fbcdn 签名 URL 过期), 预览用 Storage 图像转换按需生成
-  const mediaChanged = await processMediaImages(supabase, result);
-  if (mediaChanged) await putJson();
+  const imgChanged = await processMediaImages(supabase, result);
+  // 视频落地: CDN 签名链接时效短 → 下载转存 storage 永久 URL (自动播放/放大均走自有链接)
+  const vidChanged = await processMediaVideos(supabase, result);
+  if (imgChanged || vidChanged) await putJson();
 
   const publicUrl = supabase.storage.from('threads-reposts').getPublicUrl(result.id + '.json').data.publicUrl;
   return json({ ok: true, id: result.id, publicUrl, result });
@@ -220,6 +222,43 @@ async function processMediaImages(supabase: any, result: any): Promise<boolean> 
       m.preview = renderPreviewUrl(pub);
       changed = true;
     } catch (e) { /* 单图失败不影响其余 */ }
+  }
+  return changed;
+}
+
+/* 视频落地: Threads CDN 签名链接时效短 (~1-2h) → 下载转存 storage 永久 URL
+   失败降级保留原 CDN 链接; 单视频失败不影响其余 */
+async function processMediaVideos(supabase: any, result: any): Promise<boolean> {
+  const media = Array.isArray(result.media) ? result.media : [];
+  if (!media.length) return false;
+  let changed = false;
+  const MAX = 40 * 1024 * 1024; /* storage 默认单文件 50MB, 保守限 40MB */
+  for (let i = 0; i < media.length; i++) {
+    const m = media[i];
+    if (!m || m.type !== 'video' || !m.url) continue;
+    if (/supabase\.co\/storage/.test(m.url)) continue; /* 已转存 */
+    try {
+      const res = await fetch(m.url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36' }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const buf = await res.arrayBuffer();
+      if (!buf || buf.byteLength === 0) throw new Error('empty body');
+      if (buf.byteLength > MAX) throw new Error('size ' + buf.byteLength + ' > 40MB');
+      const ct = res.headers.get('content-type') || 'video/mp4';
+      const name = 'media/' + result.id + '/' + i + '.mp4';
+      const { error: vErr } = await supabase.storage
+        .from('threads-reposts')
+        .upload(name, new Blob([buf], { type: ct }), { upsert: true, contentType: ct });
+      if (vErr) throw vErr;
+      const pub = supabase.storage.from('threads-reposts').getPublicUrl(name).data.publicUrl;
+      m.url = pub;
+      m.local = true;
+      changed = true;
+      console.log('threads-fetch: video saved', name, buf.byteLength, 'bytes');
+    } catch (e) {
+      console.error('threads-fetch: video download failed', String((e && e.message) || e));
+    }
   }
   return changed;
 }

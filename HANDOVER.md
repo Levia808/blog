@@ -276,6 +276,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | **Threads 视频落地（调研后构建）**：开源调研——SCrawler(2141⭐)支持 Threads 但为 PyQt 桌面不可服务端用、yt-dlp 主线无 Threads extractor；根因是 **CDN 签名 URL 时效短(~1-2h)** 导致视频失效。构建：Edge Function threads-fetch 新增 `processMediaVideos`——入库时下载视频（UA 头、≤40MB）转存 `threads-reposts/media/<id>/<n>.mp4` 永久 URL（`m.local=true`），失败降级保留原链接；自动播放/点击放大均走自有链接（已部署） |
 | 08-12 | `本地` | **Threads 媒体爬取质量升级**：① `fetch.mjs` 重构——解析页面内嵌 JSON（carousel_media/video_versions/image_versions2），图片取**最大候选+去 CDN 尺寸参数原图**、视频取**最大码率**（宽高排序）、url 级去重防重复、`?&` 双符号修复、补充 taken_at 时间 ② Edge Function threads-fetch 桥模式同样做图片原图规范化（已部署）（7 项媒体提取单测通过） |
 | 08-13 | `本地` | **新增「感知」页（音乐/电影/书籍分享）**：① 导航菜单 `hugo.yaml` 加「感知」(`perception/`，weight 6) ② 内容 `content/perception.md` + 模板 `themes/brutalism/layouts/_default/perception.html`（空壳 list-header）③ `swiss.css` 纳入 `.perception-page` ④ 设计稿 `perception-page/design-perception.html`（左文右卡分屏 + CardSwap 式 3D 卡组 + 滚轮/点击交互；连续相位模型可打断、`power2.out` 缓动、文字延后 ~58% 切换、自动播放仅首交互前）+ `perception-page/README.md` 交接文档 |
 | 08-13 | `本地` | **串文卡片多图预览/查看全量优化（交互设计视角）+ 图片持久化/预览生成**：① 轮播圆点可点击跳页（扩大热区）、首/末页箭头禁用态、键盘 ←/→ 翻页（仅横向溢出时拦截）、视频播放/暂停开关（图标同步）② 图片加载骨架脉动→淡入、加载失败兜底（fbcdn 过期停止闪烁降灰占位）、`cursor: zoom-in`+悬停微缩放可供性 ③ 放大查看 GLightbox Swiss 风格覆盖（磨砂遮罩/圆形按钮/苔绿/页码计数 1/N）+ 计数随翻页更新 ④ **爬取原图+预览**：threads-fetch 服务端代拉原图转存 `media/<id>/<i>.<ext>` + 预览用 Storage render/image（`?width=640&quality=80&resize=contain`）；卡片显示 `media[].preview`，放大查看用 `data-orig` 原图（`media[].url`）。已部署验证（magick-wasm 方案 BOOT_ERROR 弃用，改用 render/image）|
