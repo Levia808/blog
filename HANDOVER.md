@@ -20,6 +20,7 @@
 | 后端 | Supabase（Auth / DB / Storage `media`+`avatars`+`threads-reposts` 桶）+ Edge Functions `threads-fetch`/`threads-login`（已部署） |
 | Threads 转发 | 动态正文贴链接→自动渲染官方 embed 风格卡片；本地 Cookie 桥（`threads-repost/bridge/`）+ 自动爬取 |
 | 动态页 | 发布/点赞/评论树/地点/可见性/编辑/实时同步 + Threads 串文卡片 |
+| 悬浮播放器 | 全站左侧悬浮网易云播放器（aplayer 主题）——前端 `static/float-player/` + 本地代理 / 公网 `music-api/` + 后台扫码登录 |
 | 语言 | zh-cn ｜ 作者 Levia（GitHub: Levia808） |
 
 **git 凭证**：`~/.git-credentials`（token，python 可提取用于 GitHub API）。
@@ -185,6 +186,7 @@ supabase functions deploy threads-login --no-verify-jwt
 | `data/cards.yaml` | 卡片样式 grid/horizontal/fullscreen（当前 **fullscreen**） | 卡片样式 |
 | `data/welcome.yaml` | 打字机/字重插值/ShapeBlur/火花参数 | 欢迎页配置 |
 | `static/fonts.json` | **字体清单（单一权威）**：构建扫描 + 上传增量更新 | — |
+| `data/player.yaml` | 悬浮播放器配置（enabled/playlistId/proxyBase/level/side 等） | 播放器配置（后台） |
 | `static/fonts/*.css|woff2` | Playfair/Grotesk/Mono 自托管字体 | — |
 
 **主题参数读取**：模板统一 `$P := site.Data.site`（site 数据优先，回退 `site.Params`）。
@@ -218,6 +220,14 @@ supabase functions deploy threads-login --no-verify-jwt
 - 仪表盘（统计/最近文章）、文章管理（GitHub 发布/草稿/归档/删除，GitHub OAuth 经 Worker）、内容归档、评论审核、用户管理（角色/状态）、媒体库（上传进度/嵌入代码/删除）
 - 系统设置：欢迎页配置、导航行为、卡片样式、字体预览（GitHub 读写 data/*.yaml）
 - **平台管理**（§3）：浏览器登录（本地桥）/账号密码登录（threads-login）/Cookie 管理/爬取串文
+
+### 悬浮播放器（网易云）
+- 前端：`static/float-player/float-player.js/.css`（全站 partial 引入，aplayer 主题，左侧悬浮、配置侧/字号/间距/播放列表）
+- 配置：`data/player.yaml`（后台「播放器配置」读写，enabled/autoLoad/playlistId/limit/level/侧边/字号/间距）
+- 数据源二选一：
+  - **本地代理** `float-player/netease-proxy/server.js`（:4188，`proxyBase: http://127.0.0.1:4188`，一键启动 `scripts/start-netease-player.js` / `start-netease-player.cmd`）
+  - **公网 API** `music-api/`（Node 后端，Render 可部署 `render.yaml`，端点 status/login/qr/check/logout/playlist，替代本地双进程）
+- 登录：后台「播放器」面板网易云**扫码登录**（qr → 轮询 check → 存 cookie），logout 退出
 
 ### 媒体/上传
 - 后台媒体库上传（Supabase `media`，类型白名单含字体 font/* + 扩展名兜底，进度条）
@@ -269,7 +279,10 @@ supabase-*.sql                 数据库(RLS/RPC/表结构)——**未执行的�
 Dockerfile + docker-compose.yml  Windows 开发环境
 threads-repost/                Threads 转发系统 (bridge/ + supabase/functions/, 详见 §3)
 about-page/ · perception-page/  设计稿打包 (design-*.html + README)
-float-player/                  悬浮播放器实验 (aplayer 主题 + player.js)
+float-player/                  悬浮播放器 (前端 demo + aplayer 主题 + netease-proxy 本地代理 :4188)
+music-api/                      公网音乐 API (Node, Render 可部署; 网易云 playlist/扫码登录端点)
+scripts/ + start-netease-player.cmd   播放器一键启动脚本
+static/float-player/            线上悬浮播放器资源 (float-player.js/.css)
 design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 ```
 
@@ -321,6 +334,12 @@ design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-14 | `d409abf` | **修复 Threads 视频爬取与播放**：① 桥新增单视频帖顶层 `video_versions` / 单图帖 `image_versions2.candidates` JSON 提取（原只认 carousel_media，单视频帖提取为空；单图帖 DOM 兜底被相关推荐帖污染成 10 张垃圾图）；DOM 兜底限主帖 6 张 + 过滤 blob URL ② 播放改点击播放（带声音）/再点暂停，居中大播放按钮播放中淡出，移除静音自动循环，preload=metadata；加载失败「视频暂不可用」兜底 ③ 视频由 Edge 自动转存桶内永久 URL（fbcdn 签名链接 1-2h 过期问题消除）——受信任点击实测播放/暂停/按钮态全通过 |
+| 08-14 | `8198aa2` | 新增公网播放器音乐 API 服务 `music-api/`（Node 后端，render.yaml 可部署 Render；端点 status/login/qr/check/logout/playlist；替代本地双进程方案） |
+| 08-14 | `dc5c04d` | 新增网易云播放器一键启动脚本 `scripts/start-netease-player.js` + `start-netease-player.cmd` |
+| 08-14 | `8938c7b` | 接入网易云扫码登录自动化（`float-player/netease-proxy/server.js` + 后台「播放器」面板：qr → 轮询 check → 存 cookie） |
+| 08-14 | `18c54dd` | 更新播放器配置 |
+| 08-14 | `e5335d2` | 修复播放器配置前台同步（static/float-player/float-player.js 读 player.yaml） |
 | 08-12 | `274c558` | 动态页发动态悬浮按键（复用文章目录弹性回弹动效）+ 修复输入框偶尔消失（Profile 重试不强制隐藏） |
 | 08-12 | `6a34a03` | 交接文档：Threads 串文转发系统章节 + 工作日志全量（见 §3） |
 | 08-12 | `本地` | 动态页修复 + 发动态悬浮按键：① 修复输入框偶尔消失——syncAuth 的 Profile.get 失败重试一次，仍失败不强制隐藏 composer（保留可见性）② 「＋ 发动态」FAB——滚动 >260px 显示（顶部隐藏）、点击 Lenis 平滑滚回顶部 + 发送框显现 + 聚焦 ③ **FAB 滚动弹性回弹动效复用文章页目录悬浮面板**（rAF lerp 0.16 + 惯性衰减 0.86，±18px）④ 瑞士极简胶囊样式（89 项 happy-dom + 5 项 puppeteer 真实验证） |
