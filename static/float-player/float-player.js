@@ -252,6 +252,26 @@
     startLoop();
   }
 
+  function isInsideWheelZone(event) {
+    if (wheel.contains(event.target)) return true;
+    var rect = wheel.getBoundingClientRect();
+    var pad = 24;
+    return event.clientX >= rect.left - pad &&
+      event.clientX <= rect.right + pad &&
+      event.clientY >= rect.top - pad &&
+      event.clientY <= rect.bottom + pad;
+  }
+
+  function applyWheelDelta(event) {
+    var delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
+    var rowH = getRowH();
+    applyTarget(state.target + clamp(delta / rowH, -1, 1), false);
+    window.clearTimeout(state.wheelTimer);
+    state.wheelTimer = window.setTimeout(function () {
+      applyTarget(state.target, true);
+    }, 140);
+  }
+
   function layout() {
     var nodes = songWheel.querySelectorAll('.fp-song');
     var rowH = getRowH();
@@ -336,14 +356,15 @@
   wheel.addEventListener('wheel', function (event) {
     if (!state.expanded) return;
     event.preventDefault();
-    var delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
-    var rowH = getRowH();
-    applyTarget(state.target + clamp(delta / rowH, -1, 1), false);
-    window.clearTimeout(state.wheelTimer);
-    state.wheelTimer = window.setTimeout(function () {
-      applyTarget(state.target, true);
-    }, 140);
+    applyWheelDelta(event);
   }, { passive: false });
+
+  document.addEventListener('wheel', function (event) {
+    if (!state.expanded || !isInsideWheelZone(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    applyWheelDelta(event);
+  }, { passive: false, capture: true });
 
   wheel.addEventListener('click', function (event) {
     var song = event.target.closest('.fp-song');
