@@ -2212,11 +2212,11 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 @keyframes thShimmer { 0%, 100% { background-color: #F2F3F5; } 50% { background-color: #E9EBEE; } }
 /* 图片: 统一高度 (JS 计算 --th-media-h), 宽度按原比例自动, 大图自动缩小 (不裁切) */
 .th-pair .th-media-item { flex: 0 0 auto; }
-.th-pair .th-media-item img, .th-pair .th-media-item video { display: block; height: var(--th-media-h, 320px); width: auto; max-width: 100%; }
+.th-pair .th-media-item img, .th-pair .th-media-item video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .th-media:not(.is-carousel) .th-media-item img, .th-media:not(.is-carousel) .th-media-item video { display: block; width: 100%; height: auto; }
 .th-media-item img, .th-media-item video { opacity: 0; transition: opacity 0.45s cubic-bezier(.16, 1, .3, 1), transform 0.45s cubic-bezier(.16, 1, .3, 1); }
 .th-media-item img { cursor: zoom-in; }
-.th-media-item video { cursor: pointer; object-fit: contain; background: #F2F3F5; }
+.th-media-item video { cursor: pointer; background: #F2F3F5; }
 .th-media-item img.is-loaded, .th-media-item video.is-loaded { opacity: 1; }
 .th-media-item img.is-broken { opacity: 0.12; cursor: default; }
 .th-media-wrap:hover .th-media-item img.is-loaded, .th-media-item.is-video:hover video.is-loaded { transform: scale(1.02); }

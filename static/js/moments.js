@@ -168,7 +168,7 @@
         if (m.type === 'video') {
           /* 视频: 与图片卡片保持同一预览视觉; 悬停静音预览, 点击可播放/暂停 */
           return '<span class="th-media-item is-video">' +
-            '<video src="' + escapeHtml(m.url) + '" muted playsinline preload="metadata" data-orig="' + escapeHtml(m.url) + '" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></video>' +
+            '<video src="' + escapeHtml(m.url) + '" muted playsinline preload="auto" data-orig="' + escapeHtml(m.url) + '" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></video>' +
             '<button type="button" class="th-video-play" aria-label="播放"><span class="th-video-icon"></span></button>' +
             '</span>';
         }
@@ -251,6 +251,16 @@
     var h = Math.round((W - threadsMediaGap) / maxSum);
     h = Math.max(180, Math.min(520, h));
     media.style.setProperty('--th-media-h', h + 'px');
+    pages.forEach(function (page) {
+      var items = Array.prototype.slice.call(page.querySelectorAll('.th-media-item'));
+      items.forEach(function (item) {
+        var child = item.querySelector('img, video');
+        var ratio = threadsImageRatio(child);
+        var width = Math.max(1, Math.round(h * ratio));
+        item.style.width = width + 'px';
+        item.style.height = h + 'px';
+      });
+    });
   }
 
   function threadsImageRatio(img) {
@@ -420,7 +430,7 @@
     video.muted = true;
     video.dataset.hoverPreview = '';
     video.dataset.manualPlaying = '';
-    try { video.currentTime = 0; } catch (_) {}
+    try { video.currentTime = 0.001; } catch (_) {}
     var item = video.closest('.th-media-item');
     var btn = item && item.querySelector('.th-video-play');
     if (item) item.classList.remove('is-previewing', 'is-manual-playing');
@@ -2325,6 +2335,10 @@
     if (el && el.tagName === 'VIDEO') {
       if (el.closest('.threads-card')) {
         el.classList.add('is-loaded');
+        if (!el.dataset.thSeekedPoster) {
+          el.dataset.thSeekedPoster = '1';
+          try { if (el.currentTime < 0.001) el.currentTime = 0.001; } catch (_) {}
+        }
         layoutThreadsMedia(el.closest('.threads-card'));
         return;
       }

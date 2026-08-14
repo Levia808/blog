@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-14 · opencode（修复动态页脚本/样式被错误覆盖导致动态不显示；Threads 图片/视频统一两两一页预览，视频悬停静音播放且隐藏播放键，移出回首帧+播放图标）
+> 最后更新：2026-08-14 · opencode（修复动态页脚本/样式被错误覆盖导致动态不显示；Threads 图片/视频统一两两一页预览，视频预览布局按比例显式定宽高，悬停静音播放且隐藏播放键，移出回首帧+播放图标）
 
 ---
 
@@ -334,6 +334,7 @@ design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-14 | `本地` | **再次优化 Threads 视频预览稳定性**：视频/图片混排不再依赖元素自然尺寸撑开，`layoutThreadsMedia` 会按图片 `naturalWidth` / 视频 `videoWidth` / 入库 `data-ratio-*` 计算比例，并为每个 `.th-media-item` 显式写入统一高度与对应宽度；`.th-pair` 内图片和视频统一 `width/height:100%; object-fit:cover`，使首帧预览、骨架、淡入、hover 缩放和两两排版表现一致。视频预载从 `metadata` 改为 `auto`，首帧就绪后轻微 seek 到 `0.001s`，降低黑帧概率；移出同样回到 `0.001s` 展示首帧。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `本地` | **修正 Threads 视频预览分页语义**：用户明确要求视频和照片一样保持「一屏两个」预览，而不是视频单独占一页。已改 `moments.js` 媒体分页为图片/视频统一两两成页；`features.css` 中 `.th-pair` 内 video 与 img 共用统一高度/比例/骨架/淡入规则；视频悬停进入 `.is-previewing` 时自动静音循环播放并隐藏居中播放键，鼠标移出暂停回首帧并恢复播放图标。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `本地` | **修复动态页无法显示动态 + Threads 视频预览交互**：根因是提交 `7a23d7e` 将 `static/js/moments.js` 从完整动态模块覆盖成 82 行补丁片段，并将 `themes/brutalism/assets/css/features.css` 从完整样式覆盖成末尾片段，导致 Supabase 动态加载/渲染逻辑缺失。已恢复二者到 `d409abf` 完整基线，并仅增量修改 Threads 媒体：视频预览继承图片卡片的圆角/骨架/淡入/缩放/统一高度逻辑；鼠标悬停静音循环预览，鼠标移出暂停并回到第一帧，同时恢复居中播放图标；点击仍可切换播放。`node --check static/js/moments.js` 与 `hugo --minify` 通过。 |
 | 08-14 | `d409abf` | **修复 Threads 视频爬取与播放**：① 桥新增单视频帖顶层 `video_versions` / 单图帖 `image_versions2.candidates` JSON 提取（原只认 carousel_media，单视频帖提取为空；单图帖 DOM 兜底被相关推荐帖污染成 10 张垃圾图）；DOM 兜底限主帖 6 张 + 过滤 blob URL ② 播放改点击播放（带声音）/再点暂停，居中大播放按钮播放中淡出，移除静音自动循环，preload=metadata；加载失败「视频暂不可用」兜底 ③ 视频由 Edge 自动转存桶内永久 URL（fbcdn 签名链接 1-2h 过期问题消除）——受信任点击实测播放/暂停/按钮态全通过 |
