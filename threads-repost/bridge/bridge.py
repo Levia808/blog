@@ -253,6 +253,43 @@ EXTRACT_JS = r"""
   var media = [];
   var seen = {};
   var avatar = '';
+
+  /* 原图候选优先: stp 无尺寸变体 (dst-jpg_e35_tt6, 无 _sNNNxNNN) = 原图档, 其次最大分辨率 */
+  var pickBest = function (cands) {
+    if (!cands || !cands.length) return null;
+    var best = null;
+    cands.forEach(function (c) {
+      if (!c || !c.url) return;
+      var u = c.url;
+      var isOrig = !/_s\d+x\d+/.test(u) && /stp=dst-jpg_e\d+/.test(u);
+      var score = (isOrig ? 1e9 : 0) + (c.width || 0) * (c.height || 0);
+      if (!best || score > best.score) best = { url: u, width: c.width || 0, height: c.height || 0, score: score };
+    });
+    return best;
+  };
+
+  /* 页面内嵌 JSON (carousel_media) 提取媒体 — 原图档 (img 遍历可能拿到 480 预览变体) */
+  var jsonMedia = [];
+  try {
+    var scripts = Array.from(document.querySelectorAll('script'));
+    for (var si = 0; si < scripts.length && !jsonMedia.length; si++) {
+      var st = scripts[si].textContent || '';
+      var cm = st.match(/"carousel_media":\s*(\[[\s\S]*?\])\s*,\s*"[a-z_]+"/);
+      if (!cm) continue;
+      var arr = JSON.parse(cm[1]);
+      arr.forEach(function (item) {
+        if (!item) return;
+        if (item.media_type === 2 && item.video_versions && item.video_versions.length) {
+          var v = item.video_versions.slice().sort(function (a, b) { return (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0); })[0];
+          if (v && v.url && !seen[v.url]) { seen[v.url] = true; jsonMedia.push({ type: 'video', url: v.url, width: v.width || 0, height: v.height || 0 }); }
+        } else if (item.image_versions2 && item.image_versions2.candidates) {
+          var p = pickBest(item.image_versions2.candidates);
+          if (p && !seen[p.url]) { seen[p.url] = true; jsonMedia.push({ type: 'image', url: p.url, width: p.width, height: p.height }); }
+        }
+      });
+    }
+  } catch (e) { /* JSON 提取失败则回退 img 遍历 */ }
+
   Array.from(document.querySelectorAll('img')).forEach(function (img) {
     var alt = img.alt || '';
     var src = img.currentSrc || img.src || '';
@@ -264,6 +301,8 @@ EXTRACT_JS = r"""
     var src = v.currentSrc || v.src || (v.querySelector('source') || {}).src || '';
     if (src && !seen[src]) { seen[src] = true; media.push({ type: 'video', url: src }); }
   });
+  /* 内嵌 JSON 媒体优先 (原图档), 否则用 img 遍历结果 */
+  if (jsonMedia.length) media = jsonMedia;
   if (media.length > 10) media = media.slice(0, 10);
   return { ready: text.length > 0 || media.length > 0, author: author, time: time, text: text, likes: likes, replies: replies, media: media, avatar: avatar };
 })()
