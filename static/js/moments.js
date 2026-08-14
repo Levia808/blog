@@ -155,28 +155,23 @@
       ? '<img class="th-avatar-img" src="' + escapeHtml(d.avatar) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
       : '';
     var mediaList = d.media || [];
-    /* 分页: 视频单独一页, 图片两两一页 (一视窗两张) */
+    /* 分页: 图片/视频统一两两一页 (一视窗两张) */
     var pages = [];
     var cur = [];
     mediaList.forEach(function (m) {
-      if (m.type === 'video') {
-        if (cur.length) { pages.push(cur); cur = []; }
-        pages.push([m]);
-      } else {
-        cur.push(m);
-        if (cur.length === 2) { pages.push(cur); cur = []; }
-      }
+      cur.push(m);
+      if (cur.length === 2) { pages.push(cur); cur = []; }
     });
     if (cur.length) pages.push(cur);
     var media = pages.map(function (pg) {
-      if (pg.length === 1 && pg[0].type === 'video') {
-        /* 视频: 与图片卡片保持同一预览视觉; 悬停静音预览, 点击可播放/暂停 */
-        return '<span class="th-media-item is-video">' +
-          '<video src="' + escapeHtml(pg[0].url) + '" muted playsinline preload="metadata" data-orig="' + escapeHtml(pg[0].url) + '" data-ratio-w="' + (Number(pg[0].width) || 0) + '" data-ratio-h="' + (Number(pg[0].height) || 0) + '"></video>' +
-          '<button type="button" class="th-video-play" aria-label="播放"><span class="th-video-icon"></span></button>' +
-          '</span>';
-      }
       return '<span class="th-pair">' + pg.map(function (m) {
+        if (m.type === 'video') {
+          /* 视频: 与图片卡片保持同一预览视觉; 悬停静音预览, 点击可播放/暂停 */
+          return '<span class="th-media-item is-video">' +
+            '<video src="' + escapeHtml(m.url) + '" muted playsinline preload="metadata" data-orig="' + escapeHtml(m.url) + '" data-ratio-w="' + (Number(m.width) || 0) + '" data-ratio-h="' + (Number(m.height) || 0) + '"></video>' +
+            '<button type="button" class="th-video-play" aria-label="播放"><span class="th-video-icon"></span></button>' +
+            '</span>';
+        }
         /* 图片: 优先预览图 (低分辨率, 载入快), data-orig 存原图供放大查看; 宽高比备用数据 */
         var orig = originalImageUrl(m.url);
         var disp = m.preview || orig;
