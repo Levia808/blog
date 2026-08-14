@@ -294,31 +294,100 @@
     if (card && !e.target.closest('.th-foot')) e.preventDefault();
   }, true);
 
-  /* 串文卡片媒体: 点击放大查看原图/视频 (复用动态 GLightbox, 不跳转) */
+  var threadsViewer = null;
+  var threadsViewerItems = [];
+  var threadsViewerIndex = 0;
+
+  function closeThreadsViewer() {
+    if (!threadsViewer) return;
+    threadsViewer.remove();
+    threadsViewer = null;
+    threadsViewerItems = [];
+    threadsViewerIndex = 0;
+    document.documentElement.classList.remove('th-viewer-open');
+  }
+
+  function renderThreadsViewer() {
+    if (!threadsViewer) return;
+    var stage = threadsViewer.querySelector('.thv-stage');
+    var count = threadsViewer.querySelector('.thv-count');
+    var prev = threadsViewer.querySelector('.thv-prev');
+    var next = threadsViewer.querySelector('.thv-next');
+    var item = threadsViewerItems[threadsViewerIndex];
+    if (!stage || !item) return;
+    if (item.type === 'video') {
+      stage.innerHTML = '<video class="thv-video" src="' + escapeHtml(item.url) + '" controls autoplay playsinline></video>';
+    } else {
+      stage.innerHTML = '<img class="thv-img" src="' + escapeHtml(item.url) + '" alt="">';
+    }
+    if (count) count.textContent = (threadsViewerIndex + 1) + ' / ' + threadsViewerItems.length;
+    if (prev) prev.disabled = threadsViewerIndex <= 0;
+    if (next) next.disabled = threadsViewerIndex >= threadsViewerItems.length - 1;
+  }
+
+  function moveThreadsViewer(dir) {
+    if (!threadsViewerItems.length) return;
+    var next = Math.max(0, Math.min(threadsViewerItems.length - 1, threadsViewerIndex + dir));
+    if (next === threadsViewerIndex) return;
+    threadsViewerIndex = next;
+    renderThreadsViewer();
+  }
+
+  function ensureThreadsViewer() {
+    if (threadsViewer) return threadsViewer;
+    threadsViewer = document.createElement('div');
+    threadsViewer.className = 'th-viewer';
+    threadsViewer.innerHTML =
+      '<button type="button" class="thv-close" aria-label="关闭">×</button>' +
+      '<button type="button" class="thv-prev" aria-label="上一个">‹</button>' +
+      '<div class="thv-stage"></div>' +
+      '<button type="button" class="thv-next" aria-label="下一个">›</button>' +
+      '<div class="thv-count"></div>';
+    threadsViewer.addEventListener('click', function (e) {
+      if (e.target === threadsViewer || e.target.closest('.thv-close')) { closeThreadsViewer(); return; }
+      if (e.target.closest('.thv-prev')) { moveThreadsViewer(-1); return; }
+      if (e.target.closest('.thv-next')) { moveThreadsViewer(1); return; }
+    });
+    var sx = 0;
+    var sy = 0;
+    threadsViewer.addEventListener('touchstart', function (e) {
+      if (!e.touches || !e.touches.length) return;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+    }, { passive: true });
+    threadsViewer.addEventListener('touchend', function (e) {
+      var t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      var dx = t.clientX - sx;
+      var dy = t.clientY - sy;
+      if (Math.abs(dx) < 42 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      moveThreadsViewer(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    document.body.appendChild(threadsViewer);
+    document.documentElement.classList.add('th-viewer-open');
+    return threadsViewer;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (!threadsViewer) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeThreadsViewer(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); moveThreadsViewer(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); moveThreadsViewer(1); }
+  });
+
+  /* 串文卡片媒体: 点击放大查看原图/视频 (独立查看器, 避免 GLightbox 本地视频兼容问题) */
   function openThreadsLightbox(mediaEl) {
     var card = mediaEl.closest('.threads-card');
     if (!card) return;
     var nodes = Array.prototype.slice.call(card.querySelectorAll('.th-media-item img, .th-media-item video'));
-    var elements = nodes.map(function (node) {
+    threadsViewerItems = nodes.map(function (node) {
       var url = node.dataset.orig || node.currentSrc || node.src;
-      if (node.tagName === 'VIDEO') {
-        return {
-          content: '<video class="th-lightbox-video" src="' + escapeHtml(url) + '" controls autoplay playsinline></video>',
-          width: '90vw'
-        };
-      }
-      return { href: url, type: 'image' };
+      return { url: url, type: node.tagName === 'VIDEO' ? 'video' : 'image' };
     });
-    if (!elements.length) return;
-    var startAt = Math.max(0, nodes.indexOf(mediaEl));
-    function open() {
-      var lb = getMomentsLightbox();
-      if (!lb) return;
-      lb.setElements(elements);
-      lb.openAt(startAt);
-    }
-    if (window.GLightbox) open();
-    else loadGlightboxLib().then(open);
+    if (!threadsViewerItems.length) return;
+    threadsViewerIndex = Math.max(0, nodes.indexOf(mediaEl));
+    ensureThreadsViewer();
+    renderThreadsViewer();
   }
 
   /* 串文卡片翻译: 点「翻译」→ 正文译成中文, 再点切回原文 (复用免费翻译端点) */
@@ -404,7 +473,7 @@
     if (index < 0) index = 0;
     if (index > count - 1) index = count - 1;
     mediaEl.dataset.page = String(index);
-    mediaEl.style.setProperty('--th-page', String(index));
+    mediaEl.style.setProperty('--th-page-x', (-index * 100) + '%');
     syncThreadsNav(wrap);
   }
 
