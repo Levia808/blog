@@ -276,6 +276,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | **Threads 重爬自动覆盖**：资源全部 upsert 覆盖（原已有）+ 新增 ① **孤儿清理** `cleanupStaleMedia`（重爬后删除该帖下不在新媒体清单的旧文件，序号/格式漂移的残留）② **缓存破坏**（图片原图 `?v=ts` + 预览 `&t=ts`、视频 `?v=ts`——覆盖后浏览器/CDN 不再显示旧图）③ 已转存识别（视频 storage URL 跳过重下载并计入保留清单）（已部署） |
 | 08-12 | `本地` | **Threads 视频落地（调研后构建）**：开源调研——SCrawler(2141⭐)支持 Threads 但为 PyQt 桌面不可服务端用、yt-dlp 主线无 Threads extractor；根因是 **CDN 签名 URL 时效短(~1-2h)** 导致视频失效。构建：Edge Function threads-fetch 新增 `processMediaVideos`——入库时下载视频（UA 头、≤40MB）转存 `threads-reposts/media/<id>/<n>.mp4` 永久 URL（`m.local=true`），失败降级保留原链接；自动播放/点击放大均走自有链接（已部署） |
 | 08-12 | `本地` | **Threads 媒体爬取质量升级**：① `fetch.mjs` 重构——解析页面内嵌 JSON（carousel_media/video_versions/image_versions2），图片取**最大候选+去 CDN 尺寸参数原图**、视频取**最大码率**（宽高排序）、url 级去重防重复、`?&` 双符号修复、补充 taken_at 时间 ② Edge Function threads-fetch 桥模式同样做图片原图规范化（已部署）（7 项媒体提取单测通过） |
 | 08-13 | `本地` | **新增「感知」页（音乐/电影/书籍分享）**：① 导航菜单 `hugo.yaml` 加「感知」(`perception/`，weight 6) ② 内容 `content/perception.md` + 模板 `themes/brutalism/layouts/_default/perception.html`（空壳 list-header）③ `swiss.css` 纳入 `.perception-page` ④ 设计稿 `perception-page/design-perception.html`（左文右卡分屏 + CardSwap 式 3D 卡组 + 滚轮/点击交互；连续相位模型可打断、`power2.out` 缓动、文字延后 ~58% 切换、自动播放仅首交互前）+ `perception-page/README.md` 交接文档 |
