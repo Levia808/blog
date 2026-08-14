@@ -303,6 +303,21 @@
 
           <div class="note"><strong>数据源</strong>：前台只请求你自己的代理服务，例如 <span class="mono">http://127.0.0.1:4188/api/netease/playlist</span>。线上部署时把代理地址改成你的正式 API。</div>
 
+          <div class="panel-title">网易云自动化</div>
+          <div class="settings-form">
+            <div class="sf-field sf-wide">
+              <span>登录与解析</span>
+              <div class="sf-actions">
+                <button type="button" class="btn" id="playerProxyStatusBtn">检查代理</button>
+                <button type="button" class="btn btn-primary" id="playerQrLoginBtn">扫码登录</button>
+                <button type="button" class="btn" id="playerPlaylistTestBtn">测试歌单</button>
+                <button type="button" class="btn" id="playerLogoutBtn">退出网易云</button>
+              </div>
+            </div>
+            <div class="note sf-wide" id="playerProxyStatus">尚未检查代理状态。</div>
+            <div class="sf-field sf-wide" id="playerLoginQr" hidden></div>
+          </div>
+
           <div class="panel-title">播放源</div>
           <div class="settings-form">
             <label class="sf-field"><span>启用播放器</span><select id="playerEnabled"><option value="true">启用</option><option value="false">关闭</option></select></label>

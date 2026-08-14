@@ -1201,12 +1201,159 @@
       });
   }
 
+  var playerQrTimer = null;
+
+  function stopPlayerQrPolling() {
+    if (playerQrTimer) window.clearTimeout(playerQrTimer);
+    playerQrTimer = null;
+  }
+
+  function playerProxyBase() {
+    return String(document.getElementById('playerProxyBase').value || PLAYER_DEFAULTS.proxyBase).trim().replace(/\/$/, '');
+  }
+
+  function playerProxyUrl(path, params) {
+    var url = playerProxyBase() + path;
+    var qs = new URLSearchParams(params || {});
+    var text = qs.toString();
+    return text ? url + '?' + text : url;
+  }
+
+  function playerProxyGet(path, params) {
+    return fetch(playerProxyUrl(path, params), { cache: 'no-store' }).then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (error) {}
+        if (!res.ok || !data || data.ok === false) {
+          throw new Error((data && data.error) || ('代理请求失败：HTTP ' + res.status));
+        }
+        return data;
+      });
+    });
+  }
+
+  function setPlayerProxyStatus(message) {
+    var el = document.getElementById('playerProxyStatus');
+    if (el) el.textContent = message || '';
+    setPlayerHint(message || '');
+  }
+
+  function renderPlayerQr(data) {
+    var box = document.getElementById('playerLoginQr');
+    if (!box) return;
+    box.hidden = false;
+    box.innerHTML = [
+      '<span>请使用网易云音乐 App 扫码登录</span>',
+      data.qrimg
+        ? '<img src="' + escapeHtml(data.qrimg) + '" alt="Netease QR Login" style="display:block;width:180px;height:180px;margin-top:10px;border:1px solid var(--line);background:#fff;">'
+        : '<a class="admin-row-action" href="' + escapeHtml(data.qrurl || '#') + '" target="_blank" rel="noopener">打开登录二维码</a>',
+      '<small class="hint">二维码会自动检测登录状态，成功后代理会保存网易云 cookie。</small>'
+    ].join('');
+  }
+
+  function checkNeteaseStatus() {
+    setPlayerProxyStatus('正在检查代理...');
+    return playerProxyGet('/api/netease/status').then(function (data) {
+      var parts = [];
+      parts.push(data.loginSupported ? 'NeteaseCloudMusicApi 已连接' : '代理可用，但未配置 NETEASE_API_BASE');
+      parts.push(data.hasCookie ? '已有登录会话' : '未登录');
+      if (data.loggedIn) parts.push('账号有效');
+      if (data.loginError) parts.push('登录状态检查失败：' + data.loginError);
+      setPlayerProxyStatus(parts.join('；'));
+      return data;
+    }).catch(function (error) {
+      setPlayerProxyStatus('代理检查失败：' + (error.message || error));
+      throw error;
+    });
+  }
+
+  function pollNeteaseQr(key) {
+    stopPlayerQrPolling();
+    playerQrTimer = window.setTimeout(function () {
+      playerProxyGet('/api/netease/login/check', { key: key }).then(function (data) {
+        if (data.code === 803 || data.loggedIn) {
+          setPlayerProxyStatus('扫码登录成功，网易云会话已保存。');
+          stopPlayerQrPolling();
+          checkNeteaseStatus().catch(function () {});
+          return;
+        }
+        if (data.code === 800) {
+          setPlayerProxyStatus('二维码已过期，请重新生成。');
+          stopPlayerQrPolling();
+          return;
+        }
+        setPlayerProxyStatus(data.code === 802 ? '已扫码，请在手机上确认登录。' : '等待扫码...');
+        pollNeteaseQr(key);
+      }).catch(function (error) {
+        setPlayerProxyStatus('二维码状态检查失败：' + (error.message || error));
+        stopPlayerQrPolling();
+      });
+    }, 1800);
+  }
+
+  function startNeteaseQrLogin() {
+    stopPlayerQrPolling();
+    setPlayerProxyStatus('正在生成网易云登录二维码...');
+    return playerProxyGet('/api/netease/login/qr').then(function (data) {
+      renderPlayerQr(data);
+      setPlayerProxyStatus('二维码已生成，等待扫码...');
+      pollNeteaseQr(data.key);
+    }).catch(function (error) {
+      setPlayerProxyStatus('生成二维码失败：' + (error.message || error));
+      throw error;
+    });
+  }
+
+  function testNeteasePlaylist() {
+    var id = String(document.getElementById('playerPlaylistId').value || '').trim();
+    if (!id) {
+      setPlayerProxyStatus('请先填写网易云歌单 ID。');
+      return Promise.resolve();
+    }
+    setPlayerProxyStatus('正在解析歌单...');
+    return playerProxyGet('/api/netease/playlist', {
+      id: id,
+      limit: document.getElementById('playerLimit').value || PLAYER_DEFAULTS.limit,
+      level: document.getElementById('playerLevel').value || PLAYER_DEFAULTS.level
+    }).then(function (data) {
+      setPlayerProxyStatus('歌单解析成功：共 ' + data.total + ' 首，可播放 ' + data.playable + ' 首。');
+      return data;
+    }).catch(function (error) {
+      setPlayerProxyStatus('歌单解析失败：' + (error.message || error));
+      throw error;
+    });
+  }
+
+  function logoutNetease() {
+    stopPlayerQrPolling();
+    setPlayerProxyStatus('正在退出网易云...');
+    return playerProxyGet('/api/netease/logout').then(function () {
+      var box = document.getElementById('playerLoginQr');
+      if (box) {
+        box.hidden = true;
+        box.innerHTML = '';
+      }
+      setPlayerProxyStatus('已退出网易云登录。');
+    }).catch(function (error) {
+      setPlayerProxyStatus('退出失败：' + (error.message || error));
+      throw error;
+    });
+  }
+
   var playerCfgReloadBtn = document.getElementById('playerCfgReloadBtn');
   if (playerCfgReloadBtn) playerCfgReloadBtn.addEventListener('click', loadPlayerConfig);
   var playerCfgSaveBtn = document.getElementById('playerCfgSaveBtn');
   if (playerCfgSaveBtn) playerCfgSaveBtn.addEventListener('click', savePlayerConfig);
   var playerCfgSaveBtn2 = document.getElementById('playerCfgSaveBtn2');
   if (playerCfgSaveBtn2) playerCfgSaveBtn2.addEventListener('click', savePlayerConfig);
+  var playerProxyStatusBtn = document.getElementById('playerProxyStatusBtn');
+  if (playerProxyStatusBtn) playerProxyStatusBtn.addEventListener('click', function () { checkNeteaseStatus().catch(function () {}); });
+  var playerQrLoginBtn = document.getElementById('playerQrLoginBtn');
+  if (playerQrLoginBtn) playerQrLoginBtn.addEventListener('click', function () { startNeteaseQrLogin().catch(function () {}); });
+  var playerPlaylistTestBtn = document.getElementById('playerPlaylistTestBtn');
+  if (playerPlaylistTestBtn) playerPlaylistTestBtn.addEventListener('click', function () { testNeteasePlaylist().catch(function () {}); });
+  var playerLogoutBtn = document.getElementById('playerLogoutBtn');
+  if (playerLogoutBtn) playerLogoutBtn.addEventListener('click', function () { logoutNetease().catch(function () {}); });
   fillPlayerForm(PLAYER_DEFAULTS);
 
   function updateGhAuthStatus() {
