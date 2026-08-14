@@ -2218,34 +2218,32 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
 .th-media-item img.is-loaded { opacity: 1; }
 .th-media-item img.is-broken { opacity: 0.12; cursor: default; }
 .th-media-wrap:hover .th-media-item img.is-loaded { transform: scale(1.02); }
-.th-media-item.is-video { flex: 0 0 100%; }
-.th-media-item.is-video video { background: #000; }
-/* 视频播放/暂停开关 (默认静音循环, 点击暂停/续播, 图标同步) */
-.th-video-toggle {
-  position: absolute; right: 10px; bottom: 10px;
-  width: 36px; height: 36px; border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55); color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+.th-media-item.is-video { flex: 0 0 100%; position: relative; }
+.th-media-item.is-video video { background: #000; width: 100%; height: auto; display: block; }
+/* 视频播放按钮 (居中, 点击播放带声音, 再点暂停; 播放中自动淡出) */
+.th-video-play {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6); color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; opacity: 0; z-index: 2;
-  transition: opacity 0.2s, background 0.2s, transform 0.2s cubic-bezier(.16, 1, .3, 1);
+  cursor: pointer; z-index: 2;
+  transition: opacity 0.25s, background 0.2s, transform 0.25s cubic-bezier(.16, 1, .3, 1);
 }
-.th-media-item.is-video:hover .th-video-toggle,
-.th-video-toggle:focus-visible { opacity: 1; }
-.th-video-toggle:hover { background: rgba(0, 0, 0, 0.78); transform: scale(1.08); }
-.th-video-icon { position: relative; width: 13px; height: 13px; display: block; }
-.th-video-icon::before, .th-video-icon::after {
-  content: ''; position: absolute; top: 0; width: 3px; height: 100%;
-  background: currentColor; border-radius: 1px;
+.th-video-play:hover { background: rgba(0, 0, 0, 0.82); transform: translate(-50%, -50%) scale(1.08); }
+.th-video-play .th-video-icon {
+  width: 0; height: 0; margin-left: 4px;
+  border-top: 14px solid transparent; border-bottom: 14px solid transparent;
+  border-left: 22px solid currentColor;
 }
-.th-video-icon::before { left: 0; }
-.th-video-icon::after { right: 0; }
-.th-video-toggle.is-paused .th-video-icon::before {
-  left: 2px; width: 0; height: 0; background: transparent; border-radius: 0;
-  border-top: 6.5px solid transparent; border-bottom: 6.5px solid transparent;
-  border-left: 10px solid currentColor; top: 0;
+.th-video-play.is-playing { opacity: 0; pointer-events: none; }
+.th-media-item.is-video:hover .th-video-play.is-playing { opacity: 0.55; pointer-events: auto; }
+.th-media-item.is-video:hover .th-video-play:not(.is-playing) { opacity: 1; }
+.th-video-play:not(.is-playing) { opacity: 0.85; }
+.th-video-fallback {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: rgba(255, 255, 255, 0.75); font-size: 13px; background: rgba(0, 0, 0, 0.6); z-index: 1;
 }
-.th-video-toggle.is-paused .th-video-icon::after { display: none; }
 .th-prev, .th-next {
   position: absolute; top: 50%; transform: translateY(-50%);
   width: 30px; height: 30px; border-radius: 50%;

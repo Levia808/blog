@@ -268,40 +268,89 @@ EXTRACT_JS = r"""
     return best;
   };
 
-  /* 页面内嵌 JSON (carousel_media) 提取媒体 — 原图档 (img 遍历可能拿到 480 预览变体) */
+  /* 页面内嵌 JSON 提取媒体 (优先): ① 多图帖 carousel_media ② 单视频帖顶层 video_versions
+     ③ 单图帖顶层 image_versions2 — 均为原图档; JSON 全空时才用 DOM 遍历兜底 (限定主帖媒体区) */
   var jsonMedia = [];
+  var scripts = Array.from(document.querySelectorAll('script'));
+  var scriptTexts = scripts.map(function (s) { return s.textContent || ''; });
+  var bestVideo = function (arr) {
+    return arr.slice().sort(function (a, b) { return (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0); })[0];
+  };
+
   try {
-    var scripts = Array.from(document.querySelectorAll('script'));
-    for (var si = 0; si < scripts.length && !jsonMedia.length; si++) {
-      var st = scripts[si].textContent || '';
+    /* ① carousel_media (多图/图文帖, 每项可能含视频) */
+    for (var si = 0; si < scriptTexts.length; si++) {
+      var st = scriptTexts[si];
       var cm = st.match(/"carousel_media":\s*(\[[\s\S]*?\])\s*,\s*"[a-z_]+"/);
       if (!cm) continue;
       var arr = JSON.parse(cm[1]);
       arr.forEach(function (item) {
         if (!item) return;
         if (item.media_type === 2 && item.video_versions && item.video_versions.length) {
-          var v = item.video_versions.slice().sort(function (a, b) { return (b.width || 0) * (b.height || 0) - (a.width || 0) * (a.height || 0); })[0];
+          var v = bestVideo(item.video_versions);
           if (v && v.url && !seen[v.url]) { seen[v.url] = true; jsonMedia.push({ type: 'video', url: v.url, width: v.width || 0, height: v.height || 0 }); }
         } else if (item.image_versions2 && item.image_versions2.candidates) {
           var p = pickBest(item.image_versions2.candidates);
           if (p && !seen[p.url]) { seen[p.url] = true; jsonMedia.push({ type: 'image', url: p.url, width: p.width, height: p.height }); }
         }
       });
+      break; /* 主帖的 carousel_media 即页面首个 */
     }
-  } catch (e) { /* JSON 提取失败则回退 img 遍历 */ }
+  } catch (e) {}
 
-  Array.from(document.querySelectorAll('img')).forEach(function (img) {
-    var alt = img.alt || '';
-    var src = img.currentSrc || img.src || '';
-    if (/头像|avatar/i.test(alt) && src && !avatar) { avatar = src; return; }
-    var isAvatar = img.naturalWidth === 150 && img.naturalHeight === 150;
-    if (!isAvatar && src && !seen[src]) { seen[src] = true; media.push({ type: 'image', url: src, width: img.naturalWidth, height: img.naturalHeight }); }
-  });
-  Array.from(document.querySelectorAll('video')).forEach(function (v) {
-    var src = v.currentSrc || v.src || (v.querySelector('source') || {}).src || '';
-    if (src && !seen[src]) { seen[src] = true; media.push({ type: 'video', url: src }); }
-  });
-  /* 内嵌 JSON 媒体优先 (原图档), 否则用 img 遍历结果 */
+  if (!jsonMedia.length) {
+    try {
+      /* ② 单视频帖: 顶层 video_versions (页面内联 JSON 中首个非空数组) */
+      for (var vi = 0; vi < scriptTexts.length && !jsonMedia.length; vi++) {
+        var stv = scriptTexts[vi];
+        var vre = /"video_versions":\s*(\[[\s\S]*?\])\s*,\s*"[a-z_]+"/;
+        var vm = stv.match(vre);
+        if (!vm) continue;
+        var varr = JSON.parse(vm[1]);
+        var vv = bestVideo(varr);
+        if (vv && vv.url && /http/.test(vv.url) && !/blob:/.test(vv.url)) {
+          seen[vv.url] = true;
+          jsonMedia.push({ type: 'video', url: vv.url, width: vv.width || 0, height: vv.height || 0 });
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!jsonMedia.length) {
+    try {
+      /* ③ 单图帖: 顶层 image_versions2.candidates (仅取首个 = 主帖) */
+      for (var ii = 0; ii < scriptTexts.length && !jsonMedia.length; ii++) {
+        var sti = scriptTexts[ii];
+        var ire = /"image_versions2":\s*\{"candidates":\s*(\[[\s\S]*?\])\s*\}/;
+        var im = sti.match(ire);
+        if (!im) continue;
+        var iarr = JSON.parse(im[1]);
+        var ip = pickBest(iarr);
+        if (ip && ip.url) {
+          seen[ip.url] = true;
+          jsonMedia.push({ type: 'image', url: ip.url, width: ip.width, height: ip.height });
+        }
+      }
+    } catch (e) {}
+  }
+
+  /* DOM 兜底 (JSON 全空时): 仅主帖媒体区 — 取前 6 个非头像媒体, 避开推荐帖 */
+  if (!jsonMedia.length) {
+    var domCount = 0;
+    Array.from(document.querySelectorAll('img, video')).forEach(function (el) {
+      if (domCount >= 6) return;
+      var src = el.currentSrc || el.src || (el.querySelector('source') || {}).src || '';
+      var alt = el.alt || '';
+      if (!src || /blob:/.test(src)) return;
+      if (el.tagName === 'IMG' && (/头像|avatar/i.test(alt) || (el.naturalWidth === 150 && el.naturalHeight === 150))) return;
+      if (!seen[src]) {
+        seen[src] = true;
+        media.push({ type: el.tagName === 'VIDEO' ? 'video' : 'image', url: src, width: el.naturalWidth || 0, height: el.naturalHeight || 0 });
+        domCount++;
+      }
+    });
+  }
+
   if (jsonMedia.length) media = jsonMedia;
   if (media.length > 10) media = media.slice(0, 10);
   return { ready: text.length > 0 || media.length > 0, author: author, time: time, text: text, likes: likes, replies: replies, media: media, avatar: avatar };

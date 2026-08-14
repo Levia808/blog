@@ -170,9 +170,11 @@
     if (cur.length) pages.push(cur);
     var media = pages.map(function (pg) {
       if (pg.length === 1 && pg[0].type === 'video') {
-        /* 视频: 静音自动播放 (浏览器策略) + 循环, 进入视口加载; 附播放/暂停开关 */
-        return '<span class="th-media-item is-video"><video src="' + escapeHtml(pg[0].url) + '" muted playsinline autoplay loop preload="auto"></video>' +
-          '<button type="button" class="th-video-toggle" aria-label="暂停" aria-pressed="true"><span class="th-video-icon"></span></button></span>';
+        /* 视频: 点击播放 (带声音), 居中播放/暂停按钮, 元数据预加载 */
+        return '<span class="th-media-item is-video">' +
+          '<video src="' + escapeHtml(pg[0].url) + '" playsinline preload="metadata" data-orig="' + escapeHtml(pg[0].url) + '"></video>' +
+          '<button type="button" class="th-video-play" aria-label="播放"><span class="th-video-icon"></span></button>' +
+          '</span>';
       }
       return '<span class="th-pair">' + pg.map(function (m) {
         /* 图片: 优先预览图 (低分辨率, 载入快), data-orig 存原图供放大查看; 宽高比备用数据 */
@@ -428,27 +430,41 @@
       scrollThreadsMediaTo(wrap, Array.prototype.indexOf.call(dot.parentNode.children, dot));
       return;
     }
-    /* 视频: 点击开关静音循环视频的播放/暂停 (autoplay 状态与图标同步) */
-    var vt = e.target.closest('.th-video-toggle');
-    if (vt) {
+    /* 视频: 点击播放 (带声音) / 再点暂停 — 按钮与视频本体均可触发, 播放态图标同步 */
+    var vt = e.target.closest('.th-video-play');
+    var videoEl = e.target.closest('.th-media-item.is-video video');
+    if (vt || videoEl) {
       e.preventDefault(); e.stopPropagation();
-      var video = wrap.querySelector('video');
+      var video = (vt ? vt.closest('.th-media-item') : videoEl.closest('.th-media-item')).querySelector('video');
+      var btn = video && video.closest('.th-media-item').querySelector('.th-video-play');
       if (video) {
         if (video.paused) {
-          video.play();
-          vt.setAttribute('aria-pressed', 'true');
-          vt.setAttribute('aria-label', '暂停');
-          vt.classList.remove('is-paused');
+          video.muted = false;
+          video.play().then(function () {
+            if (btn) { btn.classList.add('is-playing'); btn.setAttribute('aria-label', '暂停'); }
+          }).catch(function () {});
         } else {
           video.pause();
-          vt.setAttribute('aria-pressed', 'false');
-          vt.setAttribute('aria-label', '播放');
-          vt.classList.add('is-paused');
+          if (btn) { btn.classList.remove('is-playing'); btn.setAttribute('aria-label', '播放'); }
         }
       }
       return;
     }
   });
+
+  /* 视频加载失败兜底: 显示提示并移除播放按钮 */
+  listEl.addEventListener('error', function (e) {
+    var v = e.target;
+    if (v && v.tagName === 'VIDEO' && v.closest('.th-media-item.is-video')) {
+      var item = v.closest('.th-media-item');
+      var btn = item && item.querySelector('.th-video-play');
+      if (btn) btn.remove();
+      var fb = document.createElement('div');
+      fb.className = 'th-video-fallback';
+      fb.textContent = '视频暂不可用';
+      if (item) item.appendChild(fb);
+    }
+  }, true);
 
   document.addEventListener('scroll', function (e) {
     var wrap = e.target && e.target.closest && e.target.closest('.th-media-wrap');
