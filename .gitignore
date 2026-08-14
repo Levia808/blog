@@ -2,3 +2,5 @@ public/
 resources/
 .hugo_build.lock
 float-player/netease-proxy/.netease-session.json
+music-api/node_modules/
+music-api/.netease-session.json

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: blog-music-api
+    env: node
+    rootDir: music-api
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: CORS_ORIGIN
+        value: https://blog-go3.pages.dev
