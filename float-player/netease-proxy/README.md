@@ -44,6 +44,28 @@ For the most stable playlist parsing, run this proxy together with a self-hosted
 Recommended local shape:
 
 ```powershell
+cd C:\Users\27418\Documents\blog
+.\start-netease-player.cmd
+```
+
+Or run the Node launcher directly:
+
+```powershell
+cd C:\Users\27418\Documents\blog
+node scripts\start-netease-player.js
+```
+
+The launcher will:
+
+1. clone NeteaseCloudMusicApi into `%TEMP%\NeteaseCloudMusicApi` if needed;
+2. run `npm install` if dependencies are missing;
+3. start NeteaseCloudMusicApi on `http://127.0.0.1:3000`;
+4. start this proxy on `http://127.0.0.1:4188`;
+5. open the admin page.
+
+Manual equivalent:
+
+```powershell
 # terminal 1: run NeteaseCloudMusicApi / Enhanced-NeteaseCloudMusicApi on port 3000
 
 # terminal 2: run this proxy
