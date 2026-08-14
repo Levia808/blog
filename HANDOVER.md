@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-08-14 · opencode（Threads 混排媒体最终修复：动态页恢复完整模块；串文图片/视频两两预览；轮播用 JS 明确位移；放大查看改独立图片/视频查看器；真实 Chrome CDP 验证通过）
+> 最后更新：2026-08-14 · opencode（Threads 混排媒体最终修复：整合用户反馈问题复盘；动态页恢复完整模块；串文图片/视频两两预览；轮播用 JS 明确位移；放大查看改独立图片/视频查看器；真实 Chrome CDP 验证通过）
 
 ---
 
@@ -146,6 +146,21 @@ supabase functions deploy threads-login --no-verify-jwt
 - **真实浏览器验证方法**：本地 `hugo server --bind 127.0.0.1 --port 1313 --disableFastRender` + Chrome `--remote-debugging-port=9223`，通过 CDP 注入混排卡片测试；已验证卡片轮播 `page=1/x=-100%`、查看器 `1/3→2/3→3/3→1/3`、视频 hover `paused=false currentTime≈0.9`、切回查看器视频 `paused=false readyState=4 currentTime>0`
 - **浏览器缓存**：moments.js/admin.js 已加 `?v={{now.Unix}}`，否则部署后旧 JS 滞留（曾致自动爬取"没生效"）
 - **图片预览用 Storage 图像转换（render/image）**：Edge Function 只下载原图转存（fetch+upload，零图像库依赖），预览用 `object/public` → `render/image/public` URL + `?width=640&quality=80&resize=contain` 按需生成（项目已启用 Image Transformations，CDN 缓存）。⚠️ **踩坑**：最初用 `npm:@imagemagick/magick-wasm@0.0.8`（wasm 内嵌 base64 约 9.8MB）在 Edge Function 生成预览，部署成功但运行时报 `BOOT_ERROR (Function failed to start)`——emscripten 模块在 Supabase Edge Runtime 启动即崩，已弃用改用 render/image
+
+### 3.4.1 Threads 混排媒体用户问题复盘（08-14）
+
+> 用户连续反馈的问题必须作为后续回归测试清单，不能只看构建通过。
+
+| 用户反馈的问题 | 实际根因 | 当前解法 / 验证点 |
+|---|---|---|
+| 动态页无法显示自己发的动态 | 提交 `7a23d7e` 把完整 `static/js/moments.js` 覆盖成 82 行片段，同时 `features.css` 大量样式被删，Supabase 动态加载/渲染逻辑缺失 | `aaf1ada` 恢复 `d409abf` 完整基线；验证 `node --check static/js/moments.js` + `hugo --minify` |
+| Threads 视频不应单独占一页，而应和照片一样「一屏两个」预览 | 早期修复把视频强制拆成单页，违背用户预期 | `510f3e0` 改为图片/视频统一两两成页 |
+| 视频预览样式不像照片，混排时尺寸/高度不稳定 | 布局依赖 video/img 自然尺寸；视频 metadata 未返回前比例不稳定 | `0311adf` 在 `layoutThreadsMedia` 中按真实/入库比例给每个 `.th-media-item` 显式写 `width/height`，子元素统一 `width/height:100%; object-fit:cover` |
+| 图片+视频混排卡在第一个视频，无法切换预览 | 预览 `<video>` 和点击播放逻辑截获轮播拖拽/点击；`scrollLeft/scroll-snap` 容易被 video/原生控件干扰 | `6af7c74` 让预览 video `pointer-events:none`；`eb3009a` 后续改为显式页码切换；最终由 `70c7db7` 用 `--th-page-x` 明确位移完成 |
+| 视频无法自动播放 | autoplay 未必真正启动，尤其查看器里非 muted 视频会被浏览器阻止 | 预览 hover 时静音 `play()`；查看器中 `<video controls autoplay muted playsinline>` 并显式 `play()`，真实 Chrome 验证 `paused=false currentTime>0` |
+| 点击放大后视频静止，只有进度条在动 | GLightbox 本地视频封装层兼容异常，视频状态和画面刷新不同步 | 不再用 GLightbox 承载 Threads 视频；`70c7db7` 新增独立 `.th-viewer`，原生 video 直接渲染 |
+| 放大查看后无法左右切换 | GLightbox 混合 image/content/video slide 状态异常；早期 `setElements` 方案不稳定 | `.th-viewer` 自己维护媒体数组和 index，按钮/键盘/触摸统一切换；真实 Chrome 验证 `1/3→2/3→3/3→1/3` |
+| 修复后仍要继续使用测试 | 纯构建/语法检查无法覆盖交互失败 | 固定回归：本地 Hugo + Chrome CDP 注入混排卡片，验证轮播位移、圆点/按钮状态、hover 视频播放、查看器左右切换和视频播放态 |
 
 ### 3.5 已知限制
 
