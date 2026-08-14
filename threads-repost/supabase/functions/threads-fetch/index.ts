@@ -197,6 +197,48 @@ function renderPreviewUrl(originalPublicUrl: string, width = 640): string {
     + '?width=' + width + '&quality=80&resize=contain';
 }
 
+/* 从图片字节解析尺寸 (JPEG SOF / PNG IHDR / WebP VP8X/VP8L/VP8) — 转存后回填真实分辨率 */
+function imageSizeFromBytes(buf: ArrayBuffer): { w: number; h: number } {
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  if (u8.length < 24) return { w: 0, h: 0 };
+  /* PNG */
+  if (u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4E && u8[3] === 0x47) {
+    return { w: dv.getUint32(16, false), h: dv.getUint32(20, false) };
+  }
+  /* WebP: RIFF....WEBP */
+  if (u8[0] === 0x52 && u8[1] === 0x49 && u8[2] === 0x46 && u8[3] === 0x46 && u8[8] === 0x57) {
+    const fourcc = String.fromCharCode(u8[12], u8[13], u8[14], u8[15]);
+    if (fourcc === 'VP8X' && u8.length >= 30) {
+      const w = 1 + ((u8[24] | (u8[25] << 8) | (u8[26] << 16)));
+      const h = 1 + ((u8[27] | (u8[28] << 8) | (u8[29] << 16)));
+      return { w, h };
+    }
+    if (fourcc === 'VP8L' && u8.length >= 25) {
+      const b = (u8[21] | (u8[22] << 8) | (u8[23] << 16) | (u8[24] << 24)) >>> 0;
+      return { w: (b & 0x3FFF) + 1, h: ((b >> 14) & 0x3FFF) + 1 };
+    }
+    if (fourcc === 'VP8 ') {
+      return { w: dv.getUint16(26, true) & 0x3FFF, h: dv.getUint16(28, true) & 0x3FFF };
+    }
+  }
+  /* JPEG */
+  if (u8[0] === 0xFF && u8[1] === 0xD8) {
+    let j = 2;
+    while (j + 9 < u8.length) {
+      if (u8[j] !== 0xFF) { j++; continue; }
+      const m = u8[j + 1];
+      if (m === 0xD8 || m === 0xFF || (m >= 0xD0 && m <= 0xD9)) { j += 2; continue; }
+      const segLen = dv.getUint16(j + 2, false);
+      if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+        return { w: dv.getUint16(j + 7, false), h: dv.getUint16(j + 5, false) };
+      }
+      j += 2 + segLen;
+    }
+  }
+  return { w: 0, h: 0 };
+}
+
 /* 逐张图片: 下载原图 → 存桶(public, upsert 覆盖) → 生成预览 URL; 单张失败不影响其余
    返回 { changed, paths }: paths = 本次有效媒体文件路径 (供孤儿清理) */
 async function processMediaImages(supabase: any, result: any): Promise<{ changed: boolean; paths: string[] }> {
@@ -225,9 +267,12 @@ async function processMediaImages(supabase: any, result: any): Promise<{ changed
         .upload(origName, new Blob([buf], { type: ct }), { upsert: true, contentType: ct });
       if (oErr) continue;
       const pub = supabase.storage.from('threads-reposts').getPublicUrl(origName).data.publicUrl;
-      /* 覆盖后缓存破坏: 原图 + ?v, 预览 + &t (CDN/浏览器按 URL 缓存) */
+      /* 回填真实分辨率 (桥未传/传错时前端比例失效) */
+      const size = imageSizeFromBytes(buf);
+      if (size.w && size.h) { m.width = size.w; m.height = size.h; }
+      /* 覆盖后缓存破坏: 原图 + ?v, 预览 + &t (CDN/浏览器按 URL 缓存); 预览 1080 高清 */
       m.url = pub + '?v=' + ts;
-      m.preview = renderPreviewUrl(pub, 640) + '&t=' + ts;
+      m.preview = renderPreviewUrl(pub, 1080) + '&t=' + ts;
       changed = true;
     } catch (e) { /* 单图失败不影响其余 */ }
   }
