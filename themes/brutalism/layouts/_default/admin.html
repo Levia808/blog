@@ -24,6 +24,7 @@
       <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="settings"><span class="dm-idx">07</span>系统设置<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="platform"><span class="dm-idx">08</span>平台管理<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="player"><span class="dm-idx">09</span>播放器配置<span class="dm-arr">››</span></a>
     </nav>
     <div class="drawer-user">
       <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
@@ -46,6 +47,7 @@
           <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
           <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>系统设置</a>
           <a href="#" class="an-item" data-admin-section="platform"><span class="an-dot"></span>平台管理</a>
+          <a href="#" class="an-item" data-admin-section="player"><span class="an-dot"></span>播放器配置</a>
         </nav>
         <div class="an-user">
           <img src="{{ "favicon.svg" | relURL }}" alt="" id="adminUserAvatar">
@@ -287,6 +289,47 @@
             </div>
             <p class="auth-error" id="cfgThreadsFetchError" hidden></p>
             <div class="note">爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，文章中的串文链接会自动渲染成转发卡片。</div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="player" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">FLOAT PLAYER</p><h3>播放器配置</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="playerCfgReloadBtn">重新加载</button>
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn">保存配置</button>
+            </div>
+          </div>
+
+          <div class="note"><strong>数据源</strong>：前台只请求你自己的代理服务，例如 <span class="mono">http://127.0.0.1:4188/api/netease/playlist</span>。线上部署时把代理地址改成你的正式 API。</div>
+
+          <div class="panel-title">播放源</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>启用播放器</span><select id="playerEnabled"><option value="true">启用</option><option value="false">关闭</option></select></label>
+            <label class="sf-field"><span>自动加载歌单</span><select id="playerAutoLoad"><option value="false">手动</option><option value="true">自动</option></select></label>
+            <label class="sf-field"><span>网易云歌单 ID</span><input type="text" id="playerPlaylistId" placeholder="3778678"></label>
+            <label class="sf-field sf-wide"><span>代理地址</span><input type="url" id="playerProxyBase" placeholder="http://127.0.0.1:4188"></label>
+            <label class="sf-field"><span>加载数量</span><input type="number" id="playerLimit" min="1" max="200"></label>
+            <label class="sf-field"><span>音质等级</span><select id="playerLevel"><option value="standard">standard</option><option value="higher">higher</option><option value="exhigh">exhigh</option><option value="lossless">lossless</option><option value="hires">hires</option></select></label>
+          </div>
+
+          <div class="panel-title">弧形交互</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>吸附侧</span><select id="playerSide"><option value="left">左侧</option><option value="right">右侧</option></select></label>
+            <label class="sf-field"><span>字号 rem</span><input type="number" id="playerFontSize" min="1.6" max="5" step="0.1"></label>
+            <label class="sf-field"><span>行距倍率</span><input type="number" id="playerSpacing" min="0.8" max="2.4" step="0.05"></label>
+            <label class="sf-field"><span>倾斜角度</span><input type="number" id="playerTilt" min="0" max="18" step="0.5"></label>
+            <label class="sf-field"><span>弧度强度</span><input type="number" id="playerCurve" min="0" max="2.5" step="0.05"></label>
+            <label class="sf-field"><span>淡出强度</span><input type="number" id="playerFade" min="0" max="0.8" step="0.01"></label>
+            <label class="sf-field"><span>最小透明度</span><input type="number" id="playerMinOpacity" min="0" max="0.5" step="0.01"></label>
+            <label class="sf-field"><span>模糊强度</span><input type="number" id="playerBlur" min="0" max="8" step="0.1"></label>
+            <label class="sf-field"><span>缓动时间</span><input type="number" id="playerSmoothing" min="60" max="600" step="10"></label>
+            <label class="sf-field"><span>文字内缩</span><input type="number" id="playerInset" min="24" max="180" step="1"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn2">保存播放器配置</button>
+              <span class="hint" id="playerCfgHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="playerCfgError" hidden></p>
           </div>
         </section>
 

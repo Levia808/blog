@@ -1,0 +1,17 @@
+# 悬浮播放器配置（管理后台「播放器配置」可编辑）
+enabled: true
+autoLoad: false
+playlistId: ""
+proxyBase: "http://127.0.0.1:4188"
+limit: 30
+level: "exhigh"
+side: "left"
+fontSize: 3
+spacing: 1.4
+tilt: 6
+curve: 1
+fade: 0.25
+minOpacity: 0.05
+blur: 2
+smoothing: 190
+inset: 80

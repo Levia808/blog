@@ -86,7 +86,7 @@
   }
 
   /* ── 面板切换 ── */
-  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings', 'platform'];
+  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings', 'platform', 'player'];
 
   function switchSection(name) {
     sections.forEach(function (section) {
@@ -1021,6 +1021,194 @@
   var cfgNavReloadBtn = document.getElementById('cfgNavReloadBtn');
   if (cfgNavReloadBtn) cfgNavReloadBtn.addEventListener('click', loadNavBehaviorConfig);
 
+  /* ── 播放器配置 (data/player.yaml 读写) ── */
+  var playerCfgSha = null;
+  var PLAYER_FIELDS = {
+    enabled: 'playerEnabled',
+    autoLoad: 'playerAutoLoad',
+    playlistId: 'playerPlaylistId',
+    proxyBase: 'playerProxyBase',
+    limit: 'playerLimit',
+    level: 'playerLevel',
+    side: 'playerSide',
+    fontSize: 'playerFontSize',
+    spacing: 'playerSpacing',
+    tilt: 'playerTilt',
+    curve: 'playerCurve',
+    fade: 'playerFade',
+    minOpacity: 'playerMinOpacity',
+    blur: 'playerBlur',
+    smoothing: 'playerSmoothing',
+    inset: 'playerInset'
+  };
+  var PLAYER_DEFAULTS = {
+    enabled: true,
+    autoLoad: false,
+    playlistId: '',
+    proxyBase: 'http://127.0.0.1:4188',
+    limit: 30,
+    level: 'exhigh',
+    side: 'left',
+    fontSize: 3,
+    spacing: 1.4,
+    tilt: 6,
+    curve: 1,
+    fade: 0.25,
+    minOpacity: 0.05,
+    blur: 2,
+    smoothing: 190,
+    inset: 80
+  };
+
+  function setPlayerHint(message) {
+    var hint = document.getElementById('playerCfgHint');
+    if (hint) hint.textContent = message || '';
+  }
+
+  function setPlayerError(message) {
+    var el = document.getElementById('playerCfgError');
+    if (!el) return;
+    el.textContent = message || '';
+    el.hidden = !message;
+  }
+
+  function readBoolean(value) {
+    return value === true || value === 'true';
+  }
+
+  function fillPlayerForm(cfg) {
+    cfg = Object.assign({}, PLAYER_DEFAULTS, cfg || {});
+    Object.keys(PLAYER_FIELDS).forEach(function (key) {
+      var el = document.getElementById(PLAYER_FIELDS[key]);
+      if (!el) return;
+      if (key === 'enabled' || key === 'autoLoad') el.value = String(readBoolean(cfg[key]));
+      else el.value = cfg[key] == null ? '' : cfg[key];
+    });
+  }
+
+  function numberField(id, fallback) {
+    var el = document.getElementById(id);
+    var value = Number(el ? el.value : '');
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function readPlayerForm() {
+    return {
+      enabled: readBoolean(document.getElementById('playerEnabled').value),
+      autoLoad: readBoolean(document.getElementById('playerAutoLoad').value),
+      playlistId: String(document.getElementById('playerPlaylistId').value || '').trim(),
+      proxyBase: String(document.getElementById('playerProxyBase').value || PLAYER_DEFAULTS.proxyBase).trim(),
+      limit: Math.min(200, Math.max(1, Math.round(numberField('playerLimit', PLAYER_DEFAULTS.limit)))),
+      level: document.getElementById('playerLevel').value || PLAYER_DEFAULTS.level,
+      side: document.getElementById('playerSide').value === 'right' ? 'right' : 'left',
+      fontSize: numberField('playerFontSize', PLAYER_DEFAULTS.fontSize),
+      spacing: numberField('playerSpacing', PLAYER_DEFAULTS.spacing),
+      tilt: numberField('playerTilt', PLAYER_DEFAULTS.tilt),
+      curve: numberField('playerCurve', PLAYER_DEFAULTS.curve),
+      fade: numberField('playerFade', PLAYER_DEFAULTS.fade),
+      minOpacity: numberField('playerMinOpacity', PLAYER_DEFAULTS.minOpacity),
+      blur: numberField('playerBlur', PLAYER_DEFAULTS.blur),
+      smoothing: Math.round(numberField('playerSmoothing', PLAYER_DEFAULTS.smoothing)),
+      inset: Math.round(numberField('playerInset', PLAYER_DEFAULTS.inset))
+    };
+  }
+
+  function yamlScalar(value) {
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (typeof value === 'number') return String(value);
+    return '"' + String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
+
+  function serializePlayerConfig(values) {
+    return [
+      '# 悬浮播放器配置（管理后台「播放器配置」可编辑）',
+      'enabled: ' + yamlScalar(values.enabled),
+      'autoLoad: ' + yamlScalar(values.autoLoad),
+      'playlistId: ' + yamlScalar(values.playlistId),
+      'proxyBase: ' + yamlScalar(values.proxyBase),
+      'limit: ' + yamlScalar(values.limit),
+      'level: ' + yamlScalar(values.level),
+      'side: ' + yamlScalar(values.side),
+      'fontSize: ' + yamlScalar(values.fontSize),
+      'spacing: ' + yamlScalar(values.spacing),
+      'tilt: ' + yamlScalar(values.tilt),
+      'curve: ' + yamlScalar(values.curve),
+      'fade: ' + yamlScalar(values.fade),
+      'minOpacity: ' + yamlScalar(values.minOpacity),
+      'blur: ' + yamlScalar(values.blur),
+      'smoothing: ' + yamlScalar(values.smoothing),
+      'inset: ' + yamlScalar(values.inset)
+    ].join('\n') + '\n';
+  }
+
+  function loadPlayerConfig() {
+    if (!getGhToken()) {
+      setPlayerError('请先授权 GitHub 后再编辑播放器配置。');
+      return Promise.resolve();
+    }
+    setPlayerError('');
+    setPlayerHint('读取中...');
+    return ghFetch('/repos/' + GH_REPO + '/contents/data/player.yaml')
+      .then(function (file) {
+        playerCfgSha = file.sha;
+        var cfg = parseDataSimple(atob(String(file.content).replace(/\s/g, '')));
+        fillPlayerForm(cfg);
+        setPlayerHint('已加载 data/player.yaml');
+      })
+      .catch(function (error) {
+        setPlayerError('播放器配置加载失败：' + (error.message || error));
+        fillPlayerForm(PLAYER_DEFAULTS);
+      });
+  }
+
+  function savePlayerConfig() {
+    if (!getGhToken()) {
+      setPlayerError('请先授权 GitHub 后再保存播放器配置。');
+      return;
+    }
+    var values = readPlayerForm();
+    var text = serializePlayerConfig(values);
+    var btn = document.getElementById('playerCfgSaveBtn');
+    var btn2 = document.getElementById('playerCfgSaveBtn2');
+    [btn, btn2].forEach(function (item) {
+      if (item) { item.disabled = true; item.textContent = '保存中...'; }
+    });
+    setPlayerError('');
+    setPlayerHint('提交到 GitHub...');
+    ghFetch('/repos/' + GH_REPO + '/contents/data/player.yaml')
+      .then(function (file) {
+        playerCfgSha = file.sha;
+        return ghFetch('/repos/' + GH_REPO + '/contents/data/player.yaml', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: '更新播放器配置',
+            content: base64Encode(text),
+            sha: playerCfgSha
+          })
+        });
+      })
+      .then(function () {
+        showToast('播放器配置已保存，站点重建后生效', 'success');
+        setPlayerHint('已提交，等待站点重建');
+      })
+      .catch(function (error) {
+        setPlayerError('保存失败：' + (error.message || error));
+      })
+      .finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '保存配置'; }
+        if (btn2) { btn2.disabled = false; btn2.textContent = '保存播放器配置'; }
+      });
+  }
+
+  var playerCfgReloadBtn = document.getElementById('playerCfgReloadBtn');
+  if (playerCfgReloadBtn) playerCfgReloadBtn.addEventListener('click', loadPlayerConfig);
+  var playerCfgSaveBtn = document.getElementById('playerCfgSaveBtn');
+  if (playerCfgSaveBtn) playerCfgSaveBtn.addEventListener('click', savePlayerConfig);
+  var playerCfgSaveBtn2 = document.getElementById('playerCfgSaveBtn2');
+  if (playerCfgSaveBtn2) playerCfgSaveBtn2.addEventListener('click', savePlayerConfig);
+  fillPlayerForm(PLAYER_DEFAULTS);
+
   function updateGhAuthStatus() {
     var authorized = Boolean(getGhToken());
     var statusEl = document.getElementById('ghAuthStatus');
@@ -1033,6 +1221,7 @@
     if (authBtn) authBtn.textContent = authorized ? '重新授权' : 'GitHub 授权';
     if (authorized) {
       refreshPosts().catch(function (error) { showError(errorText(error)); });
+      loadPlayerConfig().catch(function () {});
     } else {
       renderPostRows([], 'adminPostTable', true);
       renderPostRows([], 'adminPublishTable', true);

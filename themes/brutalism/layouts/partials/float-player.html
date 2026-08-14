@@ -1,0 +1,9 @@
+{{- with site.Data.player -}}
+{{- if ne .enabled false -}}
+<link rel="stylesheet" href="{{ "float-player/float-player.css" | relURL }}">
+<script>
+window.__FLOAT_PLAYER_CONFIG = {{ . | jsonify | safeJS }};
+</script>
+<script src="{{ "float-player/float-player.js" | relURL }}" defer></script>
+{{- end -}}
+{{- end -}}
