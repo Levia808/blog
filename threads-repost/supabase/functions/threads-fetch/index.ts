@@ -239,6 +239,34 @@ function imageSizeFromBytes(buf: ArrayBuffer): { w: number; h: number } {
   return { w: 0, h: 0 };
 }
 
+/* 图片下载 + 原图档回退: 预览档 url (无 stp=e35 / 带 width) 去掉参数后可能仍返回低分辨率
+   → 附加 stp=dst-jpg_e35 (IG CDN 原图质量档) 重试, 取更高分辨率结果 */
+async function downloadImageWithFallback(url: string): Promise<{ buf: ArrayBuffer; w: number; h: number } | null> {
+  const base = originalImageUrl(url);
+  const attempts = [
+    base,
+    base + (base.includes('?') ? '&' : '?') + 'stp=dst-jpg_e35'
+  ];
+  let best: { buf: ArrayBuffer; w: number; h: number } | null = null;
+  for (const u of attempts) {
+    try {
+      const res = await fetch(u, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36' }
+      });
+      if (!res.ok) continue;
+      const buf = await res.arrayBuffer();
+      if (!buf || buf.byteLength === 0) continue;
+      const s = imageSizeFromBytes(buf);
+      const cand = { buf, w: s.w, h: s.h };
+      /* 保留更高分辨率结果 */
+      if (!best || (cand.w * cand.h) > (best.w * best.h)) best = cand;
+      /* 第一轮已高清 (>=800px) → 无需重试; 第二轮 (e35) 无论结果都停止 */
+      if (attempts.indexOf(u) === 0 && s.w >= 800) break;
+    } catch (e) { /* 继续下一轮 */ }
+  }
+  return best;
+}
+
 /* 逐张图片: 下载原图 → 存桶(public, upsert 覆盖) → 生成预览 URL; 单张失败不影响其余
    返回 { changed, paths }: paths = 本次有效媒体文件路径 (供孤儿清理) */
 async function processMediaImages(supabase: any, result: any): Promise<{ changed: boolean; paths: string[] }> {
@@ -251,25 +279,19 @@ async function processMediaImages(supabase: any, result: any): Promise<{ changed
     const m = media[i];
     if (!m || m.type === 'video' || !m.url) continue;
     try {
-      const origUrl = originalImageUrl(m.url);
-      const res = await fetch(origUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36' }
-      });
-      if (!res.ok) continue;
-      const buf = await res.arrayBuffer();
-      if (!buf || buf.byteLength === 0) continue;
-      const ct = res.headers.get('content-type') || 'image/jpeg';
+      const dl = await downloadImageWithFallback(m.url);
+      if (!dl || !dl.buf || dl.buf.byteLength === 0) continue;
+      const ct = 'image/jpeg';
       const base = 'media/' + result.id + '/' + i;
-      const origName = base + ctToExt(ct);
+      const origName = base + '.jpg';
       paths.push(origName);
       const { error: oErr } = await supabase.storage
         .from('threads-reposts')
-        .upload(origName, new Blob([buf], { type: ct }), { upsert: true, contentType: ct });
+        .upload(origName, new Blob([dl.buf], { type: ct }), { upsert: true, contentType: ct });
       if (oErr) continue;
       const pub = supabase.storage.from('threads-reposts').getPublicUrl(origName).data.publicUrl;
       /* 回填真实分辨率 (桥未传/传错时前端比例失效) */
-      const size = imageSizeFromBytes(buf);
-      if (size.w && size.h) { m.width = size.w; m.height = size.h; }
+      if (dl.w && dl.h) { m.width = dl.w; m.height = dl.h; }
       /* 覆盖后缓存破坏: 原图 + ?v, 预览 + &t (CDN/浏览器按 URL 缓存); 预览 1080 高清 */
       m.url = pub + '?v=' + ts;
       m.preview = renderPreviewUrl(pub, 1080) + '&t=' + ts;

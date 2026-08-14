@@ -276,6 +276,7 @@ Dockerfile + docker-compose.yml  Windows 开发环境
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 08-12 | `本地` | **Threads "前三张低分辨率" bug 根因修复**：诊断 Db-45PqAZh_ 转存文件 0,1,2 = 480×321（桥给预览档 url）、3-9 = 1840×1232——桥对前几张给预览链接。修复：`downloadImageWithFallback`——下载后若 <800px 自动附加 `stp=dst-jpg_e35`（IG CDN 原图质量档）重试取更高分辨率（已部署）；**已转存的旧帖需重新爬取（桥）覆盖** |
 | 08-12 | `本地` | **Threads 原图分辨率修复（诊断+已处理）**：诊断发现转存文件实为 4096×2730 原图，低分辨率在显示层——JSON 宽高为空（前端比例失效）+ 预览固定 640px。修复：① Edge Function 新增 `imageSizeFromBytes`（JPEG SOF/PNG/WebP 字节解析）转存后回填真实宽高 ② 预览 640→1080 高清 ③ 已为帖子 Db-xCLvESnY 重新 invoke 入库（宽高 4096×2730 + 1080 预览 + ?v/&t 缓存破坏，线上验证通过）（已部署） |
 | 08-12 | `本地` | **Threads 重爬自动覆盖**：资源全部 upsert 覆盖（原已有）+ 新增 ① **孤儿清理** `cleanupStaleMedia`（重爬后删除该帖下不在新媒体清单的旧文件，序号/格式漂移的残留）② **缓存破坏**（图片原图 `?v=ts` + 预览 `&t=ts`、视频 `?v=ts`——覆盖后浏览器/CDN 不再显示旧图）③ 已转存识别（视频 storage URL 跳过重下载并计入保留清单）（已部署） |
 | 08-12 | `本地` | **Threads 视频落地（调研后构建）**：开源调研——SCrawler(2141⭐)支持 Threads 但为 PyQt 桌面不可服务端用、yt-dlp 主线无 Threads extractor；根因是 **CDN 签名 URL 时效短(~1-2h)** 导致视频失效。构建：Edge Function threads-fetch 新增 `processMediaVideos`——入库时下载视频（UA 头、≤40MB）转存 `threads-reposts/media/<id>/<n>.mp4` 永久 URL（`m.local=true`），失败降级保留原链接；自动播放/点击放大均走自有链接（已部署） |
