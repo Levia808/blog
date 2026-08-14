@@ -316,7 +316,9 @@
     var item = threadsViewerItems[threadsViewerIndex];
     if (!stage || !item) return;
     if (item.type === 'video') {
-      stage.innerHTML = '<video class="thv-video" src="' + escapeHtml(item.url) + '" controls autoplay playsinline></video>';
+      stage.innerHTML = '<video class="thv-video" src="' + escapeHtml(item.url) + '" controls autoplay muted playsinline></video>';
+      var v = stage.querySelector('video');
+      if (v && typeof v.play === 'function') v.play().catch(function () {});
     } else {
       stage.innerHTML = '<img class="thv-img" src="' + escapeHtml(item.url) + '" alt="">';
     }
