@@ -287,6 +287,9 @@
     if (threadsResizeTimer) clearTimeout(threadsResizeTimer);
     threadsResizeTimer = setTimeout(layoutAllThreadsMedia, 150);
   });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopThreadsPreviewVideos();
+  });
 
   /* 串文卡片交互: 仅页脚「在 Threads 查看」跳转, 其余点击不跳转 (图片放大/翻译/轮播) */
   document.addEventListener('click', function (e) {
@@ -300,11 +303,26 @@
 
   function closeThreadsViewer() {
     if (!threadsViewer) return;
+    var oldVideo = threadsViewer.querySelector('.thv-video');
+    if (oldVideo) { oldVideo.pause(); oldVideo.removeAttribute('src'); oldVideo.load(); }
     threadsViewer.remove();
     threadsViewer = null;
     threadsViewerItems = [];
     threadsViewerIndex = 0;
     document.documentElement.classList.remove('th-viewer-open');
+  }
+
+  function stopThreadsPreviewVideos(except) {
+    listEl.querySelectorAll('.threads-card .th-media-item.is-video video').forEach(function (video) {
+      if (video === except) return;
+      video.pause();
+      video.muted = true;
+      video.dataset.hoverPreview = '';
+      var item = video.closest('.th-media-item');
+      if (item) item.classList.remove('is-previewing');
+      var button = item && item.querySelector('.th-video-play');
+      if (button) button.classList.remove('is-playing');
+    });
   }
 
   function renderThreadsViewer() {
@@ -387,6 +405,7 @@
       return { url: url, type: node.tagName === 'VIDEO' ? 'video' : 'image' };
     });
     if (!threadsViewerItems.length) return;
+    stopThreadsPreviewVideos();
     threadsViewerIndex = Math.max(0, nodes.indexOf(mediaEl));
     ensureThreadsViewer();
     renderThreadsViewer();
@@ -474,6 +493,7 @@
     var count = threadsPageCount(mediaEl);
     if (index < 0) index = 0;
     if (index > count - 1) index = count - 1;
+    stopThreadsPreviewVideos();
     mediaEl.dataset.page = String(index);
     mediaEl.style.setProperty('--th-page-x', (-index * 100) + '%');
     syncThreadsNav(wrap);
@@ -520,10 +540,16 @@
     if (!video || video.dataset.manualPlaying === '1') return;
     var item = video.closest('.th-media-item');
     var btn = item && item.querySelector('.th-video-play');
+    var hoverToken = String((Number(video.dataset.hoverToken) || 0) + 1);
+    video.dataset.hoverToken = hoverToken;
     video.dataset.hoverPreview = '1';
     video.muted = true;
     video.loop = true;
     video.play().then(function () {
+      if (video.dataset.hoverToken !== hoverToken || video.dataset.hoverPreview !== '1') {
+        setThreadsVideoPosterState(video);
+        return;
+      }
       if (item) item.classList.add('is-previewing');
       if (btn) { btn.classList.add('is-playing'); btn.setAttribute('aria-label', '暂停'); }
     }).catch(function () {
@@ -591,14 +617,14 @@
     var wrap = e.target.closest && e.target.closest('.threads-card .th-media-wrap');
     if (!wrap) return;
     var mediaEl = wrap.querySelector('.th-media');
-    if (!mediaEl || threadsPageCount(mediaEl) <= 1 || !e.touches || !e.touches.length) return;
+    if (!mediaEl || threadsPageCount(mediaEl) <= 1 || !e.touches || e.touches.length !== 1) return;
     threadsTouch = { wrap: wrap, x: e.touches[0].clientX, y: e.touches[0].clientY };
   }, { passive: true });
 
   document.addEventListener('touchend', function (e) {
     if (!threadsTouch) return;
     var changed = e.changedTouches && e.changedTouches[0];
-    if (!changed) { threadsTouch = null; return; }
+    if (!changed || (e.touches && e.touches.length)) { threadsTouch = null; return; }
     var dx = changed.clientX - threadsTouch.x;
     var dy = changed.clientY - threadsTouch.y;
     var wrap = threadsTouch.wrap;
