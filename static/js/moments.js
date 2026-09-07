@@ -1275,7 +1275,7 @@
           '<span class="mm-more-badge">+' + extra + '</span></div>';
       }
       /* 等大占位 + 加载动画 */
-      item = '<div class="media-frame' + (isGrid ? ' media-frame--grid' : '') + '" data-frame>' +
+      item = '<div class="media-frame' + (isGrid ? ' media-frame--grid' : '') + '" data-frame style="--media-index:' + i + '">' +
         '<span class="media-spinner" aria-hidden="true"><i></i></span>' + item + '</div>';
       return item;
     }).join('');
@@ -1683,6 +1683,7 @@
     listEl.querySelectorAll('.moment-card').forEach(function (card) {
       var id = card.dataset.momentId;
       if (!nextIds[id]) {
+        if (cardRevealObserver) cardRevealObserver.unobserve(card);
         destroyEditSortable(id);
         revokeEditMediaBlobs(card);
         card.remove();
@@ -1705,6 +1706,7 @@
       var node = holder.firstElementChild;
       node.dataset.ck = key;
       if (existing) {
+        if (cardRevealObserver) cardRevealObserver.unobserve(existing);
         destroyEditSortable(id);
         revokeEditMediaBlobs(existing);
         existing.replaceWith(node);
@@ -2918,25 +2920,37 @@
     if (window.BlogAuth) window.BlogAuth.open('login');
   });
 
-  /* ── 卡片依次上浮动效 (CSS transition + stagger delay, 渲染即隐藏无闪烁) ── */
+  /* ── 卡片进入视口后逐层揭示：卡片边线 → 作者信息 → 正文 → 媒体 → 操作区 ── */
+  var cardRevealObserver = null;
+
+  function revealMomentCard(card) {
+    if (!card || card.classList.contains('moment-card-in')) return;
+    requestAnimationFrame(function () {
+      card.classList.add('moment-card-in');
+    });
+  }
+
   function animateCardsIn(cards) {
     if (!cards || !cards.length) return;
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var list = Array.prototype.slice.call(cards);
-    if (reduced) {
-      list.forEach(function (c) { c.classList.add('moment-card-in'); });
+    list.forEach(function (card, index) {
+      card.style.setProperty('--moment-order', String(Math.min(index, 5)));
+    });
+    if (reduced || !('IntersectionObserver' in window)) {
+      list.forEach(revealMomentCard);
       return;
     }
-    var animated = list.slice(0, 12);
-    var rest = list.slice(12);
-    animated.forEach(function (c, i) {
-      c.style.transitionDelay = (i * 50) + 'ms';
-      c.classList.add('moment-card-in');
-    });
-    rest.forEach(function (c) { c.classList.add('moment-card-in'); });
-    setTimeout(function () {
-      animated.forEach(function (c) { c.style.transitionDelay = ''; });
-    }, 1200);
+    if (!cardRevealObserver) {
+      cardRevealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          revealMomentCard(entry.target);
+          cardRevealObserver.unobserve(entry.target);
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+    }
+    list.forEach(function (card) { cardRevealObserver.observe(card); });
   }
 
   /* ── 长图处理: 高/宽 > 2.35:1 时包裹容器 + 顶部裁切预览 + "长图"角标

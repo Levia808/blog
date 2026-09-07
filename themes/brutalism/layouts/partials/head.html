@@ -2,6 +2,12 @@
 {{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- $css := slice (resources.Get "css/main.css") (resources.Get "css/features.css") (resources.Get "css/swiss.css") | resources.Concat "css/bundle.css" -}}
 {{- if hugo.IsProduction }}{{ $css = $css | minify | fingerprint }}{{ end }}
 <meta name="description" content="{{ with $P.description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify }}{{ end }}{{ end }}">
+<meta property="og:title" content="{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}">
+<meta property="og:description" content="{{ with $P.description }}{{ . }}{{ else }}{{ with .Summary }}{{ . | plainify }}{{ end }}{{ end }}">
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}">
 <meta name="keywords" content="{{ with $P.keywords }}{{ delimit . ", " }}{{ end }}">
 <meta name="theme-color" content="#f7f8f4">
 <meta name="color-scheme" content="dark light">

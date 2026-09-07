@@ -8,7 +8,6 @@
 {{- end }}
 {{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
 {{- $latest := first 6 $posts }}
-{{- $featured := index $posts 0 }}
 
 {{ partial "header.html" . }}
 
@@ -38,7 +37,6 @@
   <a class="ht-wrap" id="heroWrap" href="{{ "" | relLangURL }}" aria-label="{{ site.Title }}">
     <h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1>
   </a>
-
   <div class="hero-lines" id="heroLines">
     <i></i><i></i><i></i><i></i>
     <i>
@@ -68,6 +66,29 @@
     </div>
   </section>
 
+  <section class="home-journey" aria-labelledby="explore-title" data-reveal>
+    <div class="home-journey__intro">
+      <div class="label">EXPLORE</div>
+      <h2 id="explore-title">从不同入口<br>认识这里</h2>
+      <p>文章沉淀想法，动态记录当下，感知保存那些难以归档的片段。</p>
+    </div>
+    <div class="home-journey__links">
+      <a class="journey-link" href="{{ "moments/" | relLangURL }}">
+        <span class="journey-link__index">01</span>
+        <span><strong>动态</strong><small>正在发生的记录与互动</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="journey-link" href="{{ "perception/" | relLangURL }}">
+        <span class="journey-link__index">02</span>
+        <span><strong>感知</strong><small>音乐、视觉与此刻的状态</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="journey-link" href="{{ "about/" | relLangURL }}">
+        <span class="journey-link__index">03</span>
+        <span><strong>关于</strong><small>了解作者与这个站点</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
   </section>
 </section>
 {{- end }}

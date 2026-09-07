@@ -55,6 +55,9 @@ menu:
     - name: 动态
       url: moments/
       weight: 5
+    - name: 感知
+      url: perception/
+      weight: 6
     - name: 归档
       url: archives/
       weight: 10

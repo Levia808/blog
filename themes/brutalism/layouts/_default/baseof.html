@@ -26,7 +26,7 @@
   {{ partial "head.html" . }}
 </head>
 <body class="{{ block "body-class" . }}{{ end }}{{ if not (eq .Layout "admin") }} site-has-nav{{ end }} nav-behavior-{{ $P.navBehavior | default "auto" }}" data-nav-behavior="{{ $P.navBehavior | default "auto" }}">
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">跳转到主要内容</a>
   {{- if not (eq .Layout "admin") }}
   {{- if not .IsHome }}
   {{ partial "header.html" . }}
