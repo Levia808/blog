@@ -403,43 +403,48 @@
     });
   }
 
-  /* ── TOC 滚动高亮 ── */
+  /* ── HookSidebar 风格文章目录滚动高亮 ── */
   function initTocScrollspy() {
     var tocs = document.querySelectorAll('.article-toc nav');
-    if (!tocs.length || reducedMotion) return;
+    if (!tocs.length) return;
     var entries = [];
     tocs.forEach(function (toc) {
-      var links = toc.querySelectorAll('a');
+      var links = toc.querySelectorAll('a[href^="#"]');
       if (!links.length) return;
-      var targets = Array.prototype.map.call(links, function (link) {
-        var id = decodeURIComponent((link.getAttribute('href') || '').replace(/^#/, ''));
+      toc.classList.add('hook-sidebar-nav');
+      var targets = Array.prototype.map.call(links, function (link, index) {
+        link.dataset.tocIndex = String(index);
+        var id = (link.getAttribute('href') || '').slice(1);
+        try { id = decodeURIComponent(id); } catch (e) {}
         return id ? document.getElementById(id) : null;
       });
       entries.push({ links: links, targets: targets, toc: toc });
     });
     if (!entries.length) return;
 
+    var scheduled = false;
     function highlight() {
+      scheduled = false;
       entries.forEach(function (entry) {
-        var current = null;
+        var current = -1;
         entry.targets.forEach(function (target, index) {
-          if (!target) return;
-          var rect = target.getBoundingClientRect();
-          if (rect.top <= 90) current = entry.links[index];
+          if (target && target.getBoundingClientRect().top <= 112) current = index;
         });
-        entry.links.forEach(function (link) { link.classList.toggle('active', link === current); });
-        if (current && 'scrollIntoView' in current.parentElement) {
-          var container = entry.toc.parentElement;
-          var linkTop = current.getBoundingClientRect().top - container.getBoundingClientRect().top;
-          if (linkTop < 0 || linkTop > container.clientHeight - 32) {
-            container.scrollTop += linkTop - container.clientHeight / 2;
-          }
-        }
+        entry.links.forEach(function (link, index) {
+          link.classList.toggle('active', index === current);
+          if (index === current) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
       });
     }
-
-    highlight();
-    window.addEventListener('scroll', highlight, { passive: true });
+    function scheduleHighlight() {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(highlight);
+    }
+    window.addEventListener('scroll', scheduleHighlight, { passive: true });
+    window.addEventListener('resize', scheduleHighlight, { passive: true });
+    scheduleHighlight();
   }
 
   /* ── 触控板横向手势: 图片 lightbox 打开时, 双指左滑下一张/右滑上一张 (wheel deltaX) ── */
@@ -1763,7 +1768,6 @@
     initThemeToggle();
     initReveal();
     initTocScrollspy();
-    initTocFloat();
     initSmoothScroll();
     initSearchOverlay();
     initSearchPage();
