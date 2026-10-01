@@ -157,7 +157,13 @@
         else body.appendChild(wrap);
       }
       var input = wrap.querySelector('input');
+      var sendBtn = wrap.querySelector('[data-cmt-reply-send]');
       if (input) {
+        input.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter' || event.isComposing || event.keyCode === 229) return;
+          event.preventDefault();
+          if (sendBtn && !sendBtn.disabled) sendBtn.click();
+        });
         input.focus();
         try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
       }
@@ -396,13 +402,6 @@
 
     /* 回复条收起: Esc + 点击外部 */
     list.addEventListener('keydown', function (e) {
-      var replyInput = e.target.closest('.mc-reply-bar-wrap input');
-      if (e.key === 'Enter' && replyInput) {
-        e.preventDefault();
-        var sendBtn = replyInput.closest('.mc-reply-bar-wrap').querySelector('[data-cmt-reply-send]');
-        if (sendBtn && !sendBtn.disabled) sendBtn.click();
-        return;
-      }
       if (e.key !== 'Escape') return;
       var wrap = e.target.closest('.mc-reply-bar-wrap');
       if (wrap) {

@@ -8,7 +8,7 @@
 {{- if fileExists "static/js/auth-ui.js" }}<script src="{{ "js/auth-ui.js" | relURL }}"></script>{{ end }}
 {{- end }}
 {{- if and $P.comments (not (eq .Layout "admin")) (fileExists "static/js/comments.js") }}
-<script src="{{ "js/comments.js" | relURL }}"></script>
+<script src="{{ "js/comments.js" | relURL }}?v={{ now.Unix }}"></script>
 {{- end }}
 {{- if not (eq .Layout "admin") }}
 {{ partial "float-player.html" . }}
