@@ -35,7 +35,9 @@
   var momentsPageSize = 50;
   var momentsLoadingMore = false;
   var momentsHasMore = true;
-  var loadMoreBtn = document.getElementById('momentsLoadMore');
+  var historyLoadFailed = false;
+  var historySentinel = document.getElementById('momentsHistorySentinel');
+  var historyObserver = null;
 
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, function (c) {
@@ -1633,11 +1635,12 @@
   }
 
   function updateMomentsHistoryControl() {
-    if (!loadMoreBtn) return;
-    loadMoreBtn.hidden = !momentsHasMore && loadedMoments.length === 0;
-    loadMoreBtn.disabled = momentsLoadingMore || !momentsHasMore;
-    loadMoreBtn.textContent = momentsLoadingMore ? '正在加载…' : (momentsHasMore ? '加载更早动态' : '已显示全部历史动态');
-    loadMoreBtn.classList.toggle('is-complete', !momentsHasMore && loadedMoments.length > 0);
+    if (!historySentinel) return;
+    historySentinel.hidden = !momentsHasMore && loadedMoments.length === 0;
+    historySentinel.textContent = momentsLoadingMore
+      ? '正在加载更早动态…'
+      : (historyLoadFailed ? '加载失败，滚动页面后重试' : (momentsHasMore ? '继续向下滚动以加载更早动态' : '已显示全部历史动态'));
+    historySentinel.classList.toggle('is-complete', !momentsHasMore && loadedMoments.length > 0);
   }
 
   async function loadMoments(loadMore) {
@@ -1682,15 +1685,37 @@
       } else if (!loadMore) {
         listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(msg) + '</div>';
       }
-      if (loadMore) momentsHasMore = true;
+      if (loadMore) {
+        momentsHasMore = true;
+        historyLoadFailed = true;
+      }
     } finally {
       momentsLoadingMore = false;
       showMomentsLoading(false);
       updateMomentsHistoryControl();
+      if (historyObserver && !historyLoadFailed && momentsHasMore && historySentinel) {
+        historyObserver.observe(historySentinel);
+      }
     }
   }
 
-  if (loadMoreBtn) loadMoreBtn.addEventListener('click', function () { loadMoments(true); });
+  if (historySentinel && 'IntersectionObserver' in window) {
+    historyObserver = new IntersectionObserver(function (entries) {
+      if (entries.some(function (entry) { return entry.isIntersecting; }) && momentsHasMore && !momentsLoadingMore && !historyLoadFailed) {
+        historyObserver.unobserve(historySentinel);
+        loadMoments(true);
+      }
+    }, { rootMargin: '300px 0px' });
+    historyObserver.observe(historySentinel);
+    /* 加载失败后避免观察器快速重试；用户继续滚动时才重新启用自动加载。 */
+    window.addEventListener('scroll', function () {
+      if (historyLoadFailed) {
+        historyLoadFailed = false;
+        updateMomentsHistoryControl();
+        if (momentsHasMore && !momentsLoadingMore) historyObserver.observe(historySentinel);
+      }
+    }, { passive: true });
+  }
 
   function releaseSelectedMedia() {
     selectedMedia.forEach(function (item) {
