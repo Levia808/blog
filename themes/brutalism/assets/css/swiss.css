@@ -19,6 +19,25 @@
   --swiss-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --swiss-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --swiss-shadow: 0 18px 50px rgba(47, 74, 55, 0.08);
+  --swiss-grid-line: rgba(47, 74, 55, 0.055);
+}
+
+[data-theme="dark"] body.site-has-nav {
+  --swiss-bg: #0c0c0b;
+  --swiss-surface: #161615;
+  --swiss-soft: #1b1b1a;
+  --swiss-ink: #e8e8e3;
+  --swiss-text: #c9c9c4;
+  --swiss-muted: #92928c;
+  --swiss-faint: #696963;
+  --swiss-line: rgba(232, 232, 227, 0.12);
+  --swiss-line-strong: rgba(232, 232, 227, 0.28);
+  --swiss-moss: #8eae8e;
+  --swiss-moss-soft: #243024;
+  --swiss-moss-veil: rgba(142, 174, 142, 0.12);
+  --swiss-danger: #d28d86;
+  --swiss-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+  --swiss-grid-line: rgba(232, 232, 227, 0.035);
 }
 
 body:not(.home-page),
@@ -32,13 +51,13 @@ body:not(.home-page):not(.admin-only):not(.login-only) {
 
 body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
   background:
-    linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.055) 0) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(90deg, transparent calc(100% - 1px), var(--swiss-grid-line, rgba(47, 74, 55, 0.055)) 0) 0 0 / calc(100% / 12) 100%,
     var(--swiss-bg);
 }
 
 .home-page .hero-home + .blog-home {
   background:
-    linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.05) 0) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(90deg, transparent calc(100% - 1px), var(--swiss-grid-line, rgba(47, 74, 55, 0.05)) 0) 0 0 / calc(100% / 12) 100%,
     var(--swiss-bg);
 }
 
@@ -1247,7 +1266,7 @@ body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
 
 body.login-only .login-page {
   background:
-    linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.055) 0) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(90deg, transparent calc(100% - 1px), var(--swiss-grid-line, rgba(47, 74, 55, 0.055)) 0) 0 0 / calc(100% / 12) 100%,
     var(--swiss-bg);
   color: var(--swiss-text);
 }
@@ -1304,7 +1323,7 @@ body.admin-only {
 body.admin-only .admin-wrap,
 body.admin-only .an-content {
   background:
-    linear-gradient(90deg, transparent calc(100% - 1px), rgba(47, 74, 55, 0.055) 0) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(90deg, transparent calc(100% - 1px), var(--swiss-grid-line, rgba(47, 74, 55, 0.055)) 0) 0 0 / calc(100% / 12) 100%,
     var(--swiss-bg);
 }
 

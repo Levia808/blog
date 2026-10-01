@@ -11,6 +11,17 @@
 <meta name="keywords" content="{{ with $P.keywords }}{{ delimit . ", " }}{{ end }}">
 <meta name="theme-color" content="#f7f8f4">
 <meta name="color-scheme" content="dark light">
+<script>
+  (function () {
+    var theme = null;
+    try { theme = localStorage.getItem('theme'); } catch (e) {}
+    if (theme !== 'light' && theme !== 'dark') {
+      theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme;
+  }());
+</script>
 {{- with $P.author }}
 <meta name="author" content="{{ . }}">
 {{- end }}

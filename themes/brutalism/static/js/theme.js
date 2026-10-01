@@ -145,23 +145,56 @@
     }
   }
 
-  /* ── 主题切换 ── */
+  /* ── 明暗模式: 初次/无显式选择时跟随系统; 用户切换后记住选择 ── */
   function initThemeToggle() {
-    var toggle = document.getElementById('themeToggle');
-    if (!toggle) return;
-    var stored = null;
-    try { stored = window.localStorage.getItem('theme'); } catch (e) {}
+    var toggles = [
+      document.getElementById('themeToggle'),
+      document.getElementById('themeToggleMenu')
+    ].filter(Boolean);
+    var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
-    function apply(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
-      try { window.localStorage.setItem('theme', theme); } catch (e) {}
+    function readPreference() {
+      try {
+        var saved = window.localStorage.getItem('theme');
+        return saved === 'light' || saved === 'dark' ? saved : null;
+      } catch (e) { return null; }
     }
-    if (stored === 'light' || stored === 'dark') apply(stored);
 
-    toggle.addEventListener('click', function () {
-      var current = document.documentElement.getAttribute('data-theme');
-      apply(current === 'light' ? 'dark' : 'light');
+    function apply(theme, persist) {
+      if (theme !== 'light' && theme !== 'dark') theme = 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+      if (persist) {
+        try { window.localStorage.setItem('theme', theme); } catch (e) {}
+      }
+      toggles.forEach(function (toggle) {
+        var nextLabel = theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
+        toggle.setAttribute('aria-label', nextLabel);
+        if (toggle.id === 'themeToggleMenu') toggle.textContent = nextLabel;
+      });
+    }
+
+    function syncFromPreference() {
+      var saved = readPreference();
+      apply(saved || (media && media.matches ? 'dark' : 'light'), false);
+    }
+
+    syncFromPreference();
+    toggles.forEach(function (toggle) {
+      toggle.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme');
+        apply(current === 'light' ? 'dark' : 'light', true);
+      });
+    });
+    if (media) {
+      var onSystemThemeChange = function () {
+        if (!readPreference()) syncFromPreference();
+      };
+      if (media.addEventListener) media.addEventListener('change', onSystemThemeChange);
+      else if (media.addListener) media.addListener(onSystemThemeChange);
+    }
+    window.addEventListener('storage', function (event) {
+      if (event.key === 'theme') syncFromPreference();
     });
   }
 
