@@ -109,6 +109,7 @@
             <div class="an-actions"><button type="button" class="btn" data-admin-refresh="comments">刷新</button></div>
           </div>
           <div class="filter-row"><label>状态筛选</label><select id="adminCommentFilter"><option value="">全部</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已拒绝</option><option value="hidden">已隐藏</option></select></div>
+          <p class="auth-error" id="adminCommentError" role="alert" aria-live="assertive" hidden></p>
           <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminCommentTable"></tbody></table></div>
         </section>
 

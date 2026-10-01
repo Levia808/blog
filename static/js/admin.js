@@ -2014,14 +2014,28 @@
 
     var moderationButton = event.target.closest('[data-comment-action]');
     if (moderationButton) {
+      var commentId = moderationButton.dataset.commentId;
+      var moderationStatus = moderationButton.dataset.commentAction;
+      var statusLabel = commentStatusName(moderationStatus);
+      var originalLabel = moderationButton.textContent;
+      clearError('adminCommentError');
+      moderationButton.disabled = true;
+      moderationButton.textContent = '处理中…';
       try {
-        moderationButton.disabled = true;
-        await Admin.moderateComment(Number(moderationButton.dataset.commentId), moderationButton.dataset.commentAction);
-        await loadComments();
+        await Admin.moderateComment(commentId, moderationStatus);
+        showToast('评论' + statusLabel, 'success');
+        try {
+          await loadComments();
+        } catch (refreshError) {
+          showError('审核已完成，但评论列表刷新失败：' + errorText(refreshError), 'adminCommentError');
+        }
       } catch (error) {
-        showError(errorText(error));
+        var message = '审核失败：' + errorText(error);
+        showError(message, 'adminCommentError');
+        showToast(message, 'error');
       } finally {
         moderationButton.disabled = false;
+        moderationButton.textContent = originalLabel;
       }
       return;
     }
