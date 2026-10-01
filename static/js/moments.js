@@ -31,6 +31,11 @@
   var selectedMedia = [];
   var currentUser = null;
   var currentProfile = null;
+  var loadedMoments = [];
+  var momentsPageSize = 50;
+  var momentsLoadingMore = false;
+  var momentsHasMore = true;
+  var loadMoreBtn = document.getElementById('momentsLoadMore');
 
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, function (c) {
@@ -1607,28 +1612,58 @@
     '*'
   ];
 
-  async function loadMoments() {
+  async function queryMomentsPage(from, to) {
+    var result = null;
+    var lastError = null;
+    for (var mi = 0; mi < momentQueries.length && !result; mi++) {
+      for (var qi = 0; qi < commentQueries.length; qi++) {
+        var sel = momentQueries[mi].replace('%CQ%', commentQueries[qi]);
+        if (sel.indexOf('%CQ%') >= 0) break;
+        var attempt = await window.blogSupabase
+          .from('moments')
+          .select(sel)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        if (!attempt.error) { result = attempt; break; }
+        lastError = attempt.error;
+      }
+    }
+    if (!result) throw lastError;
+    return result.data || [];
+  }
+
+  function updateMomentsHistoryControl() {
+    if (!loadMoreBtn) return;
+    loadMoreBtn.hidden = !momentsHasMore && loadedMoments.length === 0;
+    loadMoreBtn.disabled = momentsLoadingMore || !momentsHasMore;
+    loadMoreBtn.textContent = momentsLoadingMore ? '正在加载…' : (momentsHasMore ? '加载更早动态' : '已显示全部历史动态');
+    loadMoreBtn.classList.toggle('is-complete', !momentsHasMore && loadedMoments.length > 0);
+  }
+
+  async function loadMoments(loadMore) {
+    if (loadMore && (momentsLoadingMore || !momentsHasMore)) return;
     showMomentsLoading(true);
     destroyAllSortables();
+    var priorCount = loadedMoments.length;
+    var targetCount = loadMore ? priorCount + momentsPageSize : Math.max(momentsPageSize, priorCount);
+    if (loadMore) {
+      momentsLoadingMore = true;
+      updateMomentsHistoryControl();
+    }
     try {
-      var result = null;
-      var lastError = null;
-      for (var mi = 0; mi < momentQueries.length && !result; mi++) {
-        for (var qi = 0; qi < commentQueries.length; qi++) {
-          var sel = momentQueries[mi].replace('%CQ%', commentQueries[qi]);
-          if (sel.indexOf('%CQ%') >= 0) break;
-          var attempt = await window.blogSupabase
-            .from('moments')
-            .select(sel)
-            .order('created_at', { ascending: false })
-            .limit(50);
-          if (!attempt.error) { result = attempt; break; }
-          lastError = attempt.error;
+      var moments = [];
+      if (loadMore) {
+        moments = loadedMoments.concat(await queryMomentsPage(priorCount, targetCount - 1));
+      } else {
+        /* 刷新动态/评论等操作时同步刷新已载入的历史范围，不退回只显示首页。 */
+        for (var offset = 0; offset < targetCount; offset += momentsPageSize) {
+          var page = await queryMomentsPage(offset, Math.min(offset + momentsPageSize - 1, targetCount - 1));
+          moments = moments.concat(page);
+          if (page.length < momentsPageSize) break;
         }
       }
-      if (!result) throw lastError;
-      var moments = result.data || [];
-      /* 媒体缓存: JS 内存传递 (避免 HTML 属性编码风险) */
+      loadedMoments = moments;
+      momentsHasMore = moments.length === targetCount;
       momentMediaCache = {};
       momentDataCache = {};
       moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
@@ -1638,18 +1673,24 @@
       }
       hintEl.textContent = moments.length ? '共 ' + moments.length + ' 条动态' : '';
       hintEl.hidden = Boolean(moments.length);
+      updateMomentsHistoryControl();
     } catch (error) {
       var msg = error.message || String(error);
       if (msg.indexOf('PGRST205') >= 0 || msg.indexOf('Could not find the table') >= 0) {
         listEl.innerHTML = '<div class="moments-empty"><strong>动态功能未初始化</strong><br>' +
           '<span style="font-size:12px;color:var(--muted);">请在 Supabase SQL Editor 运行仓库中的 <code>supabase-moments.sql</code> 创建动态数据表，然后刷新本页。</span></div>';
-      } else {
+      } else if (!loadMore) {
         listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(msg) + '</div>';
       }
+      if (loadMore) momentsHasMore = true;
     } finally {
+      momentsLoadingMore = false;
       showMomentsLoading(false);
+      updateMomentsHistoryControl();
     }
   }
+
+  if (loadMoreBtn) loadMoreBtn.addEventListener('click', function () { loadMoments(true); });
 
   function releaseSelectedMedia() {
     selectedMedia.forEach(function (item) {
