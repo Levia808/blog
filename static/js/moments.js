@@ -1699,22 +1699,30 @@
     }
   }
 
-  if (historySentinel && 'IntersectionObserver' in window) {
-    historyObserver = new IntersectionObserver(function (entries) {
-      if (entries.some(function (entry) { return entry.isIntersecting; }) && momentsHasMore && !momentsLoadingMore && !historyLoadFailed) {
-        historyObserver.unobserve(historySentinel);
-        loadMoments(true);
-      }
-    }, { rootMargin: '300px 0px' });
-    historyObserver.observe(historySentinel);
-    /* 加载失败后避免观察器快速重试；用户继续滚动时才重新启用自动加载。 */
-    window.addEventListener('scroll', function () {
+  if (historySentinel) {
+    if ('IntersectionObserver' in window) {
+      historyObserver = new IntersectionObserver(function (entries) {
+        if (entries.some(function (entry) { return entry.isIntersecting; }) && momentsHasMore && !momentsLoadingMore && !historyLoadFailed) {
+          historyObserver.unobserve(historySentinel);
+          loadMoments(true);
+        }
+      }, { rootMargin: '300px 0px' });
+      historyObserver.observe(historySentinel);
+    }
+    /* 兼容不支持 IntersectionObserver 的移动端浏览器，并在失败后等用户滚动再重试。 */
+    function checkHistorySentinel() {
       if (historyLoadFailed) {
         historyLoadFailed = false;
         updateMomentsHistoryControl();
-        if (momentsHasMore && !momentsLoadingMore) historyObserver.observe(historySentinel);
+        if (historyObserver && momentsHasMore && !momentsLoadingMore) historyObserver.observe(historySentinel);
       }
-    }, { passive: true });
+      if (!historyObserver && momentsHasMore && !momentsLoadingMore && !historyLoadFailed) {
+        var rect = historySentinel.getBoundingClientRect();
+        if (rect.top <= window.innerHeight + 300) loadMoments(true);
+      }
+    }
+    window.addEventListener('scroll', checkHistorySentinel, { passive: true });
+    window.addEventListener('resize', checkHistorySentinel, { passive: true });
   }
 
   function releaseSelectedMedia() {

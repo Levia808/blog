@@ -70,14 +70,15 @@
     {{- end }}
     {{- end }}
   </nav>
-  {{- if $P.auth }}
   <div class="drawer-user">
+    <button type="button" id="mobileThemeToggle" aria-label="切换明暗模式"><span class="dm-idx" aria-hidden="true">◐</span>切换到明亮模式</button>
+  {{- if $P.auth }}
     <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
     <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>
     <a href="{{ "admin/" | relLangURL }}" id="mobileAdminLink" hidden><span class="dm-idx">▦</span>管理后台</a>
     <a href="{{ "login/" | relLangURL }}" id="mobileLoginBtn" data-smooth-login><span class="dm-idx">›</span>登录</a>
     <button type="button" id="mobileLogoutBtn" hidden><span class="dm-idx">×</span>退出登录</button>
-  </div>
   {{- end }}
+  </div>
   <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
 </aside>

@@ -149,7 +149,8 @@
   function initThemeToggle() {
     var toggles = [
       document.getElementById('themeToggle'),
-      document.getElementById('themeToggleMenu')
+      document.getElementById('themeToggleMenu'),
+      document.getElementById('mobileThemeToggle')
     ].filter(Boolean);
     var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
@@ -179,6 +180,12 @@
         var nextLabel = theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
         toggle.setAttribute('aria-label', nextLabel);
         if (toggle.id === 'themeToggleMenu') toggle.textContent = nextLabel;
+        if (toggle.id === 'mobileThemeToggle') {
+          var index = toggle.querySelector('.dm-idx');
+          toggle.setAttribute('aria-label', nextLabel);
+          toggle.lastChild.textContent = nextLabel;
+          if (index) toggle.insertBefore(index, toggle.firstChild);
+        }
       });
     }
 
@@ -192,6 +199,10 @@
       toggle.addEventListener('click', function () {
         var current = document.documentElement.getAttribute('data-theme');
         apply(current === 'light' ? 'dark' : 'light', true);
+        if (toggle.id === 'mobileThemeToggle') {
+          var closeButton = document.getElementById('drawerClose');
+          if (closeButton) closeButton.click();
+        }
       });
     });
     if (media) {
