@@ -2517,3 +2517,99 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
     transition: none !important;
   }
 }
+
+/* Homepage opening screen and hero navigation follow the selected color scheme. */
+[data-theme="dark"] body.home-page .hero-home,
+[data-theme="dark"] .loader {
+  background-color: #10110f;
+}
+
+[data-theme="dark"] .loader-brand,
+[data-theme="dark"] .loader-count {
+  color: #e8e8e3;
+}
+
+[data-theme="dark"] .loader-tag,
+[data-theme="dark"] .loader-word {
+  color: #92928c;
+}
+
+[data-theme="dark"] .loader-bar {
+  background-color: rgba(232, 232, 227, .18);
+}
+
+[data-theme="dark"] .hero-nav.solid {
+  background-color: rgba(16, 17, 15, .78);
+  border-bottom-color: rgba(232, 232, 227, .12);
+}
+
+[data-theme="dark"] .hn-link,
+[data-theme="dark"] .hn-link:hover {
+  color: #c9c9c4;
+}
+
+[data-theme="dark"] .hero-title {
+  color: #e8e8e3;
+}
+
+[data-theme="dark"] .hero-title .sub {
+  color: #92928c;
+}
+
+/* The regular desktop/mobile taskbar uses the same dark palette via these tokens. */
+[data-theme="dark"] body.site-has-nav {
+  --nav-glass-bg: rgba(16, 17, 15, .84);
+  --nav-glass-border: rgba(232, 232, 227, .12);
+  --nav-glass-text: #e8e8e3;
+  --nav-glass-muted: #c9c9c4;
+  --nav-glass-faint: #92928c;
+}
+
+/* Only animate theme colors during an explicit user toggle; preserve layout/motion transitions. */
+.theme-switching body.home-page .hero-home,
+.theme-switching .loader,
+.theme-switching .loader-brand,
+.theme-switching .loader-tag,
+.theme-switching .loader-count,
+.theme-switching .loader-word,
+.theme-switching .loader-bar,
+.theme-switching .hero-nav,
+.theme-switching .hn-link,
+.theme-switching .hero-title,
+.theme-switching .hero-title .sub,
+.theme-switching .nav-full,
+.theme-switching .nav-mobile {
+  transition-property: background-color, color, border-color;
+  transition-duration: 320ms;
+  transition-timing-function: ease;
+}
+
+.theme-switching .loader {
+  transition-property: transform, visibility, background-color;
+  transition-duration: .9s, .9s, 320ms;
+  transition-timing-function: cubic-bezier(.22,.61,.36,1), ease, ease;
+}
+
+.theme-switching .hero-nav {
+  transition-property: opacity, background-color, border-color, backdrop-filter;
+  transition-duration: .35s, 320ms, 320ms, .6s;
+  transition-timing-function: cubic-bezier(.22,.61,.36,1), ease, ease, ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switching body.home-page .hero-home,
+  .theme-switching .loader,
+  .theme-switching .loader-brand,
+  .theme-switching .loader-tag,
+  .theme-switching .loader-count,
+  .theme-switching .loader-word,
+  .theme-switching .loader-bar,
+  .theme-switching .hero-nav,
+  .theme-switching .hn-link,
+  .theme-switching .hero-title,
+  .theme-switching .hero-title .sub,
+  .theme-switching .nav-full,
+  .theme-switching .nav-mobile {
+    transition-duration: 0s;
+  }
+}

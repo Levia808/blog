@@ -162,6 +162,14 @@
 
     function apply(theme, persist) {
       if (theme !== 'light' && theme !== 'dark') theme = 'light';
+      if (persist && !reducedMotion) {
+        var root = document.documentElement;
+        root.classList.add('theme-switching');
+        window.clearTimeout(root.themeSwitchTimer);
+        root.themeSwitchTimer = window.setTimeout(function () {
+          root.classList.remove('theme-switching');
+        }, 450);
+      }
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.style.colorScheme = theme;
       if (persist) {
