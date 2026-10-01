@@ -166,9 +166,10 @@
     function submitReply(wrap) {
       var rInput = wrap && wrap.querySelector('input');
       var text = rInput ? rInput.value.trim() : '';
-      var parentId = wrap.querySelector('[data-cmt-reply-send]');
+      var parentId = wrap && wrap.querySelector('[data-cmt-reply-send]');
       if (!text || !parentId) return;
       var sendBtn = parentId;
+      if (sendBtn.disabled) return;
       sendBtn.disabled = true;
       window.CommentService.create(path, text, Number(sendBtn.dataset.cmtReplySend))
         .then(function (comment) {
@@ -395,6 +396,13 @@
 
     /* 回复条收起: Esc + 点击外部 */
     list.addEventListener('keydown', function (e) {
+      var replyInput = e.target.closest('.mc-reply-bar-wrap input');
+      if (e.key === 'Enter' && replyInput) {
+        e.preventDefault();
+        var sendBtn = replyInput.closest('.mc-reply-bar-wrap').querySelector('[data-cmt-reply-send]');
+        if (sendBtn && !sendBtn.disabled) sendBtn.click();
+        return;
+      }
       if (e.key !== 'Escape') return;
       var wrap = e.target.closest('.mc-reply-bar-wrap');
       if (wrap) {

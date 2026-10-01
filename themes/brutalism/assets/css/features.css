@@ -1085,10 +1085,9 @@ img.moment-avatar.is-loaded, img.mc-avatar.is-loaded { opacity: 1; }
   cursor: pointer;
   background: var(--bg);
 }
-/* 点击放大提示 + 悬停微缩放 (放大查看可交互的可供性) */
+/* 点击放大提示；悬停时保持图片原尺寸 */
 .moment-media img { cursor: zoom-in; }
 .moment-media .media-frame img { transition: opacity 0.4s var(--swiss-ease), transform 0.45s var(--swiss-ease); }
-.moment-media .media-frame img:hover { transform: scale(1.04); }
 /* 长图 (高/宽 > 2.35:1): 取最上端裁切预览 + 左下角"长图"标记, 不缩放留黑边
    JS wrap 时先按原比例全高渲染, 再过渡收拢到 280px — 消除 wrap 瞬间跳变 */
 .moment-media-long {

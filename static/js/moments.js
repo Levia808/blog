@@ -1391,12 +1391,12 @@
       .then(function (result) {
         if (result.error) throw result.error;
         var comment = result.data;
+        closeReplyBar(bar); /* 回复成功后立即收起输入条 */
         /* Realtime 事件可能先于本回调到达 → 已存在则跳过 */
         if (commentNode(comment.moment_id, comment.id)) return;
         var panel = listEl.querySelector('[data-moment-comments="' + momentId + '"]');
         if (!panel) { loadMoments(); return; }
         appendCommentNode(momentId, comment);
-        closeReplyBar(bar); /* 发送成功 → 输入条自动收起隐藏 */
       })
       .catch(function (error) {
         var msg = (error && error.message) || String(error);
@@ -3117,6 +3117,13 @@
 
   /* 回复输入条自动收起: Esc / 点击评论区域以外 */
   listEl.addEventListener('keydown', function (e) {
+    var replyInput = e.target.closest('.mc-reply-bar-wrap input');
+    if (e.key === 'Enter' && replyInput) {
+      e.preventDefault();
+      var sendBtn = replyInput.closest('.mc-reply-bar-wrap').querySelector('[data-cmt-reply-send]');
+      if (sendBtn && !sendBtn.disabled) sendBtn.click();
+      return;
+    }
     if (e.key !== 'Escape') return;
     var bar = e.target.closest('.mc-reply-bar-wrap');
     if (bar) closeReplyBar(bar);
