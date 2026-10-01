@@ -108,18 +108,18 @@ collections:
           - { label: 标题字重峰值, name: titleVariationTo, widget: string, default: "'wght' 900" }
           - { label: 指针感应半径, name: proximityRadius, widget: number, default: 140 }
           - { label: 字重衰减曲线, name: proximityFalloff, widget: select, default: linear, options: [linear, exponential, gaussian] }
-          - { label: 模糊形状尺寸, name: shapeSize, widget: number, default: 1.2 }
-          - { label: 圆角, name: roundness, widget: number, default: 0.4 }
-          - { label: 边框粗细, name: borderSize, widget: number, default: 0.05 }
-          - { label: 圆环大小, name: circleSize, widget: number, default: 0.55 }
-          - { label: 圆环边缘, name: circleEdge, widget: number, default: 0.35 }
+          - { label: 模糊形状尺寸, name: shapeSize, widget: number, value_type: float, default: 1.2 }
+          - { label: 圆角, name: roundness, widget: number, value_type: float, default: 0.4 }
+          - { label: 边框粗细, name: borderSize, widget: number, value_type: float, default: 0.05 }
+          - { label: 圆环大小, name: circleSize, widget: number, value_type: float, default: 0.55 }
+          - { label: 圆环边缘, name: circleEdge, widget: number, value_type: float, default: 0.35 }
           - { label: 火花颜色, name: sparkColor, widget: color, default: "#6B8B6B" }
           - { label: 火花大小, name: sparkSize, widget: number, default: 10 }
           - { label: 火花半径, name: sparkRadius, widget: number, default: 15 }
           - { label: 火花数量, name: sparkCount, widget: number, default: 8 }
           - { label: 火花时长(ms), name: sparkDuration, widget: number, default: 400 }
           - { label: 火花缓动, name: sparkEasing, widget: string, default: ease-out }
-          - { label: 火花额外缩放, name: sparkExtraScale, widget: number, default: 1.0 }
+          - { label: 火花额外缩放, name: sparkExtraScale, widget: number, value_type: float, default: 1.0 }
 
   - name: posts
     label: 文章
@@ -269,7 +269,7 @@ collections:
             widget: file
             choose_url: true
             required: false
-            accept: [".mp4", ".webm", ".mov"]
+            accept: ".mp4,.webm,.mov"
             hint: "设置后全屏卡片会自动播放；精选横幅默认显示首帧，鼠标悬停或聚焦时播放；视频优先于封面图片"
       - label: 正文
         name: body
