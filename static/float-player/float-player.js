@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  // 移动端停用悬浮播放器，避免遮挡阅读内容并避免加载播放列表。
+  if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return;
+
   var defaults = {
     enabled: true,
     autoLoad: false,

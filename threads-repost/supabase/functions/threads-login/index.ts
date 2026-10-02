@@ -10,6 +10,7 @@
 //       ③ 从 Set-Cookie 提取 sessionid / ds_user_id
 // 注: 若账号触发验证码/双因素/检查点, 返回明确错误, 提示在浏览器登录后手动粘贴 Cookie。
 
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 import nacl from 'npm:tweetnacl@1.0.3';
 import blake from 'npm:blakejs@1.2.1';
 
@@ -31,6 +32,9 @@ Deno.serve(async (req) => {
       }
     });
   }
+  const authError = await requireSuperadmin(req);
+  if (authError) return authError;
+
   const body = await req.json().catch(() => ({}));
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
@@ -214,6 +218,25 @@ function bytesToString(bytes: Uint8Array): string {
   let out = '';
   for (let i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
   return out;
+}
+
+async function requireSuperadmin(req: Request): Promise<Response | null> {
+  const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!token) return json({ error: '需要超级管理员登录' }, 401);
+  const url = Deno.env.get('SUPABASE_URL') || '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+  if (!url || !anonKey) return json({ error: 'Supabase Auth 配置缺失' }, 500);
+  const caller = createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+  const { data: { user }, error } = await caller.auth.getUser(token);
+  if (error || !user) return json({ error: '登录态无效' }, 401);
+  const { data: rows, error: rpcError } = await caller.rpc('get_my_profile');
+  const profile = rows && rows[0] ? rows[0] : null;
+  if (rpcError || !profile || profile.role !== 'superadmin' || profile.account_status !== 'active') {
+    return json({ error: '需要超级管理员权限' }, 403);
+  }
+  return null;
 }
 
 function json(obj: unknown, status = 200) {

@@ -240,3 +240,10 @@
     --ow-inset: 48px;
   }
 }
+
+
+@media (max-width: 768px) {
+  .fp-wheel-player {
+    display: none !important;
+  }
+}

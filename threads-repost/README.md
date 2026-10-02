@@ -80,10 +80,16 @@ THREADS_COOKIE="sessionid=xxx; ds_user_id=xxx" node fetch.mjs \
 
 ### Edge Function 部署
 
+Edge Function 配置位于 `threads-repost/supabase/`，已绑定博客 Supabase 项目。部署前需安装 Supabase CLI，并使用有该项目权限的账号执行 `supabase login`。函数关闭平台 JWT 验证是为了兼容项目当前客户端调用方式；两个函数都会在处理请求前自行验证登录 access token，并通过 `get_my_profile` 确认账号为 active superadmin。**不要移除此函数内校验，也不要把 service role key 放进前端。**
+
 ```bash
-supabase functions deploy threads-login --no-verify-jwt
-supabase functions deploy threads-fetch --no-verify-jwt
+cd threads-repost/supabase
+supabase login # 首次登录；若本机已有有效 CLI 会话则跳过
+supabase functions deploy threads-login --project-ref iyquixzprfwkglaqptxj --no-verify-jwt
+supabase functions deploy threads-fetch --project-ref iyquixzprfwkglaqptxj --no-verify-jwt
 ```
+
+部署完成后，在后台「平台管理」分别测试浏览器登录与串文抓取。`threads-login` 会访问 Instagram 登录接口，可能受验证码、双因素验证或 Meta 风控影响；遇到此类情况使用本机浏览器 Cookie 桥登录。
 
 `threads-login` 原理：Threads 与 Instagram 共用账号体系，登录走 IG Web 登录接口
 （`instagram.com/api/v1/web/accounts/login/ajax/`）。密码加密优先明文格式
