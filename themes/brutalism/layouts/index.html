@@ -14,7 +14,7 @@
     var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (!standalone) return;
     try {
-      if (window.localStorage.getItem('levia-pwa-home-splash-seen-v1') === '1') {
+      if (window.localStorage.getItem('levia-pwa-home-splash-seen-v2') === '1') {
         document.documentElement.classList.add('pwa-splash-seen');
       }
     } catch (e) {}

@@ -1,7 +1,7 @@
 /* Levia blog PWA: public reading shell only; never cache account or API traffic. */
 'use strict';
 
-const VERSION = 'levia-pwa-v3';
+const VERSION = 'levia-pwa-v4';
 const CORE_CACHE = `${VERSION}-core`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const ASSET_CACHE = `${VERSION}-assets`;

@@ -2993,24 +2993,7 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
   }
 
   .dock-item:last-child .dock-icon { stroke-width: 1.65; }
-  .dock-item-pop { animation: dockItemPop 460ms cubic-bezier(.2,.85,.25,1.18); }
-  .dock-item.is-active { animation: dockSelected 520ms cubic-bezier(.2,.85,.25,1.18) both; }
-  .dock-item-pop .dock-icon path { animation: dockIconDraw 560ms cubic-bezier(.22,.61,.36,1) both; }
-  @keyframes dockItemPop {
-    0% { transform: scale(1); }
-    42% { transform: scale(.88); }
-    76% { transform: scale(1.09); }
-    100% { transform: scale(1); }
-  }
-  @keyframes dockSelected {
-    0% { transform: scale(.9); }
-    66% { transform: scale(1.035); }
-    100% { transform: scale(1); }
-  }
-  @keyframes dockIconDraw {
-    from { stroke-dasharray: 100; stroke-dashoffset: 100; }
-    to { stroke-dasharray: 100; stroke-dashoffset: 0; }
-  }
+  .dock-item .dock-icon { transform-origin: 50% 50%; }
   .dock-item span { overflow: hidden; max-width: 0; opacity: 0; transition: max-width 220ms var(--swiss-ease), opacity 140ms ease; }
   .dock-item.is-active { flex-grow: 1.65; color: #fff; background: transparent; }
   .dock-item.is-active::before {

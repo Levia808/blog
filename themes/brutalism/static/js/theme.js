@@ -1375,33 +1375,32 @@
     })();
   }
 
-  /* Locally bundled Line MD (Iconify, MIT) icon artwork; motion is replayed with CSS. */
+  /* Motion (MIT) provides a small spring-driven touch/keyboard response;
+     the active pill itself travels between documents through native View Transitions. */
   function initMobileDockMotion() {
     var dock = document.querySelector('.mobile-dock');
     if (!dock) return;
-    function play(item) {
-      if (!item) return;
-      item.classList.remove('dock-item-pop');
-      void item.offsetWidth;
-      item.classList.add('dock-item-pop');
-      window.setTimeout(function () { item.classList.remove('dock-item-pop'); }, 520);
+    var motion = window.MotionDock;
+    if (reducedMotion || !motion || typeof motion.animate !== 'function' || typeof motion.spring !== 'function') return;
+    var lastFeedback = 0;
+    function springFeedback(event) {
+      var item = event.target.closest && event.target.closest('.dock-item');
+      if (!item || !dock.contains(item)) return;
+      var icon = item.querySelector('.dock-icon');
+      var now = performance.now();
+      /* Pointer focus often follows pointerdown; avoid playing the same response twice. */
+      if (!icon || now - lastFeedback < 140) return;
+      lastFeedback = now;
+      var spring = { type: motion.spring, stiffness: 520, damping: 25, mass: 0.72 };
+      motion.animate(icon, { scale: 0.88 }, spring).finished.then(function () {
+        if (icon.isConnected) motion.animate(icon, { scale: 1 }, spring);
+      }).catch(function () {});
     }
-    dock.querySelectorAll('.dock-item.is-active').forEach(function (item) {
-      window.setTimeout(function () { play(item); }, 80);
-    });
-    dock.addEventListener('pointerover', function (event) {
-      if (event.pointerType !== 'mouse') return;
-      var item = event.target.closest('.dock-item');
-      if (item && !item.contains(event.relatedTarget)) play(item);
-    });
     dock.addEventListener('pointerdown', function (event) {
-      var item = event.target.closest('.dock-item');
-      if (item) play(item);
+      if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      springFeedback(event);
     });
-    dock.addEventListener('focusin', function (event) {
-      var item = event.target.closest('.dock-item');
-      if (item) play(item);
-    });
+    dock.addEventListener('focusin', springFeedback);
   }
 
   /* ── 首页开屏: 加载动画 + 变形导航 + 标题入场 (瑞士风 hero) ── */
@@ -1447,7 +1446,7 @@
     var skipPwaSplash = false;
     if (standalonePwa) {
       try {
-        var splashKey = 'levia-pwa-home-splash-seen-v1';
+        var splashKey = 'levia-pwa-home-splash-seen-v2';
         skipPwaSplash = window.localStorage.getItem(splashKey) === '1';
         if (!skipPwaSplash) window.localStorage.setItem(splashKey, '1');
       } catch (e) {}
