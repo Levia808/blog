@@ -948,6 +948,13 @@ body.admin-only { overflow: hidden; height: 100vh; }
   transition: background 0.15s;
 }
 .mlp-item:hover { background: rgba(47, 74, 55, 0.08); }
+.mlp-custom {
+  border-top: 1px solid rgba(17, 19, 15, 0.12);
+  border-radius: 0 0 8px 8px;
+  color: #2f4a37;
+  font-size: 12.5px;
+}
+.mlp-custom .mlp-item-ico { font-size: 16px; }
 .mlp-item-ico { font-size: 13px; opacity: 0.7; }
 .mlp-item-main { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mlp-empty { padding: 16px; text-align: center; font-size: 12px; color: #9aa196; }

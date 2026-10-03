@@ -652,10 +652,9 @@
     scrollThreadsMedia(wrap, e.key === 'ArrowRight' ? 1 : -1);
   });
 
-  /* ── 发布地点: GPS 识别 / 附近地点 / 搜索指定 (Photon·OSM, 免费无 key, © OpenStreetMap)
-     注意: lang 参数仅支持 default/de/en/fr — 省略时浏览器自动带 Accept-Language (zh-CN) */
+  /* ── 发布地点: Photon / OpenStreetMap (开源地理编码, 支持联想与中文地点) ── */
   var LOC_API = 'https://photon.komoot.io';
-  /* 附近地点 POI 分类 (include=osm.<key>.<value>, 逗号分隔) */
+  var locSearchRequestId = 0;
   var LOC_NEARBY_CATEGORIES = [
     'osm.amenity.cafe', 'osm.amenity.restaurant', 'osm.amenity.place_of_worship',
     'osm.amenity.library', 'osm.amenity.theatre', 'osm.amenity.cinema',
@@ -667,208 +666,112 @@
     'osm.railway.station'
   ].join(',');
 
-
-  /* 中文地理编码 (成熟方案): Nominatim 官方实例 accept-language=zh-CN 原生返回中文地名
-     失败/无结果时回退 Photon; 附近 POI 用 Photon 分类检索 + 结果中文化 */
-  var NOMINATIM = 'https://nominatim.openstreetmap.org';
-  var nomLastTs = 0;
-
-  function nominatimHeaders() {
-    return { 'User-Agent': 'blog-moments/1.0 (personal blog)', 'Accept-Language': 'zh-CN,zh;q=0.9' };
-  }
-
-  function nominatimRequest(url) {
-    /* 公共实例限速 1 请求/秒: 串行节流 */
-    var wait = Math.max(0, 1100 - (Date.now() - nomLastTs));
-    nomLastTs = Date.now() + wait;
-    return new Promise(function (resolve) { setTimeout(resolve, wait); })
-      .then(function () { return locRequest(url, nominatimHeaders()); });
-  }
-
-  function locFromNominatim(f) {
-    if (!f || f.lat == null || f.lon == null) return null;
-    var a = f.address || {};
-    var parts = [];
-    if (f.name) parts.push(f.name);
-    var ctx = a.city || a.city_district || a.state_district || a.state;
-    if (ctx && parts.indexOf(ctx) < 0) parts.push(ctx);
-    if (a.country && parts.indexOf(a.country) < 0) parts.push(a.country);
-    return { name: parts.length ? parts.join(' · ') : f.display_name, lat: parseFloat(f.lat), lng: parseFloat(f.lon) };
-  }
-
-  /* Photon 结果 → 地点对象, 名称翻译为中文 (双语展示: 中文 · 原文) */
-  function translateFeatures(d) {
-    var items = ((d && d.features) || []).map(locFromFeature).filter(Boolean).slice(0, 12);
-    return Promise.all(items.map(function (loc) {
-      return translateTo(loc.name, 'zh-CN').then(function (zh) {
-        if (zh && zh !== loc.name) loc.name = zh + ' · ' + loc.name;
-        return loc;
-      });
-    })).then(function (list) {
-      return { features: list };
-    });
-  }
-
-  function locSearch(q) {
-    return nominatimRequest(NOMINATIM + '/search?q=' + encodeURIComponent(q) +
-      '&format=jsonv2&limit=8&addressdetails=1&accept-language=zh-CN')
-      .then(function (d) {
-        var items = (Array.isArray(d) ? d : []).map(locFromNominatim).filter(Boolean);
-        if (items.length) return { features: dedupeLocations(items) };
-        throw new Error('no result');
-      })
-      .catch(function () {
-        return locRequest(LOC_API + '/api/?limit=8&q=' + encodeURIComponent(q)).then(translateFeatures);
-      });
-  }
-
-  function locNearby(lat, lng) {
-    return locRequest(LOC_API + '/api/?limit=8&lat=' + lat + '&lon=' + lng +
-      '&include=' + encodeURIComponent(LOC_NEARBY_CATEGORIES)).then(translateFeatures);
-  }
-
-  function locReverse(lat, lng) {
-    return nominatimRequest(NOMINATIM + '/reverse?lat=' + lat + '&lon=' + lng +
-      '&format=jsonv2&addressdetails=1&accept-language=zh-CN')
-      .then(function (d) {
-        var loc = locFromNominatim(d);
-        return { features: loc ? [loc] : [] };
-      })
-      .catch(function () {
-        return locRequest(LOC_API + '/reverse?lat=' + lat + '&lon=' + lng).then(translateFeatures);
-      });
-  }
-
-  function locRequest(url, headers) {
-    /* 超时保护: 公共实例慢/不可达时快速降级提示, 不无限等待 */
+  function locRequest(url) {
     var ctrl = window.AbortController ? new window.AbortController() : null;
     var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
-    var opts = {};
-    if (ctrl) opts.signal = ctrl.signal;
-    if (headers) opts.headers = headers;
-    return fetch(url, opts).then(function (r) {
+    var options = ctrl ? { signal: ctrl.signal } : {};
+    return fetch(url, options).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).catch(function (e) {
       if (ctrl && e && e.name === 'AbortError') throw new Error('timeout');
       throw e;
-    }).finally(function () {
-      if (timer) clearTimeout(timer);
-    });
+    }).finally(function () { if (timer) clearTimeout(timer); });
   }
+
+  function hasHan(text) { return /[\u3400-\u9fff]/.test(text); }
 
   function placeLabel(p) {
     var parts = [];
-    if (p.name) parts.push(p.name);
-    var ctx = p.city || p.district || p.county || p.state || p.country;
-    if (ctx && parts.indexOf(ctx) < 0) parts.push(ctx);
+    var street = [p.housenumber, p.street].filter(Boolean).join(' ');
+    [p.name || street, p.suburb, p.district, p.city, p.county, p.state, p.country].forEach(function (part) {
+      if (part && parts.indexOf(part) < 0) parts.push(part);
+    });
     return parts.join(' · ');
   }
 
   function locFromFeature(f) {
     var g = f && f.geometry && f.geometry.coordinates;
-    if (!g || !g.length) return null;
-    return { name: placeLabel(f.properties || {}), lat: g[1], lng: g[0] };
+    var props = (f && f.properties) || {};
+    if (!g || g.length < 2 || !Number.isFinite(Number(g[0])) || !Number.isFinite(Number(g[1]))) return null;
+    return { name: placeLabel(props), lat: Number(g[1]), lng: Number(g[0]) };
   }
 
-  /* 过滤空名 + 同一地点合并: 同名(忽略大小写)且坐标在 ~1km 内视为同一地点 (如 涩谷站的多个站台条目) */
   function dedupeLocations(items) {
     var seen = {};
     return (items || []).filter(function (it) {
-      if (!it || !it.name) return false;
-      var k = it.lat.toFixed(2) + '|' + it.lng.toFixed(2) + '|' + String(it.name).toLowerCase().replace(/\s+/g, '');
-      if (seen[k]) return false;
-      seen[k] = true;
+      if (!it || !it.name || !Number.isFinite(Number(it.lat)) || !Number.isFinite(Number(it.lng))) return false;
+      var key = Number(it.lat).toFixed(2) + '|' + Number(it.lng).toFixed(2) + '|' + String(it.name).toLowerCase().replace(/\s+/g, '');
+      if (seen[key]) return false;
+      seen[key] = true;
       return true;
     });
   }
 
-  /* 中文地理编码 (成熟方案): Nominatim 官方实例 accept-language=zh-CN 原生返回中文地名
-     失败/无结果时回退 Photon; 附近 POI 用 Photon 分类检索 + 结果中文化 */
-  var NOMINATIM = 'https://nominatim.openstreetmap.org';
-  var nomLastTs = 0;
-
-  function nominatimHeaders() {
-    return { 'User-Agent': 'blog-moments/1.0 (personal blog)', 'Accept-Language': 'zh-CN,zh;q=0.9' };
-  }
-
-  function nominatimRequest(url) {
-    /* 公共实例限速 1 请求/秒: 串行节流 */
-    var wait = Math.max(0, 1100 - (Date.now() - nomLastTs));
-    nomLastTs = Date.now() + wait;
-    return new Promise(function (resolve) { setTimeout(resolve, wait); })
-      .then(function () { return locRequest(url, nominatimHeaders()); });
-  }
-
-  function locFromNominatim(f) {
-    if (!f || f.lat == null || f.lon == null) return null;
-    var a = f.address || {};
-    var parts = [];
-    if (f.name) parts.push(f.name);
-    var ctx = a.city || a.city_district || a.state_district || a.state;
-    if (ctx && parts.indexOf(ctx) < 0) parts.push(ctx);
-    if (a.country && parts.indexOf(a.country) < 0) parts.push(a.country);
-    return { name: parts.length ? parts.join(' · ') : f.display_name, lat: parseFloat(f.lat), lng: parseFloat(f.lon) };
-  }
-
-  /* Photon 结果 → 地点对象, 名称翻译为中文 (双语展示: 中文 · 原文) */
-  function translateFeatures(d) {
-    var items = ((d && d.features) || []).map(locFromFeature).filter(Boolean).slice(0, 12);
-    return Promise.all(items.map(function (loc) {
-      return translateTo(loc.name, 'zh-CN').then(function (zh) {
-        if (zh && zh !== loc.name) loc.name = zh + ' · ' + loc.name;
-        return loc;
-      });
-    })).then(function (list) {
-      return { features: list };
+  function photonSearch(q, restrictChina) {
+    var params = new URLSearchParams();
+    params.set('q', q);
+    params.set('limit', '10');
+    params.set('lang', 'zh');
+    if (restrictChina) {
+      ['CN', 'HK', 'MO'].forEach(function (code) { params.append('countrycode', code); });
+    }
+    /* GPS 会提升附近结果，但不限制用户搜索其他城市的能力。 */
+    var gpsIsChina = locGps && locGps.lng >= 73 && locGps.lng <= 135.5 && locGps.lat >= 17 && locGps.lat <= 54.5;
+    if (locGps && Number.isFinite(locGps.lat) && Number.isFinite(locGps.lng) && (!restrictChina || gpsIsChina)) {
+      params.set('lat', String(locGps.lat));
+      params.set('lon', String(locGps.lng));
+      params.set('zoom', '12');
+      params.set('location_bias_scale', '0.2');
+    }
+    return locRequest(LOC_API + '/api/?' + params.toString()).then(function (data) {
+      return dedupeLocations(((data && data.features) || []).map(locFromFeature).filter(Boolean));
     });
   }
 
   function locSearch(q) {
-    return nominatimRequest(NOMINATIM + '/search?q=' + encodeURIComponent(q) +
-      '&format=jsonv2&limit=8&addressdetails=1&accept-language=zh-CN')
-      .then(function (d) {
-        var items = (Array.isArray(d) ? d : []).map(locFromNominatim).filter(Boolean);
-        if (items.length) return { features: dedupeLocations(items) };
-        throw new Error('no result');
-      })
-      .catch(function () {
-        return locRequest(LOC_API + '/api/?limit=8&q=' + encodeURIComponent(q)).then(translateFeatures);
-      });
+    var chinaQuery = hasHan(q);
+    return photonSearch(q, chinaQuery).then(function (items) {
+      if (items.length || !chinaQuery) return items;
+      /* 中国范围内 OSM POI 覆盖有限时，放宽国家过滤，保留可用的匹配项。 */
+      return photonSearch(q, false);
+    });
+  }
+
+  function locFeatureCollection(data) {
+    return { features: dedupeLocations(((data && data.features) || []).map(locFromFeature).filter(Boolean)) };
   }
 
   function locNearby(lat, lng) {
-    return locRequest(LOC_API + '/api/?limit=8&lat=' + lat + '&lon=' + lng +
-      '&include=' + encodeURIComponent(LOC_NEARBY_CATEGORIES)).then(translateFeatures);
+    return locRequest(LOC_API + '/api/?limit=8&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng) +
+      '&lang=zh&include=' + encodeURIComponent(LOC_NEARBY_CATEGORIES)).then(locFeatureCollection);
   }
 
   function locReverse(lat, lng) {
-    return nominatimRequest(NOMINATIM + '/reverse?lat=' + lat + '&lon=' + lng +
-      '&format=jsonv2&addressdetails=1&accept-language=zh-CN')
-      .then(function (d) {
-        var loc = locFromNominatim(d);
-        return { features: loc ? [loc] : [] };
-      })
-      .catch(function () {
-        return locRequest(LOC_API + '/reverse?lat=' + lat + '&lon=' + lng).then(translateFeatures);
-      });
+    return locRequest(LOC_API + '/reverse?lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng) + '&lang=zh')
+      .then(locFeatureCollection);
   }
 
   function setLocStatus(text) {
     mcLocStatus.textContent = text || '';
   }
 
-  function renderLocList(items, note) {
-    if (!items || !items.length) {
-      mcLocList.innerHTML = '<div class="mlp-empty">' + (note || '无结果') + '</div>';
-      return;
-    }
-    mcLocList.innerHTML = items.map(function (it) {
+  function locationListHtml(items, note, query) {
+    var rows = (items || []).map(function (it) {
       return '<button type="button" class="mlp-item" data-loc-lat="' + it.lat + '" data-loc-lng="' + it.lng + '" data-loc-name="' + escapeHtml(it.name) + '">' +
         '<span class="mlp-item-ico" aria-hidden="true">📍</span>' +
         '<span class="mlp-item-main">' + escapeHtml(it.name) + '</span>' +
         '</button>';
-    }).join('');
+    });
+    if (!items || !items.length) rows.push('<div class="mlp-empty">' + escapeHtml(note || '未找到相关地点') + '</div>');
+    if (query) rows.push('<button type="button" class="mlp-item mlp-custom" data-loc-custom="1" data-loc-name="' + escapeHtml(query) + '">' +
+      '<span class="mlp-item-ico" aria-hidden="true">✎</span>' +
+      '<span class="mlp-item-main">没找到？使用自定义文本「' + escapeHtml(query) + '」</span></button>');
+    return rows.join('');
+  }
+
+  function renderLocList(items, note, query) {
+    mcLocList.innerHTML = locationListHtml(items, note, query);
   }
 
   function loadNearby() {
@@ -951,28 +854,32 @@
     if (!item) return;
     selectLocation({
       name: item.dataset.locName,
-      lat: parseFloat(item.dataset.locLat),
-      lng: parseFloat(item.dataset.locLng)
+      lat: item.dataset.locCustom === '1' ? null : parseFloat(item.dataset.locLat),
+      lng: item.dataset.locCustom === '1' ? null : parseFloat(item.dataset.locLng)
     });
   });
   mcLocSearch.addEventListener('input', function () {
     clearTimeout(locSearchTimer);
     var q = this.value.trim();
+    var requestId = ++locSearchRequestId;
     locSearchTimer = setTimeout(function () {
       if (!q) {
         if (locGps) loadNearby();
         else renderLocList(null, '输入关键词搜索地点');
         return;
       }
-      setLocStatus('搜索中…');
-      locSearch(q).then(function (d) {
+      if (q.length < 2) { renderLocList(null, '至少输入两个字再搜索', q); return; }
+      setLocStatus('正在搜索开源地图地点…');
+      locSearch(q).then(function (items) {
+        if (requestId !== locSearchRequestId || mcLocPanel.hidden || mcLocSearch.value.trim() !== q) return;
         setLocStatus('');
-        renderLocList(dedupeLocations((d.features || [])), '未找到相关地点');
+        renderLocList(items, '未找到相关地点', q);
       }).catch(function () {
+        if (requestId !== locSearchRequestId || mcLocPanel.hidden || mcLocSearch.value.trim() !== q) return;
         setLocStatus('搜索失败');
-        renderLocList(null, '搜索失败，请重试');
+        renderLocList(null, '地图搜索暂不可用', q);
       });
-    }, 300);
+    }, 450);
   });
   document.addEventListener('click', function (e) {
     if (e.target.closest('.mc-loc-panel') || e.target.closest('#mcLocAdd') ||
@@ -1010,19 +917,9 @@
     s.className = 'mlp-status mono' + (tone === 'ok' ? ' ok' : tone === 'err' ? ' err' : '');
   }
 
-  function editLocRenderList(panel, items, note) {
+  function editLocRenderList(panel, items, note, query) {
     var list = panel && panel.querySelector('[data-edit-loc-list]');
-    if (!list) return;
-    if (!items || !items.length) {
-      list.innerHTML = '<div class="mlp-empty">' + (note || '无结果') + '</div>';
-      return;
-    }
-    list.innerHTML = items.map(function (it) {
-      return '<button type="button" class="mlp-item" data-loc-lat="' + it.lat + '" data-loc-lng="' + it.lng + '" data-loc-name="' + escapeHtml(it.name) + '">' +
-        '<span class="mlp-item-ico" aria-hidden="true">📍</span>' +
-        '<span class="mlp-item-main">' + escapeHtml(it.name) + '</span>' +
-        '</button>';
-    }).join('');
+    if (list) list.innerHTML = locationListHtml(items, note, query);
   }
 
   function editLocLoadNearby(panel, st) {
@@ -1459,9 +1356,9 @@
       '<div class="mlp-row">' +
       '<button type="button" class="mlp-locate" data-edit-locate>◎ 使用当前位置</button>' +
       '<span class="mlp-status mono" data-edit-loc-status></span></div>' +
-      '<input type="text" class="mlp-search" data-edit-loc-search placeholder="搜索地点…" autocomplete="off">' +
+      '<input type="text" class="mlp-search" data-edit-loc-search placeholder="搜索中国及全球地点…" autocomplete="off">' +
       '<div class="mlp-list" data-edit-loc-list></div>' +
-      '<div class="mlp-attr mono">地点数据 © OpenStreetMap</div>' +
+      '<div class="mlp-attr mono">开源地图数据 © OpenStreetMap · 可输入自定义地点</div>' +
       '</div></div>';
   }
 
@@ -2630,8 +2527,8 @@
       if (elp && editLocState[elpId]) {
         editLocSelect(elp, editLocState[elpId], {
           name: editLocItem.dataset.locName,
-          lat: parseFloat(editLocItem.dataset.locLat),
-          lng: parseFloat(editLocItem.dataset.locLng)
+          lat: editLocItem.dataset.locCustom === '1' ? null : parseFloat(editLocItem.dataset.locLat),
+          lng: editLocItem.dataset.locCustom === '1' ? null : parseFloat(editLocItem.dataset.locLng)
         });
       }
       return;
@@ -2978,13 +2875,16 @@
         else editLocRenderList(panel, null, '输入关键词搜索地点');
         return;
       }
-      editLocSetStatus(panel, '搜索中…');
-      locSearch(q).then(function (d) {
+      if (q.length < 2) { editLocRenderList(panel, null, '至少输入两个字再搜索', q); return; }
+      editLocSetStatus(panel, '正在搜索开源地图地点…');
+      locSearch(q).then(function (items) {
+        if (panel.hidden || search.value.trim() !== q) return;
         editLocSetStatus(panel, '');
-        editLocRenderList(panel, dedupeLocations((d.features || [])), '未找到相关地点');
+        editLocRenderList(panel, items, '未找到相关地点', q);
       }).catch(function () {
+        if (panel.hidden || search.value.trim() !== q) return;
         editLocSetStatus(panel, '搜索失败', 'err');
-        editLocRenderList(panel, null, '搜索失败，请重试');
+        editLocRenderList(panel, null, '地图搜索暂不可用', q);
       });
     }, 300);
   });
