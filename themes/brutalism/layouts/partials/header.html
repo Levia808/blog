@@ -70,13 +70,13 @@
       </a>
     </section>
     <section class="drawer-level drawer-level--sub" id="drawerSubmenuReading" data-menu-view="reading" aria-label="内容" aria-hidden="true" inert>
-      <button class="drawer-submenu-back" type="button" data-menu-back><span aria-hidden="true">←</span>全部分类</button>
+      <div class="drawer-submenu-heading"><button class="drawer-submenu-back" type="button" data-menu-back aria-label="返回导航分类"><span aria-hidden="true">←</span><span>导航</span></button><h2>内容</h2></div>
       <a href="{{ "moments/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("moments/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("moments/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">01</span>动态<span class="dm-arr">›››</span></a>
       <a href="{{ "perception/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("perception/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("perception/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">02</span>感知<span class="dm-arr">›››</span></a>
       <a href="{{ "archives/" | relLangURL }}"{{ if or (eq $currentPage.Section "posts") (eq $currentPage.RelPermalink ("archives/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("archives/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">03</span>文章归档<span class="dm-arr">›››</span></a>
     </section>
     <section class="drawer-level drawer-level--sub" id="drawerSubmenuDiscover" data-menu-view="discover" aria-label="发现" aria-hidden="true" inert>
-      <button class="drawer-submenu-back" type="button" data-menu-back><span aria-hidden="true">←</span>全部分类</button>
+      <div class="drawer-submenu-heading"><button class="drawer-submenu-back" type="button" data-menu-back aria-label="返回导航分类"><span aria-hidden="true">←</span><span>导航</span></button><h2>发现</h2></div>
       <a href="{{ "search/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("search/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("search/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">01</span>搜索<span class="dm-arr">›››</span></a>
       <a href="{{ "tags/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("tags/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("tags/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">02</span>标签<span class="dm-arr">›››</span></a>
     </section>

@@ -9,7 +9,6 @@
 {{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
 {{- $latest := first 6 $posts }}
 
-{{ partial "header.html" . }}
 <script>
   (function () {
     var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;

@@ -18,6 +18,8 @@
 <meta name="color-scheme" content="dark light">
 <script>
   (function () {
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    document.documentElement.classList.toggle('pwa-standalone', standalone);
     var theme = null;
     try { theme = localStorage.getItem('theme'); } catch (e) {}
     if (theme !== 'light' && theme !== 'dark') {
