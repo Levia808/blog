@@ -10,6 +10,17 @@
 {{- $latest := first 6 $posts }}
 
 {{ partial "header.html" . }}
+<script>
+  (function () {
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!standalone) return;
+    try {
+      if (window.localStorage.getItem('levia-pwa-home-splash-seen-v1') === '1') {
+        document.documentElement.classList.add('pwa-splash-seen');
+      }
+    } catch (e) {}
+  })();
+</script>
 
 <!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
 <div class="loader" id="loader" aria-hidden="true">

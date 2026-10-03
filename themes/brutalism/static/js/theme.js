@@ -1239,6 +1239,35 @@
     })();
   }
 
+  /* Locally bundled Line MD (Iconify, MIT) icon artwork; motion is replayed with CSS. */
+  function initMobileDockMotion() {
+    var dock = document.querySelector('.mobile-dock');
+    if (!dock) return;
+    function play(item) {
+      if (!item) return;
+      item.classList.remove('dock-item-pop');
+      void item.offsetWidth;
+      item.classList.add('dock-item-pop');
+      window.setTimeout(function () { item.classList.remove('dock-item-pop'); }, 520);
+    }
+    dock.querySelectorAll('.dock-item.is-active').forEach(function (item) {
+      window.setTimeout(function () { play(item); }, 80);
+    });
+    dock.addEventListener('pointerover', function (event) {
+      if (event.pointerType !== 'mouse') return;
+      var item = event.target.closest('.dock-item');
+      if (item && !item.contains(event.relatedTarget)) play(item);
+    });
+    dock.addEventListener('pointerdown', function (event) {
+      var item = event.target.closest('.dock-item');
+      if (item) play(item);
+    });
+    dock.addEventListener('focusin', function (event) {
+      var item = event.target.closest('.dock-item');
+      if (item) play(item);
+    });
+  }
+
   /* ── 首页开屏: 加载动画 + 变形导航 + 标题入场 (瑞士风 hero) ── */
   function initHomeHero() {
     var hero = document.getElementById('heroWrap');
@@ -1262,18 +1291,35 @@
     var loader = document.getElementById('loader');
     var loadNum = document.getElementById('loadNum');
     var loadBar = document.getElementById('loadBar');
-    function finishLoad() {
+    function finishLoad(skipSplash) {
       forceInitialScrollTop();
       if (loadNum) loadNum.textContent = '100';
       if (loadBar) loadBar.style.width = '100%';
+      if (skipSplash) {
+        if (loader) loader.classList.add('done');
+        document.body.classList.add('loaded');
+        layoutInit();
+        return;
+      }
       setTimeout(function () {
         if (loader) loader.classList.add('done');
         document.body.classList.add('loaded');
         layoutInit();
       }, 380);
     }
-    if (reduced) { if (loadNum) loadNum.textContent = '100'; finishLoad(); }
-    else {
+    var standalonePwa = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var skipPwaSplash = false;
+    if (standalonePwa) {
+      try {
+        var splashKey = 'levia-pwa-home-splash-seen-v1';
+        skipPwaSplash = window.localStorage.getItem(splashKey) === '1';
+        if (!skipPwaSplash) window.localStorage.setItem(splashKey, '1');
+      } catch (e) {}
+      if (skipPwaSplash) document.body.classList.add('pwa-splash-seen');
+    }
+    if (skipPwaSplash) finishLoad(true);
+    else if (reduced) { if (loadNum) loadNum.textContent = '100'; finishLoad(); }
+    else if (!skipPwaSplash) {
       var num = 0;
       var iv = setInterval(function () {
         num += Math.random() * 24 + 8;
@@ -1836,6 +1882,7 @@
 
   function boot() {
     initLightbox();
+    initMobileDockMotion();
     initWelcomeEffects();
     initHomeHero();
     initWelcomeAvatar();

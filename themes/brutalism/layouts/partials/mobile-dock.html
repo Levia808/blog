@@ -2,17 +2,18 @@
 {{- $isHome := .IsHome -}}
 {{- $isArticles := or (eq .Layout "archives") (eq .Section "posts") -}}
 {{- $isMoments := or (eq .Layout "moments") (hasPrefix $path "/moments/") -}}
+<!-- Line MD SVG artwork by Iconify (MIT), adapted for locally-triggered dock animation; license: /vendor/line-md-LICENSE.txt -->
 <nav class="mobile-dock" aria-label="快捷导航">
   <a class="dock-item{{ if $isHome }} is-active{{ end }}" href="{{ "" | relLangURL }}"{{ if $isHome }} aria-current="page"{{ end }}>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg><span>首页</span>
+    <svg class="dock-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M4.5 21.5h15"></path><path d="M4.5 21.5v-13.5M19.5 21.5v-13.5"></path><path d="M2 10l10 -8l10 8"></path><path d="M9.5 21.5v-9h5v9"></path></g></svg><span>首页</span>
   </a>
   <a class="dock-item{{ if $isArticles }} is-active{{ end }}" href="{{ "archives/" | relLangURL }}"{{ if $isArticles }} aria-current="page"{{ end }}>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 9h16M8 13h3M8 17h7"/></svg><span>文章</span>
+    <svg class="dock-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4h7c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-14c-0.55 0 -1 -0.45 -1 -1v-14c0 -0.55 0.45 -1 1 -1Z"></path><path fill="currentColor" d="M5 5h14v3h-14Z"></path><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 4v-2M17 4v-2"></path><path d="M7 11h10"></path><path d="M7 15h7"></path></g></svg><span>文章</span>
   </a>
   <a class="dock-item{{ if $isMoments }} is-active{{ end }}" href="{{ "moments/" | relLangURL }}"{{ if $isMoments }} aria-current="page"{{ end }}>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-8 7.5 8.8 8.8 0 0 1-3.7-.8L4 20l1.5-3.8A7.3 7.3 0 0 1 4 11.5 7.5 7.5 0 0 1 12 4a7.5 7.5 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14h5"/></svg><span>动态</span>
+    <svg class="dock-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16.82c-2.41 -1.25 -4 -3.39 -4 -5.82c0 -3.87 4.03 -7 9 -7c4.97 0 9 3.13 9 7c0 3.87 -4.03 7 -9 7c-1.85 0 -3.57 -0.43 -5 -1.18Z"></path><path fill="currentColor" d="M5 15.5c1 1 2.5 2 4 2.5c-2 2 -5 3 -7 3c2 -2 3 -3.5 3 -5.5Z"></path><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M8 11h0.01"></path><path d="M12 11h0.01"></path><path d="M16 11h0.01"></path></g></svg><span>动态</span>
   </a>
   <button class="dock-item" id="mobileDockMenu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="mobileDrawer">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg><span>菜单</span>
+    <svg class="dock-icon" focusable="false" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 5h14"></path><path d="M5 12h14"></path><path d="M5 19h14"></path></g></svg><span>菜单</span>
   </button>
 </nav>
