@@ -57,18 +57,29 @@
       <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
     </button>
   </div>
-  <nav class="drawer-menu">
-    {{- range $index, $item := site.Menus.main }}
-    {{- $menuItemURL := (cond (strings.HasSuffix $item.URL "/") $item.URL (printf "%s/" $item.URL)) -}}
-    {{- $isLoginItem := in (lower $item.URL) "login" -}}
-    {{- if not $isLoginItem }}
-    {{- $isActive := or (eq $menuItemURL $currentPage.RelPermalink) (hasPrefix $currentPage.RelPermalink (printf "/%s" $menuItemURL)) -}}
-    {{- if $currentPage.IsHome }}{{ $isActive = eq $menuItemURL "/" }}{{ end }}
-    <a href="{{ $item.URL | relLangURL }}"{{ if $isActive }} class="active"{{ end }}>
-      <span class="dm-idx">{{ printf "%02d" (add $index 1) }}</span>{{ $item.Name }}<span class="dm-arr">›››</span>
-    </a>
-    {{- end }}
-    {{- end }}
+  <nav class="drawer-menu" id="mobileDrawerMenu" data-menu-level="root" aria-label="导航分类">
+    <section class="drawer-level drawer-level--root" data-menu-view="root" aria-label="导航分类">
+      <button class="drawer-category" type="button" data-menu-open="reading" aria-controls="drawerSubmenuReading" aria-expanded="false">
+        <span class="dm-idx">01</span><span class="drawer-category-copy"><strong>内容</strong><small>动态、感知与文章归档</small></span><span class="dm-arr">›››</span>
+      </button>
+      <button class="drawer-category" type="button" data-menu-open="discover" aria-controls="drawerSubmenuDiscover" aria-expanded="false">
+        <span class="dm-idx">02</span><span class="drawer-category-copy"><strong>发现</strong><small>搜索与标签</small></span><span class="dm-arr">›››</span>
+      </button>
+      <a class="drawer-category drawer-category--link{{ if eq $currentPage.RelPermalink ("about/" | relLangURL) }} active{{ end }}" href="{{ "about/" | relLangURL }}">
+        <span class="dm-idx">03</span><span class="drawer-category-copy"><strong>关于</strong><small>了解这个博客</small></span><span class="dm-arr">›››</span>
+      </a>
+    </section>
+    <section class="drawer-level drawer-level--sub" id="drawerSubmenuReading" data-menu-view="reading" aria-label="内容" aria-hidden="true" inert>
+      <button class="drawer-submenu-back" type="button" data-menu-back><span aria-hidden="true">←</span>全部分类</button>
+      <a href="{{ "moments/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("moments/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("moments/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">01</span>动态<span class="dm-arr">›››</span></a>
+      <a href="{{ "perception/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("perception/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("perception/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">02</span>感知<span class="dm-arr">›››</span></a>
+      <a href="{{ "archives/" | relLangURL }}"{{ if or (eq $currentPage.Section "posts") (eq $currentPage.RelPermalink ("archives/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("archives/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">03</span>文章归档<span class="dm-arr">›››</span></a>
+    </section>
+    <section class="drawer-level drawer-level--sub" id="drawerSubmenuDiscover" data-menu-view="discover" aria-label="发现" aria-hidden="true" inert>
+      <button class="drawer-submenu-back" type="button" data-menu-back><span aria-hidden="true">←</span>全部分类</button>
+      <a href="{{ "search/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("search/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("search/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">01</span>搜索<span class="dm-arr">›››</span></a>
+      <a href="{{ "tags/" | relLangURL }}"{{ if or (eq $currentPage.RelPermalink ("tags/" | relLangURL)) (hasPrefix $currentPage.RelPermalink ("tags/" | relLangURL)) }} class="active"{{ end }}><span class="dm-idx">02</span>标签<span class="dm-arr">›››</span></a>
+    </section>
   </nav>
   <div class="drawer-user">
     <button type="button" id="mobileThemeToggle" aria-label="切换明暗模式"><span class="dm-idx" aria-hidden="true">◐</span>切换到明亮模式</button>

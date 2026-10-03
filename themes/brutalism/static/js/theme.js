@@ -96,6 +96,7 @@
     var drawer = document.getElementById('mobileDrawer');
     var mask = document.getElementById('drawerMask');
     var closeBtn = document.getElementById('drawerClose');
+    var menu = document.getElementById('mobileDrawerMenu');
     if (!toggles.length || !drawer || !mask) return;
 
     var activeToggle = null;
@@ -104,6 +105,50 @@
     var openFrame = 0;
     var closeTimer = 0;
     var onCloseTransitionEnd = null;
+    var menuLevel = 'root';
+    var submenuOpener = null;
+
+    function setMenuLevel(level, moveFocus) {
+      if (!menu) return;
+      var nextView = menu.querySelector('[data-menu-view="' + level + '"]');
+      if (!nextView) level = 'root';
+      menuLevel = level;
+      menu.setAttribute('data-menu-level', level);
+      menu.querySelectorAll('[data-menu-view]').forEach(function (view) {
+        var active = view.getAttribute('data-menu-view') === level;
+        view.setAttribute('aria-hidden', active ? 'false' : 'true');
+        view.inert = !active;
+      });
+      menu.querySelectorAll('[data-menu-open]').forEach(function (button) {
+        button.setAttribute('aria-expanded', button.getAttribute('data-menu-open') === level ? 'true' : 'false');
+      });
+      if (moveFocus) {
+        var focusTarget = level === 'root'
+          ? (submenuOpener && submenuOpener.isConnected ? submenuOpener : menu.querySelector('[data-menu-open]'))
+          : menu.querySelector('[data-menu-view="' + level + '"] a, [data-menu-view="' + level + '"] [data-menu-back]');
+        if (focusTarget) focusTarget.focus({ preventScroll: true });
+      }
+    }
+
+    function resetMenuLevel() {
+      if (!menu) return;
+      var activeSubmenu = menu.querySelector('.drawer-level--sub a.active');
+      var activeView = activeSubmenu && activeSubmenu.closest('[data-menu-view]');
+      submenuOpener = activeView ? menu.querySelector('[data-menu-open="' + activeView.getAttribute('data-menu-view') + '"]') : null;
+      setMenuLevel(activeView ? activeView.getAttribute('data-menu-view') : 'root', false);
+    }
+
+    if (menu) {
+      menu.addEventListener('click', function (event) {
+        var opener = event.target.closest('[data-menu-open]');
+        if (opener) {
+          submenuOpener = opener;
+          setMenuLevel(opener.getAttribute('data-menu-open'), true);
+          return;
+        }
+        if (event.target.closest('[data-menu-back]')) setMenuLevel('root', true);
+      });
+    }
 
     function clearPendingMotion() {
       if (openFrame) window.cancelAnimationFrame(openFrame);
@@ -119,6 +164,7 @@
       var token = ++motionToken;
       isOpen = true;
       activeToggle = toggle || activeToggle || toggles[0];
+      resetMenuLevel();
       mask.hidden = false;
       drawer.hidden = false;
       mask.setAttribute('aria-hidden', 'false');
@@ -227,6 +273,36 @@
           document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'visible') checkForWorkerUpdate();
           });
+
+          var queuedPrefetches = new Set();
+          function queuePrefetch(anchor, worker) {
+            if (!anchor || !anchor.href || !worker) return;
+            var target;
+            try { target = new URL(anchor.href, window.location.href); } catch (_) { return; }
+            if (target.origin !== window.location.origin || target.search || target.hash || target.pathname === window.location.pathname) return;
+            var url = target.href;
+            if (queuedPrefetches.has(url)) return;
+            queuedPrefetches.add(url);
+            worker.postMessage({ type: 'PREFETCH_URLS', urls: [url] });
+          }
+          function warmNavigationCache(activeRegistration) {
+            var worker = navigator.serviceWorker.controller || activeRegistration.active;
+            if (!worker) return;
+            document.querySelectorAll('.mobile-dock a[href], #mobileDrawerMenu a[href]').forEach(function (anchor) {
+              queuePrefetch(anchor, worker);
+            });
+          }
+          navigator.serviceWorker.ready.then(function (activeRegistration) {
+            var warm = function () { warmNavigationCache(activeRegistration); };
+            if ('requestIdleCallback' in window) window.requestIdleCallback(warm, { timeout: 1800 });
+            else window.setTimeout(warm, 500);
+            document.addEventListener('pointerover', function (event) {
+              if (event.pointerType === 'mouse') queuePrefetch(event.target.closest('a[href]'), navigator.serviceWorker.controller || activeRegistration.active);
+            }, { passive: true });
+            document.addEventListener('pointerdown', function (event) {
+              if (event.pointerType !== 'mouse') queuePrefetch(event.target.closest('a[href]'), navigator.serviceWorker.controller || activeRegistration.active);
+            }, { passive: true });
+          }).catch(function () {});
         })
         .catch(function (error) { console.warn('PWA service worker registration failed:', error); });
     }

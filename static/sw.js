@@ -1,7 +1,7 @@
 /* Levia blog PWA: public reading shell only; never cache account or API traffic. */
 'use strict';
 
-const VERSION = 'levia-pwa-v2';
+const VERSION = 'levia-pwa-v3';
 const CORE_CACHE = `${VERSION}-core`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const ASSET_CACHE = `${VERSION}-assets`;
@@ -38,6 +38,39 @@ async function trimCache(cacheName, maxEntries) {
   await Promise.all(keys.slice(0, Math.max(0, keys.length - maxEntries)).map((key) => cache.delete(key)));
 }
 
+self.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'PREFETCH_URLS' || !Array.isArray(data.urls)) return;
+  const urls = data.urls.slice(0, 10);
+  event.waitUntil((async () => {
+    for (const rawURL of urls) {
+      try {
+        const url = new URL(rawURL, self.registration.scope);
+        if (url.origin !== self.location.origin || url.search || isPrivatePath(url.pathname) || url.pathname.endsWith('/sw.js')) continue;
+        const request = new Request(url.href, { method: 'GET', credentials: 'same-origin', headers: { Accept: 'text/html' } });
+        const cached = await caches.match(request, { cacheName: PAGE_CACHE });
+        if (cached) continue;
+        const response = await fetch(request);
+        if (response && response.status === 200 && response.type === 'basic' && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
+          const cache = await caches.open(PAGE_CACHE);
+          await cache.put(request, response.clone());
+          trimCache(PAGE_CACHE, 40).catch(() => {});
+        }
+      } catch (_) { /* Prefetch must never interfere with the foreground page. */ }
+    }
+  })());
+});
+
+async function refreshPage(request) {
+  const response = await fetch(request);
+  if (response && response.status === 200 && response.type === 'basic' && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
+    const cache = await caches.open(PAGE_CACHE);
+    await cache.put(request, response.clone());
+    trimCache(PAGE_CACHE, 40).catch(() => {});
+  }
+  return response;
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
@@ -46,18 +79,12 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     if (url.search) return;
+    const refresh = refreshPage(request);
+    event.waitUntil(refresh.then(() => undefined).catch(() => undefined));
     event.respondWith((async () => {
-      try {
-        const response = await fetch(request);
-        if (response && response.status === 200 && response.type === 'basic' && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
-          const cache = await caches.open(PAGE_CACHE);
-          await cache.put(request, response.clone());
-          trimCache(PAGE_CACHE, 40).catch(() => {});
-        }
-        return response;
-      } catch (_) {
-        const cached = await caches.match(request, { cacheName: PAGE_CACHE });
-        if (cached) return cached;
+      const cached = await caches.match(request, { cacheName: PAGE_CACHE });
+      if (cached) return cached;
+      try { return await refresh; } catch (_) {
         const offlineURL = new URL('offline.html', self.registration.scope).href;
         return (await caches.match(offlineURL, { cacheName: CORE_CACHE })) || Response.error();
       }
