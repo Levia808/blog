@@ -374,32 +374,7 @@
       return true;
     }
 
-    list.addEventListener('wheel', function (event) {
-      /* Lenis 平滑滚动接管时禁用卡片级 wheel 导航 (避免双滚动源冲突) */
-      if (window.__lenis) return;
-      if (Math.abs(event.deltaY) < 18 || Math.abs(event.deltaY) < Math.abs(event.deltaX) || !inCardViewport()) return;
-      var direction = event.deltaY > 0 ? 1 : -1;
-      var current = nearestCardIndex();
-      var atBoundary = (current === 0 && direction < 0) || (current === cards.length - 1 && direction > 0);
-      if (atBoundary) return;
-      event.preventDefault();
-      if (!locked) moveCard(direction);
-    }, { passive: false });
-
-    var touchStartY = null;
-    list.addEventListener('touchstart', function (event) {
-      if (event.touches[0]) touchStartY = event.touches[0].clientY;
-    }, { passive: true });
-    list.addEventListener('touchend', function (event) {
-      if (touchStartY == null || !event.changedTouches[0] || !inCardViewport()) return;
-      var delta = touchStartY - event.changedTouches[0].clientY;
-      touchStartY = null;
-      if (Math.abs(delta) < 42) return;
-      var direction = delta > 0 ? 1 : -1;
-      var current = nearestCardIndex();
-      var atBoundary = (current === 0 && direction < 0) || (current === cards.length - 1 && direction > 0);
-      if (!atBoundary && !locked) moveCard(direction);
-    }, { passive: true });
+    /* Wheel and touch scrolling stay native so proximity snap can settle gently. */
 
     document.addEventListener('keydown', function (event) {
       if (!inCardViewport() || event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
@@ -1253,7 +1228,11 @@
       var dx = (init.tTarget.x - init.tInit.x) * p;
       var dy = (init.tTarget.y - init.tInit.y) * p;
       var sc = 1 + (init.tScale - 1) * p;
-      title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
+      if (window.matchMedia('(max-width: 720px)').matches) {
+        title.style.transform = 'none';
+      } else {
+        title.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
+      }
       title.style.opacity = 1;
       init.items.forEach(function (g) {
         var x = g.initX * (1 - p);

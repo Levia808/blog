@@ -1239,7 +1239,7 @@ html.js [data-reveal].reveal-visible {
   background-size: cover;
   background-position: center;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
+  scroll-snap-stop: normal;
   transition: border-color 350ms ease-out, background-color 350ms ease-out;
 }
 .post-card-fullscreen::before {
@@ -2249,4 +2249,10 @@ body.loaded .hero-lines i { transform: scaleX(1); }
   .hero-title { white-space: normal; font-size: clamp(56px, 17vw, 120px); }
   .hn-cta { display: none; }
   .hero-lines .l-text { font-size: 11px; }
+  .home-page .ht-wrap { position: absolute; }
+  html.js .home-page.home-nav-collapsed:not(.nav-is-hidden) .ht-wrap,
+  html.js .home-page.home-nav-collapsed.nav-is-hidden .ht-wrap {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

@@ -49,13 +49,18 @@ body:not(.home-page):not(.admin-only):not(.login-only) {
   color: var(--swiss-text);
 }
 
-body:not(.home-page):not(.admin-only):not(.login-only) .site-main {
+body:not(.home-page):not(.admin-only):not(.login-only):not(.moments-page-view) .site-main {
   background:
     linear-gradient(90deg, transparent calc(100% - 1px), var(--swiss-grid-line, rgba(47, 74, 55, 0.055)) 0) 0 0 / calc(100% / 12) 100%,
     var(--swiss-bg);
 }
 
 .home-page .hero-home + .blog-home {
+  background: var(--swiss-bg);
+}
+
+/* The moments feed should use a clean background without the global column texture. */
+body.moments-page-view .site-main {
   background: var(--swiss-bg);
 }
 
