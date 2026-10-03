@@ -1199,10 +1199,6 @@ html.js [data-reveal].reveal-visible {
   gap: 0;
   overscroll-behavior-y: contain;
 }
-.fullscreen-snap-enabled {
-  scroll-snap-type: y proximity;
-  scroll-padding-top: 0;
-}
 .pcf-cta {
   display: inline-block;
   margin-top: 6px;
@@ -1238,8 +1234,6 @@ html.js [data-reveal].reveal-visible {
   background: var(--surface);
   background-size: cover;
   background-position: center;
-  scroll-snap-align: start;
-  scroll-snap-stop: normal;
   transition: border-color 350ms ease-out, background-color 350ms ease-out;
 }
 .post-card-fullscreen::before {
@@ -1478,7 +1472,6 @@ html.js [data-reveal].reveal-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fullscreen-snap-enabled { scroll-snap-type: none; }
   .pcf-inner { opacity: 1; transform: none; transition: none; }
   .post-card-feature,
   .post-card-feature .pcf-media img,

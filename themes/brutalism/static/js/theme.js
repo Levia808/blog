@@ -248,7 +248,6 @@
     var cards = list ? Array.prototype.slice.call(list.querySelectorAll('.post-card-fullscreen')) : [];
     var effectCards = Array.prototype.slice.call(document.querySelectorAll('.post-card-fullscreen, .post-card-feature'));
     if (!cards.length && !effectCards.length) return;
-    if (list && cards.length) document.documentElement.classList.add('fullscreen-snap-enabled');
 
     function wrapTitleUnits(title) {
       if (!title || title.dataset.unitsReady === '1') return;
@@ -374,7 +373,52 @@
       return true;
     }
 
-    /* Wheel and touch scrolling stay native so proximity snap can settle gently. */
+    /*
+     * Gently settle only tiny scroll offsets after the user's gesture is fully over.
+     * Native scroll-snap can hijack wheel/touch momentum, so larger offsets are always
+     * left exactly where the user stopped.
+     */
+    var settleTimer = 0;
+    var settleReleaseTimer = 0;
+    var settling = false;
+    var settleDelay = 360;
+
+    function settleNearCard() {
+      if (reducedMotion || settling || locked || !inCardViewport()) return;
+      var index = nearestCardIndex();
+      var card = cards[index];
+      if (!card) return;
+
+      // Do not pull the page back into the final card as the user leaves the list.
+      if (index === cards.length - 1 && list.getBoundingClientRect().bottom < window.innerHeight) return;
+
+      var distance = card.getBoundingClientRect().top;
+      var threshold = Math.max(36, Math.min(96, window.innerHeight * 0.08));
+      if (Math.abs(distance) < 3 || Math.abs(distance) > threshold) return;
+
+      settling = true;
+      var lenis = window.__lenis;
+      if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(card, {
+          duration: 0.48,
+          easing: function (t) { return 1 - Math.pow(1 - t, 3); },
+          lock: false,
+          onComplete: function () { settling = false; }
+        });
+        window.clearTimeout(settleReleaseTimer);
+        settleReleaseTimer = window.setTimeout(function () { settling = false; }, 750);
+      } else {
+        window.scrollTo({ top: window.scrollY + distance, behavior: 'smooth' });
+        window.clearTimeout(settleReleaseTimer);
+        settleReleaseTimer = window.setTimeout(function () { settling = false; }, 750);
+      }
+    }
+
+    window.addEventListener('scroll', function () {
+      if (settling) return;
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(settleNearCard, settleDelay);
+    }, { passive: true });
 
     document.addEventListener('keydown', function (event) {
       if (!inCardViewport() || event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
