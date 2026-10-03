@@ -90,57 +90,96 @@
     }, { passive: true });
   }
 
-  /* ── 移动端菜单 ── */
-  /* ── 移动端左侧抽屉导航 ── */
+  /* ── 移动端菜单：状态/token 驱动，快速反复开合时取消过期帧和收尾任务 ── */
   function initMobileMenu() {
     var toggles = [document.getElementById('mobileMenuToggle'), document.getElementById('mobileDockMenu')].filter(Boolean);
     var drawer = document.getElementById('mobileDrawer');
     var mask = document.getElementById('drawerMask');
     var closeBtn = document.getElementById('drawerClose');
-    if (!toggles.length || !drawer) return;
+    if (!toggles.length || !drawer || !mask) return;
+
     var activeToggle = null;
+    var isOpen = false;
+    var motionToken = 0;
+    var openFrame = 0;
+    var closeTimer = 0;
+    var onCloseTransitionEnd = null;
+
+    function clearPendingMotion() {
+      if (openFrame) window.cancelAnimationFrame(openFrame);
+      if (closeTimer) window.clearTimeout(closeTimer);
+      if (onCloseTransitionEnd) drawer.removeEventListener('transitionend', onCloseTransitionEnd);
+      openFrame = 0;
+      closeTimer = 0;
+      onCloseTransitionEnd = null;
+    }
 
     function openDrawer(toggle) {
-      activeToggle = toggle || toggles[0];
+      clearPendingMotion();
+      var token = ++motionToken;
+      isOpen = true;
+      activeToggle = toggle || activeToggle || toggles[0];
       mask.hidden = false;
       drawer.hidden = false;
+      mask.setAttribute('aria-hidden', 'false');
       drawer.setAttribute('aria-hidden', 'false');
       toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'true'); });
       document.body.style.overflow = 'hidden';
-      window.requestAnimationFrame(function () {
+      /* Commit the unhidden/offscreen state before applying the open class. */
+      void drawer.offsetHeight;
+      openFrame = window.requestAnimationFrame(function () {
+        openFrame = 0;
+        if (!isOpen || token !== motionToken) return;
         drawer.classList.add('is-open');
         mask.classList.add('is-show');
+        if (closeBtn) closeBtn.focus({ preventScroll: true });
       });
     }
 
+    function finishClose(token) {
+      if (token !== motionToken || isOpen) return;
+      clearPendingMotion();
+      drawer.hidden = true;
+      mask.hidden = true;
+      mask.setAttribute('aria-hidden', 'true');
+      drawer.setAttribute('aria-hidden', 'true');
+      if (activeToggle && activeToggle.isConnected) activeToggle.focus({ preventScroll: true });
+    }
+
     function closeDrawer() {
+      if (!isOpen && drawer.hidden) return;
+      clearPendingMotion();
+      var token = ++motionToken;
+      isOpen = false;
       drawer.classList.remove('is-open');
       mask.classList.remove('is-show');
       toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
       document.body.style.overflow = '';
-      window.setTimeout(function () {
-        if (!drawer.classList.contains('is-open')) {
-          drawer.hidden = true;
-          mask.hidden = true;
-          drawer.setAttribute('aria-hidden', 'true');
-          if (activeToggle && activeToggle.isConnected) activeToggle.focus({ preventScroll: true });
-        }
-      }, 180);
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        finishClose(token);
+        return;
+      }
+      onCloseTransitionEnd = function (event) {
+        if (event.target === drawer && (event.propertyName === 'transform' || event.propertyName === 'opacity')) finishClose(token);
+      };
+      drawer.addEventListener('transitionend', onCloseTransitionEnd);
+      closeTimer = window.setTimeout(function () { finishClose(token); }, 480);
     }
 
     toggles.forEach(function (toggle) {
       toggle.addEventListener('click', function () {
-        if (drawer.hidden || !drawer.classList.contains('is-open')) openDrawer(toggle);
-        else closeDrawer();
+        if (isOpen) closeDrawer();
+        else openDrawer(toggle);
       });
     });
     if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
     mask.addEventListener('click', closeDrawer);
-    drawer.addEventListener('click', function (e) {
-      if (e.target.closest('a')) closeDrawer();
+    drawer.addEventListener('click', function (event) {
+      if (event.target.closest('a')) closeDrawer();
     });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !drawer.hidden && drawer.classList.contains('is-open')) closeDrawer();
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && isOpen) closeDrawer();
     });
 
     var mobileLoginBtn = document.getElementById('mobileLoginBtn');
@@ -167,7 +206,28 @@
       var scriptURL = themeScriptSrc ? new URL(themeScriptSrc, window.location.href) : new URL('js/theme.js', window.location.href);
       var workerURL = pwaWorkerPath ? new URL(pwaWorkerPath, window.location.href) : new URL('../sw.js', scriptURL);
       var workerScope = pwaScopePath ? new URL(pwaScopePath, window.location.href).pathname : new URL('../', scriptURL).pathname;
-      navigator.serviceWorker.register(workerURL.href, { scope: workerScope })
+      var hadController = !!navigator.serviceWorker.controller;
+      var reloadingForWorker = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!standalone || !hadController || reloadingForWorker) return;
+        reloadingForWorker = true;
+        window.location.reload();
+      });
+
+      navigator.serviceWorker.register(workerURL.href, { scope: workerScope, updateViaCache: 'none' })
+        .then(function (registration) {
+          function checkForWorkerUpdate() {
+            if (document.visibilityState === 'hidden' || !navigator.onLine) return;
+            registration.update().catch(function () {});
+          }
+          checkForWorkerUpdate();
+          window.setInterval(checkForWorkerUpdate, 60 * 60 * 1000);
+          window.addEventListener('online', checkForWorkerUpdate);
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') checkForWorkerUpdate();
+          });
+        })
         .catch(function (error) { console.warn('PWA service worker registration failed:', error); });
     }
 
