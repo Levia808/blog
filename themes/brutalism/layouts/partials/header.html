@@ -72,6 +72,8 @@
   </nav>
   <div class="drawer-user">
     <button type="button" id="mobileThemeToggle" aria-label="切换明暗模式"><span class="dm-idx" aria-hidden="true">◐</span>切换到明亮模式</button>
+    <button type="button" id="pwaInstallBtn" hidden><span class="dm-idx" aria-hidden="true">↓</span>安装博客应用</button>
+    <p class="pwa-ios-hint" id="pwaIosHint" hidden>在 Safari 中点“分享” → “添加到主屏幕”，即可像 App 一样打开。</p>
   {{- if $P.auth }}
     <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
     <a href="{{ "admin-cms/" | relURL }}" id="mobileCmsLink" hidden><span class="dm-idx">✎</span>写文章</a>

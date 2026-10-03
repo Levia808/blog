@@ -2895,3 +2895,123 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .mc-loc-panel { animation: none; }
 }
+
+/* PWA mobile dock: replaces the old compact top navigation on touch-sized screens. */
+.home-page .nav-full,
+.home-page .nav-mobile { display: none !important; }
+.mobile-dock { display: none; }
+.pwa-ios-hint {
+  margin: 0;
+  padding: 12px 20px 14px 54px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 768px) {
+  body.home-page .nav-full,
+  body.home-page .nav-mobile,
+  .nav-mobile { display: none !important; }
+
+  .site-has-nav:not(.home-page):not(.login-only) .site-main {
+    padding-top: 0;
+  }
+
+  body:not(.login-only):not(.admin-only) .site-main {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:not(.login-only):not(.admin-only) .site-footer {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-dock {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 80;
+    left: 50%;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: min(420px, calc(100vw - 32px));
+    min-height: 72px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--swiss-line) 75%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--swiss-surface) 90%, transparent);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    backdrop-filter: blur(22px) saturate(1.35);
+    transform: translateX(-50%);
+  }
+
+  .dock-item {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--swiss-muted);
+    background: transparent;
+    text-decoration: none;
+    font: 500 13px/1 var(--font-sans, Inter, sans-serif);
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: flex-grow 220ms var(--swiss-ease), color 180ms ease, background 180ms ease, transform 180ms ease;
+  }
+
+  .dock-item svg {
+    display: block;
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .dock-item:last-child svg { stroke-width: 1.65; }
+  .dock-item span { overflow: hidden; max-width: 0; opacity: 0; transition: max-width 220ms var(--swiss-ease), opacity 140ms ease; }
+  .dock-item.is-active { flex-grow: 1.65; color: #fff; background: var(--swiss-moss); }
+  .dock-item.is-active span { max-width: 72px; opacity: 1; }
+  .dock-item:active { transform: scale(0.96); }
+  .dock-item:focus-visible { outline: 2px solid var(--swiss-moss); outline-offset: 2px; }
+
+  [data-theme="dark"] .mobile-dock {
+    border-color: rgba(232, 232, 227, 0.12);
+    background: color-mix(in srgb, #1b1b1a 90%, transparent);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.44), 0 2px 8px rgba(0, 0, 0, 0.24);
+  }
+
+  [data-theme="dark"] .dock-item.is-active { color: #10140f; }
+
+  .moments-page { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .moments-fab { bottom: calc(98px + env(safe-area-inset-bottom, 0px)); }
+  .mc-loc-panel { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  .drawer {
+    z-index: 100;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 360px) {
+  .mobile-dock { gap: 3px; width: calc(100vw - 20px); padding: 7px; }
+  .dock-item { gap: 5px; padding-inline: 8px; font-size: 12px; }
+  .dock-item svg { flex-basis: 21px; width: 21px; height: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-item, .dock-item span { transition: none; }
+}

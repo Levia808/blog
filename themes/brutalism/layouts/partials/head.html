@@ -10,6 +10,11 @@
 <meta name="twitter:title" content="{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}">
 <meta name="keywords" content="{{ with $P.keywords }}{{ delimit . ", " }}{{ end }}">
 <meta name="theme-color" content="#f7f8f4">
+<link rel="manifest" href="{{ "manifest.webmanifest" | relURL }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ "images/pwa-180.png" | relURL }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Levia’s blog">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="color-scheme" content="dark light">
 <script>
   (function () {
@@ -47,5 +52,5 @@
 {{- end }}
 {{- if not (eq .Layout "admin") }}
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
-<script defer src="{{ "js/theme.js" | relURL }}?v={{ now.Unix }}"></script>
+<script defer src="{{ "js/theme.js" | relURL }}?v={{ now.Unix }}" data-pwa-worker="{{ "sw.js" | relURL }}" data-pwa-scope="{{ "" | relURL }}"></script>
 {{- end }}

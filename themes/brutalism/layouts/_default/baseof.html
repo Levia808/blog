@@ -28,9 +28,7 @@
 <body class="{{ block "body-class" . }}{{ end }}{{ if not (eq .Layout "admin") }} site-has-nav{{ end }} nav-behavior-{{ $P.navBehavior | default "auto" }}" data-nav-behavior="{{ $P.navBehavior | default "auto" }}">
   <a class="skip-link" href="#main">跳转到主要内容</a>
   {{- if not (eq .Layout "admin") }}
-  {{- if not .IsHome }}
   {{ partial "header.html" . }}
-  {{- end }}
   {{- end }}
   <main id="main" class="site-main">
     {{ block "main" . }}{{ end }}
@@ -40,6 +38,9 @@
   {{- if $P.auth }}
   {{ partial "auth-modal.html" . }}
   {{- end }}
+  {{- end }}
+  {{- if and (ne .Layout "admin") (not (hasPrefix .RelPermalink "/login/")) }}
+  {{ partial "mobile-dock.html" . }}
   {{- end }}
   {{ partial "scripts.html" . }}
 </body>

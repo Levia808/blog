@@ -2,7 +2,10 @@
   'use strict';
 
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var themeScriptSrc = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
+  var currentScript = document.currentScript;
+  var themeScriptSrc = currentScript && currentScript.src ? currentScript.src : '';
+  var pwaWorkerPath = currentScript && currentScript.getAttribute('data-pwa-worker');
+  var pwaScopePath = currentScript && currentScript.getAttribute('data-pwa-scope');
   document.documentElement.classList.add('js');
 
   function clamp01(value) {
@@ -90,17 +93,19 @@
   /* ── 移动端菜单 ── */
   /* ── 移动端左侧抽屉导航 ── */
   function initMobileMenu() {
-    var toggle = document.getElementById('mobileMenuToggle');
+    var toggles = [document.getElementById('mobileMenuToggle'), document.getElementById('mobileDockMenu')].filter(Boolean);
     var drawer = document.getElementById('mobileDrawer');
     var mask = document.getElementById('drawerMask');
     var closeBtn = document.getElementById('drawerClose');
-    if (!toggle || !drawer) return;
+    if (!toggles.length || !drawer) return;
+    var activeToggle = null;
 
-    function openDrawer() {
+    function openDrawer(toggle) {
+      activeToggle = toggle || toggles[0];
       mask.hidden = false;
       drawer.hidden = false;
       drawer.setAttribute('aria-hidden', 'false');
-      toggle.setAttribute('aria-expanded', 'true');
+      toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'true'); });
       document.body.style.overflow = 'hidden';
       window.requestAnimationFrame(function () {
         drawer.classList.add('is-open');
@@ -111,20 +116,23 @@
     function closeDrawer() {
       drawer.classList.remove('is-open');
       mask.classList.remove('is-show');
-      toggle.setAttribute('aria-expanded', 'false');
+      toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
       document.body.style.overflow = '';
       window.setTimeout(function () {
         if (!drawer.classList.contains('is-open')) {
           drawer.hidden = true;
           mask.hidden = true;
           drawer.setAttribute('aria-hidden', 'true');
+          if (activeToggle && activeToggle.isConnected) activeToggle.focus({ preventScroll: true });
         }
       }, 180);
     }
 
-    toggle.addEventListener('click', function () {
-      if (drawer.hidden || !drawer.classList.contains('is-open')) openDrawer();
-      else closeDrawer();
+    toggles.forEach(function (toggle) {
+      toggle.addEventListener('click', function () {
+        if (drawer.hidden || !drawer.classList.contains('is-open')) openDrawer(toggle);
+        else closeDrawer();
+      });
     });
     if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
     mask.addEventListener('click', closeDrawer);
@@ -141,6 +149,49 @@
         closeDrawer();
         if (window.BlogAuth) window.BlogAuth.open('login');
         else if (document.getElementById('navLoginBtn')) document.getElementById('navLoginBtn').click();
+      });
+    }
+  }
+
+  /* ── PWA 安装体验与离线缓存注册 ── */
+  function initPWA() {
+    var installButton = document.getElementById('pwaInstallBtn');
+    var iosHint = document.getElementById('pwaIosHint');
+    var installPrompt = null;
+    var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    var ua = window.navigator.userAgent || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.indexOf('Macintosh') !== -1 && 'ontouchend' in document);
+    var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+      var scriptURL = themeScriptSrc ? new URL(themeScriptSrc, window.location.href) : new URL('js/theme.js', window.location.href);
+      var workerURL = pwaWorkerPath ? new URL(pwaWorkerPath, window.location.href) : new URL('../sw.js', scriptURL);
+      var workerScope = pwaScopePath ? new URL(pwaScopePath, window.location.href).pathname : new URL('../', scriptURL).pathname;
+      navigator.serviceWorker.register(workerURL.href, { scope: workerScope })
+        .catch(function (error) { console.warn('PWA service worker registration failed:', error); });
+    }
+
+    if (standalone) return;
+    if (isIOS && isSafari && iosHint) iosHint.hidden = false;
+
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      installPrompt = event;
+      if (installButton) installButton.hidden = false;
+    });
+    window.addEventListener('appinstalled', function () {
+      installPrompt = null;
+      if (installButton) installButton.hidden = true;
+      if (iosHint) iosHint.hidden = true;
+    });
+    if (installButton) {
+      installButton.addEventListener('click', function () {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        installPrompt.userChoice.then(function () {
+          installPrompt = null;
+          installButton.hidden = true;
+        }).catch(function () { installPrompt = null; });
       });
     }
   }
@@ -1799,6 +1850,7 @@
     initVideoLoading();
     initNavScroll();
     initMobileMenu();
+    initPWA();
     initThemeToggle();
     initReveal();
     initTocScrollspy();
