@@ -3253,3 +3253,22 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
   .drawer-level { padding-inline: 16px; }
   .drawer-user { margin-inline: 16px; }
 }
+
+/* Shared Lottie controls: the inline SVG remains visible until animation data is ready. */
+.lottie-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: inherit;
+  line-height: 0;
+}
+.lottie-icon .lottie-fallback { display: block; width: 100%; height: 100%; }
+.lottie-icon .lottie-fallback[hidden] { display: none; }
+.lottie-icon.is-ready > svg:not(.lottie-fallback) { width: 100%; height: 100%; overflow: visible; }
+.lottie-icon.is-ready > svg:not(.lottie-fallback) path[fill]:not([fill="none"]) { fill: currentColor !important; }
+.lottie-icon.is-ready > svg:not(.lottie-fallback) path[stroke]:not([stroke="none"]) { stroke: currentColor !important; }
+.nav-menu-icon, .admin-menu-icon { width: 22px; height: 22px; }
+.theme-toggle-icon { width: 18px; height: 18px; vertical-align: middle; margin-right: 7px; }
+.theme-toggle-icon .theme-glyph { font-size: 16px; line-height: 1; }
+.drawer-action-icon { width: 18px; height: 18px; margin-right: 8px; font-size: 16px; line-height: 1; }

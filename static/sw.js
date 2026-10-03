@@ -1,7 +1,7 @@
 /* Levia blog PWA: public reading shell only; never cache account or API traffic. */
 'use strict';
 
-const VERSION = 'levia-pwa-v4';
+const VERSION = 'levia-pwa-v5';
 const CORE_CACHE = `${VERSION}-core`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const ASSET_CACHE = `${VERSION}-assets`;
@@ -92,7 +92,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const isStaticAsset = /\.(?:css|js|mjs|woff2?|ttf|otf|svg|png|jpe?g|webp|ico)$/i.test(url.pathname);
+  const isStaticAsset = /\.(?:css|js|mjs|json|woff2?|ttf|otf|svg|png|jpe?g|webp|ico)$/i.test(url.pathname);
   if (!isStaticAsset || /\.(?:mp4|webm|mov|mp3|m4a)$/i.test(url.pathname)) return;
   const refresh = fetch(request).then(async (response) => {
     const lengthHeader = response.headers.get('Content-Length');

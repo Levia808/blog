@@ -366,13 +366,10 @@
       toggles.forEach(function (toggle) {
         var nextLabel = theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
         toggle.setAttribute('aria-label', nextLabel);
-        if (toggle.id === 'themeToggleMenu') toggle.textContent = nextLabel;
-        if (toggle.id === 'mobileThemeToggle') {
-          var index = toggle.querySelector('.dm-idx');
-          toggle.setAttribute('aria-label', nextLabel);
-          toggle.lastChild.textContent = nextLabel;
-          if (index) toggle.insertBefore(index, toggle.firstChild);
-        }
+        var label = toggle.querySelector('.theme-toggle-label');
+        if (label) label.textContent = nextLabel;
+        var icon = toggle.querySelector('.theme-toggle-icon');
+        if (icon && window.LeviaLottie) window.LeviaLottie.setState(icon, theme, !!persist);
       });
     }
 
@@ -1223,6 +1220,9 @@
         var showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
         wrap.classList.toggle('pw-visible', !showing);
+        btn.setAttribute('aria-label', showing ? '显示密码' : '隐藏密码');
+        var eyeIcon = wrap.querySelector(showing ? '.icon-eye' : '.icon-eye-off');
+        if (eyeIcon && window.LeviaLottie) window.LeviaLottie.play(eyeIcon);
       });
     });
 

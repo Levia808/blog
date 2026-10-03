@@ -33,7 +33,7 @@
         <a href="{{ "profile/" | relLangURL }}">个人主页</a>
         <a href="{{ "admin-cms/" | relURL }}" id="cmsLink" hidden>写文章</a>
         <a href="{{ "admin/" | relLangURL }}" id="adminLink" hidden>管理后台</a>
-        <button type="button" id="themeToggleMenu" aria-label="切换明暗模式">切换到明亮模式</button>
+        <button type="button" id="themeToggleMenu" aria-label="切换到明亮模式"><span class="theme-toggle-icon lottie-icon" data-lottie-src="{{ "vendor/lottie-icons/toggle.json" | relURL }}" aria-hidden="true"><span class="lottie-fallback theme-glyph">◐</span></span><span class="theme-toggle-label">切换到明亮模式</span></button>
         <div class="dm-divider"></div>
         <button type="button" id="logoutBtn">注销</button>
       </div>
@@ -45,7 +45,7 @@
 <div class="nav-mobile" id="siteHeaderMobile" aria-label="主导航" data-component="mobile-nav">
   <a class="nm-logo nav-wordmark" href="{{ "" | relLangURL }}">LEVIA<span class="nav-wordmark-sub">’s blog</span></a>
   <button type="button" class="nm-toggle" id="mobileMenuToggle" aria-label="打开菜单" aria-expanded="false">
-    <svg viewBox="0 0 256 256" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
+    <span class="nav-menu-icon lottie-icon" data-lottie-src="{{ "vendor/lottie-icons/menu.json" | relURL }}" aria-hidden="true"><svg class="lottie-fallback" viewBox="0 0 256 256" width="20" height="20" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></span>
   </button>
 </div>
 
@@ -82,8 +82,8 @@
     </section>
   </nav>
   <div class="drawer-user">
-    <button type="button" id="mobileThemeToggle" aria-label="切换明暗模式"><span class="dm-idx" aria-hidden="true">◐</span>切换到明亮模式</button>
-    <button type="button" id="pwaInstallBtn" hidden><span class="dm-idx" aria-hidden="true">↓</span>安装博客应用</button>
+    <button type="button" id="mobileThemeToggle" aria-label="切换到明亮模式"><span class="theme-toggle-icon lottie-icon" data-lottie-src="{{ "vendor/lottie-icons/toggle.json" | relURL }}" aria-hidden="true"><span class="lottie-fallback theme-glyph">◐</span></span><span class="theme-toggle-label">切换到明亮模式</span></button>
+    <button type="button" id="pwaInstallBtn" hidden><span class="drawer-action-icon lottie-icon" data-lottie-src="{{ "vendor/lottie-icons/download.json" | relURL }}" aria-hidden="true"><span class="lottie-fallback">↓</span></span>安装博客应用</button>
     <p class="pwa-ios-hint" id="pwaIosHint" hidden>在 Safari 中点“分享” → “添加到主屏幕”，即可像 App 一样打开。</p>
   {{- if $P.auth }}
     <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
