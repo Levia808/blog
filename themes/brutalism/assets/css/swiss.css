@@ -3272,3 +3272,143 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
 .theme-toggle-icon { width: 18px; height: 18px; vertical-align: middle; margin-right: 7px; }
 .theme-toggle-icon .theme-glyph { font-size: 16px; line-height: 1; }
 .drawer-action-icon { width: 18px; height: 18px; margin-right: 8px; font-size: 16px; line-height: 1; }
+
+
+/* Installed PWA: a restrained, monochrome frosted-glass navigation shell.
+   The regular mobile website keeps its existing header and never shows this dock. */
+.pwa-app-header { display: none; }
+@media (max-width: 768px) {
+  html.pwa-standalone body:not(.login-only):not(.admin-only) .pwa-app-header {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 240;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) max(18px, env(safe-area-inset-right, 0px)) 0 max(18px, env(safe-area-inset-left, 0px));
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+    background: rgba(255, 255, 255, .48);
+    color: var(--swiss-text);
+    -webkit-backdrop-filter: blur(18px) saturate(1);
+    backdrop-filter: blur(18px) saturate(1);
+    transition: background-color 180ms ease, border-color 180ms ease;
+  }
+
+  html[data-theme="dark"].pwa-standalone body:not(.login-only):not(.admin-only) .pwa-app-header {
+    border-bottom-color: rgba(255, 255, 255, .12);
+    background: rgba(28, 28, 28, .62);
+  }
+
+  .pwa-app-brand {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    color: inherit;
+    text-decoration: none;
+    font: 600 13px/1.2 var(--font-sans, Inter, sans-serif);
+    letter-spacing: .12em;
+  }
+  .pwa-app-brand-sub { color: var(--swiss-muted); font-weight: 450; letter-spacing: .015em; }
+  .pwa-app-search {
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--swiss-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 160ms ease, background-color 160ms ease, transform 180ms ease;
+  }
+  .pwa-app-search svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+  .pwa-app-search:active { transform: scale(.94); background: rgba(0, 0, 0, .06); }
+  html[data-theme="dark"].pwa-standalone .pwa-app-search:active { background: rgba(255, 255, 255, .1); }
+  .pwa-app-search:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  html.pwa-standalone .mobile-dock {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 3px;
+    left: max(10px, env(safe-area-inset-left, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    min-height: 66px;
+    padding: 6px;
+    transform: none;
+    border-color: rgba(0, 0, 0, .08);
+    border-radius: 23px;
+    background: rgba(255, 255, 255, .48);
+    box-shadow: none;
+    -webkit-backdrop-filter: blur(18px) saturate(1);
+    backdrop-filter: blur(18px) saturate(1);
+  }
+  html[data-theme="dark"].pwa-standalone .mobile-dock {
+    border-color: rgba(255, 255, 255, .12);
+    background: rgba(28, 28, 28, .62);
+  }
+  html.pwa-standalone .dock-item {
+    flex: initial;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 52px;
+    padding: 4px 2px;
+    border-radius: 16px;
+    color: var(--swiss-muted);
+    transition: color 160ms ease, background-color 160ms ease, transform 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  html.pwa-standalone .dock-item .dock-icon { flex: 0 0 21px; width: 21px; height: 21px; }
+  html.pwa-standalone .dock-item > span:not(.dock-icon) {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    opacity: 1;
+    color: inherit;
+    font-size: 10px;
+    line-height: 1;
+    transition: none;
+  }
+  html.pwa-standalone .dock-item.is-active { flex-grow: 1; color: var(--swiss-text); background: rgba(0, 0, 0, .06); }
+  html.pwa-standalone .dock-item.is-active::before { content: none; view-transition-name: none; }
+  html[data-theme="dark"].pwa-standalone .dock-item.is-active { background: rgba(255, 255, 255, .11); }
+  html.pwa-standalone .dock-item:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
+
+  html.pwa-standalone .drawer {
+    border-color: rgba(0, 0, 0, .08);
+    background: rgba(255, 255, 255, .48);
+    box-shadow: none;
+    -webkit-backdrop-filter: blur(18px) saturate(1);
+    backdrop-filter: blur(18px) saturate(1);
+  }
+  html[data-theme="dark"].pwa-standalone .drawer {
+    border-color: rgba(255, 255, 255, .12);
+    background: rgba(28, 28, 28, .62);
+  }
+  html.pwa-standalone .drawer-category,
+  html.pwa-standalone .drawer-level--sub > a {
+    transition: background-color 180ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), border-color 180ms ease;
+  }
+  html.pwa-standalone .drawer-category:active,
+  html.pwa-standalone .drawer-level--sub > a:active { background: rgba(0, 0, 0, .06); }
+  html[data-theme="dark"].pwa-standalone .drawer-category:active,
+  html[data-theme="dark"].pwa-standalone .drawer-level--sub > a:active { background: rgba(255, 255, 255, .1); }
+  html.pwa-standalone .drawer-level--sub > a.active {
+    color: var(--swiss-text);
+    border-color: rgba(0, 0, 0, .2);
+    background: rgba(0, 0, 0, .06);
+  }
+  html[data-theme="dark"].pwa-standalone .drawer-level--sub > a.active {
+    border-color: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .1);
+  }
+}

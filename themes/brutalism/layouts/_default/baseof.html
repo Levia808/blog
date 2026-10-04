@@ -29,6 +29,7 @@
   <a class="skip-link" href="#main">跳转到主要内容</a>
   {{- if not (eq .Layout "admin") }}
   {{ partial "header.html" . }}
+  {{ partial "pwa-app-header.html" . }}
   {{- end }}
   <main id="main" class="site-main">
     {{ block "main" . }}{{ end }}
