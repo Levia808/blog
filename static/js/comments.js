@@ -62,12 +62,12 @@
     function commentActions(c) {
       var mine = currentUserId === c.user_id;
       var canManage = mine || isAdmin;
-      var actions = '<button type="button" class="mcc-act" data-cmt-reply="' + c.id + '">回复</button>';
+      var actions = '<button type="button" class="mcc-act" data-cmt-reply="' + c.id + '" aria-label="回复评论"><span class="action-glyph" aria-hidden="true">◌</span></button>';
       if (canManage) {
-        actions += '<button type="button" class="mcc-act" data-cmt-edit="' + c.id + '">编辑</button>' +
-          '<button type="button" class="mcc-act is-danger" data-cmt-delete="' + c.id + '">删除</button>';
+        actions += '<button type="button" class="mcc-act" data-cmt-edit="' + c.id + '" aria-label="编辑评论"><span class="action-glyph" aria-hidden="true">✎</span></button>' +
+          '<button type="button" class="mcc-act is-danger" data-cmt-delete="' + c.id + '" aria-label="删除评论"><span class="action-glyph" aria-hidden="true">×</span></button>';
       } else {
-        actions += '<button type="button" class="mcc-act" data-cmt-report="' + c.id + '">举报</button>';
+        actions += '<button type="button" class="mcc-act" data-cmt-report="' + c.id + '" aria-label="举报评论"><span class="action-glyph" aria-hidden="true">!</span></button>';
       }
       return '<div class="mcc-actions">' + actions + '</div>';
     }

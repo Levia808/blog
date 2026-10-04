@@ -3274,6 +3274,87 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
 .drawer-action-icon { width: 18px; height: 18px; margin-right: 8px; font-size: 16px; line-height: 1; }
 
 
+/* Thread-like icon actions: fixed boxes prevent Lottie/fallback baseline drift and heart jumps. */
+.site-main .visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.site-main .moment-action-btn,
+.site-main .mcc-act {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  transform-origin: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.site-main .moment-action-btn .action-icon,
+.site-main .mcc-act .action-icon,
+.site-main .moment-action-btn .action-glyph,
+.site-main .mcc-act .action-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  line-height: 0;
+  vertical-align: middle;
+  position: relative;
+}
+.site-main .moment-action-btn .action-icon > .lottie-fallback,
+.site-main .mcc-act .action-icon > .lottie-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+}
+.site-main .moment-action-btn .action-icon.is-ready > svg:not(.lottie-fallback),
+.site-main .mcc-act .action-icon.is-ready > svg:not(.lottie-fallback) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.site-main .moment-action-btn .action-glyph,
+.site-main .mcc-act .action-glyph {
+  font-size: 1.15rem;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+.site-main .moment-action-btn .ma-count,
+.site-main .mcc-act .ma-count {
+  min-width: 1ch;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.site-main .moment-action-btn[data-like-pending],
+.site-main .mcc-act[data-like-pending] { cursor: progress; }
+.site-main .moment-action-btn .heart-icon,
+.site-main .mcc-act .heart-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+}
+.site-main .moment-action-btn .comment-icon,
+.site-main .mcc-act .comment-icon,
+.site-main .moment-action-btn .visibility-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+
 /* Installed PWA: a restrained, monochrome frosted-glass navigation shell.
    The regular mobile website keeps its existing header and never shows this dock. */
 .pwa-app-header { display: none; }
@@ -3538,7 +3619,7 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
 .site-main .moment-action-btn.is-liked,
 .site-main .moment-action-btn.is-primary { color: var(--swiss-moss); }
 .site-main .moment-action-btn.is-liked .heart-icon { color: var(--swiss-moss); }
-.site-main .moment-action-btn .heart-icon { width: 18px; height: 18px; }
+.site-main .moment-action-btn .heart-icon { width: 1.25rem; height: 1.25rem; }
 .site-main .moment-action-btn .ma-label,
 .site-main .comments-list .mcc-like-label { display: none; }
 .site-main .moment-action-btn .ma-count { color: inherit; opacity: .72; }

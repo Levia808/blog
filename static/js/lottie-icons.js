@@ -4,7 +4,6 @@
 
   var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var nodes = Array.prototype.slice.call(document.querySelectorAll('[data-lottie-src]'));
-  if (!nodes.length) return;
 
   var initScript = document.currentScript;
   var playerURL = initScript ? new URL('../vendor/lottie-light.min.js', initScript.src).href : '/vendor/lottie-light.min.js';
@@ -123,5 +122,27 @@
     });
   }
 
-  window.LeviaLottie = { play: play, setState: setState };
+  function refresh(scope) {
+    var root = scope && scope.querySelectorAll ? scope : document;
+    Array.prototype.slice.call(root.querySelectorAll('[data-lottie-src]')).forEach(function (node) {
+      mount(node);
+    });
+  }
+
+  /* Dynamic moment/comment cards are rendered after the initial script pass. Mount
+     their local Lottie icons automatically without requiring a second page load. */
+  if (window.MutationObserver && document.body) {
+    var observer = new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        Array.prototype.slice.call(record.addedNodes || []).forEach(function (node) {
+          if (node.nodeType !== 1) return;
+          if (node.matches && node.matches('[data-lottie-src]')) mount(node);
+          refresh(node);
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  window.LeviaLottie = { play: play, setState: setState, refresh: refresh };
 }());
