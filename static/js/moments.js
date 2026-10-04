@@ -1482,9 +1482,13 @@
       '<button type="button" class="moment-action-btn' + (liked ? ' is-liked' : '') + '" data-moment-like="' + moment.id + '" aria-label="' + (liked ? '取消点赞' : '点赞') + '" aria-pressed="' + liked + '">' +
       heartMarkup() + '<span class="ma-label visually-hidden">' + (liked ? '已赞' : '点赞') + '</span><span class="ma-count">' + likeCount + '</span></button>' +
       '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '" aria-expanded="false" aria-label="展开评论">' + commentMarkup() + '<span class="ma-count">' + commentCount + '</span></button>' +
-      (canManage ? '<button type="button" class="moment-action-btn" data-moment-edit="' + moment.id + '" aria-label="编辑动态">' + textIconMarkup('✎') + '</button>' +
-      (currentProfile && currentProfile.role === 'superadmin' ? '<button type="button" class="moment-action-btn" data-moment-visibility="' + moment.id + '" aria-label="动态可见性">' + visibilityMarkup() + '</button>' : '') +
-      '<button type="button" class="moment-action-btn is-danger" data-moment-delete="' + moment.id + '" aria-label="删除动态">' + textIconMarkup('×') + '</button>' : '') +
+      (canManage ? '<div class="moment-manage">' +
+      '<button type="button" class="moment-action-btn moment-manage-toggle" data-moment-manage-toggle aria-label="编辑动态选项" aria-haspopup="menu" aria-expanded="false"><span class="action-glyph" aria-hidden="true">•••</span></button>' +
+      '<div class="moment-manage-menu" data-moment-manage-menu role="menu" hidden>' +
+      '<button type="button" class="moment-manage-item" data-moment-edit="' + moment.id + '" role="menuitem">' + textIconMarkup('✎') + '<span>编辑</span></button>' +
+      (currentProfile && currentProfile.role === 'superadmin' ? '<button type="button" class="moment-manage-item" data-moment-visibility="' + moment.id + '" role="menuitem">' + visibilityMarkup() + '<span>可见性</span></button>' : '') +
+      '<button type="button" class="moment-manage-item is-danger" data-moment-delete="' + moment.id + '" role="menuitem">' + textIconMarkup('×') + '<span>删除</span></button>' +
+      '</div></div>' : '') +
       '</div>' +
       '<div class="moment-comments" data-moment-comments="' + moment.id + '" hidden>' +
       renderComments(moment) +
@@ -2593,7 +2597,61 @@
     }
   }, true);
 
+  listEl.addEventListener('keydown', function (e) {
+    var menu = e.target.closest('[data-moment-manage-menu]');
+    if (!menu) return;
+    var items = Array.prototype.slice.call(menu.querySelectorAll('[role="menuitem"]'));
+    var index = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      menu.hidden = true;
+      var trigger = menu.parentElement && menu.parentElement.querySelector('[data-moment-manage-toggle]');
+      if (trigger) { trigger.setAttribute('aria-expanded', 'false'); trigger.focus(); }
+    } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && items.length) {
+      e.preventDefault();
+      items[(index + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+    } else if (e.key === 'Tab') {
+      menu.hidden = true;
+      var tabTrigger = menu.parentElement && menu.parentElement.querySelector('[data-moment-manage-toggle]');
+      if (tabTrigger) tabTrigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
   listEl.addEventListener('click', function (e) {
+    var manageToggle = e.target.closest('[data-moment-manage-toggle]');
+    if (manageToggle) {
+      var manageWrap = manageToggle.closest('.moment-manage');
+      var manageMenu = manageWrap && manageWrap.querySelector('[data-moment-manage-menu]');
+      var willOpen = !!(manageMenu && manageMenu.hidden);
+      listEl.querySelectorAll('[data-moment-manage-menu]:not([hidden])').forEach(function (openMenu) {
+        openMenu.hidden = true;
+        var trigger = openMenu.parentElement && openMenu.parentElement.querySelector('[data-moment-manage-toggle]');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      });
+      if (manageMenu && willOpen) {
+        manageMenu.hidden = false;
+        manageToggle.setAttribute('aria-expanded', 'true');
+        var firstItem = manageMenu.querySelector('[role="menuitem"]');
+        if (firstItem) firstItem.focus();
+      }
+      return;
+    }
+    listEl.querySelectorAll('[data-moment-manage-menu]:not([hidden])').forEach(function (openMenu) {
+      if (!openMenu.contains(e.target)) {
+        openMenu.hidden = true;
+        var trigger = openMenu.parentElement && openMenu.parentElement.querySelector('[data-moment-manage-toggle]');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+    var chosenManageAction = e.target.closest('[data-moment-edit], [data-moment-visibility], [data-moment-delete]');
+    if (chosenManageAction) {
+      var actionMenu = chosenManageAction.closest('[data-moment-manage-menu]');
+      if (actionMenu) {
+        actionMenu.hidden = true;
+        var actionTrigger = actionMenu.parentElement && actionMenu.parentElement.querySelector('[data-moment-manage-toggle]');
+        if (actionTrigger) actionTrigger.setAttribute('aria-expanded', 'false');
+      }
+    }
     var editBtn = e.target.closest('[data-moment-edit]');
     if (editBtn) {
       var editId = editBtn.dataset.momentEdit;
