@@ -3412,3 +3412,24 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
     background: rgba(255, 255, 255, .1);
   }
 }
+
+/* Installed PWA route changes softly transition only the page content; the app chrome
+   remains anchored, and browser tabs retain their existing navigation behavior. */
+@media (display-mode: standalone) {
+  html.pwa-standalone #main { view-transition-name: pwa-main; }
+  ::view-transition-old(pwa-main) { animation: pwa-page-out 140ms ease both; }
+  ::view-transition-new(pwa-main) { animation: pwa-page-in 200ms cubic-bezier(.2, .75, .25, 1) both; }
+}
+
+@keyframes pwa-page-out {
+  to { opacity: .72; }
+}
+@keyframes pwa-page-in {
+  from { opacity: .72; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (display-mode: standalone) and (prefers-reduced-motion: reduce) {
+  ::view-transition-old(pwa-main),
+  ::view-transition-new(pwa-main) { animation: none !important; }
+}

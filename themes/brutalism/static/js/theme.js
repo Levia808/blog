@@ -28,7 +28,14 @@
     header.style.setProperty('--nav-auth-track-opacity', alpha.toFixed(3));
   }
 
+  var installedPWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+
   function forceInitialScrollTop() {
+    // Installed apps should keep the browser's native back/forward scroll restoration.
+    if (installedPWA) {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'auto';
+      return;
+    }
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
     window.requestAnimationFrame(function () { window.scrollTo(0, 0); });
@@ -40,7 +47,7 @@
   document.addEventListener('DOMContentLoaded', forceInitialScrollTop, { once: true });
   window.addEventListener('load', forceInitialScrollTop, { once: true });
   window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
+    if (event.persisted && !installedPWA) {
       forceInitialScrollTop();
       window.setTimeout(forceInitialScrollTop, 120);
     }
@@ -291,6 +298,16 @@
             document.querySelectorAll('.mobile-dock a[href], #mobileDrawerMenu a[href]').forEach(function (anchor) {
               queuePrefetch(anchor, worker);
             });
+
+            // Warm just the first two article destinations on installed PWA, so the
+            // likely next reading step is local without eagerly downloading the feed.
+            var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            var slowOrMetered = connection && (connection.saveData || /^(slow-2g|2g)$/.test(connection.effectiveType || ''));
+            if (standalone && !slowOrMetered) {
+              Array.prototype.slice.call(document.querySelectorAll(
+                'main .post-card-fullscreen > .pcf-link, main .post-card-feature > .pcf-link, main .post-card-cover .pc-link'
+              ), 0, 2).forEach(function (anchor) { queuePrefetch(anchor, worker); });
+            }
           }
           navigator.serviceWorker.ready.then(function (activeRegistration) {
             var warm = function () { warmNavigationCache(activeRegistration); };
