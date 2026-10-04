@@ -2994,7 +2994,7 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
 
   .dock-item:last-child .dock-icon { stroke-width: 1.65; }
   .dock-item .dock-icon { transform-origin: 50% 50%; }
-  .dock-item span { overflow: hidden; max-width: 0; opacity: 0; transition: max-width 220ms var(--swiss-ease), opacity 140ms ease; }
+  .dock-item > span:not(.dock-icon) { overflow: hidden; max-width: 0; opacity: 0; transition: max-width 220ms var(--swiss-ease), opacity 140ms ease; }
   .dock-item.is-active { flex-grow: 1.65; color: #fff; background: transparent; }
   .dock-item.is-active::before {
     content: "";
@@ -3005,7 +3005,7 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
     background: var(--swiss-moss);
     view-transition-name: mobile-dock-active-pill;
   }
-  .dock-item.is-active span { max-width: 72px; opacity: 1; }
+  .dock-item.is-active > span:not(.dock-icon) { max-width: 72px; opacity: 1; }
   .dock-item:active { transform: scale(0.96); }
   .dock-item:focus-visible { outline: 2px solid var(--swiss-moss); outline-offset: 2px; }
 
@@ -3378,9 +3378,13 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
     line-height: 1;
     transition: none;
   }
-  html.pwa-standalone .dock-item.is-active { flex-grow: 1; color: var(--swiss-text); background: rgba(0, 0, 0, .06); }
-  html.pwa-standalone .dock-item.is-active::before { content: none; view-transition-name: none; }
-  html[data-theme="dark"].pwa-standalone .dock-item.is-active { background: rgba(255, 255, 255, .11); }
+  html.pwa-standalone .dock-item.is-active { flex-grow: 1; color: var(--swiss-text); background: transparent; }
+  html.pwa-standalone .dock-item.is-active::before {
+    content: "";
+    background: rgba(0, 0, 0, .06);
+    view-transition-name: mobile-dock-active-pill;
+  }
+  html[data-theme="dark"].pwa-standalone .dock-item.is-active::before { background: rgba(255, 255, 255, .11); }
   html.pwa-standalone .dock-item:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
 
   html.pwa-standalone .drawer {
@@ -3432,4 +3436,362 @@ html.pwa-splash-seen .welcome-avatar { animation: none; }
 @media (display-mode: standalone) and (prefers-reduced-motion: reduce) {
   ::view-transition-old(pwa-main),
   ::view-transition-new(pwa-main) { animation: none !important; }
+}
+
+/* Social and auth UI: one quiet editorial system across browser and installed PWA.
+   Motion Mini drives the micro-interactions; icons come from the bundled open-source
+   animation assets (with text fallbacks), never hand-authored SVG markup. */
+.site-main .native-comments {
+  margin-top: clamp(36px, 5vw, 56px);
+  padding-top: 24px;
+  border-top: 1px solid var(--swiss-line);
+}
+.site-main .comments-heading {
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--swiss-line);
+}
+.site-main .comments-kicker { display: none; }
+.site-main .comments-heading h2 {
+  margin: 0;
+  color: var(--swiss-ink);
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 600;
+  letter-spacing: -.035em;
+}
+.site-main .comments-count {
+  min-width: 1.5em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--swiss-muted);
+  text-align: right;
+}
+
+.site-main .comments-auth-wall,
+.site-main .moments-login-wall {
+  min-height: 0;
+  padding: 20px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.site-main .comments-auth-wall .comments-button,
+.site-main .moments-login-wall .comments-button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--swiss-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.site-main .comments-auth-wall .comments-button:hover,
+.site-main .moments-login-wall .comments-button:hover {
+  background: transparent;
+  color: var(--swiss-moss);
+  transform: translateX(3px);
+}
+
+.site-main .comments-shell {
+  margin-top: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.site-main .moment-actions {
+  gap: 20px;
+  padding-top: 12px;
+  border-top: 0;
+}
+
+.site-main .moment-action-btn {
+  min-height: 40px;
+  gap: 8px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--swiss-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 180ms ease, transform 180ms var(--swiss-ease);
+}
+
+.site-main .moment-action-btn::before { content: none; }
+.site-main .moment-action-btn:hover {
+  border: 0;
+  background: transparent;
+  color: var(--swiss-ink);
+  transform: translateY(-1px);
+}
+.site-main .moment-action-btn.is-liked,
+.site-main .moment-action-btn.is-primary { color: var(--swiss-moss); }
+.site-main .moment-action-btn.is-liked .heart-icon { color: var(--swiss-moss); }
+.site-main .moment-action-btn .heart-icon { width: 18px; height: 18px; }
+.site-main .moment-action-btn .ma-label,
+.site-main .comments-list .mcc-like-label { display: none; }
+.site-main .moment-action-btn .ma-count { color: inherit; opacity: .72; }
+.site-main .moment-action-btn.is-danger:hover { color: var(--swiss-danger); }
+
+.site-main .moment-comments {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--swiss-line);
+}
+
+.site-main .comments-list .mcc-actions { opacity: 1; transform: none; }
+.site-main .comments-list .mcc-act {
+  min-height: 40px;
+  padding-inline: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.site-main .comments-list .mcc-act:hover { transform: none; }
+
+.site-main .comment-form {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 0 16px;
+}
+.site-main .comment-editor-tabs {
+  gap: 18px;
+  border: 0;
+  border-bottom: 1px solid var(--swiss-line);
+  border-radius: 0;
+  padding: 0;
+}
+.site-main .comment-tab { min-height: 36px; }
+.site-main #commentInput {
+  border: 0;
+  border-bottom: 1px solid var(--swiss-line);
+  border-radius: 0;
+  background: transparent;
+  padding: 14px 0;
+  box-shadow: none;
+}
+.site-main #commentInput:focus { border-bottom-color: var(--swiss-moss); }
+.site-main .comment-preview {
+  min-height: 0;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--swiss-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.site-main .comments-empty {
+  padding: 16px 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--swiss-muted);
+  text-align: left;
+}
+.site-main .comments-notice {
+  padding: 6px 0;
+  margin: 0 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.site-main .comment-form-footer { padding: 12px 0 0; }
+.site-main .comment-form-footer .comments-button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+}
+
+/* Borderless auth dialog and credential fields; keep labels, errors and status feedback. */
+.auth-modal {
+  width: min(380px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  border: 0;
+  border-radius: 18px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .18);
+}
+.auth-modal .auth-title { color: var(--swiss-ink, var(--fg)); }
+.auth-modal .auth-close {
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--swiss-muted, var(--muted));
+  font-size: 22px;
+  line-height: 1;
+}
+.auth-modal .auth-close:hover {
+  color: var(--swiss-ink, var(--fg));
+  background: color-mix(in srgb, var(--swiss-ink, var(--fg)) 6%, transparent);
+  transform: none;
+}
+.auth-field { gap: 5px; }
+.auth-field .auth-input {
+  border: 0;
+  border-bottom: 1px solid var(--swiss-line, rgba(120, 120, 120, .24));
+  border-radius: 0;
+  background: transparent;
+  padding: 12px 2px;
+}
+.auth-field .auth-input:focus {
+  border-bottom-color: var(--swiss-moss, var(--accent));
+}
+.auth-modal .btn {
+  border: 0;
+  border-radius: 999px;
+}
+.auth-modal .auth-divider::before,
+.auth-modal .auth-divider::after { background: var(--swiss-line, var(--border)); }
+.auth-modal .auth-switch { margin-top: 18px; }
+.auth-modal .auth-field > span { font-family: var(--font-body); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.auth-modal .auth-divider { margin: 18px 0; }
+.auth-modal .auth-success { border: 0; padding: 0; background: transparent; }
+
+/* Login page: one quiet column, with no decorative frame, grid or duplicate wordmark. */
+body.login-only .site-main { overflow-y: auto; }
+body.login-only .login-page {
+  justify-content: center;
+  background: var(--swiss-bg);
+}
+body.login-only .login-form-col {
+  flex: 0 1 440px;
+  width: min(100%, 440px);
+  min-height: 100%;
+  margin-inline: auto;
+  overflow: visible;
+}
+body.login-only .login-form-wrap {
+  width: 100%;
+  max-width: 400px;
+  max-height: none;
+  overflow: visible;
+}
+body.login-only .login-back {
+  margin-bottom: clamp(24px, 7vh, 64px);
+  font-size: 18px;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+body.login-only .login-title { font-size: clamp(42px, 6vw, 64px); }
+body.login-only .login-form { gap: clamp(14px, 2.4vh, 20px); }
+body.login-only .login-label {
+  margin-bottom: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+body.login-only .glass-input {
+  border: 0;
+  border-bottom: 1px solid var(--swiss-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+body.login-only .glass-input:focus-within {
+  border-bottom-color: var(--swiss-moss);
+  background: transparent;
+}
+body.login-only .glass-input input { padding: 12px 2px; }
+body.login-only .password-wrap { min-height: 44px; }
+body.login-only .pw-toggle {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--swiss-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+body.login-only .pw-toggle:hover { color: var(--swiss-ink); }
+body.login-only .pw-toggle:focus-visible { outline-offset: 1px; }
+body.login-only .login-submit,
+body.login-only .login-google {
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+}
+body.login-only .login-google { background: transparent; }
+body.login-only .login-switch { margin-top: 20px; }
+body.login-only .login-hero-col { display: none !important; }
+
+@media (max-width: 860px) {
+  .site-main .moment-actions { gap: 16px; }
+  .site-main .moment-action-btn,
+  .site-main .comments-list .mcc-act { min-height: 44px; }
+  .site-main .comments-auth-wall,
+  .site-main .moments-login-wall { align-items: flex-start; }
+}
+
+@media (display-mode: standalone) and (max-width: 640px) {
+  html.pwa-standalone .auth-overlay {
+    align-items: flex-end;
+    padding: 12px max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  html.pwa-standalone .auth-modal {
+    width: min(100%, 520px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px));
+    padding: 32px 24px max(24px, env(safe-area-inset-bottom, 0px));
+    border-radius: 24px;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, .12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-main .moment-action-btn,
+  .site-main .comments-auth-wall .comments-button,
+  .site-main .moments-login-wall .comments-button { transition: none; }
+}
+
+.login-only .nav-mobile,
+.login-only .pwa-app-header,
+.login-only .mobile-dock { display: none !important; }
+.login-only .pw-toggle .icon-eye-off { display: none; }
+.login-only .pw-visible .icon-eye-off { display: inline-flex; }
+
+@media (max-width: 640px) {
+  body.login-only .login-page {
+    height: auto;
+    min-height: 100dvh;
+    max-height: none;
+    overflow: visible;
+  }
+  body.login-only .login-form-col {
+    min-height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px));
+  }
+  body.login-only .login-back { margin-bottom: clamp(24px, 6vh, 48px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.login-only .animate-element {
+    opacity: 1 !important;
+    animation: none !important;
+  }
 }

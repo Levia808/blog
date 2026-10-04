@@ -4,3 +4,7 @@ Animation assets: Creative Commons Attribution 4.0 International (CC BY 4.0):
 https://creativecommons.org/licenses/by/4.0/
 The lottie-web React wrapper is MIT-licensed; this Hugo site uses the animation
 assets directly with the separately licensed lottie-web SVG player.
+
+
+Included interaction asset: heart.json from react-useanimations 2.10.0 (useAnimations),
+used via its MIT-licensed package and CC BY 4.0 animation asset license.

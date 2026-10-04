@@ -287,32 +287,51 @@
             var target;
             try { target = new URL(anchor.href, window.location.href); } catch (_) { return; }
             if (target.origin !== window.location.origin || target.search || target.hash || target.pathname === window.location.pathname) return;
+            if (/\.(?:mp4|webm|mov|mp3|m4a|m4v|avi|pdf)$/i.test(target.pathname)) return;
+            if (/^\/(?:admin|admin-cms|login|profile|api)(?:\/|$)/i.test(target.pathname)) return;
             var url = target.href;
             if (queuedPrefetches.has(url)) return;
             queuedPrefetches.add(url);
             worker.postMessage({ type: 'PREFETCH_URLS', urls: [url] });
           }
           function warmNavigationCache(activeRegistration) {
+            if (!standalone) return;
             var worker = navigator.serviceWorker.controller || activeRegistration.active;
             if (!worker) return;
+            var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            var slowOrMetered = connection && (connection.saveData || /^(slow-2g|2g)$/.test(connection.effectiveType || ''));
+            if (slowOrMetered) return;
+
             document.querySelectorAll('.mobile-dock a[href], #mobileDrawerMenu a[href]').forEach(function (anchor) {
               queuePrefetch(anchor, worker);
             });
 
-            // Warm just the first two article destinations on installed PWA, so the
-            // likely next reading step is local without eagerly downloading the feed.
-            var connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            var slowOrMetered = connection && (connection.saveData || /^(slow-2g|2g)$/.test(connection.effectiveType || ''));
-            if (standalone && !slowOrMetered) {
-              Array.prototype.slice.call(document.querySelectorAll(
-                'main .post-card-fullscreen > .pcf-link, main .post-card-feature > .pcf-link, main .post-card-cover .pc-link'
-              ), 0, 2).forEach(function (anchor) { queuePrefetch(anchor, worker); });
+            // Prioritize the first two likely reading destinations immediately,
+            // then warm a bounded number of article links shortly before they appear.
+            var articleLinks = Array.prototype.slice.call(document.querySelectorAll(
+              'main .archive-card-link, main .post-card-fullscreen > .pcf-link, main .post-card-feature > .pcf-link, main .post-card-cover .pc-link, main .post-nav a[href]'
+            ));
+            articleLinks.slice(0, 2).forEach(function (anchor) { queuePrefetch(anchor, worker); });
+
+            // Quicklink-style viewport prefetch: touch users get time to download a
+            // page before tapping it, without eagerly fetching hidden feeds or media.
+            if ('IntersectionObserver' in window) {
+              var observed = 0;
+              var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                  if (!entry.isIntersecting) return;
+                  observer.unobserve(entry.target);
+                  if (observed >= 6) return;
+                  observed += 1;
+                  queuePrefetch(entry.target, worker);
+                });
+                if (observed >= 6) observer.disconnect();
+              }, { rootMargin: '320px 0px' });
+              articleLinks.slice(2).forEach(function (anchor) { observer.observe(anchor); });
             }
           }
           navigator.serviceWorker.ready.then(function (activeRegistration) {
-            var warm = function () { warmNavigationCache(activeRegistration); };
-            if ('requestIdleCallback' in window) window.requestIdleCallback(warm, { timeout: 1800 });
-            else window.setTimeout(warm, 500);
+            warmNavigationCache(activeRegistration);
             document.addEventListener('pointerover', function (event) {
               if (event.pointerType === 'mouse') queuePrefetch(event.target.closest('a[href]'), navigator.serviceWorker.controller || activeRegistration.active);
             }, { passive: true });
@@ -1237,9 +1256,13 @@
         var showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
         wrap.classList.toggle('pw-visible', !showing);
+        btn.textContent = showing ? '显示' : '隐藏';
         btn.setAttribute('aria-label', showing ? '显示密码' : '隐藏密码');
-        var eyeIcon = wrap.querySelector(showing ? '.icon-eye' : '.icon-eye-off');
-        if (eyeIcon && window.LeviaLottie) window.LeviaLottie.play(eyeIcon);
+        btn.setAttribute('aria-pressed', String(!showing));
+        var motion = window.MotionDock;
+        if (motion && motion.animate && motion.spring && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+          motion.animate(btn, { scale: [1, 0.94, 1] }, { type: motion.spring, stiffness: 520, damping: 30 }).finished.catch(function () {});
+        }
       });
     });
 
@@ -1254,8 +1277,8 @@
           s.classList.toggle('is-hidden', s.dataset.mode === (up ? 'signin' : 'signup'));
         });
         var t = document.querySelector(up ? '.login-title' : '.login-title');
-        if (up) t.innerHTML = 'Join<span class="login-dot">.</span>';
-        else t.innerHTML = 'Welcome<span class="login-dot">.</span>';
+        if (up) t.textContent = '创建账户';
+        else t.textContent = '登录';
       });
     });
 

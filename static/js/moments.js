@@ -3,6 +3,8 @@
 
   var root = document.querySelector('.moments-wrap');
   if (!root) return;
+  var momentsScriptURL = document.currentScript && document.currentScript.src;
+  var heartAnimationURL = new URL('../vendor/lottie-icons/heart.json', momentsScriptURL || window.location.href).href;
 
   var composer = document.getElementById('momentsComposer');
   var loginWall = document.getElementById('momentsLoginWall');
@@ -1070,52 +1072,29 @@
     }, 3000);
   }
 
-  /* ── 开源动画: Anime.js 点赞 heart-burst + 粒子迸发 (Twitter 风格) ── */
-  function likeBurst(btn) {
-    if (!window.anime) return;
+  /* Open-source useAnimations Lottie asset + Motion Mini spring micro-interaction. */
+  function heartMarkup() {
+    return '<span class="heart-icon lottie-icon" data-lottie-src="' + heartAnimationURL + '" data-lottie-trigger="manual" aria-hidden="true"><span class="lottie-fallback">♥</span></span>';
+  }
+
+  function likeBurst(btn, isAddingLike) {
     var icon = btn.querySelector('.heart-icon');
-    if (icon) {
-      anime({
-        targets: icon,
-        scale: [1, 1.7, 0.85, 1.25, 1],
-        rotate: [0, -12, 8, 0],
-        duration: 620,
-        easing: 'easeOutCubic'
-      });
-    }
-    var rect = btn.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    for (var i = 0; i < 7; i++) {
-      var dot = document.createElement('span');
-      dot.className = 'like-particle';
-      dot.style.left = cx + 'px';
-      dot.style.top = cy + 'px';
-      document.body.appendChild(dot);
-      var angle = (Math.PI * 2 / 7) * i + Math.random() * 0.6;
-      var dist = 24 + Math.random() * 16;
-      anime({
-        targets: dot,
-        translateX: Math.cos(angle) * dist,
-        translateY: Math.sin(angle) * dist,
-        scale: [1, 0.15],
-        opacity: [1, 0],
-        duration: 560,
-        easing: 'easeOutCubic',
-        complete: function () { dot.remove(); }
-      });
-    }
+    if (isAddingLike && icon && window.LeviaLottie) window.LeviaLottie.play(icon);
+    var motion = window.MotionDock;
+    if (!motion || typeof motion.animate !== 'function' || typeof motion.spring !== 'function' ||
+        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    motion.animate(btn, { scale: [1, 0.96, 1] }, {
+      type: motion.spring, stiffness: 540, damping: 30, mass: 0.7
+    }).finished.catch(function () {});
   }
 
   function animateIn(el) {
-    if (!window.anime) { el.classList.add('animate__animated', 'animate__fadeInUp'); return; }
-    anime({
-      targets: el,
-      opacity: [0, 1],
-      translateY: [10, 0],
-      duration: 280,
-      easing: 'easeOutCubic'
-    });
+    var motion = window.MotionDock;
+    if (!motion || typeof motion.animate !== 'function' || typeof motion.spring !== 'function' ||
+        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    motion.animate(el, { opacity: [0, 1], y: [8, 0] }, {
+      type: motion.spring, stiffness: 420, damping: 36, mass: 0.82
+    }).finished.catch(function () {});
   }
 
   function fmtTime(iso) {
@@ -1195,8 +1174,8 @@
     var isMine = currentUser && currentUser.id === c.user_id;
     var isAdmin = currentProfile && currentProfile.role === 'superadmin';
     return '<div class="mcc-actions">' +
-      '<button type="button" class="mcc-act' + (liked ? ' is-liked' : '') + '" data-cmt-like="' + c.id + '" data-cmt-moment="' + momentId + '">' +
-      (liked ? '已赞' : '赞') + ' <span class="ma-count">' + likeCount + '</span></button>' +
+      '<button type="button" class="mcc-act mcc-like' + (liked ? ' is-liked' : '') + '" data-cmt-like="' + c.id + '" data-cmt-moment="' + momentId + '" aria-label="' + (liked ? '取消评论点赞' : '赞评论') + '" aria-pressed="' + liked + '">' +
+      heartMarkup() + '<span class="mcc-like-label">' + (liked ? '已赞' : '赞') + '</span> <span class="ma-count">' + likeCount + '</span></button>' +
       '<button type="button" class="mcc-act" data-cmt-reply="' + c.id + '" data-cmt-moment="' + momentId + '" data-cmt-author="' + escapeHtml(c.profiles ? (c.profiles.display_name || c.profiles.username || '') : '') + '">回复</button>' +
       ((isMine || isAdmin) ? '<button type="button" class="mcc-act is-danger" data-cmt-delete="' + c.id + '" data-cmt-moment="' + momentId + '">删除</button>' : '') +
       '</div>';
@@ -1482,17 +1461,16 @@
       '<button type="button" class="moment-action-btn" data-moment-cancel-edit="' + moment.id + '">取消</button>' +
       '</div><p class="auth-error moment-edit-error" data-moment-edit-error="' + moment.id + '" hidden></p></div>' : '') +
       '<div class="moment-actions">' +
-      '<button type="button" class="moment-action-btn' + (liked ? ' is-liked' : '') + '" data-moment-like="' + moment.id + '">' +
-      '<svg class="heart-icon" viewBox="0 0 32 32" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M16 29s-13-8.2-13-17.5C3 6.9 6.7 3.5 10.5 3.5c2.3 0 4.5 1.1 5.5 2.9 1-1.8 3.2-2.9 5.5-2.9C25.3 3.5 29 6.9 29 11.5 29 20.8 16 29 16 29z"/></svg>' +
-      (liked ? '已赞' : '点赞') + ' <span class="ma-count">' + likeCount + '</span></button>' +
-      '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '">评论 <span class="ma-count">' + commentCount + '</span></button>' +
+      '<button type="button" class="moment-action-btn' + (liked ? ' is-liked' : '') + '" data-moment-like="' + moment.id + '" aria-label="' + (liked ? '取消点赞' : '点赞') + '" aria-pressed="' + liked + '">' +
+      heartMarkup() + '<span class="ma-label">' + (liked ? '已赞' : '点赞') + '</span> <span class="ma-count">' + likeCount + '</span></button>' +
+      '<button type="button" class="moment-action-btn" data-moment-toggle-comments="' + moment.id + '" aria-expanded="false">评论 <span class="ma-count">' + commentCount + '</span></button>' +
       (canManage ? '<button type="button" class="moment-action-btn" data-moment-edit="' + moment.id + '">编辑</button>' +
       (currentProfile && currentProfile.role === 'superadmin' ? '<button type="button" class="moment-action-btn" data-moment-visibility="' + moment.id + '">可见性</button>' : '') +
       '<button type="button" class="moment-action-btn is-danger" data-moment-delete="' + moment.id + '">删除</button>' : '') +
       '</div>' +
-      '<div class="moment-comments" data-moment-comments="' + moment.id + '">' +
+      '<div class="moment-comments" data-moment-comments="' + moment.id + '" hidden>' +
       renderComments(moment) +
-      '<div class="moment-comment-input"><input type="text" placeholder="写下你的评论…" data-moment-comment-input="' + moment.id + '">' +
+      '<div class="moment-comment-input"><input type="text" placeholder="写评论…" data-moment-comment-input="' + moment.id + '">' +
       '<button type="button" data-moment-comment-submit="' + moment.id + '">发送</button></div>' +
       '</div></article>';
   }
@@ -1719,8 +1697,10 @@
       if (countEl && (parseInt(countEl.textContent, 10) || 0) !== likeCount) countEl.textContent = likeCount;
       if (likeBtn.classList.contains('is-liked') !== liked) {
         likeBtn.classList.toggle('is-liked', liked);
-        var label = Array.prototype.find.call(likeBtn.childNodes, function (n) { return n.nodeType === 3; });
-        if (label) label.textContent = liked ? '已赞 ' : '点赞 ';
+        var label = likeBtn.querySelector('.ma-label');
+        if (label) label.textContent = liked ? '已赞' : '点赞';
+        likeBtn.setAttribute('aria-pressed', String(liked));
+        likeBtn.setAttribute('aria-label', liked ? '取消点赞' : '点赞');
       }
     }
     var toggle = card.querySelector('[data-moment-toggle-comments]');
@@ -2684,11 +2664,13 @@
       var countEl = likeBtn.querySelector('.ma-count');
       var count = countEl ? parseInt(countEl.textContent, 10) || 0 : 0;
       likeBtn.disabled = true;
-      if (!liked) likeBurst(likeBtn);
+      likeBurst(likeBtn, !liked);
       // 乐观更新: 状态 + 文案 + 数字同步 ±1 (即时刷新)
       likeBtn.classList.toggle('is-liked', !liked);
-      var labelNode = Array.prototype.find.call(likeBtn.childNodes, function (n) { return n.nodeType === 3; });
-      if (labelNode) labelNode.textContent = liked ? '点赞 ' : '已赞 ';
+      var labelNode = likeBtn.querySelector('.ma-label');
+      if (labelNode) labelNode.textContent = liked ? '点赞' : '已赞';
+      likeBtn.setAttribute('aria-pressed', String(!liked));
+      likeBtn.setAttribute('aria-label', liked ? '点赞' : '取消点赞');
       if (countEl) countEl.textContent = Math.max(0, count + (liked ? -1 : 1));
       var op = liked
         ? window.blogSupabase.from('moment_likes').delete().eq('moment_id', momentId).eq('user_id', currentUser.id)
@@ -2699,7 +2681,9 @@
       }).catch(function (error) {
         // 失败回滚: 状态/文案/数字全部还原
         likeBtn.classList.toggle('is-liked', liked);
-        if (labelNode) labelNode.textContent = liked ? '已赞 ' : '点赞 ';
+        if (labelNode) labelNode.textContent = liked ? '已赞' : '点赞';
+        likeBtn.setAttribute('aria-pressed', String(liked));
+        likeBtn.setAttribute('aria-label', liked ? '取消点赞' : '点赞');
         if (countEl) countEl.textContent = count;
         flashNotice('点赞失败：' + (error.message || error));
       }).finally(function () {
@@ -2713,6 +2697,7 @@
       var panel = listEl.querySelector('[data-moment-comments="' + toggleBtn.dataset.momentToggleComments + '"]');
       if (panel) {
         panel.hidden = !panel.hidden;
+        toggleBtn.setAttribute('aria-expanded', String(!panel.hidden));
         if (!panel.hidden) animateIn(panel);
       }
       return;
@@ -2726,9 +2711,12 @@
       var countEl = cmtLikeBtn.querySelector('.ma-count');
       var count = countEl ? parseInt(countEl.textContent, 10) || 0 : 0;
       cmtLikeBtn.disabled = true;
+      likeBurst(cmtLikeBtn, !liked);
       cmtLikeBtn.classList.toggle('is-liked', !liked);
-      var labelNode = Array.prototype.find.call(cmtLikeBtn.childNodes, function (n) { return n.nodeType === 3; });
-      if (labelNode) labelNode.textContent = liked ? '赞 ' : '已赞 ';
+      var labelNode = cmtLikeBtn.querySelector('.mcc-like-label');
+      if (labelNode) labelNode.textContent = liked ? '赞' : '已赞';
+      cmtLikeBtn.setAttribute('aria-pressed', String(!liked));
+      cmtLikeBtn.setAttribute('aria-label', liked ? '赞评论' : '取消评论点赞');
       if (countEl) countEl.textContent = Math.max(0, count + (liked ? -1 : 1));
       var op = liked
         ? window.blogSupabase.from('moment_comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUser.id)
@@ -2738,7 +2726,9 @@
         if (result.error) throw result.error;
       }).catch(function (error) {
         cmtLikeBtn.classList.toggle('is-liked', liked);
-        if (labelNode) labelNode.textContent = liked ? '已赞 ' : '赞 ';
+        if (labelNode) labelNode.textContent = liked ? '已赞' : '赞';
+        cmtLikeBtn.setAttribute('aria-pressed', String(liked));
+        cmtLikeBtn.setAttribute('aria-label', liked ? '取消评论点赞' : '赞评论');
         if (countEl) countEl.textContent = count;
         flashNotice('点赞失败：' + (error.message || error));
       }).finally(function () {

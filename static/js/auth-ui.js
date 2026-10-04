@@ -20,6 +20,23 @@
   var mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
   var userMenuCloseTimer = null;
   var navAuthTimers = new WeakMap();
+  var authMotionSequence = 0;
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function animateAuth(target, keyframes) {
+    var motion = window.MotionDock;
+    if (prefersReducedMotion() || !motion || typeof motion.animate !== 'function' || typeof motion.spring !== 'function') {
+      return Promise.resolve();
+    }
+    try {
+      return motion.animate(target, keyframes, { type: motion.spring, stiffness: 430, damping: 34, mass: 0.82 }).finished.catch(function () {});
+    } catch (_) {
+      return Promise.resolve();
+    }
+  }
 
   var panels = {
     login: document.getElementById('authLogin'),
@@ -38,7 +55,13 @@
     var active = normalizePanel(name);
     Object.keys(panels).forEach(function (k) {
       panels[k].hidden = k !== active;
+      var title = panels[k].querySelector('.auth-title');
+      if (title) {
+        if (k === active) title.id = 'authTitle';
+        else title.removeAttribute('id');
+      }
     });
+    animateAuth(panels[active], { opacity: [0, 1], y: [8, 0] });
   }
 
   document.querySelectorAll('.auth-link').forEach(function (btn) {
@@ -50,13 +73,24 @@
   // ====== Modal Open/Close ======
   function openAuth(panel) {
     showPanel(panel || 'login');
+    authMotionSequence += 1;
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
+    animateAuth(modal, { opacity: [0, 1], y: [14, 0], scale: [0.985, 1] });
   }
 
   function closeAuth() {
-    overlay.hidden = true;
-    document.body.style.overflow = '';
+    var sequence = ++authMotionSequence;
+    if (prefersReducedMotion()) {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      return;
+    }
+    animateAuth(modal, { opacity: [1, 0], y: [0, 10], scale: [1, 0.99] }).then(function () {
+      if (sequence !== authMotionSequence) return;
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+    });
   }
 
   function smoothNavigate(href) {

@@ -1,7 +1,7 @@
 /* Levia blog PWA: public reading shell only; never cache account or API traffic. */
 'use strict';
 
-const VERSION = 'levia-pwa-v6';
+const VERSION = 'levia-pwa-v7';
 const CORE_CACHE = `${VERSION}-core`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const ASSET_CACHE = `${VERSION}-assets`;
@@ -22,7 +22,12 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => Promise.all(keys
       .filter((key) => key.startsWith('levia-pwa-') && ![CORE_CACHE, PAGE_CACHE, ASSET_CACHE].includes(key))
       .map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
+      .then(async () => {
+        if (self.registration.navigationPreload) {
+          try { await self.registration.navigationPreload.enable(); } catch (_) { /* Optional browser optimization. */ }
+        }
+        await self.clients.claim();
+      })
   );
 });
 
@@ -46,12 +51,12 @@ self.addEventListener('message', (event) => {
     for (const rawURL of urls) {
       try {
         const url = new URL(rawURL, self.registration.scope);
-        if (url.origin !== self.location.origin || url.search || isPrivatePath(url.pathname) || url.pathname.endsWith('/sw.js')) continue;
+        if (url.origin !== self.location.origin || url.search || isPrivatePath(url.pathname) || url.pathname.endsWith('/sw.js') || /\.(?:mp4|webm|mov|mp3|m4a|m4v|avi|pdf)$/i.test(url.pathname)) continue;
         const request = new Request(url.href, { method: 'GET', credentials: 'same-origin', headers: { Accept: 'text/html' } });
         const cached = await caches.match(request, { cacheName: PAGE_CACHE });
         if (cached) continue;
         const response = await fetch(request);
-        if (response && response.status === 200 && response.type === 'basic' && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
+        if (response && response.status === 200 && response.type === 'basic' && /^text\/html\b/i.test(response.headers.get('Content-Type') || '') && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
           const cache = await caches.open(PAGE_CACHE);
           await cache.put(request, response.clone());
           trimCache(PAGE_CACHE, 40).catch(() => {});
@@ -61,8 +66,10 @@ self.addEventListener('message', (event) => {
   })());
 });
 
-async function refreshPage(request) {
-  const response = await fetch(request);
+async function refreshPage(request, preloadResponse) {
+  // Navigation Preload starts the HTML request before a sleeping worker wakes.
+  // Unsupported browsers simply fall back to fetch(request).
+  const response = (await preloadResponse) || await fetch(request);
   if (response && response.status === 200 && response.type === 'basic' && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
     const cache = await caches.open(PAGE_CACHE);
     await cache.put(request, response.clone());
@@ -79,7 +86,7 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     if (url.search) return;
-    const refresh = refreshPage(request);
+    const refresh = refreshPage(request, event.preloadResponse);
     event.waitUntil(refresh.then(() => undefined).catch(() => undefined));
     event.respondWith((async () => {
       const cached = await caches.match(request, { cacheName: PAGE_CACHE });
