@@ -1,0 +1,49 @@
+/* Recovery controls are intentionally shown only after a permanent sync failure. */
+.pwa-sync-recoveries {
+  position: fixed;
+  z-index: 12000;
+  inset: auto max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  pointer-events: none;
+}
+.pwa-sync-recovery {
+  width: min(440px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
+  color: var(--text, #171717);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .16);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+}
+[data-theme="dark"] .pwa-sync-recovery { --surface: #20201f; --text: #f5f3ed; }
+.pwa-sync-recovery-copy { font-size: 13px; line-height: 1.5; }
+.pwa-sync-recovery-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.pwa-sync-recovery-actions button {
+  min-height: 36px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, .12);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.pwa-sync-recovery-actions button:first-child { background: var(--swiss-text, #191919); color: var(--swiss-bg, #fff); }
+[data-theme="dark"] .pwa-sync-recovery-actions button:first-child { background: #f5f3ed; color: #181817; }
+.pwa-sync-recovery-actions button:disabled { opacity: .55; cursor: default; }
+.pwa-sync-recovery-actions .pwa-sync-dismiss { width: 34px; padding: 0; font-size: 20px; }
+@media (max-width: 520px) {
+  .pwa-sync-recoveries { justify-items: stretch; }
+  .pwa-sync-recovery { width: auto; align-items: flex-start; gap: 10px; padding: 12px; }
+  .pwa-sync-recovery-actions { gap: 5px; }
+  .pwa-sync-recovery-actions button { min-height: 34px; padding-inline: 9px; }
+}

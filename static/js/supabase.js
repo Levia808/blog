@@ -144,19 +144,32 @@ var Profile = window.Profile = {
     return data;
   },
 
-  async uploadAvatar(userId, file) {
+  async uploadAvatar(userId, file, options) {
+    options = options || {};
+    async function assertExpectedUser() {
+      if (!options.expectedUserId) return;
+      var session = await Auth.session().catch(function () { return null; });
+      if (!session || !session.user || session.user.id !== options.expectedUserId) {
+        var mismatch = new Error('请使用创建此任务的原账号登录后继续同步。');
+        mismatch.pwaDefer = true;
+        throw mismatch;
+      }
+    }
+    await assertExpectedUser();
     if (!file || !/^image\//i.test(file.type)) {
       throw new Error('请选择图片文件（jpg/png/webp 等）');
     }
     if (file.size > 5 * 1024 * 1024) {
       throw new Error('头像图片不能超过 5 MB');
     }
-    const fileExt = file.name.split('.').pop() || 'png';
+    var avatarFile = options.compressedFile || file;
+    const fileExt = avatarFile.name.split('.').pop() || 'png';
     const filePath = `${userId}/avatar.${fileExt}`;
 
+    await assertExpectedUser();
     const { error: uploadError } = await blogSupabase.storage
       .from('avatars')
-      .upload(filePath, file, { upsert: true, contentType: file.type });
+      .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type, cacheControl: '3600' });
 
     if (uploadError) {
       if (/permission|policy|RLS|row.?level|not allowed/i.test(uploadError.message || '')) {
@@ -170,7 +183,8 @@ var Profile = window.Profile = {
       .getPublicUrl(filePath);
 
     /* 同名文件覆盖上传, URL 不变 → 浏览器缓存旧图 → 加时间戳强制刷新 */
-    const bustUrl = publicUrl + (publicUrl.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now();
+    await assertExpectedUser();
+    const bustUrl = publicUrl + (publicUrl.indexOf('?') >= 0 ? '&' : '?') + 'v=' + encodeURIComponent(options.cacheVersion || Date.now());
     await this.update(userId, { avatar_url: bustUrl });
     return bustUrl;
   },
@@ -479,9 +493,24 @@ var Admin = window.Admin = {
     });
   },
 
-  async uploadMedia(file, onProgress) {
+  async uploadMedia(file, onProgress, options) {
+    options = options || {};
     var user = await Auth.user();
     if (!user) throw new Error('请先登录');
+    async function assertExpectedUser() {
+      if (!options.expectedUserId) return;
+      var session = await Auth.session().catch(function () { return null; });
+      if (!session || !session.user || session.user.id !== options.expectedUserId) {
+        var mismatch = new Error('请使用创建此任务的原账号登录后继续同步。');
+        mismatch.pwaDefer = true;
+        throw mismatch;
+      }
+    }
+    if (options.expectedUserId && user.id !== options.expectedUserId) {
+      var mismatch = new Error('请使用创建此任务的原账号登录后继续同步。');
+      mismatch.pwaDefer = true;
+      throw mismatch;
+    }
     if (!file || !(/^((image|video|audio|font)\/)/i.test(file.type) || /\.(ttf|otf|woff2?|eot)$/i.test(file.name))) {
       throw new Error('仅支持图片、视频、音频或字体文件（ttf/otf/woff/woff2）');
     }
@@ -492,7 +521,10 @@ var Admin = window.Admin = {
     var uploadFile = file;
     var previewFile = null;
     var isImage = file.type.startsWith('image/');
-    if (isImage) {
+    if (isImage && options.compressedPair) {
+      uploadFile = options.compressedPair.original || file;
+      previewFile = options.compressedPair.preview || null;
+    } else if (isImage && !options.skipCompression) {
       var pair = await this.compressImage(file);
       if (pair && pair.original) {
         uploadFile = pair.original;
@@ -500,9 +532,11 @@ var Admin = window.Admin = {
       }
     }
     var safeName = uploadFile.name.replace(/[^\w.\-]+/g, '-').replace(/^-+|-+$/g, '');
-    var filePath = user.id + '/' + Date.now() + '-' + safeName;
+    var stableId = options.operationId ? String(options.operationId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) : null;
+    var filePath = user.id + '/' + (stableId ? 'pwa/' + stableId + '-' : Date.now() + '-') + safeName;
+    await assertExpectedUser();
     var upload = await blogSupabase.storage.from('media').upload(filePath, uploadFile, {
-      upsert: false,
+      upsert: !!stableId,
       contentType: uploadFile.type,
       cacheControl: '3600',
       onUploadProgress: onProgress || undefined
@@ -510,18 +544,27 @@ var Admin = window.Admin = {
     if (upload.error) throw upload.error;
     /* 预览图上传 (不注册媒体库记录) */
     if (previewFile) {
-      var previewPath = user.id + '/' + Date.now() + '-preview-' + safeName;
-      await blogSupabase.storage.from('media').upload(previewPath, previewFile, {
-        upsert: false,
-        contentType: 'image/webp',
-        cacheControl: '3600'
-      }).catch(function () {});
+      var previewPath = user.id + '/' + (stableId ? 'pwa/preview-' + stableId + '-' : 'preview-' + Date.now() + '-') + safeName;
+      try {
+        await assertExpectedUser();
+        var previewUpload = await blogSupabase.storage.from('media').upload(previewPath, previewFile, {
+          upsert: !!stableId,
+          contentType: 'image/webp',
+          cacheControl: '3600'
+        });
+        if (previewUpload.error && stableId) throw previewUpload.error;
+      } catch (previewError) {
+        if (stableId) throw previewError;
+        /* Existing non-PWA behavior treats previews as best-effort. */
+      }
     }
     var publicUrl = blogSupabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
     try {
-      return await this.registerMedia(filePath, uploadFile, publicUrl);
+      await assertExpectedUser();
+      return await this.registerMedia(filePath, uploadFile, publicUrl, stableId ? { operation_id: stableId } : undefined);
     } catch (error) {
-      await blogSupabase.storage.from('media').remove([filePath]).catch(function () {});
+      // Keep deterministic PWA objects: retries can upsert and finish registration safely.
+      if (!stableId) await blogSupabase.storage.from('media').remove([filePath]).catch(function () {});
       throw error;
     }
   }

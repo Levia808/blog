@@ -1,0 +1,6 @@
+{
+  "name": "levia-blog-pwa-sync-tests",
+  "private": true,
+  "scripts": { "test": "node pwa-sync.test.cjs" },
+  "devDependencies": { "fake-indexeddb": "^6.2.4" }
+}

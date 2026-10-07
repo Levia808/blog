@@ -1291,6 +1291,21 @@
   }
 
   function submitReplyComment(momentId, parentId, text, bar, btn) {
+    if (window.PwaSync && window.PwaSync.enabled) {
+      var reply = {
+        id: window.PwaSync.uuid(), moment_id: momentId, user_id: currentUser.id,
+        content: text, parent_id: parentId, created_at: new Date().toISOString()
+      };
+      window.PwaSync.enqueue(currentUser.id, 'comment.create', { comment: reply })
+        .then(function () {
+          closeReplyBar(bar);
+          var panel = listEl.querySelector('[data-moment-comments="' + momentId + '"]');
+          if (panel && !commentNode(momentId, reply.id)) appendCommentNode(momentId, Object.assign({}, reply, { profiles: currentProfile || {} }));
+        })
+        .catch(function (error) { flashNotice('无法保存回复：' + (error.message || error)); })
+        .finally(function () { if (btn) btn.disabled = false; });
+      return;
+    }
     window.blogSupabase.from('moment_comments')
       .insert({ moment_id: momentId, user_id: currentUser.id, content: text, parent_id: parentId })
       .select('id, content, created_at, parent_id, profiles(display_name, username, avatar_url)')
@@ -1540,6 +1555,115 @@
     historySentinel.classList.toggle('is-complete', !momentsHasMore && loadedMoments.length > 0);
   }
 
+  var pendingMediaObjectUrls = Object.create(null);
+
+  function localTaskMediaUrl(task, file, index) {
+    var key = task.id + ':' + index;
+    if (!pendingMediaObjectUrls[key]) {
+      try { pendingMediaObjectUrls[key] = URL.createObjectURL(file); }
+      catch (_) { return ''; }
+    }
+    return pendingMediaObjectUrls[key];
+  }
+
+  function taskMediaForView(task, entries) {
+    return (entries || []).map(function (entry, index) {
+      if (typeof entry === 'string') return entry;
+      if (entry && entry.url) return entry.url;
+      if (entry && entry.file) return localTaskMediaUrl(task, entry.file, index);
+      return '';
+    }).filter(Boolean);
+  }
+
+  async function projectPwaTasks(baseMoments) {
+    if (!window.PwaSync || !window.PwaSync.enabled || !currentUser) return baseMoments;
+    var tasks;
+    try { tasks = await window.PwaSync.pending(currentUser.id); } catch (_) { return baseMoments; }
+    var byId = Object.create(null);
+    var ordered = baseMoments.map(function (moment) {
+      var copy = Object.assign({}, moment, {
+        moment_likes: (moment.moment_likes || []).slice(),
+        moment_comments: (moment.moment_comments || []).slice(),
+        media: (moment.media || []).slice()
+      });
+      byId[copy.id] = copy;
+      return copy;
+    });
+    tasks.forEach(function (task) {
+      var p = task.payload || {};
+      if (task.type === 'moment.create' && p.moment) {
+        var draft = p.moment;
+        var created = Object.assign({}, draft, {
+          profiles: currentProfile || {},
+          media: taskMediaForView(task, draft.media),
+          moment_likes: [], moment_comments: []
+        });
+        if (!byId[created.id]) { byId[created.id] = created; ordered.unshift(created); }
+      } else if (task.type === 'moment.update' && byId[p.id]) {
+        byId[p.id].content = p.content;
+        byId[p.id].media = taskMediaForView(task, p.media);
+        if (p.locationDirty) byId[p.id].location = p.location || null;
+        byId[p.id].updated_at = p.updated_at;
+      } else if (task.type === 'moment.delete') {
+        ordered = ordered.filter(function (moment) { if (moment.id !== p.id) return true; delete byId[p.id]; return false; });
+      } else if (task.type === 'moment.visibility' && byId[p.id]) {
+        Object.assign(byId[p.id], p.values || {});
+      } else if (task.type === 'moment.like' && byId[p.momentId]) {
+        var likes = byId[p.momentId].moment_likes;
+        likes = likes.filter(function (like) { return like.user_id !== currentUser.id; });
+        if (p.liked) likes.push({ user_id: currentUser.id });
+        byId[p.momentId].moment_likes = likes;
+      } else if (task.type === 'comment.create' && p.comment) {
+        var target = byId[p.comment.moment_id];
+        if (target && !target.moment_comments.some(function (comment) { return comment.id === p.comment.id; })) {
+          target.moment_comments.push(Object.assign({ profiles: currentProfile || {}, moment_comment_likes: [] }, p.comment));
+        }
+      } else if (task.type === 'comment.delete') {
+        ordered.forEach(function (moment) {
+          var removed = Object.create(null);
+          removed[p.id] = true;
+          var changed = true;
+          while (changed) {
+            changed = false;
+            moment.moment_comments.forEach(function (comment) {
+              if (comment.parent_id && removed[comment.parent_id] && !removed[comment.id]) { removed[comment.id] = true; changed = true; }
+            });
+          }
+          moment.moment_comments = moment.moment_comments.filter(function (comment) { return !removed[comment.id]; });
+        });
+      } else if (task.type === 'comment.like') {
+        ordered.forEach(function (moment) {
+          moment.moment_comments.forEach(function (comment) {
+            if (comment.id !== p.commentId) return;
+            var likes = (comment.moment_comment_likes || []).filter(function (like) { return like.user_id !== currentUser.id; });
+            if (p.liked) likes.push({ user_id: currentUser.id });
+            comment.moment_comment_likes = likes;
+          });
+        });
+      }
+    });
+    return ordered;
+  }
+
+  async function refreshPwaProjection() {
+    if (!window.PwaSync || !window.PwaSync.enabled || !currentUser) return;
+    var view = await projectPwaTasks(loadedMoments);
+    momentMediaCache = {};
+    momentDataCache = {};
+    view.forEach(function (moment) { momentMediaCache[moment.id] = moment.media || []; momentDataCache[moment.id] = moment; });
+    diffRenderMoments(view);
+  }
+
+  function bindPwaMomentSyncEvents() {
+    if (!window.PwaSync || !window.PwaSync.enabled) return;
+    ['synced', 'failure', 'discarded'].forEach(function (eventName) {
+      window.PwaSync.on(eventName, function (detail) {
+        if (!currentUser || !detail.task || detail.task.userId !== currentUser.id) return;
+        loadMoments();
+      });
+    });
+  }
+
   async function loadMoments(loadMore) {
     if (loadMore && (momentsLoadingMore || !momentsHasMore)) return;
     showMomentsLoading(true);
@@ -1566,8 +1690,9 @@
       momentsHasMore = moments.length === targetCount;
       momentMediaCache = {};
       momentDataCache = {};
-      moments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
-      diffRenderMoments(moments);
+      var viewMoments = await projectPwaTasks(moments);
+      viewMoments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
+      diffRenderMoments(viewMoments);
       reapplyPendingLikes();
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
@@ -1652,6 +1777,12 @@
 
   function diffRenderMoments(moments) {
     if (!moments.length) {
+      listEl.querySelectorAll('.moment-card').forEach(function (card) {
+        if (cardRevealObserver) cardRevealObserver.unobserve(card);
+        destroyEditSortable(card.dataset.momentId);
+        revokeEditMediaBlobs(card);
+        card.remove();
+      });
       listEl.innerHTML = '<div class="moments-empty">还没有动态，发布第一条吧。</div>';
       return;
     }
@@ -1776,6 +1907,7 @@
     } catch (e) {}
     if (localUser) {
       currentUser = localUser;
+      if (window.PwaSync && window.PwaSync.enabled) window.PwaSync.resume(currentUser.id);
       loginWall.hidden = true;
       try {
         currentProfile = await window.Profile.get(currentUser.id);
@@ -1793,6 +1925,7 @@
     } else {
       currentUser = null;
       currentProfile = null;
+      if (window.PwaSync && window.PwaSync.enabled) window.PwaSync.resume(null);
       loginWall.hidden = false;
       composer.hidden = true;
     }
@@ -1807,8 +1940,35 @@
       return;
     }
     mcPublishBtn.disabled = true;
-    mcPublishBtn.textContent = '发布中…';
     mcError.hidden = true;
+    if (window.PwaSync && window.PwaSync.enabled) {
+      try {
+        var draftId = window.PwaSync.uuid();
+        var draftMedia = selectedMedia.map(function (item, index) {
+          return item.file
+            ? { file: item.file, fileName: item.file.name, fileType: item.file.type, lastModified: item.file.lastModified || Date.now(), operationId: draftId + '-' + index }
+            : item.url;
+        });
+        var draft = {
+          id: draftId,
+          user_id: currentUser.id,
+          content: content,
+          media: draftMedia,
+          location: selectedLocation,
+          created_at: new Date().toISOString()
+        };
+        await window.PwaSync.enqueue(currentUser.id, 'moment.create', { moment: draft });
+        showComposer(false);
+        await refreshPwaProjection();
+      } catch (queueError) {
+        mcError.textContent = queueError.message || '本机无法保存待办；内容仍保留在编辑框中。';
+        mcError.hidden = false;
+      } finally {
+        mcPublishBtn.disabled = false;
+      }
+      return;
+    }
+    mcPublishBtn.textContent = '发布中…';
     try {
       var media = [];
       for (var i = 0; i < selectedMedia.length; i++) {
@@ -1995,6 +2155,29 @@
     state.version += 1;
     applyLikeUI(button, nextLiked, state.optimisticCount, true);
     likeBurst(button, nextLiked);
+    if (window.PwaSync && window.PwaSync.enabled) {
+      var operationVersion = state.version;
+      var likePayload = kind === 'comment'
+        ? { commentId: String(id), momentId: button.dataset.cmtMoment || '', liked: nextLiked }
+        : { momentId: String(id), liked: nextLiked };
+      var likeTaskType = kind === 'comment' ? 'comment.like' : 'moment.like';
+      window.PwaSync.enqueue(currentUser.id, likeTaskType, likePayload, 'like:' + kind + ':' + id)
+        .then(function () {
+          state.committed = nextLiked;
+          state.committedCount = state.optimisticCount;
+          if (state.version === operationVersion) likeQueue.delete(key);
+          refreshPwaProjection();
+        })
+        .catch(function (error) {
+          if (state.version !== operationVersion) return;
+          state.desired = state.committed;
+          state.optimisticCount = state.committedCount;
+          applyLikeUI(state.button || findLikeButton(state.kind, state.id), state.committed, state.committedCount, false);
+          likeQueue.delete(key);
+          flashNotice('无法保存这次点赞：' + (error.message || error));
+        });
+      return;
+    }
     scheduleLikeFlush(state);
   }
 
@@ -2083,6 +2266,18 @@
         updated_at: new Date().toISOString()
       };
       saveBtn.disabled = true;
+      if (window.PwaSync && window.PwaSync.enabled) {
+        window.PwaSync.enqueue(currentUser.id, 'moment.visibility', { id: moment.id, values: payload }, 'visibility:' + moment.id)
+          .then(function () {
+            close();
+            return refreshPwaProjection();
+          })
+          .catch(function (err) {
+            flashNotice('本机无法保存设置：' + (err.message || err));
+            saveBtn.disabled = false;
+          });
+        return;
+      }
       saveBtn.textContent = '保存中…';
       window.blogSupabase.from('moments').update(payload).eq('id', moment.id)
         .then(function (r) {
@@ -2786,6 +2981,38 @@
       }
       saveBtn.disabled = true;
       if (saveError) saveError.hidden = true;
+      if (window.PwaSync && window.PwaSync.enabled) {
+        var updatePayload = {
+          id: saveId,
+          content: nextContent,
+          media: pendingMedia.map(function (item, index) {
+            return item && item.file
+              ? { file: item.file, fileName: item.file.name, fileType: item.file.type, lastModified: item.file.lastModified || Date.now(), operationId: 'edit-' + saveId + '-' + window.PwaSync.uuid() + '-' + index }
+              : item;
+          }).filter(function (item) { return typeof item !== 'string' || item; }),
+          updated_at: new Date().toISOString()
+        };
+        var pendingLoc = editLocState[saveId];
+        if (pendingLoc && pendingLoc.dirty) {
+          updatePayload.locationDirty = true;
+          updatePayload.location = pendingLoc.selected || null;
+        }
+        window.PwaSync.enqueue(currentUser.id, 'moment.update', updatePayload, 'moment-update:' + saveId)
+          .then(function () {
+            revokeEditMediaBlobs(saveCard);
+            resetEditMediaState();
+            editLocDiscard(saveId);
+            return refreshPwaProjection();
+          })
+          .catch(function (error) {
+            if (saveError) {
+              saveError.textContent = error.message || '无法将修改保存到本机；原内容仍保留。';
+              saveError.hidden = false;
+            }
+            saveBtn.disabled = false;
+          });
+        return;
+      }
       var uploads = pendingMedia.map(function (m) {
         if (m && m.file) return window.Admin.uploadMedia(m.file).then(function (r) { return r.public_url || r; });
         return null;
@@ -2850,6 +3077,15 @@
         var deleteId = deleteBtn.dataset.momentDelete;
         var deleteCard = listEl.querySelector('[data-moment-id="' + deleteId + '"]');
         deleteBtn.disabled = true;
+        if (window.PwaSync && window.PwaSync.enabled) {
+          window.PwaSync.enqueue(currentUser.id, 'moment.delete', { id: deleteId })
+            .then(function () { return refreshPwaProjection(); })
+            .catch(function (error) {
+              deleteBtn.disabled = false;
+              flashNotice('本机无法保存删除操作：' + (error.message || error));
+            });
+          return;
+        }
         window.blogSupabase.from('moments').delete().eq('id', deleteId)
           .then(function (result) {
             if (result.error) throw result.error;
@@ -2936,6 +3172,15 @@
         if (!ok) return;
         var delCommentId = cmtDeleteBtn.dataset.cmtDelete;
         cmtDeleteBtn.disabled = true;
+        if (window.PwaSync && window.PwaSync.enabled) {
+          window.PwaSync.enqueue(currentUser.id, 'comment.delete', { id: delCommentId })
+            .then(function () { return refreshPwaProjection(); })
+            .catch(function (error) {
+              cmtDeleteBtn.disabled = false;
+              flashNotice('本机无法保存删除操作：' + (error.message || error));
+            });
+          return;
+        }
         window.blogSupabase.from('moment_comments').delete().eq('id', delCommentId)
           .then(function (result) {
             if (result.error) throw result.error;
@@ -2960,6 +3205,19 @@
       submitBtn.disabled = true;
       /* 底部常驻输入条仅发新评论 (顶层); 回复走各评论下方内联输入条 */
       var payload = { moment_id: momentId2, user_id: currentUser.id, content: text };
+      if (window.PwaSync && window.PwaSync.enabled) {
+        payload.id = window.PwaSync.uuid();
+        payload.created_at = new Date().toISOString();
+        window.PwaSync.enqueue(currentUser.id, 'comment.create', { comment: payload })
+          .then(function () {
+            var panel = listEl.querySelector('[data-moment-comments="' + momentId2 + '"]');
+            if (panel && !commentNode(momentId2, payload.id)) appendCommentNode(momentId2, Object.assign({}, payload, { profiles: currentProfile || {} }));
+            cleanupCommentInput(input);
+          })
+          .catch(function (error) { flashNotice('无法保存评论：' + (error.message || error)); })
+          .finally(function () { submitBtn.disabled = false; });
+        return;
+      }
       window.blogSupabase.from('moment_comments')
         .insert(payload)
         .select('id, content, created_at, parent_id, profiles(display_name, username, avatar_url)')

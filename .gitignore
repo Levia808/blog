@@ -4,3 +4,4 @@ resources/
 float-player/netease-proxy/.netease-session.json
 music-api/node_modules/
 music-api/.netease-session.json
+/tests/pwa-sync/node_modules/
