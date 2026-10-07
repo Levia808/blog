@@ -156,6 +156,14 @@ function mergeSongUrls(target, payload) {
   });
 }
 
+function hasAnonymousToken() {
+  try {
+    return Boolean(fs.readFileSync(path.join(os.tmpdir(), 'anonymous_token'), 'utf8').trim());
+  } catch (error) {
+    return false;
+  }
+}
+
 async function fetchLegacySongUrls(ids, bitrate) {
   const endpoint = new URL('https://music.163.com/api/song/enhance/player/url');
   endpoint.searchParams.set('ids', `[${ids.join(',')}]`);
@@ -173,11 +181,19 @@ async function fetchLegacySongUrls(ids, bitrate) {
 
 async function resolveSongUrls(ids, level) {
   const urls = {};
+  const resolution = {
+    requested: ids.length,
+    enhanced: 0,
+    standard: 0,
+    account: 0,
+    public: 0
+  };
   const primaryPayload = await callNetease('song_url_v1', {
     id: ids.join(','),
     level
   });
   mergeSongUrls(urls, primaryPayload);
+  resolution.enhanced = Object.keys(urls).length;
 
   let missingIds = ids.filter((id) => !urls[id]);
   if (missingIds.length && level !== 'standard') {
@@ -187,6 +203,7 @@ async function resolveSongUrls(ids, level) {
         level: 'standard'
       });
       mergeSongUrls(urls, fallbackPayload);
+      resolution.standard = Object.keys(urls).length - resolution.enhanced;
     } catch (error) {
       console.warn(`Netease standard URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
     }
@@ -200,6 +217,7 @@ async function resolveSongUrls(ids, level) {
         br: levelBitrate(level)
       });
       mergeSongUrls(urls, fallbackPayload);
+      resolution.account = Object.keys(urls).length - resolution.enhanced - resolution.standard;
     } catch (error) {
       console.warn(`Netease authenticated URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
     }
@@ -212,6 +230,11 @@ async function resolveSongUrls(ids, level) {
       try {
         const fallbackPayload = await fetchLegacySongUrls(missingIds, bitrate);
         mergeSongUrls(urls, fallbackPayload);
+        resolution.public += Object.keys(urls).length
+          - resolution.enhanced
+          - resolution.standard
+          - resolution.account
+          - resolution.public;
       } catch (error) {
         console.warn(`Netease public URL fallback failed at ${bitrate} bps for ${missingIds.length} tracks:`, error.message || error);
       }
@@ -219,7 +242,7 @@ async function resolveSongUrls(ids, level) {
       if (!missingIds.length) break;
     }
   }
-  return urls;
+  return { urls, resolution };
 }
 
 function artistName(song) {
@@ -254,7 +277,9 @@ async function handleStatus(req, res) {
     ok: true,
     adapter: '@neteasecloudmusicapienhanced/api',
     loginSupported: true,
-    hasCookie: Boolean(cookie)
+    hasCookie: Boolean(cookie),
+    hasAnonymousToken: hasAnonymousToken(),
+    buildCommit: process.env.RENDER_GIT_COMMIT || null
   };
 
   if (!cookie) {
@@ -354,8 +379,11 @@ async function handlePlaylist(req, res, url) {
     const ids = songs.map((song) => song.id).filter(Boolean);
 
     const urls = {};
+    let resolution = { requested: 0, enhanced: 0, standard: 0, account: 0, public: 0 };
     if (ids.length) {
-      Object.assign(urls, await resolveSongUrls(ids, level));
+      const result = await resolveSongUrls(ids, level);
+      Object.assign(urls, result.urls);
+      resolution = result.resolution;
     }
 
     const allTracks = songs.map((song, index) => normalizeSong(song, urls, index));
@@ -370,6 +398,7 @@ async function handlePlaylist(req, res, url) {
       },
       total: allTracks.length,
       playable: tracks.length,
+      resolution,
       skipped: allTracks.filter((track) => !track.url).map((track) => ({
         id: track.id,
         name: track.name,
