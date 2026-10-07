@@ -6,12 +6,12 @@ proxyBase: "https://blog-music-api.onrender.com"
 limit: 200
 level: "higher"
 side: "left"
-fontSize: 3
+fontSize: 4
 spacing: 1.4
 tilt: 6
 curve: 1
 fade: 0.25
 minOpacity: 0.05
 blur: 2
-smoothing: 190
+smoothing: 100
 inset: 80
