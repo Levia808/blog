@@ -22,6 +22,9 @@ GET /api/netease/logout
 GET /api/netease/playlist?id=3778678&limit=30&level=exhigh
 ```
 
+The playlist endpoint is public for visitors. QR login, QR polling, and logout
+require `Authorization: Bearer <PLAYER_ADMIN_TOKEN>`.
+
 ## Local Run
 
 ```powershell
@@ -57,7 +60,9 @@ Useful environment variables:
 ```text
 PORT=4188
 HOST=0.0.0.0
-CORS_ORIGIN=https://blog-go3.pages.dev
+CORS_ORIGIN=https://levia808.github.io,https://blog-go3.pages.dev
+PLAYER_ADMIN_TOKEN=replace-with-a-long-random-secret
+XEAPI_PUBLIC_KEY_JSON=secret-json-generated-by-the-api
 NETEASE_COOKIE=optional prefilled MUSIC_U cookie
 NETEASE_COOKIE_FILE=/data/.netease-session.json
 ```

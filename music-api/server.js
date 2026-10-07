@@ -2,14 +2,25 @@
 
 const http = require('http');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { URL } = require('url');
+const { timingSafeEqual } = require('crypto');
 
 const PORT = Number(process.env.PORT || 4188);
 const HOST = process.env.HOST || '0.0.0.0';
-const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://levia808.github.io';
+const CORS_ORIGINS = new Set(
+  [CORS_ORIGIN, 'https://levia808.github.io', 'https://blog-go3.pages.dev']
+    .flatMap((value) => String(value).split(','))
+    .map((value) => value.trim())
+    .filter(Boolean)
+);
 const ENV_COOKIE = process.env.NETEASE_COOKIE || '';
+const PLAYER_ADMIN_TOKEN = process.env.PLAYER_ADMIN_TOKEN || '';
+const XEAPI_PUBLIC_KEY_JSON = process.env.XEAPI_PUBLIC_KEY_JSON || '';
 const COOKIE_FILE = process.env.NETEASE_COOKIE_FILE || process.env.MUSIC_API_COOKIE_FILE || path.join(__dirname, '.netease-session.json');
+const XEAPI_PUBLIC_KEY_FILE = path.join(os.tmpdir(), 'xeapi_public_key');
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 200;
 
@@ -17,13 +28,20 @@ let enhancedApi = null;
 
 function send(res, status, payload) {
   const body = JSON.stringify(payload);
-  res.writeHead(status, {
-    'Access-Control-Allow-Origin': CORS_ORIGIN,
+  const requestOrigin = String(res.req && res.req.headers.origin || '');
+  const headers = {
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
     'Cache-Control': 'no-store',
     'Content-Type': 'application/json; charset=utf-8'
-  });
+  };
+  if (CORS_ORIGINS.has('*')) {
+    headers['Access-Control-Allow-Origin'] = '*';
+  } else if (requestOrigin && CORS_ORIGINS.has(requestOrigin)) {
+    headers['Access-Control-Allow-Origin'] = requestOrigin;
+  }
+  res.writeHead(status, headers);
   res.end(body);
 }
 
@@ -32,6 +50,22 @@ function getEnhancedApi() {
     enhancedApi = require('@neteasecloudmusicapienhanced/api');
   }
   return enhancedApi;
+}
+
+function requireAdmin(req, res) {
+  const match = (req.headers.authorization || '').match(/^Bearer (.+)$/i);
+  if (!PLAYER_ADMIN_TOKEN) {
+    send(res, 503, { ok: false, error: 'Player administration is not configured.' });
+    return false;
+  }
+
+  const provided = Buffer.from(match ? match[1] : '');
+  const expected = Buffer.from(PLAYER_ADMIN_TOKEN);
+  if (!match || provided.length !== expected.length || !timingSafeEqual(provided, expected)) {
+    send(res, 401, { ok: false, error: 'Player administration authorization is required.' });
+    return false;
+  }
+  return true;
 }
 
 function readSessionCookie() {
@@ -258,9 +292,9 @@ const server = http.createServer((req, res) => {
 
   const routes = {
     '/api/netease/status': () => handleStatus(req, res),
-    '/api/netease/login/qr': () => handleQrLogin(req, res),
-    '/api/netease/login/check': () => handleQrCheck(req, res, url),
-    '/api/netease/logout': () => handleLogout(req, res),
+    '/api/netease/login/qr': () => requireAdmin(req, res) && handleQrLogin(req, res),
+    '/api/netease/login/check': () => requireAdmin(req, res) && handleQrCheck(req, res, url),
+    '/api/netease/logout': () => requireAdmin(req, res) && handleLogout(req, res),
     '/api/netease/playlist': () => handlePlaylist(req, res, url)
   };
 
@@ -276,8 +310,40 @@ const server = http.createServer((req, res) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, HOST, () => {
-    console.log(`Music API listening on http://${HOST}:${PORT}`);
+  async function start() {
+    const anonymousTokenFile = path.join(os.tmpdir(), 'anonymous_token');
+    if (!fs.existsSync(anonymousTokenFile)) fs.writeFileSync(anonymousTokenFile, '', 'utf8');
+
+    const apiRoot = '@neteasecloudmusicapienhanced/api';
+    if (XEAPI_PUBLIC_KEY_JSON) {
+      const initialKey = JSON.parse(XEAPI_PUBLIC_KEY_JSON);
+      if (!initialKey || typeof initialKey.sk !== 'string' || !initialKey.sk) {
+        throw new Error('XEAPI_PUBLIC_KEY_JSON must contain a valid key state.');
+      }
+      fs.writeFileSync(XEAPI_PUBLIC_KEY_FILE, JSON.stringify(initialKey), 'utf8');
+    } else if (!fs.existsSync(XEAPI_PUBLIC_KEY_FILE)) {
+      const { getXeapiPublicKey } = require(`${apiRoot}/util/xeapiKey`);
+      const initialKey = await getXeapiPublicKey({}, '');
+      fs.writeFileSync(XEAPI_PUBLIC_KEY_FILE, JSON.stringify(initialKey), 'utf8');
+    }
+    await require(`${apiRoot}/generateConfig`)();
+    if (!fs.existsSync(XEAPI_PUBLIC_KEY_FILE)) {
+      throw new Error('Netease API initialization did not produce its xeapi public key.');
+    }
+    JSON.parse(fs.readFileSync(XEAPI_PUBLIC_KEY_FILE, 'utf8'));
+    const anonymousToken = fs.readFileSync(anonymousTokenFile, 'utf8').trim();
+    if (!anonymousToken) {
+      throw new Error('Netease API initialization did not produce its anonymous token.');
+    }
+
+    server.listen(PORT, HOST, () => {
+      console.log(`Music API listening on http://${HOST}:${PORT}`);
+    });
+  }
+
+  start().catch((error) => {
+    console.error('Music API initialization failed:', error.message || error);
+    process.exitCode = 1;
   });
 }
 

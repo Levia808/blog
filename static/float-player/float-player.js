@@ -8,7 +8,7 @@
     enabled: true,
     autoLoad: false,
     playlistId: '',
-    proxyBase: 'http://127.0.0.1:4188',
+    proxyBase: 'https://blog-music-api.onrender.com',
     limit: 30,
     level: 'exhigh',
     side: 'left',

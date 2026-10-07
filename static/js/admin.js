@@ -1045,7 +1045,7 @@
     enabled: true,
     autoLoad: false,
     playlistId: '',
-    proxyBase: 'http://127.0.0.1:4188',
+    proxyBase: 'https://blog-music-api.onrender.com',
     limit: 30,
     level: 'exhigh',
     side: 'left',
@@ -1202,6 +1202,20 @@
   }
 
   var playerQrTimer = null;
+  var playerQrLoginButton = document.getElementById('playerQrLoginBtn');
+  if (playerQrLoginButton && playerQrLoginButton.parentNode) {
+    var playerTokenLabel = document.createElement('label');
+    playerTokenLabel.className = 'sf-field sf-wide';
+    playerTokenLabel.innerHTML = '<span>API 管理密钥</span>';
+    var playerTokenInput = document.createElement('input');
+    playerTokenInput.id = 'playerAdminToken';
+    playerTokenInput.type = 'password';
+    playerTokenInput.autocomplete = 'off';
+    playerTokenInput.placeholder = '仅用于当前管理会话';
+    playerTokenLabel.appendChild(playerTokenInput);
+    var playerLoginActions = playerQrLoginButton.parentNode;
+    playerLoginActions.parentNode.insertBefore(playerTokenLabel, playerLoginActions);
+  }
 
   function stopPlayerQrPolling() {
     if (playerQrTimer) window.clearTimeout(playerQrTimer);
@@ -1220,7 +1234,13 @@
   }
 
   function playerProxyGet(path, params) {
-    return fetch(playerProxyUrl(path, params), { cache: 'no-store' }).then(function (res) {
+    var headers = {};
+    var adminTokenInput = document.getElementById('playerAdminToken');
+    var adminToken = String(adminTokenInput ? adminTokenInput.value : '').trim();
+    if (adminToken && /^\/api\/netease\/(login\/qr|login\/check|logout)$/.test(path)) {
+      headers.Authorization = 'Bearer ' + adminToken;
+    }
+    return fetch(playerProxyUrl(path, params), { cache: 'no-store', headers: headers }).then(function (res) {
       return res.text().then(function (text) {
         var data = null;
         try { data = text ? JSON.parse(text) : null; } catch (error) {}

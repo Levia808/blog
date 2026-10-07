@@ -10,4 +10,8 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: CORS_ORIGIN
-        value: https://blog-go3.pages.dev
+        value: https://levia808.github.io,https://blog-go3.pages.dev
+      - key: PLAYER_ADMIN_TOKEN
+        sync: false
+      - key: XEAPI_PUBLIC_KEY_JSON
+        sync: false

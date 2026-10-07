@@ -2,7 +2,7 @@
 enabled: true
 autoLoad: true
 playlistId: "17684425086"
-proxyBase: "http://127.0.0.1:4188"
+proxyBase: "https://blog-music-api.onrender.com"
 limit: 200
 level: "higher"
 side: "left"
