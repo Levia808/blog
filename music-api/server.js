@@ -144,6 +144,41 @@ function normalizeLevel(value) {
   return level === 'higher' ? 'exhigh' : level;
 }
 
+function levelBitrate(level) {
+  if (level === 'standard') return 128000;
+  if (level === 'lossless' || level === 'hires' || level === 'jymaster') return 999000;
+  return 320000;
+}
+
+function mergeSongUrls(target, payload) {
+  (payload && payload.data || []).forEach((item) => {
+    if (item && item.id && item.url) target[item.id] = item.url;
+  });
+}
+
+async function resolveSongUrls(ids, level) {
+  const urls = {};
+  const primaryPayload = await callNetease('song_url_v1', {
+    id: ids.join(','),
+    level
+  });
+  mergeSongUrls(urls, primaryPayload);
+
+  const missingIds = ids.filter((id) => !urls[id]);
+  if (missingIds.length) {
+    try {
+      const fallbackPayload = await callNetease('song_url', {
+        id: missingIds.join(','),
+        br: levelBitrate(level)
+      });
+      mergeSongUrls(urls, fallbackPayload);
+    } catch (error) {
+      console.warn(`Netease legacy URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
+    }
+  }
+  return urls;
+}
+
 function artistName(song) {
   const list = song.ar || song.artists || [];
   if (Array.isArray(list) && list.length) return list.map((item) => item.name).filter(Boolean).join(' / ');
@@ -277,13 +312,7 @@ async function handlePlaylist(req, res, url) {
 
     const urls = {};
     if (ids.length) {
-      const urlPayload = await callNetease('song_url_v1', {
-        id: ids.join(','),
-        level
-      });
-      (urlPayload.data || []).forEach((item) => {
-        if (item && item.id && item.url) urls[item.id] = item.url;
-      });
+      Object.assign(urls, await resolveSongUrls(ids, level));
     }
 
     const allTracks = songs.map((song, index) => normalizeSong(song, urls, index));
