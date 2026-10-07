@@ -77,7 +77,7 @@ html {
     top: 0;
     right: 4px;
     bottom: 0;
-    z-index: 2147483000;
+    z-index: 179;
     width: 4px;
     pointer-events: none;
     opacity: 0;

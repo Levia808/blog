@@ -2905,9 +2905,7 @@ html.js .moments-page .list-header.reveal-visible .list-count { transition-delay
   animation-timing-function: cubic-bezier(.22,.61,.36,1);
 }
 
-/* PWA mobile dock: replaces the old compact top navigation on touch-sized screens. */
-.home-page .nav-full,
-.home-page .nav-mobile { display: none !important; }
+/* PWA mobile dock replaces compact navigation only at mobile widths. */
 .mobile-dock { display: none; }
 .pwa-ios-hint {
   margin: 0;
