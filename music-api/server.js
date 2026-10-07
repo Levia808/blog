@@ -156,10 +156,10 @@ function mergeSongUrls(target, payload) {
   });
 }
 
-async function fetchLegacySongUrls(ids, level) {
+async function fetchLegacySongUrls(ids, bitrate) {
   const endpoint = new URL('https://music.163.com/api/song/enhance/player/url');
   endpoint.searchParams.set('ids', `[${ids.join(',')}]`);
-  endpoint.searchParams.set('br', String(levelBitrate(level)));
+  endpoint.searchParams.set('br', String(bitrate));
   const response = await fetch(endpoint, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
@@ -179,13 +179,44 @@ async function resolveSongUrls(ids, level) {
   });
   mergeSongUrls(urls, primaryPayload);
 
-  const missingIds = ids.filter((id) => !urls[id]);
-  if (missingIds.length) {
+  let missingIds = ids.filter((id) => !urls[id]);
+  if (missingIds.length && level !== 'standard') {
     try {
-      const fallbackPayload = await fetchLegacySongUrls(missingIds, level);
+      const fallbackPayload = await callNetease('song_url_v1', {
+        id: missingIds.join(','),
+        level: 'standard'
+      });
       mergeSongUrls(urls, fallbackPayload);
     } catch (error) {
-      console.warn(`Netease legacy URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
+      console.warn(`Netease standard URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
+    }
+  }
+
+  missingIds = ids.filter((id) => !urls[id]);
+  if (missingIds.length) {
+    try {
+      const fallbackPayload = await callNetease('song_url', {
+        id: missingIds.join(','),
+        br: levelBitrate(level)
+      });
+      mergeSongUrls(urls, fallbackPayload);
+    } catch (error) {
+      console.warn(`Netease authenticated URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
+    }
+  }
+
+  missingIds = ids.filter((id) => !urls[id]);
+  if (missingIds.length) {
+    const bitrates = [...new Set([levelBitrate(level), 128000])];
+    for (const bitrate of bitrates) {
+      try {
+        const fallbackPayload = await fetchLegacySongUrls(missingIds, bitrate);
+        mergeSongUrls(urls, fallbackPayload);
+      } catch (error) {
+        console.warn(`Netease public URL fallback failed at ${bitrate} bps for ${missingIds.length} tracks:`, error.message || error);
+      }
+      missingIds = ids.filter((id) => !urls[id]);
+      if (!missingIds.length) break;
     }
   }
   return urls;
