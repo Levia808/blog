@@ -3,7 +3,7 @@ services:
     name: blog-music-api
     env: node
     rootDir: music-api
-    buildCommand: npm install
+    buildCommand: npm ci && npm run check
     startCommand: npm start
     plan: free
     envVars:

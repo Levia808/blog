@@ -44,7 +44,7 @@ http://127.0.0.1:4188
 Recommended service shape:
 
 ```text
-Build command: npm install
+Build command: npm ci && npm run check
 Start command: npm start
 Root directory: music-api
 ```
