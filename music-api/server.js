@@ -304,9 +304,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  route().catch((error) => {
-    send(res, 502, { ok: false, error: error.message || String(error) });
-  });
+  Promise.resolve()
+    .then(route)
+    .catch((error) => {
+      if (!res.headersSent) {
+        send(res, 502, { ok: false, error: error.message || String(error) });
+      }
+    });
 });
 
 if (require.main === module) {
