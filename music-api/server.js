@@ -326,15 +326,27 @@ if (require.main === module) {
       const initialKey = await getXeapiPublicKey({}, '');
       fs.writeFileSync(XEAPI_PUBLIC_KEY_FILE, JSON.stringify(initialKey), 'utf8');
     }
-    await require(`${apiRoot}/generateConfig`)();
+    const generateConfig = require(`${apiRoot}/generateConfig`);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      await generateConfig();
+      if (fs.readFileSync(anonymousTokenFile, 'utf8').trim()) break;
+      if (attempt < 3) {
+        console.warn(`Netease anonymous session initialization failed (attempt ${attempt}/3); retrying.`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
     if (!fs.existsSync(XEAPI_PUBLIC_KEY_FILE)) {
       throw new Error('Netease API initialization did not produce its xeapi public key.');
     }
     JSON.parse(fs.readFileSync(XEAPI_PUBLIC_KEY_FILE, 'utf8'));
     const anonymousToken = fs.readFileSync(anonymousTokenFile, 'utf8').trim();
     if (!anonymousToken) {
-      throw new Error('Netease API initialization did not produce its anonymous token.');
+      console.warn('Netease anonymous session is unavailable; starting with limited API access.');
     }
+
+    // The API caches the anonymous token when its request module is loaded.
+    delete require.cache[require.resolve(`${apiRoot}/util/request`)];
+    delete require.cache[require.resolve(`${apiRoot}/main`)];
 
     server.listen(PORT, HOST, () => {
       console.log(`Music API listening on http://${HOST}:${PORT}`);
