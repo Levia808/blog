@@ -185,11 +185,16 @@ async function fetchLegacySongUrls(ids, bitrate) {
   const endpoint = new URL('https://music.163.com/api/song/enhance/player/url');
   endpoint.searchParams.set('ids', `[${ids.join(',')}]`);
   endpoint.searchParams.set('br', String(bitrate));
+  const headers = {
+    'User-Agent': 'Mozilla/5.0',
+    Referer: 'https://music.163.com/'
+  };
+  if (global.cnIp) {
+    headers['X-Real-IP'] = global.cnIp;
+    headers['X-Forwarded-For'] = global.cnIp;
+  }
   const response = await fetch(endpoint, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-      Referer: 'https://music.163.com/'
-    },
+    headers,
     signal: AbortSignal.timeout(15000)
   });
   if (!response.ok) throw new Error(`Legacy Netease URL HTTP ${response.status}`);
@@ -208,7 +213,8 @@ async function resolveSongUrls(ids, level) {
   };
   const primaryPayload = await callNetease('song_url_v1', {
     id: ids.join(','),
-    level
+    level,
+    randomCNIP: true
   });
   resolution.responses.push({
     source: 'enhanced',
@@ -222,7 +228,8 @@ async function resolveSongUrls(ids, level) {
     try {
       const fallbackPayload = await callNetease('song_url_v1', {
         id: missingIds.join(','),
-        level: 'standard'
+        level: 'standard',
+        randomCNIP: true
       });
       resolution.responses.push({
         source: 'enhanced',
@@ -241,7 +248,8 @@ async function resolveSongUrls(ids, level) {
     try {
       const fallbackPayload = await callNetease('song_url', {
         id: missingIds.join(','),
-        br: levelBitrate(level)
+        br: levelBitrate(level),
+        randomCNIP: true
       });
       resolution.responses.push({
         source: 'account',
