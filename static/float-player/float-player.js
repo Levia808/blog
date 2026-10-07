@@ -409,6 +409,18 @@
     return state.playlistPromise;
   }
 
+  function loadPlaylistWithRetry(id, options) {
+    return loadPlaylist(id, options).catch(function (error) {
+      if (state.playlistRequestId !== String(id)) throw error;
+      return new Promise(function (resolve) {
+        window.setTimeout(resolve, 900);
+      }).then(function () {
+        state.playlistStatus = 'idle';
+        return loadPlaylist(id, options);
+      });
+    });
+  }
+
   function startLoop() {
     if (state.raf) return;
     state.last = performance.now();
@@ -478,7 +490,7 @@
       wheel.focus({ preventScroll: true });
     }, 80);
     if (cfg.playlistId && state.playlistStatus === 'idle') {
-      loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+      loadPlaylistWithRetry(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
     }
   }
 
@@ -657,7 +669,7 @@
     event.stopPropagation();
     if (event.target.closest('.fp-song-retry')) {
       state.playlistStatus = 'idle';
-      loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+      loadPlaylistWithRetry(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
       return;
     }
     var song = event.target.closest('.fp-song');
@@ -752,7 +764,7 @@
   setUI({ anchorX: 0, anchorOpacity: 1, anchorScale: 1, wheelX: -28 * sideSign(), wheelOpacity: 0 });
   render();
   if (cfg.autoLoad && cfg.playlistId) {
-    loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+    loadPlaylistWithRetry(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
   }
   });
 })();

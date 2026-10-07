@@ -23,8 +23,13 @@ const COOKIE_FILE = process.env.NETEASE_COOKIE_FILE || process.env.MUSIC_API_COO
 const XEAPI_PUBLIC_KEY_FILE = path.join(os.tmpdir(), 'xeapi_public_key');
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 200;
+const UPSTREAM_RETRIES = 2;
+const PLAYLIST_CACHE_TTL_MS = 30 * 1000;
+const PLAYLIST_STALE_TTL_MS = 5 * 60 * 1000;
+const MAX_PLAYLIST_CACHE_ENTRIES = 64;
 
 let enhancedApi = null;
+const playlistCache = new Map();
 
 function send(res, status, payload) {
   const body = JSON.stringify(payload);
@@ -113,14 +118,30 @@ async function callNetease(method, params = {}, options = {}) {
   const payload = Object.assign({}, params);
   const cookie = options.cookie !== undefined ? options.cookie : readSessionCookie();
   if (!options.skipCookie && cookie) payload.cookie = cookie;
-  const result = await fn(payload);
-  return unwrapApiPayload(result);
+  let lastError;
+  for (let attempt = 0; attempt <= UPSTREAM_RETRIES; attempt += 1) {
+    try {
+      const result = await fn(payload);
+      return unwrapApiPayload(result);
+    } catch (error) {
+      lastError = error;
+      if (attempt < UPSTREAM_RETRIES) {
+        await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
 }
 
 function clampLimit(value) {
   const parsed = Number(value || DEFAULT_LIMIT);
   if (!Number.isFinite(parsed)) return DEFAULT_LIMIT;
   return Math.min(MAX_LIMIT, Math.max(1, Math.floor(parsed)));
+}
+
+function normalizeLevel(value) {
+  const level = String(value || 'exhigh').toLowerCase();
+  return level === 'higher' ? 'exhigh' : level;
 }
 
 function artistName(song) {
@@ -145,7 +166,7 @@ function normalizeSong(song, urlMap, index) {
     artist: artistName(song) || 'Unknown Artist',
     album: albumName(song),
     cover: coverUrl(song),
-    url: urlMap[id] || ''
+    url: urlMap[id] ? String(urlMap[id]).replace(/^http:/i, 'https:') : ''
   };
 }
 
@@ -241,42 +262,65 @@ async function handlePlaylist(req, res, url) {
   }
 
   const limit = clampLimit(url.searchParams.get('limit'));
-  const level = url.searchParams.get('level') || 'exhigh';
-  const songsPayload = await callNetease('playlist_track_all', { id, limit });
-  const songs = Array.isArray(songsPayload.songs) ? songsPayload.songs : [];
-  const ids = songs.map((song) => song.id).filter(Boolean);
-
-  const urls = {};
-  if (ids.length) {
-    const urlPayload = await callNetease('song_url_v1', {
-      id: ids.join(','),
-      level
-    });
-    (urlPayload.data || []).forEach((item) => {
-      if (item && item.id && item.url) urls[item.id] = item.url;
-    });
+  const level = normalizeLevel(url.searchParams.get('level'));
+  const cacheKey = `${id}:${limit}:${level}`;
+  const cached = playlistCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    send(res, 200, cached.payload);
+    return;
   }
 
-  const allTracks = songs.map((song, index) => normalizeSong(song, urls, index));
-  const tracks = allTracks.filter((track) => track.url);
+  try {
+    const songsPayload = await callNetease('playlist_track_all', { id, limit });
+    const songs = Array.isArray(songsPayload.songs) ? songsPayload.songs : [];
+    const ids = songs.map((song) => song.id).filter(Boolean);
 
-  send(res, 200, {
-    ok: true,
-    adapter: '@neteasecloudmusicapienhanced/api',
-    playlist: {
-      id,
-      name: songsPayload.playlist && songsPayload.playlist.name || '',
-      cover: songsPayload.playlist && songsPayload.playlist.coverImgUrl || ''
-    },
-    total: allTracks.length,
-    playable: tracks.length,
-    skipped: allTracks.filter((track) => !track.url).map((track) => ({
-      id: track.id,
-      name: track.name,
-      artist: track.artist
-    })),
-    tracks
-  });
+    const urls = {};
+    if (ids.length) {
+      const urlPayload = await callNetease('song_url_v1', {
+        id: ids.join(','),
+        level
+      });
+      (urlPayload.data || []).forEach((item) => {
+        if (item && item.id && item.url) urls[item.id] = item.url;
+      });
+    }
+
+    const allTracks = songs.map((song, index) => normalizeSong(song, urls, index));
+    const tracks = allTracks.filter((track) => track.url);
+    const payload = {
+      ok: true,
+      adapter: '@neteasecloudmusicapienhanced/api',
+      playlist: {
+        id,
+        name: songsPayload.playlist && songsPayload.playlist.name || '',
+        cover: songsPayload.playlist && songsPayload.playlist.coverImgUrl || ''
+      },
+      total: allTracks.length,
+      playable: tracks.length,
+      skipped: allTracks.filter((track) => !track.url).map((track) => ({
+        id: track.id,
+        name: track.name,
+        artist: track.artist
+      })),
+      tracks
+    };
+    playlistCache.set(cacheKey, {
+      expiresAt: Date.now() + PLAYLIST_CACHE_TTL_MS,
+      staleUntil: Date.now() + PLAYLIST_STALE_TTL_MS,
+      payload
+    });
+    while (playlistCache.size > MAX_PLAYLIST_CACHE_ENTRIES) {
+      playlistCache.delete(playlistCache.keys().next().value);
+    }
+    send(res, 200, payload);
+  } catch (error) {
+    if (cached && cached.staleUntil > Date.now()) {
+      send(res, 200, cached.payload);
+      return;
+    }
+    throw error;
+  }
 }
 
 const server = http.createServer((req, res) => {
