@@ -57,7 +57,58 @@
 *::before,
 *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; overflow-x: clip; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .site-scroll-indicator {
+    position: fixed;
+    top: 0;
+    right: 4px;
+    bottom: 0;
+    z-index: 2147483000;
+    width: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .site-scroll-indicator::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: var(--scrollbar-thumb-size, 0px);
+    border-radius: 999px;
+    background: rgba(128, 128, 128, 0.52);
+    transform: translate3d(0, var(--scrollbar-thumb-offset, 0px), 0);
+    transition: transform 80ms linear;
+  }
+
+  .site-scroll-indicator.is-visible {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-scroll-indicator,
+  .site-scroll-indicator::after {
+    transition: none;
+  }
+}
+
 body { overflow-x: clip; }
 
 body {

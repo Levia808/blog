@@ -1,5 +1,7 @@
 
-{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}{{- if not (eq .Layout "admin") }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}<div class="site-scroll-indicator" data-scroll-indicator aria-hidden="true" hidden></div>
+<script defer src="{{ "js/scroll-indicator.js" | relURL }}?v={{ now.Unix }}"></script>
+{{- if not (eq .Layout "admin") }}
 {{ partial "search-overlay.html" . }}
 {{- end }}
 {{- if $P.auth }}
