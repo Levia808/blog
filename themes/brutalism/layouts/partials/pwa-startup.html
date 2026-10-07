@@ -1,0 +1,18 @@
+{{- if not (eq .Layout "admin") }}
+<div class="pwa-startup" id="pwaStartup" aria-hidden="true">
+  <div class="pwa-startup__inner">
+    <div class="pwa-startup__head">
+      <span class="pwa-startup__brand">LEVIA<span>’s</span> BLOG</span>
+      <span class="pwa-startup__status" data-pwa-startup-status>正在打开</span>
+    </div>
+    <div class="pwa-startup__center">
+      <span class="pwa-startup__pulse" aria-hidden="true"><i></i></span>
+      <span class="pwa-startup__label">准备你的阅读空间</span>
+    </div>
+    <div class="pwa-startup__foot">
+      <span class="pwa-startup__version">PWA</span>
+      <span class="pwa-startup__track" aria-hidden="true"><i data-pwa-startup-progress></i></span>
+    </div>
+  </div>
+</div>
+{{- end }}

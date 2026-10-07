@@ -30,6 +30,54 @@
 
   var installedPWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
 
+  /*
+   * The launch layer is intentionally independent from the home splash.
+   * It gives every installed route an immediate visual response, then yields
+   * as soon as the document is usable instead of waiting on remote auth/media.
+   */
+  function initPwaStartup() {
+    if (!installedPWA) return;
+    var screen = document.getElementById('pwaStartup');
+    if (!screen) {
+      if (typeof window.__completePwaStartup === 'function') window.__completePwaStartup();
+      return;
+    }
+
+    var status = screen.querySelector('[data-pwa-startup-status]');
+    var progress = screen.querySelector('[data-pwa-startup-progress]');
+    var now = function () { return window.performance && typeof window.performance.now === 'function' ? window.performance.now() : Date.now(); };
+    var startedAt = Number(window.__pwaStartupStartedAt) || now();
+    var done = false;
+
+    function complete(reason) {
+      if (done) return;
+      done = true;
+      if (status) status.textContent = reason === 'load' ? '已就绪' : '正在进入';
+      if (progress) {
+        progress.style.animation = 'none';
+        progress.style.transform = 'scaleX(1)';
+        progress.style.width = '100%';
+      }
+      var finish = function () {
+        if (typeof window.__completePwaStartup === 'function') window.__completePwaStartup();
+        else document.documentElement.classList.add('pwa-startup-ready');
+      };
+      var remaining = Math.max(0, 220 - (now() - startedAt));
+      window.setTimeout(finish, remaining);
+    }
+
+    function whenUsable() {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', whenUsable, { once: true });
+        return;
+      }
+      window.requestAnimationFrame(function () { complete('ready'); });
+    }
+
+    whenUsable();
+    window.addEventListener('load', function () { complete('load'); }, { once: true });
+  }
+
   function forceInitialScrollTop() {
     // Installed apps should keep the browser's native back/forward scroll restoration.
     if (installedPWA) {
@@ -729,8 +777,16 @@
 
   /* ── 图片点击放大 (GLightbox 开源库: 缩放/淡入淡出动效 + 触摸手势 + 触控板横滑) ── */
   var glightboxInstance = null;
+  var waitingForLightbox = false;
   function initLightbox() {
-    if (typeof window.GLightbox !== 'function') return;
+    if (glightboxInstance) return;
+    if (typeof window.GLightbox !== 'function') {
+      if (!waitingForLightbox) {
+        waitingForLightbox = true;
+        window.addEventListener('glightbox:ready', function () { waitingForLightbox = false; initLightbox(); }, { once: true });
+      }
+      return;
+    }
     try {
       glightboxInstance = window.GLightbox({
         selector: '.article-body img, .moment-media img',
@@ -886,9 +942,17 @@
   }
 
   /* ── ShapeBlur 叠加 (three.js shader, Vue Bits 组件移植, 苔绿) ── */
+  var waitingForThree = false;
   function initShapeBlur() {
     var mount = document.getElementById('shapeBlur');
-    if (!mount || typeof window.THREE === 'undefined') return;
+    if (!mount) return;
+    if (typeof window.THREE === 'undefined') {
+      if (!waitingForThree) {
+        waitingForThree = true;
+        window.addEventListener('three:ready', function () { waitingForThree = false; initShapeBlur(); }, { once: true });
+      }
+      return;
+    }
     var THREE = window.THREE;
 
     var vertexShader = 'varying vec2 v_texcoord; void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); v_texcoord = uv; }';
@@ -2057,6 +2121,8 @@
     });
     mo.observe(document.body, { attributes: true, attributeFilter: ['style'] });
   }
+
+  initPwaStartup();
 
   function boot() {
     initLightbox();
