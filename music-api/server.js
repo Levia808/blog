@@ -156,6 +156,21 @@ function mergeSongUrls(target, payload) {
   });
 }
 
+async function fetchLegacySongUrls(ids, level) {
+  const endpoint = new URL('https://music.163.com/api/song/enhance/player/url');
+  endpoint.searchParams.set('ids', `[${ids.join(',')}]`);
+  endpoint.searchParams.set('br', String(levelBitrate(level)));
+  const response = await fetch(endpoint, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      Referer: 'https://music.163.com/'
+    },
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!response.ok) throw new Error(`Legacy Netease URL HTTP ${response.status}`);
+  return response.json();
+}
+
 async function resolveSongUrls(ids, level) {
   const urls = {};
   const primaryPayload = await callNetease('song_url_v1', {
@@ -167,10 +182,7 @@ async function resolveSongUrls(ids, level) {
   const missingIds = ids.filter((id) => !urls[id]);
   if (missingIds.length) {
     try {
-      const fallbackPayload = await callNetease('song_url', {
-        id: missingIds.join(','),
-        br: levelBitrate(level)
-      });
+      const fallbackPayload = await fetchLegacySongUrls(missingIds, level);
       mergeSongUrls(urls, fallbackPayload);
     } catch (error) {
       console.warn(`Netease legacy URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
