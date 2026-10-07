@@ -1,7 +1,17 @@
 {{- with site.Data.player -}}
-<link rel="stylesheet" href="{{ "float-player/float-player.css" | relURL }}">
+{{- /* Keep CSS and JS cache versions tied to their own source files. */ -}}
+{{- $playerCssVersion := now.UnixMilli -}}
+{{- with os.Stat "static/float-player/float-player.css" -}}
+{{- $playerCssVersion = .ModTime.UnixMilli -}}
+{{- end -}}
+{{- $playerJsVersion := now.UnixMilli -}}
+{{- with os.Stat "static/float-player/float-player.js" -}}
+{{- $playerJsVersion = .ModTime.UnixMilli -}}
+{{- end -}}
+<link rel="stylesheet" href="{{ "float-player/float-player.css" | relURL }}?v={{ $playerCssVersion }}">
+<script src="{{ "vendor/media-chrome-4.19.3.min.js" | relURL }}" defer></script>
 <script>
 window.__FLOAT_PLAYER_CONFIG = {{ . | jsonify | safeJS }};
 </script>
-<script src="{{ "float-player/float-player.js" | relURL }}" defer></script>
+<script src="{{ "float-player/float-player.js" | relURL }}?v={{ $playerJsVersion }}" defer></script>
 {{- end -}}

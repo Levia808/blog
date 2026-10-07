@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // 移动端停用悬浮播放器，避免遮挡阅读内容并避免加载播放列表。
+  // Disable the floating player on mobile to keep the reading surface clear.
   if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return;
 
   var defaults = {
@@ -45,6 +45,7 @@
   }
 
   function loadRuntimeConfig() {
+    if (window.__FLOAT_PLAYER_CONFIG_URL === false) return Promise.resolve({});
     var url = window.__FLOAT_PLAYER_CONFIG_URL || 'https://raw.githubusercontent.com/Levia808/blog/main/data/player.yaml';
     var controller = window.AbortController ? new AbortController() : null;
     var timer = controller ? window.setTimeout(function () { controller.abort(); }, 2200) : 0;
@@ -74,7 +75,7 @@
   ];
   var tracks = (window.__FLOAT_PLAYER_TRACKS && window.__FLOAT_PLAYER_TRACKS.length)
     ? window.__FLOAT_PLAYER_TRACKS.slice()
-    : fallbackTracks.slice();
+    : (cfg.playlistId ? [] : fallbackTracks.slice());
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -86,20 +87,47 @@
     });
   }
 
+  function safeImageUrl(value) {
+    if (typeof value !== 'string' || !value.trim()) return '';
+    try {
+      var url = new URL(value, location.href);
+      return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+    } catch (error) {
+      return '';
+    }
+  }
+
   function createPlayerDom() {
     var root = document.createElement('section');
     root.className = 'fp-wheel-player is-collapsed is-' + (cfg.side === 'right' ? 'right' : 'left');
     root.id = 'floatPlayer';
     root.setAttribute('aria-label', 'Floating music selector');
+    root.setAttribute('data-lenis-prevent-wheel', '');
     root.setAttribute('aria-expanded', 'false');
     root.innerHTML = [
       '<button class="fp-wheel-anchor" id="fpWheelAnchor" type="button" aria-label="展开音乐列表">',
       '<span class="fp-wheel-arrow" aria-hidden="true"></span>',
       '</button>',
-      '<div class="fp-wheel-panel" id="fpWheelPanel" role="listbox" tabindex="0" aria-label="歌曲列表">',
+      '<div class="fp-wheel-panel" id="fpWheelPanel" role="listbox" tabindex="0" aria-label="歌曲列表" data-lenis-prevent-wheel>',
       '<div class="fp-song-wheel" id="fpSongWheel"></div>',
+      '<div class="fp-song-status" id="fpSongStatus" aria-live="polite" hidden></div>',
       '</div>',
-      '<audio id="fpAudio" preload="metadata"></audio>'
+      '<media-controller class="fp-media-controller" audio>',
+      '<media-control-bar class="fp-transport">',
+      '<img class="fp-transport-cover" id="fpTransportCover" alt="" draggable="false" hidden>',
+      '<div class="fp-transport-meta">',
+      '<span class="fp-transport-title" id="fpTransportTitle"></span>',
+      '<span class="fp-transport-artist" id="fpTransportArtist"></span>',
+      '</div>',
+      '<div class="fp-transport-progress">',
+      '<media-time-display class="fp-transport-time" showduration></media-time-display>',
+      '<media-time-range class="fp-transport-range"></media-time-range>',
+      '</div>',
+      '<media-play-button class="fp-transport-play"></media-play-button>',
+      '<media-volume-range class="fp-transport-volume" aria-label="音量"></media-volume-range>',
+      '</media-control-bar>',
+      '<audio id="fpAudio" slot="media" preload="metadata"></audio>',
+      '</media-controller>'
     ].join('');
     document.body.appendChild(root);
     return root;
@@ -109,6 +137,11 @@
   var anchor = player.querySelector('#fpWheelAnchor');
   var wheel = player.querySelector('#fpWheelPanel');
   var songWheel = player.querySelector('#fpSongWheel');
+  var songStatus = player.querySelector('#fpSongStatus');
+  var transport = player.querySelector('.fp-transport');
+  var transportCover = player.querySelector('#fpTransportCover');
+  var transportTitle = player.querySelector('#fpTransportTitle');
+  var transportArtist = player.querySelector('#fpTransportArtist');
   var audio = player.querySelector('#fpAudio');
 
   songWheel.style.setProperty('--ow-font-size', Number(cfg.fontSize || defaults.fontSize) + 'rem');
@@ -116,6 +149,9 @@
 
   var state = {
     expanded: false,
+    anchorDrag: null,
+    suppressAnchorClick: false,
+    blockNextPageClick: false,
     selected: 0,
     current: 0,
     pos: 0,
@@ -126,8 +162,45 @@
     drag: null,
     dragMoved: false,
     playing: false,
+    playlistStatus: 'idle',
+    playlistPromise: null,
+    playlistRequestId: '',
+    loadedPlaylistId: '',
     uiRafs: []
   };
+  var pageOverflowBeforeExpand = null;
+
+  function lockPageScroll() {
+    var body = document.body;
+    var root = document.documentElement;
+    pageOverflowBeforeExpand = {
+      body: {
+        value: body.style.getPropertyValue('overflow'),
+        priority: body.style.getPropertyPriority('overflow')
+      },
+      root: {
+        value: root.style.getPropertyValue('overflow'),
+        priority: root.style.getPropertyPriority('overflow')
+      }
+    };
+    body.style.setProperty('overflow', 'hidden');
+    root.style.setProperty('overflow', 'hidden');
+  }
+
+  function restorePageScroll() {
+    if (pageOverflowBeforeExpand === null) return;
+    [
+      { node: document.body, style: pageOverflowBeforeExpand.body },
+      { node: document.documentElement, style: pageOverflowBeforeExpand.root }
+    ].forEach(function (entry) {
+      if (entry.style.value) {
+        entry.node.style.setProperty('overflow', entry.style.value, entry.style.priority);
+      } else {
+        entry.node.style.removeProperty('overflow');
+      }
+    });
+    pageOverflowBeforeExpand = null;
+  }
 
   function setVar(node, name, value) {
     node.style.setProperty(name, value);
@@ -202,15 +275,52 @@
 
   function render() {
     songWheel.innerHTML = tracks.map(function (track, index) {
+      var cover = safeImageUrl(track.cover);
       return [
-        '<button class="fp-song" type="button" role="option" data-index="', index, '">',
-        '<span class="fp-song-title">', escapeText(track.name), '</span>',
-        '<span class="fp-song-artist">', escapeText(track.artist), '</span>',
+        '<button class="fp-song" type="button" role="option" data-index="', index, '" aria-label="', escapeText(track.name), ' ', escapeText(track.artist), '">',
+        cover ? '<img class="fp-song-cover" src="' + escapeText(cover) + '" alt="" draggable="false" loading="lazy" decoding="async">' : '',
+        '<span class="fp-song-meta">',
+        '<span class="fp-song-title"><span class="fp-song-marquee"><span>', escapeText(track.name), '</span></span></span>',
+        '<span class="fp-song-artist"><span class="fp-song-marquee"><span>', escapeText(track.artist), '</span></span></span>',
+        '</span>',
         '</button>'
       ].join('');
     }).join('');
+    updateTitleOverflow();
+    syncTransport();
     syncAudio();
     layout();
+  }
+
+  function updateTitleOverflow() {
+    songWheel.querySelectorAll('.fp-song-title, .fp-song-artist').forEach(function (textNode) {
+      var text = textNode.querySelector('.fp-song-marquee > span');
+      var overflowing = text && text.scrollWidth > textNode.clientWidth + 1;
+      textNode.dataset.overflow = overflowing ? 'true' : 'false';
+      var duplicate = textNode.querySelector('.fp-song-marquee > span[aria-hidden="true"]');
+      if (overflowing && !duplicate) {
+        duplicate = text.cloneNode(true);
+        duplicate.setAttribute('aria-hidden', 'true');
+        textNode.querySelector('.fp-song-marquee').appendChild(duplicate);
+      } else if (!overflowing && duplicate) {
+        duplicate.remove();
+      }
+    });
+  }
+
+  function syncTransport() {
+    var track = tracks[state.current];
+    if (!track) {
+      player.classList.remove('has-tracks');
+      return;
+    }
+    player.classList.add('has-tracks');
+    transportTitle.textContent = track.name;
+    transportArtist.textContent = track.artist;
+    var cover = safeImageUrl(track.cover);
+    transportCover.hidden = !cover;
+    if (cover && transportCover.src !== cover) transportCover.src = cover;
+    if (!cover) transportCover.removeAttribute('src');
   }
 
   function syncAudio() {
@@ -231,11 +341,21 @@
     return String(cfg.proxyBase || defaults.proxyBase).replace(/\/$/, '') + '/api/netease/playlist?' + params.toString();
   }
 
+  function setPlaylistStatus(message, retry) {
+    songStatus.hidden = !message;
+    songStatus.innerHTML = message
+      ? (retry
+        ? '<button class="fp-song-retry" type="button">歌单加载失败，点击重试</button>'
+        : escapeText(message))
+      : '';
+  }
+
   function replaceTracks(nextTracks) {
     tracks = nextTracks.map(function (track) {
       return {
         name: track.name || 'Untitled',
         artist: track.artist || 'Unknown Artist',
+        cover: track.cover || '',
         url: track.url || ''
       };
     }).filter(function (track) {
@@ -254,20 +374,39 @@
 
   function loadPlaylist(id, options) {
     if (!id) return Promise.reject(new Error('Playlist id is required.'));
-    return fetch(buildPlaylistEndpoint(String(id), options), { cache: 'no-store' })
+    id = String(id);
+    if (state.playlistStatus === 'loading' && state.playlistPromise && state.playlistRequestId === id) return state.playlistPromise;
+    if (state.playlistStatus === 'loaded' && state.loadedPlaylistId === id) return Promise.resolve({ tracks: tracks });
+    state.playlistStatus = 'loading';
+    state.playlistRequestId = id;
+    setPlaylistStatus('正在加载歌单…');
+    state.playlistPromise = fetch(buildPlaylistEndpoint(id, options), { cache: 'no-store' })
       .then(function (response) {
         if (!response.ok) throw new Error('Playlist proxy HTTP ' + response.status);
         return response.json();
       })
       .then(function (payload) {
+        if (state.playlistRequestId !== id) return payload;
         if (!payload || !payload.ok) throw new Error((payload && payload.error) || 'Playlist proxy returned an error.');
         if (!Array.isArray(payload.tracks) || !payload.tracks.length) {
           throw new Error('No playable tracks returned for playlist ' + id + '.');
         }
         replaceTracks(payload.tracks);
-        expand();
+        state.playlistStatus = 'loaded';
+        state.playlistPromise = null;
+        state.loadedPlaylistId = id;
+        setPlaylistStatus('');
+
         return payload;
+      }).catch(function (error) {
+        if (state.playlistRequestId === id) {
+          state.playlistStatus = 'error';
+          state.playlistPromise = null;
+          setPlaylistStatus('歌单加载失败，点击重试', true);
+        }
+        throw error;
       });
+    return state.playlistPromise;
   }
 
   function startLoop() {
@@ -295,26 +434,6 @@
     state.target = clamp(snap ? Math.round(value) : value, 0, max);
     state.selected = clamp(Math.round(state.target), 0, max);
     startLoop();
-  }
-
-  function isInsideWheelZone(event) {
-    if (wheel.contains(event.target)) return true;
-    var rect = wheel.getBoundingClientRect();
-    var pad = 24;
-    return event.clientX >= rect.left - pad &&
-      event.clientX <= rect.right + pad &&
-      event.clientY >= rect.top - pad &&
-      event.clientY <= rect.bottom + pad;
-  }
-
-  function applyWheelDelta(event) {
-    var delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
-    var rowH = getRowH();
-    applyTarget(state.target + clamp(delta / rowH, -1, 1), false);
-    window.clearTimeout(state.wheelTimer);
-    state.wheelTimer = window.setTimeout(function () {
-      applyTarget(state.target, true);
-    }, 140);
   }
 
   function layout() {
@@ -350,6 +469,7 @@
   function expand() {
     if (state.expanded) return;
     state.expanded = true;
+    lockPageScroll();
     player.classList.add('is-expanded');
     player.classList.remove('is-collapsed');
     player.setAttribute('aria-expanded', 'true');
@@ -357,11 +477,15 @@
     window.setTimeout(function () {
       wheel.focus({ preventScroll: true });
     }, 80);
+    if (cfg.playlistId && state.playlistStatus === 'idle') {
+      loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+    }
   }
 
   function collapse() {
     if (!state.expanded) return;
     state.expanded = false;
+    restorePageScroll();
     anchor.style.pointerEvents = 'auto';
     player.classList.add('is-collapsed');
     player.classList.remove('is-expanded');
@@ -374,44 +498,168 @@
     state.selected = state.current;
     state.target = state.current;
     state.playing = true;
+    syncTransport();
     syncAudio();
     startLoop();
     layout();
-    audio.play().catch(function () {});
+    audio.play().catch(function () {
+      state.playing = false;
+      setPlaylistStatus('播放失败，请重新选择歌曲');
+      layout();
+    });
   }
 
   function pauseTrack() {
     state.playing = false;
+    syncTransport();
     audio.pause();
     layout();
   }
 
+  anchor.addEventListener('pointerdown', function (event) {
+    if (state.expanded || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    var rect = anchor.getBoundingClientRect();
+    state.anchorDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      width: rect.width,
+      height: rect.height,
+      moved: false
+    };
+    anchor.setPointerCapture(event.pointerId);
+  });
+
+  anchor.addEventListener('pointermove', function (event) {
+    var drag = state.anchorDrag;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    var deltaX = event.clientX - drag.startX;
+    var deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) > 7) {
+      drag.moved = true;
+      player.classList.add('is-dragging');
+      anchor.style.setProperty('--anchor-x', '0px');
+      anchor.style.setProperty('--anchor-scale', '1');
+    }
+    if (!drag.moved) return;
+    event.preventDefault();
+    var left = clamp(event.clientX - drag.offsetX, 0, Math.max(0, window.innerWidth - drag.width));
+    var top = clamp(event.clientY - drag.offsetY, 0, Math.max(0, window.innerHeight - drag.height));
+    anchor.style.left = left + 'px';
+    anchor.style.right = 'auto';
+    anchor.style.top = top + 'px';
+  });
+
+  function finishAnchorDrag(event, canceled) {
+    var drag = state.anchorDrag;
+    if (!drag || (event && drag.pointerId !== event.pointerId)) return;
+    state.anchorDrag = null;
+    if (!drag.moved) return;
+
+    if (event) event.preventDefault();
+    state.suppressAnchorClick = !canceled;
+    var rect = anchor.getBoundingClientRect();
+    var currentLeft = clamp(rect.left, 0, Math.max(0, window.innerWidth - drag.width));
+    var currentTop = clamp(rect.top, 0, Math.max(0, window.innerHeight - drag.height));
+    cfg.side = currentLeft + drag.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    var edgeLeft = cfg.side === 'right' ? Math.max(0, window.innerWidth - drag.width) : 0;
+
+    player.classList.remove('is-left', 'is-right');
+    player.classList.add('is-' + cfg.side);
+    anchor.style.right = 'auto';
+    anchor.style.left = currentLeft + 'px';
+    anchor.style.top = currentTop + drag.height / 2 + 'px';
+    player.classList.remove('is-dragging');
+    layout();
+    requestAnimationFrame(function () {
+      anchor.style.left = edgeLeft + 'px';
+    });
+    if (state.suppressAnchorClick) {
+      window.setTimeout(function () { state.suppressAnchorClick = false; }, 0);
+    }
+  }
+
+  anchor.addEventListener('pointerup', function (event) {
+    finishAnchorDrag(event, false);
+  });
+  anchor.addEventListener('pointercancel', function (event) {
+    finishAnchorDrag(event, true);
+  });
+  anchor.addEventListener('transitionend', function (event) {
+    if (event.propertyName !== 'left' || state.anchorDrag || player.classList.contains('is-dragging')) return;
+    anchor.style.removeProperty('left');
+    anchor.style.removeProperty('right');
+  });
+
   anchor.addEventListener('click', function (event) {
+    if (state.suppressAnchorClick) {
+      state.suppressAnchorClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     expand();
   });
 
-  document.addEventListener('pointerdown', function (event) {
+  function isPlayerControl(target) {
+    return wheel.contains(target) || anchor.contains(target) || transport.contains(target);
+  }
+
+  function blockPageInput(event) {
+    if (event.type === 'click' && state.blockNextPageClick) {
+      state.blockNextPageClick = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (!state.expanded || isPlayerControl(event.target)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (event.type === 'pointerdown') {
+      state.blockNextPageClick = true;
+      collapse();
+    }
+  }
+
+  document.addEventListener('pointerdown', blockPageInput, { capture: true, passive: false });
+  document.addEventListener('click', blockPageInput, true);
+  document.addEventListener('wheel', function (event) {
     if (!state.expanded) return;
-    if (wheel.contains(event.target) || anchor.contains(event.target)) return;
-    collapse();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (!wheel.contains(event.target)) return;
+    var delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
+    var rowH = getRowH();
+    applyTarget(state.target + clamp(delta / rowH, -1, 1), false);
+    window.clearTimeout(state.wheelTimer);
+    state.wheelTimer = window.setTimeout(function () {
+      applyTarget(state.target, true);
+    }, 140);
+  }, { capture: true, passive: false });
+
+  player.addEventListener('dragstart', function (event) {
+    event.preventDefault();
+  }, true);
+  player.addEventListener('selectstart', function (event) {
+    event.preventDefault();
+  }, true);
+  ['pointerdown', 'pointerup', 'pointermove', 'pointercancel', 'click', 'dblclick', 'contextmenu'].forEach(function (eventName) {
+    player.addEventListener(eventName, function (event) {
+      if (state.expanded) event.stopPropagation();
+    });
   });
 
-  wheel.addEventListener('wheel', function (event) {
-    if (!state.expanded) return;
-    event.preventDefault();
-    applyWheelDelta(event);
-  }, { passive: false });
-
-  document.addEventListener('wheel', function (event) {
-    if (!state.expanded || !isInsideWheelZone(event)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    applyWheelDelta(event);
-  }, { passive: false, capture: true });
-
   wheel.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (event.target.closest('.fp-song-retry')) {
+      state.playlistStatus = 'idle';
+      loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+      return;
+    }
     var song = event.target.closest('.fp-song');
     if (!song || state.dragMoved) return;
     var index = Number(song.dataset.index || 0);
@@ -472,14 +720,21 @@
 
   audio.addEventListener('play', function () {
     state.playing = true;
+    setPlaylistStatus('');
+    syncTransport();
     layout();
   });
-  audio.addEventListener('pause', layout);
+  audio.addEventListener('pause', function () {
+    state.playing = false;
+    syncTransport();
+    layout();
+  });
   audio.addEventListener('ended', function () {
     if (state.current < tracks.length - 1) playTrack(state.current + 1);
     else pauseTrack();
   });
   window.addEventListener('resize', layout);
+  window.addEventListener('resize', updateTitleOverflow);
 
   window.FloatPlayer = {
     audio: audio,
@@ -497,9 +752,7 @@
   setUI({ anchorX: 0, anchorOpacity: 1, anchorScale: 1, wheelX: -28 * sideSign(), wheelOpacity: 0 });
   render();
   if (cfg.autoLoad && cfg.playlistId) {
-    loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function (error) {
-      console.error(error);
-    });
+    loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
   }
   });
 })();
