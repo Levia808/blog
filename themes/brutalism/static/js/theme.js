@@ -174,6 +174,7 @@
       resetMenuLevel();
       mask.hidden = false;
       drawer.hidden = false;
+      drawer.inert = false;
       mask.setAttribute('aria-hidden', 'false');
       drawer.setAttribute('aria-hidden', 'false');
       toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'true'); });
@@ -193,6 +194,7 @@
       if (token !== motionToken || isOpen) return;
       clearPendingMotion();
       drawer.hidden = true;
+      drawer.inert = true;
       mask.hidden = true;
       mask.setAttribute('aria-hidden', 'true');
       drawer.setAttribute('aria-hidden', 'true');
@@ -205,6 +207,7 @@
       var token = ++motionToken;
       isOpen = false;
       drawer.classList.remove('is-open');
+      drawer.inert = true;
       mask.classList.remove('is-show');
       toggles.forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
       document.body.style.overflow = '';
