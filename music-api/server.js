@@ -151,9 +151,19 @@ function levelBitrate(level) {
 }
 
 function mergeSongUrls(target, payload) {
-  (payload && payload.data || []).forEach((item) => {
+  const data = Array.isArray(payload && payload.data) ? payload.data : [];
+  const codes = {};
+  data.forEach((item) => {
+    const code = String(item && item.code !== undefined ? item.code : 'missing');
+    codes[code] = (codes[code] || 0) + 1;
     if (item && item.id && item.url) target[item.id] = item.url;
   });
+  return {
+    rows: data.length,
+    urls: data.filter((item) => item && item.id && item.url).length,
+    responseCode: payload && payload.code,
+    itemCodes: codes
+  };
 }
 
 function hasAnonymousToken() {
@@ -162,6 +172,13 @@ function hasAnonymousToken() {
   } catch (error) {
     return false;
   }
+}
+
+function safeUpstreamError(error) {
+  const status = Number(error && (error.status || error.statusCode));
+  if (Number.isInteger(status) && status >= 400 && status <= 599) return `HTTP_${status}`;
+  if (error && ['AbortError', 'TimeoutError', 'SyntaxError'].includes(error.name)) return error.name;
+  return 'UPSTREAM_ERROR';
 }
 
 async function fetchLegacySongUrls(ids, bitrate) {
@@ -186,13 +203,18 @@ async function resolveSongUrls(ids, level) {
     enhanced: 0,
     standard: 0,
     account: 0,
-    public: 0
+    public: 0,
+    responses: []
   };
   const primaryPayload = await callNetease('song_url_v1', {
     id: ids.join(','),
     level
   });
-  mergeSongUrls(urls, primaryPayload);
+  resolution.responses.push({
+    source: 'enhanced',
+    level,
+    ...mergeSongUrls(urls, primaryPayload)
+  });
   resolution.enhanced = Object.keys(urls).length;
 
   let missingIds = ids.filter((id) => !urls[id]);
@@ -202,9 +224,14 @@ async function resolveSongUrls(ids, level) {
         id: missingIds.join(','),
         level: 'standard'
       });
-      mergeSongUrls(urls, fallbackPayload);
+      resolution.responses.push({
+        source: 'enhanced',
+        level: 'standard',
+        ...mergeSongUrls(urls, fallbackPayload)
+      });
       resolution.standard = Object.keys(urls).length - resolution.enhanced;
     } catch (error) {
+      resolution.responses.push({ source: 'enhanced', level: 'standard', error: safeUpstreamError(error) });
       console.warn(`Netease standard URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
     }
   }
@@ -216,9 +243,14 @@ async function resolveSongUrls(ids, level) {
         id: missingIds.join(','),
         br: levelBitrate(level)
       });
-      mergeSongUrls(urls, fallbackPayload);
+      resolution.responses.push({
+        source: 'account',
+        bitrate: levelBitrate(level),
+        ...mergeSongUrls(urls, fallbackPayload)
+      });
       resolution.account = Object.keys(urls).length - resolution.enhanced - resolution.standard;
     } catch (error) {
+      resolution.responses.push({ source: 'account', error: safeUpstreamError(error) });
       console.warn(`Netease authenticated URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
     }
   }
@@ -229,13 +261,18 @@ async function resolveSongUrls(ids, level) {
     for (const bitrate of bitrates) {
       try {
         const fallbackPayload = await fetchLegacySongUrls(missingIds, bitrate);
-        mergeSongUrls(urls, fallbackPayload);
+        resolution.responses.push({
+          source: 'public',
+          bitrate,
+          ...mergeSongUrls(urls, fallbackPayload)
+        });
         resolution.public += Object.keys(urls).length
           - resolution.enhanced
           - resolution.standard
           - resolution.account
           - resolution.public;
       } catch (error) {
+        resolution.responses.push({ source: 'public', bitrate, error: safeUpstreamError(error) });
         console.warn(`Netease public URL fallback failed at ${bitrate} bps for ${missingIds.length} tracks:`, error.message || error);
       }
       missingIds = ids.filter((id) => !urls[id]);
@@ -379,7 +416,7 @@ async function handlePlaylist(req, res, url) {
     const ids = songs.map((song) => song.id).filter(Boolean);
 
     const urls = {};
-    let resolution = { requested: 0, enhanced: 0, standard: 0, account: 0, public: 0 };
+    let resolution = { requested: 0, enhanced: 0, standard: 0, account: 0, public: 0, responses: [] };
     if (ids.length) {
       const result = await resolveSongUrls(ids, level);
       Object.assign(urls, result.urls);
