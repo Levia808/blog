@@ -207,6 +207,7 @@ async function resolveSongUrls(ids, level) {
     requested: ids.length,
     enhanced: 0,
     standard: 0,
+    alternate: 0,
     account: 0,
     public: 0,
     responses: []
@@ -244,6 +245,34 @@ async function resolveSongUrls(ids, level) {
   }
 
   missingIds = ids.filter((id) => !urls[id]);
+  for (const crypto of ['weapi', 'api']) {
+    if (!missingIds.length) break;
+    try {
+      const fallbackPayload = await callNetease('song_url_v1', {
+        id: missingIds.join(','),
+        level,
+        crypto,
+        randomCNIP: true
+      });
+      resolution.responses.push({
+        source: 'enhanced',
+        protocol: crypto,
+        ...mergeSongUrls(urls, fallbackPayload)
+      });
+      resolution.alternate = Object.keys(urls).length
+        - resolution.enhanced
+        - resolution.standard;
+    } catch (error) {
+      resolution.responses.push({
+        source: 'enhanced',
+        protocol: crypto,
+        error: safeUpstreamError(error)
+      });
+      console.warn(`Netease ${crypto} URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
+    }
+    missingIds = ids.filter((id) => !urls[id]);
+  }
+
   if (missingIds.length) {
     try {
       const fallbackPayload = await callNetease('song_url', {
@@ -256,7 +285,10 @@ async function resolveSongUrls(ids, level) {
         bitrate: levelBitrate(level),
         ...mergeSongUrls(urls, fallbackPayload)
       });
-      resolution.account = Object.keys(urls).length - resolution.enhanced - resolution.standard;
+      resolution.account = Object.keys(urls).length
+        - resolution.enhanced
+        - resolution.standard
+        - resolution.alternate;
     } catch (error) {
       resolution.responses.push({ source: 'account', error: safeUpstreamError(error) });
       console.warn(`Netease authenticated URL fallback failed for ${missingIds.length} tracks:`, error.message || error);
@@ -277,6 +309,7 @@ async function resolveSongUrls(ids, level) {
         resolution.public += Object.keys(urls).length
           - resolution.enhanced
           - resolution.standard
+          - resolution.alternate
           - resolution.account
           - resolution.public;
       } catch (error) {
@@ -424,7 +457,7 @@ async function handlePlaylist(req, res, url) {
     const ids = songs.map((song) => song.id).filter(Boolean);
 
     const urls = {};
-    let resolution = { requested: 0, enhanced: 0, standard: 0, account: 0, public: 0, responses: [] };
+    let resolution = { requested: 0, enhanced: 0, standard: 0, alternate: 0, account: 0, public: 0, responses: [] };
     if (ids.length) {
       const result = await resolveSongUrls(ids, level);
       Object.assign(urls, result.urls);
