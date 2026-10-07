@@ -36,6 +36,7 @@
   var currentUser = null;
   var currentProfile = null;
   var loadedMoments = [];
+  var momentsLoadGeneration = 0;
   var momentsPageSize = 50;
   var momentsLoadingMore = false;
   var momentsHasMore = true;
@@ -1578,7 +1579,16 @@
   async function projectPwaTasks(baseMoments) {
     if (!window.PwaSync || !window.PwaSync.enabled || !currentUser) return baseMoments;
     var tasks;
-    try { tasks = await window.PwaSync.pending(currentUser.id); } catch (_) { return baseMoments; }
+    try {
+      tasks = await window.PwaSync.pending(currentUser.id);
+      // Keep permanent failures visible in the local projection as well. The
+      // recovery notice can then offer retry/discard without making a post
+      // appear to vanish after the server rejects it.
+      if (typeof window.PwaSync.failed === 'function') {
+        try { tasks = tasks.concat(await window.PwaSync.failed(currentUser.id)); } catch (_) {}
+      }
+    } catch (_) { return baseMoments; }
+    tasks.sort(function (a, b) { return a.createdAt - b.createdAt; });
     var byId = Object.create(null);
     var ordered = baseMoments.map(function (moment) {
       var copy = Object.assign({}, moment, {
@@ -1645,13 +1655,89 @@
     return ordered;
   }
 
-  async function refreshPwaProjection() {
-    if (!window.PwaSync || !window.PwaSync.enabled || !currentUser) return;
-    var view = await projectPwaTasks(loadedMoments);
+  function renderMomentSnapshot(view) {
     momentMediaCache = {};
     momentDataCache = {};
-    view.forEach(function (moment) { momentMediaCache[moment.id] = moment.media || []; momentDataCache[moment.id] = moment; });
+    view.forEach(function (moment) {
+      momentMediaCache[moment.id] = moment.media || [];
+      momentDataCache[moment.id] = moment;
+    });
     diffRenderMoments(view);
+    reapplyPendingLikes();
+  }
+
+  function rememberSyncedMomentTask(task, result) {
+    if (!task) return;
+    var payload = task.payload || {};
+    var row = result && typeof result === 'object' && !Array.isArray(result) ? result : null;
+    var id = task.type === 'moment.create' ? (payload.moment && payload.moment.id) : payload.id;
+    if (task.type === 'moment.like') id = payload.momentId;
+    if (task.type === 'comment.create') id = payload.comment && payload.comment.moment_id;
+
+    var index = id ? loadedMoments.findIndex(function (moment) { return moment.id === id; }) : -1;
+    var previous = index >= 0 ? loadedMoments[index] : null;
+    if (task.type === 'moment.create') {
+      var draft = payload.moment || {};
+      var created = Object.assign({}, draft, previous || {}, row || {});
+      created.profiles = (row && row.profiles) || (previous && previous.profiles) || currentProfile || {};
+      created.media = row && Array.isArray(row.media) ? row.media : (draft.media || []);
+      created.moment_likes = previous && previous.moment_likes || [];
+      created.moment_comments = previous && previous.moment_comments || [];
+      if (index >= 0) loadedMoments[index] = created;
+      else loadedMoments.unshift(created);
+      return;
+    }
+    if (task.type === 'moment.delete') {
+      if (index >= 0) loadedMoments.splice(index, 1);
+      return;
+    }
+    if (task.type === 'comment.delete' || task.type === 'comment.like') {
+      loadedMoments.forEach(function (moment) {
+        if (task.type === 'comment.delete') {
+          var removed = Object.create(null);
+          removed[payload.id] = true;
+          var changed = true;
+          while (changed) {
+            changed = false;
+            (moment.moment_comments || []).forEach(function (comment) {
+              if (comment.parent_id && removed[comment.parent_id] && !removed[comment.id]) {
+                removed[comment.id] = true;
+                changed = true;
+              }
+            });
+          }
+          moment.moment_comments = (moment.moment_comments || []).filter(function (comment) { return !removed[comment.id]; });
+        } else {
+          (moment.moment_comments || []).forEach(function (comment) {
+            if (comment.id !== payload.commentId) return;
+            var likes = (comment.moment_comment_likes || []).filter(function (like) { return like.user_id !== task.userId; });
+            if (payload.liked) likes.push({ user_id: task.userId });
+            comment.moment_comment_likes = likes;
+          });
+        }
+      });
+      return;
+    }
+    if (index < 0) return;
+    var current = loadedMoments[index];
+    if (task.type === 'moment.update') {
+      loadedMoments[index] = Object.assign({}, current, row || {}, {
+        profiles: (row && row.profiles) || current.profiles || currentProfile || {},
+        moment_likes: current.moment_likes || [], moment_comments: current.moment_comments || []
+      });
+    } else if (task.type === 'moment.visibility') {
+      Object.assign(current, payload.values || {});
+    } else if (task.type === 'moment.like') {
+      var likes = (current.moment_likes || []).filter(function (like) { return like.user_id !== task.userId; });
+      if (payload.liked) likes.push({ user_id: task.userId });
+      current.moment_likes = likes;
+    } else if (task.type === 'comment.create' && payload.comment) {
+      var comments = current.moment_comments || (current.moment_comments = []);
+      var comment = row || payload.comment;
+      if (!comments.some(function (item) { return item.id === comment.id; })) {
+        comments.push(Object.assign({ profiles: currentProfile || {}, moment_comment_likes: [] }, comment));
+      }
+    }
   }
 
   function bindPwaMomentSyncEvents() {
@@ -1659,6 +1745,7 @@
     ['synced', 'failure', 'discarded'].forEach(function (eventName) {
       window.PwaSync.on(eventName, function (detail) {
         if (!currentUser || !detail.task || detail.task.userId !== currentUser.id) return;
+        if (eventName === 'synced') rememberSyncedMomentTask(detail.task, detail.result);
         loadMoments();
       });
     });
@@ -1666,6 +1753,7 @@
 
   async function loadMoments(loadMore) {
     if (loadMore && (momentsLoadingMore || !momentsHasMore)) return;
+    var requestGeneration = ++momentsLoadGeneration;
     showMomentsLoading(true);
     destroyAllSortables();
     var priorCount = loadedMoments.length;
@@ -1686,14 +1774,14 @@
           if (page.length < momentsPageSize) break;
         }
       }
+      // Ignore out-of-order responses. A later sync/auth refresh may already
+      // have rendered a newer snapshot while this request was in flight.
+      if (requestGeneration !== momentsLoadGeneration) return;
       loadedMoments = moments;
       momentsHasMore = moments.length === targetCount;
-      momentMediaCache = {};
-      momentDataCache = {};
       var viewMoments = await projectPwaTasks(moments);
-      viewMoments.forEach(function (m) { momentMediaCache[m.id] = m.media || []; momentDataCache[m.id] = m; });
-      diffRenderMoments(viewMoments);
-      reapplyPendingLikes();
+      if (requestGeneration !== momentsLoadGeneration) return;
+      renderMomentSnapshot(viewMoments);
       if (window.__blogLightbox && typeof window.__blogLightbox.reload === 'function') {
         window.__blogLightbox.reload();
       }
@@ -1701,23 +1789,43 @@
       hintEl.hidden = Boolean(moments.length);
       updateMomentsHistoryControl();
     } catch (error) {
+      if (requestGeneration !== momentsLoadGeneration) return;
       var msg = error.message || String(error);
       if (msg.indexOf('PGRST205') >= 0 || msg.indexOf('Could not find the table') >= 0) {
         listEl.innerHTML = '<div class="moments-empty"><strong>动态功能未初始化</strong><br>' +
           '<span style="font-size:12px;color:var(--muted);">请在 Supabase SQL Editor 运行仓库中的 <code>supabase-moments.sql</code> 创建动态数据表，然后刷新本页。</span></div>';
       } else if (!loadMore) {
-        listEl.innerHTML = '<div class="moments-empty">动态加载失败：' + escapeHtml(msg) + '</div>';
+        // A refresh failure must not replace a just-published PWA post (or any
+        // previously rendered feed) with an error screen. Preserve the latest
+        // local projection and let the next online/focus refresh reconcile it.
+        var fallback = await projectPwaTasks(loadedMoments).catch(function () { return loadedMoments.slice(); });
+        if (requestGeneration !== momentsLoadGeneration) return;
+        renderMomentSnapshot(fallback);
+        if (!fallback.length) {
+          listEl.innerHTML = '<div class="moments-empty">暂时无法连接，恢复后会重新加载动态。</div>';
+          clearTimeout(noticeTimer);
+          hintEl.hidden = true;
+          hintEl.textContent = '';
+          hintEl.style.color = '';
+        } else {
+          clearTimeout(noticeTimer);
+          hintEl.textContent = navigator.onLine ? '暂时无法连接，显示最近内容及本机待同步动态' : '离线中，显示最近内容及本机待同步动态';
+          hintEl.hidden = false;
+          hintEl.style.color = 'var(--muted)';
+        }
       }
       if (loadMore) {
         momentsHasMore = true;
         historyLoadFailed = true;
       }
     } finally {
-      momentsLoadingMore = false;
-      showMomentsLoading(false);
-      updateMomentsHistoryControl();
-      if (historyObserver && !historyLoadFailed && momentsHasMore && historySentinel) {
-        historyObserver.observe(historySentinel);
+      if (requestGeneration === momentsLoadGeneration) {
+        momentsLoadingMore = false;
+        showMomentsLoading(false);
+        updateMomentsHistoryControl();
+        if (historyObserver && !historyLoadFailed && momentsHasMore && historySentinel) {
+          historyObserver.observe(historySentinel);
+        }
       }
     }
   }

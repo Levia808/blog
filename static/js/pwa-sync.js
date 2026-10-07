@@ -16,16 +16,16 @@
   document.head.appendChild(recoveryStyles);
 
   var DB_NAME = 'levia-blog-pwa-outbox';
-  var DB_VERSION = 1;
+  var DB_VERSION = 2;
   var STORE = 'tasks';
   var LEASE_MS = 60000;
+  var LEASE_RENEW_MS = Math.floor(LEASE_MS / 3);
   var dbPromise = null;
   var activeUserId = null;
   var draining = false;
   var retryTimer = null;
   var workerURL = null;
   var shownFailures = Object.create(null);
-  var tabId = uuid();
 
   function uuid() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -49,12 +49,13 @@
       var req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = function () {
         var db = req.result;
-        if (!db.objectStoreNames.contains(STORE)) {
-          var store = db.createObjectStore(STORE, { keyPath: 'id' });
-          store.createIndex('userId', 'userId', { unique: false });
-          store.createIndex('status', 'status', { unique: false });
-          store.createIndex('createdAt', 'createdAt', { unique: false });
-        }
+        var store = db.objectStoreNames.contains(STORE)
+          ? req.transaction.objectStore(STORE)
+          : db.createObjectStore(STORE, { keyPath: 'id' });
+        // Keep the upgrade additive so an existing v1 outbox remains intact.
+        if (!store.indexNames.contains('userId')) store.createIndex('userId', 'userId', { unique: false });
+        if (!store.indexNames.contains('status')) store.createIndex('status', 'status', { unique: false });
+        if (!store.indexNames.contains('createdAt')) store.createIndex('createdAt', 'createdAt', { unique: false });
       };
       req.onsuccess = function () {
         req.result.onversionchange = function () { req.result.close(); dbPromise = null; };
@@ -80,13 +81,31 @@
     });
   }
 
-  function allTasks() {
+  function tasksForUser(userId) {
     return openDb().then(function (db) {
       return new Promise(function (resolve, reject) {
         var tx = db.transaction(STORE, 'readonly');
-        var req = tx.objectStore(STORE).getAll();
+        var index = tx.objectStore(STORE).index('userId');
+        var req = index.getAll(userId);
         req.onsuccess = function () { resolve(req.result || []); };
         req.onerror = function () { reject(req.error || new Error('读取本地待办失败。')); };
+      });
+    });
+  }
+
+  function withTask(id, mutate) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE, 'readwrite');
+        var store = tx.objectStore(STORE);
+        var value = null;
+        var req = store.get(id);
+        req.onsuccess = function () {
+          try { value = mutate(req.result || null, store); }
+          catch (error) { try { tx.abort(); } catch (_) {} reject(error); }
+        };
+        tx.oncomplete = function () { resolve(value); };
+        tx.onerror = tx.onabort = function () { reject(tx.error || new Error('本地任务更新失败。')); };
       });
     });
   }
@@ -104,16 +123,61 @@
   function putTask(task) { return transact('readwrite', function (store) { store.put(task); }); }
 
   function updateTask(id, patch) {
-    return getTask(id).then(function (task) {
+    return withTask(id, function (task, store) {
       if (!task) return null;
       Object.assign(task, patch);
-      return putTask(task).then(function () { return task; });
+      store.put(task);
+      return task;
     });
   }
 
-  function userNow() {
-    if (!window.Auth || typeof window.Auth.user !== 'function') return Promise.resolve(null);
-    return window.Auth.user().catch(function () { return null; });
+  function claimMatches(current, task) {
+    // The per-claim token is the fence. Lease expiry makes a claim eligible for
+    // atomic takeover, but does not invalidate it until another transaction
+    // actually replaces the token.
+    return !!current && current.status === 'processing' && current.lockId === task.lockId;
+  }
+
+  function mutateClaim(task, mutate) {
+    return withTask(task.id, function (current, store) {
+      if (!claimMatches(current, task)) return false;
+      return mutate(current, store);
+    });
+  }
+
+  function lostClaimError() {
+    var error = new Error('同步任务已由其他窗口接管。');
+    error.pwaClaimLost = true;
+    return error;
+  }
+
+  function renewClaim(task) {
+    return mutateClaim(task, function (current, store) {
+      current.leaseUntil = Date.now() + LEASE_MS;
+      current.updatedAt = Date.now();
+      store.put(current);
+      return current.leaseUntil;
+    });
+  }
+
+  function startClaimHeartbeat(task) {
+    var stopped = false;
+    var timer = null;
+    async function renew() {
+      if (stopped) return;
+      try {
+        var leaseUntil = await renewClaim(task);
+        if (!leaseUntil) { task.claimLost = true; return; }
+        task.leaseUntil = leaseUntil;
+      } catch (_) {
+        // A transient IndexedDB error is not itself proof that the lease was
+        // stolen. Retry while the last known lease is still valid.
+        if (Date.now() >= Number(task.leaseUntil || 0)) { task.claimLost = true; return; }
+      }
+      if (!stopped) timer = setTimeout(renew, LEASE_RENEW_MS);
+    }
+    timer = setTimeout(renew, LEASE_RENEW_MS);
+    return function stop() { stopped = true; clearTimeout(timer); };
   }
 
   function sessionNow() {
@@ -128,9 +192,25 @@
   }
 
   async function assertOwner(task) {
-    var user = await userNow();
+    // getSession reads the locally persisted session. Do not add an auth network
+    // round-trip ahead of queued work; the actual Supabase request validates it.
+    var session = await sessionNow();
+    var user = session && session.user;
     if (!user || user.id !== task.userId) throw defer('请使用创建此任务的原账号登录后继续同步。');
     return user;
+  }
+
+  async function assertClaim(task) {
+    if (task.claimLost) throw lostClaimError();
+    // Renew transactionally before each network side effect. If the lease
+    // expired but no other tab took over, the same fenced owner can continue;
+    // if takeover already happened, the token check rejects this operation.
+    var leaseUntil = await renewClaim(task);
+    if (!leaseUntil) {
+      task.claimLost = true;
+      throw lostClaimError();
+    }
+    task.leaseUntil = leaseUntil;
   }
 
   function isTransient(error) {
@@ -222,12 +302,14 @@
   }
 
   async function uploadMedia(file, operationId, task) {
+    await assertClaim(task);
     await assertOwner(task);
     var pair = await prepareImage(file);
     if (!pair && file && /^image\//i.test(file.type) && !/image\/(?:gif|svg\+xml)/i.test(file.type) &&
         window.Admin && typeof window.Admin.compressImage === 'function') {
       try { pair = await window.Admin.compressImage(file); } catch (_) { pair = null; }
     }
+    await assertClaim(task);
     await assertOwner(task);
     return window.Admin.uploadMedia(file, null, {
       operationId: operationId,
@@ -252,12 +334,19 @@
       // Save URLs into the exact nested media array before attempting the next upload.
       var mediaPath = task.type === 'moment.create' ? task.payload.moment.media : task.payload.media;
       if (mediaPath) mediaPath[i] = entries[i];
-      await putTask(task);
+      var persisted = await mutateClaim(task, function (current, store) {
+        current.payload = task.payload;
+        current.updatedAt = Date.now();
+        store.put(current);
+        return current;
+      });
+      if (!persisted) { task.claimLost = true; throw lostClaimError(); }
     }
     return urls;
   }
 
   async function execute(task) {
+    await assertClaim(task);
     await assertOwner(task);
     var p = task.payload || {};
     var result;
@@ -265,6 +354,7 @@
       case 'moment.create': {
         var draft = p.moment;
         var media = await uploadEntries(task, draft.media || []);
+        await assertClaim(task);
         await assertOwner(task);
         result = await insertIdempotent('moments', {
           id: draft.id, user_id: task.userId, content: draft.content || '', media: media,
@@ -274,6 +364,7 @@
       }
       case 'moment.update': {
         var updateMedia = await uploadEntries(task, p.media || []);
+        await assertClaim(task);
         await assertOwner(task);
         var changes = { content: p.content || '', media: updateMedia, updated_at: p.updated_at };
         if (p.locationDirty) changes.location = p.location || null;
@@ -283,6 +374,7 @@
         break;
       }
       case 'moment.delete': {
+        await assertClaim(task);
         await assertOwner(task);
         var deleted = await blogSupabase.from('moments').delete().eq('id', p.id);
         if (deleted.error) throw deleted.error;
@@ -290,6 +382,7 @@
         break;
       }
       case 'moment.visibility': {
+        await assertClaim(task);
         await assertOwner(task);
         var visibility = await blogSupabase.from('moments').update(p.values).eq('id', p.id);
         if (visibility.error) throw visibility.error;
@@ -302,6 +395,7 @@
         var table = isComment ? 'moment_comment_likes' : 'moment_likes';
         var col = isComment ? 'comment_id' : 'moment_id';
         var targetId = isComment ? p.commentId : p.momentId;
+        await assertClaim(task);
         await assertOwner(task);
         var like = p.liked
           ? await blogSupabase.from(table).upsert((function () { var row = { user_id: task.userId }; row[col] = targetId; return row; })(), { onConflict: col + ',user_id' })
@@ -311,12 +405,14 @@
         break;
       }
       case 'comment.create': {
+        await assertClaim(task);
         await assertOwner(task);
         result = await insertIdempotent('moment_comments', p.comment,
           'id, moment_id, content, created_at, user_id, parent_id, profiles(display_name, username, avatar_url)');
         break;
       }
       case 'comment.delete': {
+        await assertClaim(task);
         await assertOwner(task);
         var commentDelete = await blogSupabase.from('moment_comments').delete().eq('id', p.id);
         if (commentDelete.error) throw commentDelete.error;
@@ -324,16 +420,19 @@
         break;
       }
       case 'profile.update':
+        await assertClaim(task);
         await assertOwner(task);
         result = await window.Profile.update(task.userId, p.values);
         break;
       case 'profile.avatar': {
         var avatarFile = restoreFile(p.file, p);
+        await assertClaim(task);
         var avatarPair = await prepareImage(avatarFile);
         if (!avatarPair && avatarFile && /^image\//i.test(avatarFile.type) && !/image\/(?:gif|svg\+xml)/i.test(avatarFile.type) &&
             window.Admin && typeof window.Admin.compressImage === 'function') {
           try { avatarPair = await window.Admin.compressImage(avatarFile); } catch (_) { avatarPair = null; }
         }
+        await assertClaim(task);
         await assertOwner(task);
         result = await window.Profile.uploadAvatar(task.userId, avatarPair && (avatarPair.original || avatarPair.preview) || avatarFile, {
           operationId: task.id, cacheVersion: task.id, skipCompression: true, expectedUserId: task.userId
@@ -341,6 +440,7 @@
         break;
       }
       case 'profile.github': {
+        await assertClaim(task);
         var response = await fetch('https://api.github.com/users/' + encodeURIComponent(p.username));
         if (!response.ok) {
           var ghError = new Error(response.status === 404 ? '没有找到该 GitHub 用户。' : 'GitHub 暂时无法响应。');
@@ -348,6 +448,7 @@
           throw ghError;
         }
         var gh = await response.json();
+        await assertClaim(task);
         await assertOwner(task);
         result = await window.Profile.update(task.userId, {
           github_username: p.username, github_avatar_url: gh.avatar_url || null, avatar_url: gh.avatar_url || null
@@ -370,33 +471,30 @@
         var now = Date.now();
         var tx = db.transaction(STORE, 'readwrite');
         var store = tx.objectStore(STORE);
-        var req = store.getAll();
+        var req = store.index('userId').getAll(userId);
         var claimed = null;
         var nextAt = 0;
         req.onsuccess = function () {
-          var tasks = (req.result || []).filter(function (task) { return task.userId === userId; })
-            .sort(function (a, b) { return a.createdAt - b.createdAt; });
-          tasks.forEach(function (task) {
-            if (task.status === 'processing' && Number(task.leaseUntil || 0) <= now) {
-              task.status = 'queued'; task.lockId = null; task.leaseUntil = 0; store.put(task);
-            }
-          });
+          var tasks = (req.result || []).sort(function (a, b) { return a.createdAt - b.createdAt; });
           for (var i = 0; i < tasks.length; i++) {
             var task = tasks[i];
             if (task.status === 'failed') continue;
-            if (task.status === 'processing' && task.leaseUntil > now) {
+            if (task.status === 'processing' && Number(task.leaseUntil || 0) > now) {
               if (!nextAt || task.leaseUntil < nextAt) nextAt = task.leaseUntil;
               continue;
             }
-            if (task.status !== 'queued') continue;
-            if (task.nextAttemptAt > now) {
+            if (task.status !== 'queued' && task.status !== 'processing') continue;
+            if (task.status === 'queued' && Number(task.nextAttemptAt || 0) > now) {
               if (!nextAt || task.nextAttemptAt < nextAt) nextAt = task.nextAttemptAt;
               continue;
             }
+            // Expired leases are reclaimed directly in this read-write
+            // transaction. A new per-claim token fences the old tab out.
             task.status = 'processing';
-            task.lockId = tabId;
+            task.lockId = uuid();
             task.leaseUntil = now + LEASE_MS;
             task.lastError = null;
+            task.updatedAt = now;
             store.put(task);
             claimed = task;
             break;
@@ -409,39 +507,46 @@
   }
 
   function removeClaimed(task) {
-    return transact('readwrite', function (store) {
-      var req = store.get(task.id);
-      req.onsuccess = function () {
-        var current = req.result;
-        if (current && current.lockId === tabId) store.delete(task.id);
-      };
+    return mutateClaim(task, function (_current, store) {
+      store.delete(task.id);
+      return true;
     });
   }
 
   function failTask(task, error) {
-    var transient = isTransient(error);
-    if (error && error.pwaDefer) {
-      return updateTask(task.id, { status: 'queued', lockId: null, leaseUntil: 0, nextAttemptAt: 0, lastError: null });
-    }
-    if (transient) {
-      var attempts = (task.attempts || 0) + 1;
-      var delay = Math.min(5 * 60 * 1000, 1500 * Math.pow(2, Math.min(attempts - 1, 8)));
-      var nextAttemptAt = Date.now() + delay;
-      return updateTask(task.id, {
-        status: 'queued', lockId: null, leaseUntil: 0, attempts: attempts,
-        nextAttemptAt: nextAttemptAt, lastError: messageOf(error)
-      }).then(function () {
-        emit('pwa-sync:retrying', { task: task, retryAt: nextAttemptAt });
-        return nextAttemptAt;
-      });
-    }
-    return updateTask(task.id, {
-      status: 'failed', lockId: null, leaseUntil: 0, attempts: (task.attempts || 0) + 1,
-      lastError: messageOf(error), failedAt: Date.now()
-    }).then(function (failed) {
-      if (failed) {
-        emit('pwa-sync:failure', { task: failed, error: failed.lastError });
-        notifyFailure(failed, failed.lastError);
+    return mutateClaim(task, function (current, store) {
+      var now = Date.now();
+      if (error && error.pwaDefer) {
+        current.status = 'queued'; current.lockId = null; current.leaseUntil = 0;
+        current.nextAttemptAt = 0; current.lastError = null; current.updatedAt = now;
+        store.put(current);
+        return { deferred: true, retryAt: 0 };
+      }
+      current.attempts = (current.attempts || 0) + 1;
+      current.lockId = null; current.leaseUntil = 0; current.updatedAt = now;
+      if (isTransient(error)) {
+        var delay = Math.min(5 * 60 * 1000, 1500 * Math.pow(2, Math.min(current.attempts - 1, 8)));
+        current.status = 'queued';
+        current.nextAttemptAt = now + delay;
+        current.lastError = messageOf(error);
+        store.put(current);
+        return { retryAt: current.nextAttemptAt, task: current };
+      }
+      current.status = 'failed'; current.failedAt = now;
+      current.lastError = messageOf(error);
+      store.put(current);
+      return { retryAt: 0, task: current, failed: true };
+    }).then(function (transition) {
+      if (!transition) return 0; // The claim was lost; never overwrite its new owner.
+      if (transition.deferred) return 0;
+      if (transition.failed) {
+        emit('pwa-sync:failure', { task: transition.task, error: transition.task.lastError });
+        notifyFailure(transition.task, transition.task.lastError);
+        return 0;
+      }
+      if (transition.retryAt) {
+        emit('pwa-sync:retrying', { task: transition.task, retryAt: transition.retryAt });
+        return transition.retryAt;
       }
       return 0;
     });
@@ -456,14 +561,17 @@
         return;
       }
       var task = claimed.task;
+      var stopHeartbeat = startClaimHeartbeat(task);
       try {
         var result = await execute(task);
-        await removeClaimed(task);
-        emit('pwa-sync:synced', { task: task, result: result });
+        var removed = await removeClaimed(task);
+        if (removed) emit('pwa-sync:synced', { task: task, result: result });
       } catch (error) {
         var retryAt = await failTask(task, error);
         if (error && error.pwaDefer) return;
         if (retryAt) { schedule(retryAt - Date.now()); return; }
+      } finally {
+        stopHeartbeat();
       }
       if (activeUserId !== userId) return;
     }
@@ -508,12 +616,12 @@
       return new Promise(function (resolve, reject) {
         var tx = db.transaction(STORE, 'readwrite');
         var store = tx.objectStore(STORE);
-        var req = store.getAll();
+        var req = store.index('userId').getAll(userId);
         var saved = task;
         req.onsuccess = function () {
           if (coalesceKey) {
             var existing = (req.result || []).filter(function (candidate) {
-              return candidate.userId === userId && candidate.type === type && candidate.coalesceKey === coalesceKey && candidate.status !== 'processing';
+              return candidate.type === type && candidate.coalesceKey === coalesceKey && candidate.status !== 'processing';
             }).sort(function (a, b) { return b.createdAt - a.createdAt; })[0];
             if (existing) {
               existing.payload = payload;
@@ -550,44 +658,50 @@
 
   async function pending(userId) {
     if (!userId || !await ownsCurrentSession(userId)) return [];
-    var tasks = await allTasks();
-    var now = Date.now();
-    var own = tasks.filter(function (task) { return task.userId === userId; });
-    for (var i = 0; i < own.length; i++) {
-      if (own[i].status === 'processing' && Number(own[i].leaseUntil || 0) <= now) {
-        own[i].status = 'queued'; own[i].lockId = null; own[i].leaseUntil = 0; own[i].nextAttemptAt = 0;
-        await putTask(own[i]);
-      }
-    }
-    return own.filter(function (task) { return task.status === 'queued' || task.status === 'processing'; })
+    // A read API must never rewrite an expired claim: another tab may already
+    // have reclaimed it. claimNext performs expiry handling atomically.
+    return (await tasksForUser(userId))
+      .filter(function (task) { return task.status === 'queued' || task.status === 'processing'; })
       .sort(function (a, b) { return a.createdAt - b.createdAt; });
   }
 
   async function failed(userId) {
     if (!userId || !await ownsCurrentSession(userId)) return [];
-    return (await allTasks()).filter(function (task) { return task.userId === userId && task.status === 'failed'; });
+    return (await tasksForUser(userId)).filter(function (task) { return task.status === 'failed'; });
   }
 
   async function retry(id) {
     var task = await getTask(id);
-    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId)) {
+    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId) || activeUserId !== task.userId) {
       throw new Error('只能恢复当前账号自己的待办。');
     }
-    task.status = 'queued'; task.attempts = 0; task.nextAttemptAt = 0; task.lastError = null;
-    task.failedAt = null; task.lockId = null; task.leaseUntil = 0;
-    await putTask(task);
+    var retried = await withTask(id, function (current, store) {
+      if (!current || current.userId !== task.userId || current.status !== 'failed') return null;
+      current.status = 'queued'; current.attempts = 0; current.nextAttemptAt = 0; current.lastError = null;
+      current.failedAt = null; current.lockId = null; current.leaseUntil = 0; current.updatedAt = Date.now();
+      store.put(current);
+      return current;
+    });
+    if (!retried) throw new Error('该待办状态已变化，请刷新后重试。');
     delete shownFailures[id]; schedule(100);
-    return task;
+    return retried;
   }
 
   async function discard(id) {
     var task = await getTask(id);
-    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId)) {
+    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId) || activeUserId !== task.userId) {
       throw new Error('只能清理当前账号自己的待办。');
     }
-    await transact('readwrite', function (store) { store.delete(id); });
-    delete shownFailures[id]; emit('pwa-sync:discarded', { id: id, task: task });
-    return task;
+    var discarded = await withTask(id, function (current, store) {
+      // Only failed entries are shown as recoverable/discardable. Avoid deleting
+      // work another tab has already resumed or is actively sending.
+      if (!current || current.userId !== task.userId || current.status !== 'failed') return null;
+      store.delete(id);
+      return current;
+    });
+    if (!discarded) throw new Error('该待办状态已变化，请刷新后重试。');
+    delete shownFailures[id]; emit('pwa-sync:discarded', { id: id, task: discarded });
+    return discarded;
   }
 
   function notifyFailure(task, message) {
@@ -641,7 +755,8 @@
     }
     activeUserId = nextUserId;
     if (!activeUserId) return;
-    userNow().then(function (user) {
+    sessionNow().then(function (session) {
+      var user = session && session.user;
       if (!user || user.id !== activeUserId) return;
       failed(user.id).then(function (tasks) {
         tasks.forEach(function (task) { notifyFailure(task, task.lastError); });

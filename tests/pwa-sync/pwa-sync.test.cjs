@@ -14,6 +14,7 @@ const profileUpdates = [];
 const compressedFiles = [];
 const uploadOperations = [];
 let forcedError = null;
+let insertBarrier = null;
 let insertCalls = 0;
 let supabase = null;
 let timerId = 0;
@@ -52,7 +53,8 @@ function queryTable(table) {
     }); },
     then(resolve, reject) { return execute().then(resolve, reject); }
   };
-  function execute() {
+  async function execute() {
+    if (operation === 'insert' && insertBarrier) await insertBarrier;
     if (forcedError) {
       const error = forcedError;
       forcedError = null;
@@ -238,6 +240,28 @@ async function flush(app) { await app.window.PwaSync.flush(); }
   assert.equal(rowsFor('moment_comments').has('comment-a'), false);
   assert.equal(rowsFor('moments').has('draft-a'), false);
 
+
+  // Two standalone windows share the IndexedDB outbox. The second tab must not
+  // submit a task while the first still owns a live lease.
+  let releaseInsert;
+  insertBarrier = new Promise((resolve) => { releaseInsert = resolve; });
+  const crossTabId = 'cross-tab-claim';
+  await app.window.PwaSync.enqueue('user-a', 'moment.create', {
+    moment: { id: crossTabId, user_id: 'user-a', content: 'single worker', media: [], created_at: new Date().toISOString() }
+  });
+  const insertCallsBeforeClaim = insertCalls;
+  const firstTabFlush = app.window.PwaSync.flush();
+  for (let i = 0; i < 20 && insertCalls === insertCallsBeforeClaim; i++) await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(insertCalls, insertCallsBeforeClaim + 1, 'the first tab has started the write');
+  const secondTab = boot();
+  secondTab.window.PwaSync.resume('user-a');
+  await secondTab.window.PwaSync.flush();
+  assert.equal(insertCalls, insertCallsBeforeClaim + 1, 'a second tab cannot claim an active task');
+  releaseInsert();
+  insertBarrier = null;
+  await firstTabFlush;
+  assert.equal(rowsFor('moments').has(crossTabId), true, 'the live claim completes exactly once');
+
   // SQL validation / permission errors with a SQLSTATE but no HTTP status are permanent.
   forcedError = { code: '23514', message: 'check constraint violation' };
   await app.window.PwaSync.enqueue('user-a', 'moment.create', {
@@ -264,7 +288,7 @@ async function flush(app) { await app.window.PwaSync.flush(); }
   await assert.rejects(app.window.PwaSync.enqueue('user-a', 'profile.update', { values: { display_name: 'wrong' } }), /账号已变化/);
 
   timers.clear();
-  console.log('PWA sync tests passed: persistence/restart, account isolation, media fallback, CRUD executors, idempotency, retry classification, storage errors.');
+  console.log('PWA sync tests passed: persistence/restart, account isolation, media fallback, CRUD executors, idempotency, cross-tab leases, retry classification, storage errors.');
 })().catch((error) => {
   timers.clear();
   console.error(error);
