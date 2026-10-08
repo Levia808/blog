@@ -20,7 +20,8 @@
     minOpacity: 0.05,
     blur: 2,
     smoothing: 190,
-    inset: 80
+    inset: 80,
+    playlistTimeout: 15000
   };
   function parseConfigScalar(raw) {
     var value = String(raw == null ? '' : raw).trim();
@@ -166,7 +167,8 @@
     playlistPromise: null,
     playlistRequestId: '',
     loadedPlaylistId: '',
-    uiRafs: []
+    uiRafs: [],
+    failedTracks: {}
   };
   var pageOverflowBeforeExpand = null;
 
@@ -341,6 +343,18 @@
     return String(cfg.proxyBase || defaults.proxyBase).replace(/\/$/, '') + '/api/netease/playlist?' + params.toString();
   }
 
+  function fetchWithTimeout(url, options, timeoutMs) {
+    var controller = window.AbortController ? new AbortController() : null;
+    var timer = controller ? window.setTimeout(function () {
+      controller.abort();
+    }, timeoutMs) : 0;
+    var requestOptions = Object.assign({}, options || {});
+    if (controller) requestOptions.signal = controller.signal;
+    return fetch(url, requestOptions).finally(function () {
+      if (timer) window.clearTimeout(timer);
+    });
+  }
+
   function setPlaylistStatus(message, retry) {
     songStatus.hidden = !message;
     songStatus.innerHTML = message
@@ -366,6 +380,7 @@
     state.pos = 0;
     state.target = 0;
     state.playing = false;
+    state.failedTracks = {};
     audio.pause();
     audio.removeAttribute('src');
     audio.load();
@@ -380,7 +395,11 @@
     state.playlistStatus = 'loading';
     state.playlistRequestId = id;
     setPlaylistStatus('正在加载歌单…');
-    state.playlistPromise = fetch(buildPlaylistEndpoint(id, options), { cache: 'no-store' })
+    state.playlistPromise = fetchWithTimeout(
+      buildPlaylistEndpoint(id, options),
+      { cache: 'no-store' },
+      Number(cfg.playlistTimeout || defaults.playlistTimeout)
+    )
       .then(function (response) {
         if (!response.ok) throw new Error('Playlist proxy HTTP ' + response.status);
         return response.json();
@@ -388,10 +407,15 @@
       .then(function (payload) {
         if (state.playlistRequestId !== id) return payload;
         if (!payload || !payload.ok) throw new Error((payload && payload.error) || 'Playlist proxy returned an error.');
-        if (!Array.isArray(payload.tracks) || !payload.tracks.length) {
+        var playableTracks = Array.isArray(payload.tracks)
+          ? payload.tracks.filter(function (track) {
+            return track && typeof track.url === 'string' && /^https?:\/\//i.test(track.url);
+          })
+          : [];
+        if (!playableTracks.length) {
           throw new Error('No playable tracks returned for playlist ' + id + '.');
         }
-        replaceTracks(payload.tracks);
+        replaceTracks(playableTracks);
         state.playlistStatus = 'loaded';
         state.playlistPromise = null;
         state.loadedPlaylistId = id;
@@ -738,6 +762,29 @@
   });
   audio.addEventListener('pause', function () {
     state.playing = false;
+    syncTransport();
+    layout();
+  });
+  audio.addEventListener('error', function () {
+    var track = tracks[state.current];
+    if (!track || !track.url) return;
+    state.playing = false;
+    state.failedTracks[track.url] = true;
+    var next = -1;
+    for (var index = state.current + 1; index < tracks.length; index += 1) {
+      if (!state.failedTracks[tracks[index].url]) {
+        next = index;
+        break;
+      }
+    }
+    if (next >= 0) {
+      setPlaylistStatus('当前歌曲不可用，已切换下一首');
+      window.setTimeout(function () {
+        if (state.failedTracks[track.url]) playTrack(next);
+      }, 360);
+    } else {
+      setPlaylistStatus('没有可播放的歌曲，请重试歌单');
+    }
     syncTransport();
     layout();
   });

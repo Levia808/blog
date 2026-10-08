@@ -201,6 +201,38 @@ async function fetchLegacySongUrls(ids, bitrate) {
   return response.json();
 }
 
+async function resolvePublicSongUrls(ids, level, urls, resolution, bitrates) {
+  const triedBitrates = [];
+  const remainingBitrates = [...new Set(bitrates.map(Number).filter((value) => Number.isFinite(value)))];
+
+  for (const bitrate of remainingBitrates) {
+    const missingIds = ids.filter((id) => !urls[id]);
+    if (!missingIds.length) break;
+    triedBitrates.push(bitrate);
+
+    try {
+      const fallbackPayload = await fetchLegacySongUrls(missingIds, bitrate);
+      const before = Object.keys(urls).length;
+      const response = mergeSongUrls(urls, fallbackPayload);
+      resolution.responses.push({
+        source: 'public',
+        bitrate,
+        ...response
+      });
+      resolution.public += Object.keys(urls).length - before;
+    } catch (error) {
+      resolution.responses.push({
+        source: 'public',
+        bitrate,
+        error: safeUpstreamError(error)
+      });
+      console.warn(`Netease public URL fallback failed at ${bitrate} bps:`, error.message || error);
+    }
+  }
+
+  return triedBitrates;
+}
+
 async function resolveSongUrls(ids, level) {
   const urls = {};
   const resolution = {
@@ -212,6 +244,25 @@ async function resolveSongUrls(ids, level) {
     public: 0,
     responses: []
   };
+  const publicBitrates = [...new Set([levelBitrate(level), 128000])];
+  const triedPublicBitrates = [];
+
+  // Anonymous NetEase URL resolution is currently much slower and less
+  // reliable than the public endpoint. Resolve one public batch first so the
+  // player can receive a playable partial playlist instead of waiting for a
+  // chain of 404 fallbacks that cannot improve the result for most public
+  // playlists. Authenticated requests still use the richer resolution chain.
+  if (!readSessionCookie()) {
+    triedPublicBitrates.push(...await resolvePublicSongUrls(
+      ids,
+      level,
+      urls,
+      resolution,
+      publicBitrates.slice(0, 1)
+    ));
+    if (Object.keys(urls).length) return { urls, resolution };
+  }
+
   const primaryPayload = await callNetease('song_url_v1', {
     id: ids.join(','),
     level,
@@ -297,29 +348,10 @@ async function resolveSongUrls(ids, level) {
 
   missingIds = ids.filter((id) => !urls[id]);
   if (missingIds.length) {
-    const bitrates = [...new Set([levelBitrate(level), 128000])];
-    for (const bitrate of bitrates) {
-      try {
-        const fallbackPayload = await fetchLegacySongUrls(missingIds, bitrate);
-        resolution.responses.push({
-          source: 'public',
-          bitrate,
-          ...mergeSongUrls(urls, fallbackPayload)
-        });
-        resolution.public += Object.keys(urls).length
-          - resolution.enhanced
-          - resolution.standard
-          - resolution.alternate
-          - resolution.account
-          - resolution.public;
-      } catch (error) {
-        resolution.responses.push({ source: 'public', bitrate, error: safeUpstreamError(error) });
-        console.warn(`Netease public URL fallback failed at ${bitrate} bps for ${missingIds.length} tracks:`, error.message || error);
-      }
-      missingIds = ids.filter((id) => !urls[id]);
-      if (!missingIds.length) break;
-    }
+    const remainingBitrates = publicBitrates.filter((bitrate) => !triedPublicBitrates.includes(bitrate));
+    await resolvePublicSongUrls(ids, level, urls, resolution, remainingBitrates);
   }
+
   return { urls, resolution };
 }
 
