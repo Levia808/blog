@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>文章编辑器 - Levia's blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="../fonts/Playfair_Display.css" rel="stylesheet">
+  <link href="../fonts/Space_Grotesk.css" rel="stylesheet">
+  <link href="../fonts/JetBrains_Mono.css" rel="stylesheet">
+  <link href="font-preview.css" rel="stylesheet">
+  <style>
+    html, body { margin: 0; min-height: 100%; font-family: system-ui, sans-serif; }
+    .cms-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; color: #18211d; background: #eef1ed; }
+    .cms-gate[hidden] { display: none; }
+    .cms-gate-card { max-width: 460px; padding: 28px; border: 1px solid #cbd5ce; background: #fff; }
+    .cms-gate-card a { color: inherit; }
+    .cms-gate-card ol { padding-left: 20px; font-size: 13px; line-height: 1.8; color: #33413a; }
+    .cms-gate-card code { background: #eef1ed; padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main class="cms-gate" id="cmsGate">
+    <div class="cms-gate-card">
+      <h1>文章编辑器</h1>
+      <p id="cmsGateMessage">正在验证管理员权限…</p>
+      <a id="cmsGateBack" href="../admin/" hidden>返回管理后台</a>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../js/supabase.js"></script>
+  <script src="font-preview.js"></script>
+  <script>
+    (async function () {
+      var message = document.getElementById('cmsGateMessage');
+      var back = document.getElementById('cmsGateBack');
+      try {
+        var allowed = await window.Admin.isAdmin();
+        if (!allowed) {
+          message.innerHTML = '此编辑器仅对管理员开放。请确认：<ol><li>已用 GitHub 账号登录本站（右上角头像）</li><li>该账号为 SUPERADMIN（个人主页可查看角色徽章）</li></ol>';
+          back.hidden = false;
+          return;
+        }
+        document.getElementById('cmsGate').hidden = true;
+        var cms = document.createElement('script');
+        cms.src = 'https://unpkg.com/@sveltia/cms/dist/sveltia-cms.js';
+        cms.onload = function () {
+          registerEditorComponents();
+          if (window.FontPreviewWidget && typeof window.FontPreviewWidget.register === 'function') {
+            window.FontPreviewWidget.register();
+          }
+        };
+        document.head.appendChild(cms);
+      } catch (error) {
+        message.textContent = '管理员权限验证失败，请返回后台重试。';
+        back.hidden = false;
+      }
+    })();
+
+    // 编辑器内嵌组件: 视频 / 音频 (Hugo shortcode, 支持编辑器内直接上传文件)
+    function registerEditorComponents() {
+      var CMS = window.CMS;
+      if (!CMS || typeof CMS.registerEditorComponent !== 'function') return;
+
+      CMS.registerEditorComponent({
+        id: 'video',
+        label: '视频',
+        icon: 'play_circle',
+        fields: [
+          { name: 'src', label: '视频文件', widget: 'file', required: true },
+          { name: 'poster', label: '封面图', widget: 'image', required: false },
+          { name: 'caption', label: '说明', required: false }
+        ],
+        pattern: /{{< video src="(?<src>.*?)"(?: poster="(?<poster>.*?)")?(?: caption="(?<caption>.*?)")? >}}/,
+        fromBlock: function (match) {
+          return { src: match.groups.src || '', poster: match.groups.poster || '', caption: match.groups.caption || '' };
+        },
+        toBlock: function (data) {
+          var out = '{{< video src="' + (data.src || '') + '"';
+          if (data.poster) out += ' poster="' + data.poster + '"';
+          if (data.caption) out += ' caption="' + data.caption + '"';
+          return out + ' >}}';
+        },
+        toPreview: function (data) {
+          return '<figure><video src="' + (data.src || '') + '" controls' +
+            (data.poster ? ' poster="' + data.poster + '"' : '') +
+            ' style="width:100%"></video>' +
+            (data.caption ? '<figcaption>' + data.caption + '</figcaption>' : '') + '</figure>';
+        }
+      });
+
+      CMS.registerEditorComponent({
+        id: 'audio',
+        label: '音频',
+        icon: 'music_note',
+        fields: [
+          { name: 'src', label: '音频文件', widget: 'file', required: true },
+          { name: 'caption', label: '说明', required: false }
+        ],
+        pattern: /{{< audio src="(?<src>.*?)"(?: caption="(?<caption>.*?)")? >}}/,
+        fromBlock: function (match) {
+          return { src: match.groups.src || '', caption: match.groups.caption || '' };
+        },
+        toBlock: function (data) {
+          var out = '{{< audio src="' + (data.src || '') + '"';
+          if (data.caption) out += ' caption="' + data.caption + '"';
+          return out + ' >}}';
+        },
+        toPreview: function (data) {
+          return '<figure><audio src="' + (data.src || '') + '" controls style="width:100%"></audio>' +
+            (data.caption ? '<figcaption>' + data.caption + '</figcaption>' : '') + '</figure>';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

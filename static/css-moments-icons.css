@@ -1,0 +1,36 @@
+/* Phosphor Icons Web 2.1.2 — MIT; local subset to keep actions available offline. */
+@font-face {
+  font-family: "Phosphor Moments";
+  src: url("/fonts/phosphor/regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Phosphor Moments Fill";
+  src: url("/fonts/phosphor/fill.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+.moment-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  font-family: "Phosphor Moments";
+  font-size: 1.2em;
+  font-style: normal;
+  font-weight: 400;
+  font-variant: normal;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.moment-icon.ph-heart::before { content: "\e2a8"; }
+.moment-icon.ph-chat-circle::before { content: "\e168"; }
+.moment-icon.ph-pencil-simple::before { content: "\e3b4"; }
+.moment-icon.ph-caret-down::before { content: "\e136"; }
+.moment-icon.ph-eye::before { content: "\e220"; }
+.moment-icon.ph-trash-simple::before { content: "\e4a8"; }
+.moment-icon.ph-fill.ph-heart { font-family: "Phosphor Moments Fill"; }

@@ -1,0 +1,19 @@
+name: brutalism
+license: MIT
+licenselink: https://github.com/Levia808/blog/blob/main/LICENSE
+description: 自然科技 · 凌厉冷淡 — 矿物单色 + 单点苔绿 · 变换驱动动效 · Hugo 独立主题
+homepage: https://github.com/Levia808/blog
+tags:
+  - blog
+  - minimal
+  - brutalist
+features:
+  - 终端欢迎页
+  - 3:2 封面卡片
+  - 文章 TOC 侧栏
+  - Fuse.js 站内搜索 (Ctrl+K)
+  - Supabase 登录/评论/个人中心/后台
+author:
+  name: Levia808
+  homepage: https://github.com/Levia808
+min_version: 0.120.0

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design · 动态评论树状回复 + 输入条自动收起</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8f4;
+    --surface: #ffffff;
+    --ink: #11130f;
+    --text: #252a22;
+    --muted: #687064;
+    --faint: #9aa196;
+    --line: rgba(17, 19, 15, 0.15);
+    --line-strong: rgba(17, 19, 15, 0.36);
+    --moss: #2f4a37;
+    --moss-veil: rgba(47, 74, 55, 0.08);
+    --danger: #a03d2e;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-display); -webkit-font-smoothing: antialiased; padding: 0 24px 120px; }
+  .mono { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; }
+  .doc { max-width: 640px; margin: 0 auto; }
+  .doc-head { padding: 60px 0 28px; border-bottom: 1px solid var(--line-strong); margin-bottom: 28px; }
+  .doc-head .tag { color: var(--moss); text-transform: uppercase; font-weight: 600; }
+  .doc-head h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 650; letter-spacing: -0.03em; color: var(--ink); margin: 10px 0 8px; line-height: 1; }
+  .doc-head p { font-size: 13px; color: var(--muted); line-height: 1.8; max-width: 56ch; }
+  .doc-section { margin: 40px 0; }
+  .doc-section h2 { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .doc-section .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.8; }
+  .note {
+    margin-top: 18px; padding: 12px 16px;
+    border: 1px dashed var(--line-strong); border-radius: 8px;
+    font-size: 12px; color: var(--muted); line-height: 1.9;
+  }
+  .note b { color: var(--moss); }
+
+  /* ══════════ 模拟动态卡片 ══════════ */
+  .moment {
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .m-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .m-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #b8c4b6, var(--moss));
+    color: #f7f8f4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; flex: none;
+  }
+  .m-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .m-time { font-family: var(--font-mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .m-body { font-size: 14px; line-height: 1.9; color: var(--text); margin-bottom: 14px; }
+
+  /* ══════════ 评论区（树状） ══════════ */
+  .moment-comments { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .moment-comment { display: flex; gap: 10px; }
+  .mc-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--moss-veil); color: var(--moss);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex: none;
+  }
+  .mc-avatar.alt { background: #e9e5da; color: #8a8068; }
+  .mc-body { flex: 1; min-width: 0; }
+  .mc-author { font-size: 12px; font-weight: 600; color: var(--moss); }
+  .mc-text { font-size: 13px; color: var(--text); line-height: 1.65; margin: 2px 0 4px; word-break: break-word; }
+  .mc-time { font-family: var(--font-mono); font-size: 9px; color: var(--faint); display: inline-block; margin-right: 10px; }
+  .mc-actions { display: inline-flex; gap: 12px; }
+  .mc-act {
+    background: none; border: none; padding: 0;
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--faint); cursor: pointer;
+    transition: color 0.2s;
+  }
+  .mc-act:hover { color: var(--moss); }
+  .mc-act.danger:hover { color: var(--danger); }
+
+  /* 回复子树: 嵌套容器, 每层缩进 + 左侧边线 */
+  .mc-replies {
+    margin-top: 10px;
+    margin-left: 22px;
+    padding-left: 12px;
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* 第 3 层起收紧缩进, 防深树过宽 */
+  }
+  .mc-replies .mc-replies .mc-replies { margin-left: 10px; padding-left: 10px; }
+
+  /* ══════════ 内联回复输入条（自动收起） ══════════ */
+  .mc-reply-bar-wrap { flex-basis: 100%; margin-top: 8px; }
+  .mc-reply-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    transform-origin: top;
+  }
+  .mc-reply-bar .rbar-input {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .mc-reply-bar .rbar-input::placeholder { color: var(--faint); }
+  .mc-reply-bar .rbar-input:focus { border-color: var(--moss); }
+  .mc-reply-bar .rbar-send {
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #f7f8f4;
+    background: var(--moss);
+    border: 1px solid var(--moss);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.2s;
+  }
+  .mc-reply-bar .rbar-send:hover { filter: brightness(1.12); }
+  .mc-reply-bar .rbar-cancel {
+    padding: 8px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--faint);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .mc-reply-bar .rbar-cancel:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* 展开 / 收起动画 */
+  .mc-reply-bar-wrap { transition: max-height 0.38s var(--ease-out), opacity 0.3s var(--ease-out); max-height: 60px; opacity: 1; }
+  .mc-reply-bar-wrap.closing { max-height: 0; opacity: 0; pointer-events: none; }
+
+  /* 新回复节点入场 */
+  .mc-new { animation: mcIn 0.4s var(--ease-out); }
+  @keyframes mcIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* 深度标注 (仅设计稿演示) */
+  .depth-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+
+  /* 操作引导条 */
+  .demo-hint {
+    margin-top: 16px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--moss);
+  }
+  .demo-hint .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--moss); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="doc-head">
+    <div class="mono tag">DESIGN · 动态评论区</div>
+    <h1>树状回复 · 输入条自动收起</h1>
+    <p>回复的回复以树状嵌套展示（每层缩进 + 左侧边线）；点击「回复」在目标评论下方展开内联输入条，发送 / 取消 / Esc / 点击他处后自动收起隐藏。</p>
+  </header>
+
+  <!-- ───────────────── 树状结构展示 ───────────────── -->
+  <section class="doc-section">
+    <h2>01 · 树状回复结构</h2>
+    <p class="sub">多层嵌套：回复的回复挂在父评论子树内，层级以缩进 + 边线表达，深度不限（第 3 层起收紧缩进）。</p>
+
+    <div class="moment">
+      <div class="m-head">
+        <div class="m-avatar">L</div>
+        <div>
+          <div class="m-name">Levia</div>
+          <div class="m-time">26/08/11 09:24</div>
+        </div>
+      </div>
+      <div class="m-body">这一版动态页要上树状回复，大家看下交互有没有问题 👇</div>
+
+      <div class="moment-comments">
+        <!-- L1 · 顶层评论 -->
+        <div class="moment-comment">
+          <div class="mc-avatar alt">A</div>
+          <div class="mc-body">
+            <span class="mc-author">阿白</span> <span class="mc-time">08:02</span>
+            <div class="mc-text">树状结构挺清楚的，回复一多也不会挤成一团。</div>
+            <div class="mc-actions">
+              <button class="mc-act" data-reply>回复</button>
+              <button class="mc-act is-liked">赞 3</button>
+            </div>
+            <!-- L2 · 阿白的回复 -->
+            <div class="mc-replies">
+              <div class="moment-comment">
+                <div class="mc-avatar">L</div>
+                <div class="mc-body">
+                  <span class="mc-author">Levia</span> <span class="mc-time">08:05</span>
+                  <div class="mc-text">对，重点是多层回复不再丢失，谁回复谁都一目了然。</div>
+                  <div class="mc-actions">
+                    <button class="mc-act" data-reply>回复</button>
+                    <button class="mc-act">赞 1</button>
+                  </div>
+                  <!-- L3 · Levia 的回复 的回复 -->
+                  <div class="mc-replies">
+                    <div class="moment-comment">
+                      <div class="mc-avatar alt">B</div>
+                      <div class="mc-body">
+                        <span class="mc-author">北辰 <span class="depth-tag">L3</span></span> <span class="mc-time">08:09</span>
+                        <div class="mc-text">缩进 + 边线确实够瑞士，深树也不乱。</div>
+                        <div class="mc-actions">
+                          <button class="mc-act" data-reply>回复</button>
+                        </div>
+                        <!-- L4 · 演示最深一层 -->
+                        <div class="mc-replies">
+                          <div class="moment-comment">
+                            <div class="mc-avatar">L</div>
+                            <div class="mc-body">
+                              <span class="mc-author">Levia <span class="depth-tag">L4</span></span> <span class="mc-time">08:12</span>
+                              <div class="mc-text">L3 起缩进收紧，屏幕宽度不够时也不会爆边。</div>
+                              <div class="mc-actions">
+                                <button class="mc-act" data-reply>回复</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- L2 · 阿白的另一个回复 -->
+              <div class="moment-comment">
+                <div class="mc-avatar alt">A</div>
+                <div class="mc-body">
+                  <span class="mc-author">阿白 <span class="depth-tag">L2</span></span> <span class="mc-time">08:10</span>
+                  <div class="mc-text">再补一句：输入条发完就收起这点很顺手。</div>
+                  <div class="mc-actions">
+                    <button class="mc-act" data-reply>回复</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- L1 · 顶层评论 2 -->
+        <div class="moment-comment">
+          <div class="mc-avatar alt">C</div>
+          <div class="mc-body">
+            <span class="mc-author">Chou <span class="depth-tag">L1</span></span> <span class="mc-time">08:20</span>
+            <div class="mc-text">回复后输入条自动收起，不会被一长串输入框挡住浏览。</div>
+            <div class="mc-actions">
+              <button class="mc-act" data-reply>回复</button>
+              <button class="mc-act">赞 2</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────── 交互演示 ───────────────── -->
+  <section class="doc-section">
+    <h2>02 · 回复输入条（展开 → 收起）</h2>
+    <p class="sub">点击任意「回复」在此处演示：目标评论下方展开内联输入条，其余输入条自动收起；发送成功后输入条折叠隐藏，新回复以动画挂入父评论子树。</p>
+
+    <div class="moment" id="demoMoment">
+      <div class="m-head">
+        <div class="m-avatar">L</div>
+        <div>
+          <div class="m-name">Levia</div>
+          <div class="m-time">26/08/11 10:02</div>
+        </div>
+      </div>
+      <div class="m-body">上面静态结构确认后，这块是可交互 demo：点「回复」试试 👇</div>
+      <div class="moment-comments" id="demoComments">
+        <div class="moment-comment">
+          <div class="mc-avatar alt">A</div>
+          <div class="mc-body">
+            <span class="mc-author">阿白</span> <span class="mc-time">10:03</span>
+            <div class="mc-text">我发一条，回复试试看我下面会不会冒出输入条？</div>
+            <div class="mc-actions"><button class="mc-act" data-reply>回复</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-hint"><span class="dot"></span>点击「回复」展开 → 输入内容点「回复」发送 → 输入条自动收起</div>
+    </div>
+
+    <div class="note">
+      <b>交互规则：</b>① 点击「回复」→ 在目标评论正下方展开内联输入条（聚焦 + 自动滚入视口），同时收起其他输入条；② 发送成功 → 输入条自动折叠隐藏（max-height + 透明度过渡），新回复节点淡入父评论子树；③ 取消按钮 / <b>Esc</b> / 点击评论区域以外任意处 → 收起隐藏；④ 底部常驻输入条仅用于发新评论（顶层），与回复条互不干扰。
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var commentsRoot = document.getElementById('demoComments');
+
+  /* 收起所有输入条 (except 除外) */
+  function closeAllBars(except) {
+    commentsRoot.querySelectorAll('.mc-reply-bar-wrap').forEach(function (wrap) {
+      if (wrap === except) return;
+      closeBar(wrap);
+    });
+  }
+  function closeBar(wrap) {
+    if (!wrap || wrap.dataset.closing) return;
+    wrap.dataset.closing = '1';
+    wrap.classList.add('closing');
+    setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 400);
+  }
+
+  /* 展开输入条: 插到目标评论的回复子树前 */
+  function openReplyBar(replyBtn) {
+    var comment = replyBtn.closest('.moment-comment');
+    if (!comment) return;
+    closeAllBars();
+    var existing = comment.querySelector(':scope > .mc-reply-bar-wrap');
+    if (existing) {
+      delete existing.dataset.closing;
+      existing.classList.remove('closing');
+      var inp = existing.querySelector('input');
+      if (inp) inp.focus();
+      return;
+    }
+    var author = comment.querySelector('.mc-author');
+    var authorName = author ? author.childNodes[0].nodeValue.trim() : '对方';
+    var wrap = document.createElement('div');
+    wrap.className = 'mc-reply-bar-wrap';
+    wrap.innerHTML =
+      '<div class="mc-reply-bar">' +
+        '<input type="text" class="rbar-input" maxlength="2000" placeholder="回复 @' + authorName + '…" autocomplete="off">' +
+        '<button type="button" class="rbar-send">回复</button>' +
+        '<button type="button" class="rbar-cancel" aria-label="取消">×</button>' +
+      '</div>';
+    /* 已有回复子树 → 插在其前; 否则追加到评论底部 */
+    var replies = comment.querySelector(':scope > .mc-body > .mc-replies');
+    var holder = replies || comment.querySelector('.mc-body');
+    if (replies) holder.parentNode.insertBefore(wrap, replies);
+    else holder.appendChild(wrap);
+    var input = wrap.querySelector('input');
+    if (input) {
+      input.focus();
+      try { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+  }
+
+  /* 发送: 输入条自动收起 + 新回复挂入父评论子树 */
+  function sendReply(wrap) {
+    var input = wrap.querySelector('input');
+    var text = input && input.value.trim();
+    if (!text) return;
+    var comment = wrap.closest('.moment-comment');
+    var authorName = (input.placeholder.match(/@(.+?)…/) || [])[1] || '对方';
+    var node = document.createElement('div');
+    node.className = 'moment-comment mc-new';
+    node.innerHTML =
+      '<div class="mc-avatar">我</div>' +
+      '<div class="mc-body">' +
+        '<span class="mc-author">我</span> <span class="mc-time">刚刚</span>' +
+        '<div class="mc-text">' + text.replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        }) + '</div>' +
+        '<div class="mc-actions"><button class="mc-act" data-reply>回复</button></div>' +
+      '</div>';
+    var body = comment.querySelector('.mc-body');
+    var replies = body.querySelector(':scope > .mc-replies');
+    if (!replies) {
+      replies = document.createElement('div');
+      replies.className = 'mc-replies';
+      body.appendChild(replies);
+    }
+    replies.appendChild(node);
+    closeBar(wrap); /* ← 发送成功即自动收起 */
+    var tag = node.querySelector('.mc-author');
+    if (tag) {
+      var depth = commentsRoot.querySelectorAll('.mc-replies').length;
+      tag.innerHTML = '我 <span class="depth-tag">L' + (depth + 1) + '</span>';
+    }
+  }
+
+  commentsRoot.addEventListener('click', function (e) {
+    var replyBtn = e.target.closest('[data-reply]');
+    if (replyBtn) { openReplyBar(replyBtn); return; }
+    var sendBtn = e.target.closest('.rbar-send');
+    if (sendBtn) { sendReply(sendBtn.closest('.mc-reply-bar-wrap')); return; }
+    var cancelBtn = e.target.closest('.rbar-cancel');
+    if (cancelBtn) { closeBar(cancelBtn.closest('.mc-reply-bar-wrap')); return; }
+  });
+
+  commentsRoot.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var wrap = e.target.closest('.mc-reply-bar-wrap');
+    if (wrap) closeBar(wrap);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.mc-reply-bar-wrap') || e.target.closest('[data-reply]')) return;
+    closeAllBars();
+  }, true);
+})();
+</script>
+</body>
+</html>

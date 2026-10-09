@@ -1,0 +1,9 @@
+project_id = "iyquixzprfwkglaqptxj"
+
+[functions.threads-login]
+# This function validates an active superadmin access token in its handler.
+verify_jwt = false
+
+[functions.threads-fetch]
+# This function validates an active superadmin access token in its handler.
+verify_jwt = false

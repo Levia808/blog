@@ -1,0 +1,20 @@
+{
+  "name": "blog-music-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Music playlist metadata import and free source matching system",
+  "type": "module",
+  "scripts": {
+    "import": "node src/import.js",
+    "sync": "node src/sync.js",
+    "validate": "node src/validate.js",
+    "report": "node src/report.js",
+    "check": "node --check src/*.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

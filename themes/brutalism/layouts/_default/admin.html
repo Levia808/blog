@@ -1,0 +1,358 @@
+{{- define "body-class" }}admin-only{{ end }}
+{{- define "main" }}
+<div class="admin-wrap">
+  <div class="admin-mobile-bar" id="adminMobileBar">
+    <span class="an-logo-sm">{{ site.Title }}<span class="an-role" id="adminRoleSm">—</span></span>
+    <button type="button" class="admin-burger" id="adminDrawerToggle" aria-label="打开菜单" aria-expanded="false">
+      <svg viewBox="0 0 256 256" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg>
+    </button>
+  </div>
+  <div class="drawer-mask" id="adminDrawerMask" hidden aria-hidden="true"></div>
+  <aside class="drawer admin-drawer" id="adminDrawer" role="dialog" aria-modal="true" aria-label="后台导航" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="drawer-logo">{{ site.Title }}</span>
+      <button type="button" class="drawer-close" id="adminDrawerClose" aria-label="关闭菜单">
+        <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
+      </button>
+    </div>
+    <nav class="drawer-menu">
+      <a href="#" class="active" data-admin-section="dashboard"><span class="dm-idx">01</span>仪表盘<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="posts"><span class="dm-idx">02</span>文章管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="archive"><span class="dm-idx">03</span>内容归档<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="comments"><span class="dm-idx">04</span>评论审核<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="users"><span class="dm-idx">05</span>用户管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="settings"><span class="dm-idx">07</span>系统设置<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="platform"><span class="dm-idx">08</span>平台管理<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="player"><span class="dm-idx">09</span>播放器配置<span class="dm-arr">››</span></a>
+    </nav>
+    <div class="drawer-user">
+      <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
+      <button type="button" id="adminDrawerLogout"><span class="dm-idx">×</span>退出登录</button>
+    </div>
+    <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
+  </aside>
+  <div class="admin-shell" id="adminPage">
+    <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="state-tag">[ 加载中 ]</span><p>正在加载管理面板…</p></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
+    <div id="adminContent" hidden>
+      <aside class="admin-nav">
+        <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
+        <nav class="an-menu" aria-label="后台导航">
+          <a href="#" class="an-item active" data-admin-section="dashboard"><span class="an-dot"></span>仪表盘</a>
+          <a href="#" class="an-item" data-admin-section="posts"><span class="an-dot"></span>文章管理</a>
+          <a href="#" class="an-item" data-admin-section="archive"><span class="an-dot"></span>内容归档</a>
+          <a href="#" class="an-item" data-admin-section="comments"><span class="an-dot"></span>评论审核</a>
+          <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>用户管理</a>
+          <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
+          <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>系统设置</a>
+          <a href="#" class="an-item" data-admin-section="platform"><span class="an-dot"></span>平台管理</a>
+          <a href="#" class="an-item" data-admin-section="player"><span class="an-dot"></span>播放器配置</a>
+        </nav>
+        <div class="an-user">
+          <img src="{{ "favicon.svg" | relURL }}" alt="" id="adminUserAvatar">
+          <div><div class="au-name" id="adminUserName">—</div><div class="au-email" id="adminUserEmail">—</div></div>
+          <button type="button" class="au-out" id="adminLogoutBtn" title="退出登录">↗</button>
+        </div>
+      </aside>
+
+      <div class="an-content">
+        <section class="admin-panel" data-admin-panel="dashboard">
+          <div class="an-head">
+            <div><p class="an-head-sub" id="adminIdentity">控制台</p><h3>仪表盘</h3></div>
+            <div class="an-actions">
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary" id="cmsNewPost">+ 新建文章</a>
+              <button type="button" class="btn" id="adminRefreshBtn" data-admin-refresh="stats">刷新状态</button>
+            </div>
+          </div>
+          <div class="dashboard-status-row"><span class="admin-status" id="dashboardGhStatus"><span class="status-dot status-draft"></span>GitHub: 未授权</span><span class="hint" id="dashboardSyncHint"></span></div>
+          <div class="stat-grid">
+            <div class="stat"><span class="st-label">文章数</span><span class="st-value" id="adminPostCount">—</span></div>
+            <div class="stat"><span class="st-label">首页卡片</span><span class="st-value" id="adminHomeCardCount">—</span></div>
+            <div class="stat"><span class="st-label">评论数</span><span class="st-value" id="adminCommentCount">—</span></div>
+            <div class="stat"><span class="st-label">用户数</span><span class="st-value" id="adminUserCount">—</span></div>
+            <div class="stat"><span class="st-label">待审核</span><span class="st-value" id="adminPendingCommentCount">—</span></div>
+          </div>
+          <div>
+            <div class="panel-title">最近文章</div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
+            <div class="hint" id="adminPostHint"></div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="posts" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">内容管理</p><h3>文章管理</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="ghAuthBtn">GitHub 授权</button>
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary">+ 新建文章</a>
+            </div>
+          </div>
+          <div class="note" id="ghPublishNote">发布 = 将仓库文章的「草稿」状态改为「已发布」并提交，站点自动重建上线。首次使用请先授权 GitHub。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPublishTable"></tbody></table></div>
+          <div class="hint" id="adminPublishHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="archive" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">内容归档</p><h3>已归档文章</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="archive">刷新</button></div>
+          </div>
+          <div class="note" id="ghArchiveNote">归档的文章会从首页与列表隐藏，仍可通过原链接访问并显示归档标记。在「文章管理」中可对任意文章执行归档，或在此取消归档。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminArchiveTable"></tbody></table></div>
+          <div class="hint" id="adminArchiveHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="comments" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">评论审核</p><h3>评论管理</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="comments">刷新</button></div>
+          </div>
+          <div class="filter-row"><label>状态筛选</label><select id="adminCommentFilter"><option value="">全部</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已拒绝</option><option value="hidden">已隐藏</option></select></div>
+          <p class="auth-error" id="adminCommentError" role="alert" aria-live="assertive" hidden></p>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminCommentTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="users" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">账号管理</p><h3>用户管理</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" data-admin-refresh="users">刷新</button>
+              <button type="button" class="btn is-primary" id="adminAddUserBtn" hidden>＋ 新增账号</button>
+            </div>
+          </div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="adminUserTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="media" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">文件资产</p><h3>媒体库</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="media">刷新</button></div>
+          </div>
+          <div class="upload-row"><input type="file" id="adminMediaInput" accept="image/*,video/*,audio/*,font/*,.ttf,.otf,.woff,.woff2,.eot"><button type="button" class="btn btn-primary" id="adminMediaUpload">上传媒体</button></div>
+          <div class="upload-progress" id="adminUploadProgress" hidden>
+            <div class="upload-progress-track"><div class="upload-progress-fill" id="adminUploadProgressFill"></div></div>
+            <span class="upload-progress-text" id="adminUploadProgressText">0%</span>
+          </div>
+          <p class="auth-error" id="adminMediaError" hidden></p>
+          <div class="media-grid" id="adminMediaGrid"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="settings" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">系统配置</p><h3>设置</h3></div>
+          </div>
+          <div class="font-preview-panel">
+            <h4 class="fp-title">标题字体预览</h4>
+            <p class="fp-desc">文章编辑器「全屏标题字体」中的选项对应效果（设备字体渲染）</p>
+            <div class="font-preview-list" id="fontPreviewList"></div>
+          </div>
+          <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></div>
+
+          <div class="panel-title">导航栏行为</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>全局导航栏</span>
+              <select id="cfgNavBehavior">
+                <option value="auto">动态收起（下滚隐藏，上滚展开）</option>
+                <option value="fixed">常驻显示</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgNavSaveBtn">保存导航设置</button>
+              <button type="button" class="btn" id="cfgNavReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgNavError" hidden></p>
+          </div>
+
+          <div class="panel-title">欢迎页配置（打字机 + 动效参数）</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>打字机文本</span><textarea id="cfgTypewriterText" rows="2" placeholder="写代码，也写生活。记录学习与思考。"></textarea></label>
+            <label class="sf-field"><span>打字速度 (ms/字)</span><input type="number" id="cfgTypeSpeed" min="20" max="400"></label>
+            <label class="sf-field"><span>删除速度 (ms/字)</span><input type="number" id="cfgDeleteSpeed" min="10" max="300"></label>
+            <label class="sf-field"><span>停顿时长 (ms)</span><input type="number" id="cfgPause" min="200" max="10000" step="100"></label>
+            <label class="sf-field"><span>字重范围 (from)</span><input type="text" id="cfgVariationFrom" placeholder="'wght' 400"></label>
+            <label class="sf-field"><span>字重范围 (to)</span><input type="text" id="cfgVariationTo" placeholder="'wght' 900"></label>
+            <label class="sf-field"><span>指针半径</span><input type="number" id="cfgRadius" min="40" max="400"></label>
+            <label class="sf-field"><span>衰减方式</span><select id="cfgFalloff"><option value="linear">linear</option><option value="exponential">exponential</option><option value="gaussian">gaussian</option></select></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgSaveBtn">保存配置</button>
+              <button type="button" class="btn" id="cfgReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgError" hidden></p>
+          </div>
+
+          <div class="panel-title">文章卡片样式</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>卡片布局</span>
+              <select id="cfgCardStyle">
+                <option value="grid">当前样式（3:2 封面网格）</option>
+                <option value="horizontal">横向长条卡片（封面在左）</option>
+                <option value="fullscreen">全屏杂志封面入口</option>
+                <option value="feature">精选横幅（2:1 标题封面）</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgCardSaveBtn">保存卡片样式</button>
+              <span class="hint" id="cfgCardHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgCardError" hidden></p>
+          </div>
+
+          <div class="panel-title">Threads 串文转发</div>
+          <div class="note">已迁移至「<strong>平台管理</strong>」侧栏页：自动登录 / Cookie 管理 / 串文爬取统一在那里操作。</div>
+
+          <div class="panel-title">样式预览</div>
+          <div class="card-preview">
+            <div class="cp-col" data-cp="grid">
+              <div class="cp-label">[ 当前样式 · 网格 ]</div>
+              <div class="cp-grid" id="cpGridPreview"></div>
+            </div>
+            <div class="cp-col" data-cp="horizontal">
+              <div class="cp-label">[ 横向长条 ]</div>
+              <div class="cp-hlist" id="cpHListPreview"></div>
+            </div>
+            <div class="cp-col cp-col-full" data-cp="fullscreen">
+              <div class="cp-label">[ 全屏杂志封面 ]</div>
+              <div class="cp-fullscreen" id="cpFsPreview">
+                <div class="cp-fs">
+                  <div class="cp-fs-inner">
+                    <div class="cp-fs-date">2026 · 08 · 06 · 6 min</div>
+                    <div class="cp-fs-title">构建现代化个人博客</div>
+                    <div class="cp-fs-quote">从 Hugo 到双线部署的完整实践。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cp-col cp-col-full" data-cp="feature">
+              <div class="cp-label">[ 精选横幅 · 2:1 ]</div>
+              <div class="cp-feature" id="cpFeaturePreview">
+                <div class="cp-feature-inner">
+                  <div class="cp-fs-date">2026 · 08 · 06 · 6 min</div>
+                  <div class="cp-fs-title">构建现代化个人博客</div>
+                  <div class="cp-fs-quote">更适合列表中强调重点文章的横向封面。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="platform" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">Threads 自动转发链</p><h3>平台管理</h3></div>
+            <div class="an-actions">
+              <span class="hint" id="pltStatus" style="margin:0;align-self:center;"></span>
+              <button type="button" class="btn" data-admin-refresh="platform">刷新状态</button>
+            </div>
+          </div>
+          <div class="note">自动链路：<strong>浏览器登录</strong> 或 <strong>账号密码登录</strong> → 获取登录态 Cookie → 用 Cookie <strong>爬取串文</strong>生成静态资源。Cookie 仅保存在你本机浏览器（localStorage）。</div>
+
+          <div class="panel-title">浏览器登录（推荐 · 免输密码）</div>
+          <div class="settings-form">
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsBrowserLogin">打开浏览器登录</button>
+              <button type="button" class="btn" id="cfgThreadsBrowserCancel" hidden>取消等待</button>
+              <span class="hint" id="cfgThreadsBrowserHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsBrowserError" hidden></p>
+            <div class="note">点击按钮 → 在弹出的真实 Chrome 窗口中登录 Threads（支持验证码 / 双因素）→ 登录成功后 Cookie 自动读取并保存。首次使用需先运行一键启动器：<span class="mono">threads-repost/bridge/chrome-debug.sh</span>（Windows 用 <span class="mono">chrome-debug.bat</span>），它会启动调试 Chrome 与本机 Cookie 桥（端口 9222 / 8788，仅本机可访问）。</div>
+          </div>
+
+          <div class="panel-title">自动登录（账号密码）</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>Threads / Instagram 账号</span><input type="text" id="cfgThreadsUser" placeholder="用户名或邮箱" autocomplete="username"></label>
+            <label class="sf-field"><span>密码</span><input type="password" id="cfgThreadsPass" placeholder="密码" autocomplete="current-password"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsLogin">自动登录</button>
+              <span class="hint" id="cfgThreadsLoginHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsLoginError" hidden></p>
+          </div>
+
+          <div class="panel-title">登录态 Cookie</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Cookie（自动登录后自动填充；手动登录时可从浏览器复制 <span class="mono">sessionid=…; ds_user_id=…</span>）</span><input type="password" id="cfgThreadsCookie" placeholder="sessionid=…; ds_user_id=…" autocomplete="off"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsSave">保存 Cookie</button>
+              <button type="button" class="btn" id="cfgThreadsTest">测试连接</button>
+              <button type="button" class="btn" id="cfgThreadsClear">清除</button>
+            </div>
+            <p class="auth-error" id="cfgThreadsError" hidden></p>
+          </div>
+
+          <div class="panel-title">爬取串文</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Threads 链接</span><input type="text" id="cfgThreadsUrl" placeholder="https://www.threads.net/@user/post/xxx 或 https://www.threads.com/@user/post/xxx"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsFetch">爬取并生成资源</button>
+              <span class="hint" id="cfgThreadsHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsFetchError" hidden></p>
+            <div class="note">爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，文章中的串文链接会自动渲染成转发卡片。</div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="player" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">FLOAT PLAYER</p><h3>播放器配置</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="playerCfgReloadBtn">重新加载</button>
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn">保存配置</button>
+            </div>
+          </div>
+
+          <div class="note"><strong>数据源</strong>：前台只请求你自己的代理服务，例如 <span class="mono">http://127.0.0.1:4188/api/netease/playlist</span>。线上部署时把代理地址改成你的正式 API。</div>
+
+          <div class="panel-title">网易云自动化</div>
+          <div class="settings-form">
+            <div class="sf-field sf-wide">
+              <span>登录与解析</span>
+              <div class="sf-actions">
+                <button type="button" class="btn" id="playerProxyStatusBtn">检查代理</button>
+                <button type="button" class="btn btn-primary" id="playerQrLoginBtn">扫码登录</button>
+                <button type="button" class="btn" id="playerPlaylistTestBtn">测试歌单</button>
+                <button type="button" class="btn" id="playerLogoutBtn">退出网易云</button>
+              </div>
+            </div>
+            <div class="note sf-wide" id="playerProxyStatus">尚未检查代理状态。</div>
+            <div class="sf-field sf-wide" id="playerLoginQr" hidden></div>
+          </div>
+
+          <div class="panel-title">播放源</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>启用播放器</span><select id="playerEnabled"><option value="true">启用</option><option value="false">关闭</option></select></label>
+            <label class="sf-field"><span>自动加载歌单</span><select id="playerAutoLoad"><option value="false">手动</option><option value="true">自动</option></select></label>
+            <label class="sf-field"><span>网易云歌单 ID</span><input type="text" id="playerPlaylistId" placeholder="3778678"></label>
+            <label class="sf-field sf-wide"><span>代理地址</span><input type="url" id="playerProxyBase" placeholder="http://127.0.0.1:4188"></label>
+            <label class="sf-field"><span>加载数量</span><input type="number" id="playerLimit" min="1" max="200"></label>
+            <label class="sf-field"><span>音质等级</span><select id="playerLevel"><option value="standard">standard</option><option value="higher">higher</option><option value="exhigh">exhigh</option><option value="lossless">lossless</option><option value="hires">hires</option></select></label>
+          </div>
+
+          <div class="panel-title">弧形交互</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>吸附侧</span><select id="playerSide"><option value="left">左侧</option><option value="right">右侧</option></select></label>
+            <label class="sf-field"><span>字号 rem</span><input type="number" id="playerFontSize" min="1.6" max="5" step="0.1"></label>
+            <label class="sf-field"><span>行距倍率</span><input type="number" id="playerSpacing" min="0.8" max="2.4" step="0.05"></label>
+            <label class="sf-field"><span>倾斜角度</span><input type="number" id="playerTilt" min="0" max="18" step="0.5"></label>
+            <label class="sf-field"><span>弧度强度</span><input type="number" id="playerCurve" min="0" max="2.5" step="0.05"></label>
+            <label class="sf-field"><span>淡出强度</span><input type="number" id="playerFade" min="0" max="0.8" step="0.01"></label>
+            <label class="sf-field"><span>最小透明度</span><input type="number" id="playerMinOpacity" min="0" max="0.5" step="0.01"></label>
+            <label class="sf-field"><span>模糊强度</span><input type="number" id="playerBlur" min="0" max="8" step="0.1"></label>
+            <label class="sf-field"><span>缓动时间</span><input type="number" id="playerSmoothing" min="60" max="600" step="10"></label>
+            <label class="sf-field"><span>文字内缩</span><input type="number" id="playerInset" min="24" max="180" step="1"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn2">保存播放器配置</button>
+              <span class="hint" id="playerCfgHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="playerCfgError" hidden></p>
+          </div>
+        </section>
+
+        <div class="auth-error" id="adminError" hidden></div>
+      </div>
+    </div>
+  </div>
+  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+</div>
+{{- end }}

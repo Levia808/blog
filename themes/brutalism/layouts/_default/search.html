@@ -1,0 +1,27 @@
+{{- define "main" }}
+<section class="container search-page">
+  <header class="search-head" data-reveal>
+    <span class="label">SEARCH</span>
+    <h1 class="search-title">搜索</h1>
+    <span class="mono search-count">INDEX — <b id="searchCountPage">0</b></span>
+  </header>
+  <div class="search-rule"></div>
+
+  <div class="search-stage">
+    <div class="search-cmd" id="searchCmdPage">
+      <span class="search-dollar">$</span>
+      <input id="searchInputPage" type="text" placeholder="输入关键词开始检索" autocomplete="off" aria-label="搜索内容" data-index="{{ "index.json" | relURL }}">
+      <button type="button" class="search-clear" id="searchClearPage" aria-label="清除">×</button>
+    </div>
+    <div class="search-hint">
+      <span><kbd>⌘K</kbd> 打开</span>
+      <span><kbd>esc</kbd> 清空</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+      <span><kbd>enter</kbd> 跳转</span>
+    </div>
+
+    <div class="search-results" id="searchResultsPage" aria-live="polite"></div>
+    <div class="search-status" id="searchStatusPage" hidden></div>
+  </div>
+</section>
+{{- end }}

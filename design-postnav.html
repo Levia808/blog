@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文章页 上一条/下一条 按钮设计稿</title>
+<style>
+  :root {
+    --bg:#0C0C0B; --surface:#161615; --border:#2C2C2A;
+    --fg:#E8E8E3; --muted:#7A7A75; --faint:#3E3E3C;
+    --accent:#6B8B6B; --white:#F2F2ED;
+    --font-sans:"Inter","Noto Sans SC",system-ui,sans-serif;
+    --font-display:"Space Grotesk","Inter","Noto Sans SC",sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);line-height:1.75;-webkit-font-smoothing:antialiased}
+  .container{max-width:1060px;margin:0 auto;padding:0 28px}
+  h1{font-size:clamp(24px,4.5vw,42px);font-weight:500;letter-spacing:-1.2px;font-family:var(--font-display)}
+  h2{font-size:19px;font-weight:500;color:var(--white);font-family:var(--font-display)}
+  .label{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted)}
+  .mono{font-family:var(--font-mono);font-size:11px}
+  .header{padding:56px 0 36px;text-align:center;border-bottom:1px solid var(--border)}
+  .header .sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);margin-bottom:14px;letter-spacing:3px}
+  .header p{color:var(--muted);max-width:560px;margin:12px auto 0;font-size:13px}
+  hr{border:none;border-top:1px solid var(--border)}
+  section{padding:52px 0}
+  .stage{border:1px solid var(--border);border-radius:2px;overflow:hidden;background:var(--surface);margin-top:14px}
+  .stage-bar{display:flex;align-items:center;gap:7px;padding:7px 14px;background:#101010;border-bottom:1px solid var(--border);font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:1px}
+  .stage-bar .dot{width:9px;height:9px;border-radius:50%;background:#555}
+  .stage-body{padding:32px;background:var(--bg)}
+
+  /* ── 当前样式 (参照) ── */
+  .pn-current{display:flex;flex-direction:column;gap:12px;max-width:680px;margin:0 auto}
+  .pn-row{display:flex;flex-direction:column;gap:4px;border:1px solid var(--border);border-radius:6px;padding:14px 20px;background:var(--surface)}
+  .pn-row .lab{font-size:9px;color:var(--faint);letter-spacing:2px;font-family:var(--font-mono)}
+  .pn-row a{font-size:14px;color:var(--fg);text-decoration:none}
+
+  /* ── 方案 A: 左右双卡 ── */
+  .pnA{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:680px;margin:0 auto}
+  .pnA a{display:flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:2px;padding:16px 18px;background:var(--surface);text-decoration:none;transition:transform var(--dur-fast),border-color var(--dur-slow)}
+  .pnA a:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .pnA .dir{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:2px}
+  .pnA .arrow{transition:transform var(--dur-fast)}
+  .pnA a:hover .arrow{transform:translateX(3px)}
+  .pnA .prev .arrow{transform:rotate(180deg)}
+  .pnA .prev:hover .arrow{transform:rotate(180deg) translateX(-3px)}
+  .pnA .title{font-size:13px;font-weight:500;color:var(--white);line-height:1.4}
+  .pnA .meta{font-family:var(--font-mono);font-size:9px;color:var(--faint)}
+
+  /* ── 方案 B: 上下大卡 ── */
+  .pnB{display:flex;flex-direction:column;gap:12px;max-width:680px;margin:0 auto}
+  .pnB a{display:flex;align-items:center;gap:16px;border:1px solid var(--border);border-radius:2px;padding:16px 18px;background:var(--surface);text-decoration:none;transition:transform var(--dur-fast),border-color var(--dur-slow)}
+  .pnB a:hover{transform:translateX(3px);border-color:var(--accent)}
+  .pnB .ic{width:40px;height:40px;flex-shrink:0;border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;transition:color var(--dur-slow),border-color var(--dur-slow)}
+  .pnB a:hover .ic{color:var(--accent);border-color:var(--accent)}
+  .pnB .b-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .pnB .dir{font-family:var(--font-mono);font-size:9px;color:var(--faint);letter-spacing:2px}
+  .pnB .title{font-size:14px;font-weight:500;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ── 方案 C: 单行导航 ── */
+  .pnC{display:flex;justify-content:space-between;gap:12px;max-width:680px;margin:0 auto}
+  .pnC a{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:2px;padding:12px 16px;background:var(--surface);text-decoration:none;font-family:var(--font-mono);font-size:12px;color:var(--muted);transition:transform var(--dur-fast),border-color var(--dur-slow),color var(--dur-slow)}
+  .pnC a:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--fg)}
+  .pnC .empty{visibility:hidden;border:1px solid var(--border);border-radius:2px;padding:12px 16px;font-family:var(--font-mono);font-size:12px;color:var(--faint)}
+
+  /* ── 方案 D: 双箭头大按钮 ── */
+  .pnD{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:680px;margin:0 auto}
+  .pnD a{display:flex;flex-direction:column;gap:8px;border:2px solid var(--border);border-radius:2px;padding:20px;background:var(--surface);text-decoration:none;position:relative;transition:transform var(--dur-fast),border-color var(--dur-slow)}
+  .pnD a:hover{transform:scale(1.02);border-color:var(--accent)}
+  .pnD .big{font-size:28px;color:var(--faint);line-height:1;transition:color var(--dur-slow),transform var(--dur-fast)}
+  .pnD a:hover .big{color:var(--accent);transform:translateX(4px)}
+  .pnD .prev .big{transform:rotate(180deg)}
+  .pnD .prev:hover .big{transform:rotate(180deg) translateX(-4px)}
+  .pnD .dir{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:2px}
+  .pnD .title{font-size:14px;font-weight:500;color:var(--white);line-height:1.4}
+  .pnD .tag{position:absolute;top:10px;right:12px;font-family:var(--font-mono);font-size:8px;color:var(--faint)}
+
+  .spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}
+  .spec-card{border:1px solid var(--border);border-radius:2px;padding:12px 14px;background:var(--surface);font-size:12px;color:var(--muted)}
+  .spec-card strong{display:block;color:var(--white);margin-bottom:4px;font-size:12px;font-family:var(--font-mono)}
+  .verdict{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .verdict span{border:1px solid var(--border);border-radius:99px;padding:3px 12px;font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+  .table{width:100%;border-collapse:collapse;font-size:12px;margin-top:16px}
+  .table th,.table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .table th{background:var(--surface);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<header class="header">
+  <div class="sub">[ POST NAV ] · 重制设计稿</div>
+  <h1>文章页 上一条/下一条 按钮</h1>
+  <p>四个方案 · 均在 680px 文章宽度下展示 · v7 设计语言（直角 · 苔绿 · 变换动效）</p>
+</header>
+
+<hr>
+
+<!-- 当前样式 -->
+<section>
+  <div class="label">· 当前样式（参照）</div>
+  <h2>现状：两条独立窄条，上下堆叠</h2>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>current — prev/next</span></div>
+    <div class="stage-body">
+      <div class="pn-current">
+        <nav class="pn-row"><span class="lab">PREV</span><a href="#">Rust 所有权模型</a></nav>
+        <nav class="pn-row"><span class="lab">NEXT</span><a href="#">Container Queries 指南</a></nav>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- 方案 A -->
+<section>
+  <div class="label">方案 A · 左右双卡</div>
+  <h2>上一篇 / 下一篇 并排双卡，箭头位移反馈</h2>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>plan A — dual cards</span></div>
+    <div class="stage-body">
+      <div class="pnA">
+        <a href="#" class="prev">
+          <span class="dir"><span class="arrow">→</span> 上一篇</span>
+          <span class="title">Rust 所有权模型</span>
+          <span class="meta">2025 · 06 · 15 · 6 min</span>
+        </a>
+        <a href="#">
+          <span class="dir">下一篇 <span class="arrow">→</span></span>
+          <span class="title">Container Queries 指南</span>
+          <span class="meta">2025 · 04 · 10 · 5 min</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>结构</strong>grid 两列 · 方向标记 + 标题 + mono 元信息</div>
+    <div class="spec-card"><strong>动效</strong>hover: translateY(-2px) + 边框苔绿 · 箭头 translateX(3px) 随方向</div>
+    <div class="spec-card"><strong>信息量</strong>含日期/阅读时长，浏览前可判断</div>
+  </div>
+  <div class="verdict"><span>推荐 ★★★★★</span><span>信息完整</span><span>移动端单列</span></div>
+</section>
+
+<hr>
+
+<!-- 方案 B -->
+<section>
+  <div class="label">方案 B · 上下大卡</div>
+  <h2>保留纵向堆叠，升级图标块 + 横向位移</h2>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>plan B — stacked cards</span></div>
+    <div class="stage-body">
+      <div class="pnB">
+        <a href="#">
+          <span class="ic">↑</span>
+          <span class="b-body"><span class="dir">PREV</span><span class="title">Rust 所有权模型</span></span>
+        </a>
+        <a href="#">
+          <span class="ic">↓</span>
+          <span class="b-body"><span class="dir">NEXT</span><span class="title">Container Queries 指南</span></span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>结构</strong>上下两行 · 40px 图标块 + 标签 + 标题</div>
+    <div class="spec-card"><strong>动效</strong>hover: translateX(3px) · 图标块边框/颜色转苔绿</div>
+    <div class="spec-card"><strong>信息量</strong>适中 · 图标块强化方向感</div>
+  </div>
+  <div class="verdict"><span>贴合现状</span><span>升级感强</span></div>
+</section>
+
+<hr>
+
+<!-- 方案 C -->
+<section>
+  <div class="label">方案 C · 单行导航</div>
+  <h2>上一篇/下一篇同行，左侧右布局</h2>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>plan C — single row</span></div>
+    <div class="stage-body">
+      <div class="pnC">
+        <a href="#">← 上一篇</a>
+        <span class="empty">→ 下一篇</span>
+      </div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>结构</strong>flex space-between · mono 胶囊按钮</div>
+    <div class="spec-card"><strong>动效</strong>hover: translateY(-2px) + 苔绿边框</div>
+    <div class="spec-card"><strong>信息量</strong>仅方向提示，无标题</div>
+  </div>
+  <div class="verdict"><span>最简洁</span><span>信息少</span></div>
+</section>
+
+<hr>
+
+<!-- 方案 D -->
+<section>
+  <div class="label">方案 D · 双箭头大按钮</div>
+  <h2>大箭头 + 粗边框，强调感最强</h2>
+  <div class="stage">
+    <div class="stage-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>plan D — arrow buttons</span></div>
+    <div class="stage-body">
+      <div class="pnD">
+        <a href="#" class="prev">
+          <span class="dir">上一篇</span>
+          <span class="big">→</span>
+          <span class="title">Rust 所有权模型</span>
+          <span class="tag">01 / 02</span>
+        </a>
+        <a href="#">
+          <span class="dir">下一篇</span>
+          <span class="big">→</span>
+          <span class="title">Container Queries 指南</span>
+          <span class="tag">03 / 04</span>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="spec">
+    <div class="spec-card"><strong>结构</strong>grid 两列 · 2px 粗边框 · 28px 大箭头</div>
+    <div class="spec-card"><strong>动效</strong>hover: scale(1.02) · 箭头苔绿 + 位移</div>
+    <div class="spec-card"><strong>信息量</strong>含序号标记 · 视觉冲击强</div>
+  </div>
+  <div class="verdict"><span>视觉最强</span><span>适合强调</span></div>
+</section>
+
+<hr>
+
+<!-- 对比表 -->
+<section>
+  <div class="label">· 对比总表</div>
+  <h2>方案对比</h2>
+  <table class="table">
+    <thead><tr><th>方案</th><th>布局</th><th>信息量</th><th>动效</th><th>推荐度</th></tr></thead>
+    <tbody>
+      <tr><td>A · 左右双卡</td><td>并排两卡</td><td>标题+日期+时长</td><td>上浮+箭头位移</td><td>★ 首选</td></tr>
+      <tr><td>B · 上下大卡</td><td>堆叠两行</td><td>标题+方向</td><td>横移+图标变色</td><td>★★★★</td></tr>
+      <tr><td>C · 单行导航</td><td>同行两端</td><td>仅方向</td><td>上浮</td><td>★★★</td></tr>
+      <tr><td>D · 双箭头大按钮</td><td>并排两卡</td><td>标题+序号</td><td>缩放+箭头位移</td><td>★★★★ 视觉强</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<footer style="border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:11px;color:var(--faint);font-family:var(--font-mono);">
+  design-postnav v1 · 2026-08-08 · LEVIA
+</footer>
+</div>
+</body>
+</html>

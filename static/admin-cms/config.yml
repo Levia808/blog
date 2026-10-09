@@ -1,0 +1,302 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+
+# 【发布流程】简单工作流: 保存 = 提交并推送到 main 分支，Cloudflare 自动重建站点。
+# 发布 = 在编辑页把「发布状态」开关取消勾选（draft: false）后保存。
+# 注意: 草稿状态（draft: true）的文章保存后不会出现在站点上。
+
+# 媒体使用说明:
+# - 图片: 正文中直接拖入媒体库图片即可（markdown ![](/images/...))
+# - 视频/音频: 先在媒体库上传 .mp4/.mp3 等文件，然后在正文中写入:
+#     {{< video src="/images/xxx.mp4" poster="/images/xxx.jpg" caption="视频标题" >}}
+#     {{< audio src="/media/xxx.mp3" caption="音频标题" >}}
+#   （markdown 渲染器已开启 unsafe，shortcode 会被 Hugo 渲染为播放器）
+
+backend:
+  name: github
+  repo: Levia808/blog
+  branch: main
+  base_url: https://sveltia-cms-auth.18013013170.workers.dev
+
+media_folder: assets/images
+public_folder: /images
+# 图片上传到 assets/images 后由主题 Hugo Pipes 自动压缩: 卡片封面 320px · 文章底图 2K
+
+locale: zh-cn
+site_url: https://blog-go3.pages.dev/
+display_url: https://blog-go3.pages.dev/
+logo_url: https://blog-go3.pages.dev/favicon.svg
+
+collections:
+  - label: 卡片样式
+    name: cardstyle
+    files:
+      - label: 卡片样式
+        name: cardstyle
+        file: data/cards.yaml
+        fields:
+          - label: 卡片样式
+            name: style
+            widget: select
+            required: true
+            default: fullscreen
+            options:
+              - { label: "全屏杂志封面（占满整页）", value: fullscreen }
+              - { label: "精选横幅（2:1 标题封面）", value: feature }
+              - { label: "网格", value: grid }
+              - { label: "横向长条", value: horizontal }
+            hint: "保存后自动部署，主站首页卡片样式立即更新"
+
+  - label: 站点设置
+    name: siteconfig
+    files:
+      - label: 站点设置
+        name: siteconfig
+        file: data/site.yaml
+        fields:
+          - { label: 作者, name: author, widget: string }
+          - { label: 导航 Logo 文字, name: navLogo, widget: string }
+          - label: 导航栏行为
+            name: navBehavior
+            widget: select
+            required: true
+            default: auto
+            options:
+              - { label: "动态收起（下滚隐藏，上滚展开）", value: auto }
+              - { label: "常驻显示", value: fixed }
+            hint: "控制全站收起态导航栏；首页开屏标题仍会先按设计稿变形为左侧 Logo"
+          - { label: 欢迎页头像 (圆形裁切显示), name: avatarUrl, widget: string, required: false,
+              hint: "图片 URL，建议正方形（如 GitHub 头像），欢迎页标题后圆形放大显示，与文本重合区域反相" }
+          - { label: 站点描述, name: description, widget: text }
+          - label: 关键词
+            name: keywords
+            widget: list
+            required: false
+          - label: 功能开关
+            name: toggles
+            widget: object
+            collapsed: true
+            fields:
+              - { label: 登录/个人中心, name: auth, widget: boolean, default: true }
+              - { label: 评论区, name: comments, widget: boolean, default: true }
+              - { label: 文章目录, name: ShowToc, widget: boolean, default: true }
+              - { label: 阅读时间, name: ShowReadingTime, widget: boolean, default: true }
+              - { label: 字数统计, name: ShowWordCount, widget: boolean, default: true }
+              - { label: 面包屑, name: ShowBreadCrumbs, widget: boolean, default: true }
+              - { label: 上一篇/下一篇, name: ShowPostNavLinks, widget: boolean, default: true }
+          - label: 社交图标
+            name: socialIcons
+            widget: list
+            required: false
+            collapsed: true
+            summary: "{{fields.name}}"
+            fields:
+              - { label: 平台, name: name, widget: string }
+              - { label: 链接, name: url, widget: string }
+
+  - label: 欢迎页配置
+    name: welcome
+    files:
+      - label: 欢迎页配置
+        name: welcome
+        file: data/welcome.yaml
+        fields:
+          - { label: 打字机文本, name: typewriterText, widget: text, default: "写代码，也写生活。" }
+          - { label: 打字速度(ms), name: typeSpeed, widget: number, default: 70 }
+          - { label: 删除速度(ms), name: deleteSpeed, widget: number, default: 38 }
+          - { label: 停顿(ms), name: pause, widget: number, default: 1800 }
+          - { label: 标题字重起始, name: titleVariationFrom, widget: string, default: "'wght' 400" }
+          - { label: 标题字重峰值, name: titleVariationTo, widget: string, default: "'wght' 900" }
+          - { label: 指针感应半径, name: proximityRadius, widget: number, default: 140 }
+          - { label: 字重衰减曲线, name: proximityFalloff, widget: select, default: linear, options: [linear, exponential, gaussian] }
+          - { label: 模糊形状尺寸, name: shapeSize, widget: number, value_type: float, default: 1.2 }
+          - { label: 圆角, name: roundness, widget: number, value_type: float, default: 0.4 }
+          - { label: 边框粗细, name: borderSize, widget: number, value_type: float, default: 0.05 }
+          - { label: 圆环大小, name: circleSize, widget: number, value_type: float, default: 0.55 }
+          - { label: 圆环边缘, name: circleEdge, widget: number, value_type: float, default: 0.35 }
+          - { label: 火花颜色, name: sparkColor, widget: color, default: "#6B8B6B" }
+          - { label: 火花大小, name: sparkSize, widget: number, default: 10 }
+          - { label: 火花半径, name: sparkRadius, widget: number, default: 15 }
+          - { label: 火花数量, name: sparkCount, widget: number, default: 8 }
+          - { label: 火花时长(ms), name: sparkDuration, widget: number, default: 400 }
+          - { label: 火花缓动, name: sparkEasing, widget: string, default: ease-out }
+          - { label: 火花额外缩放, name: sparkExtraScale, widget: number, value_type: float, default: 1.0 }
+
+  - name: posts
+    label: 文章
+    label_singular: 文章
+    folder: content/posts
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    editor:
+      preview: false
+    fields:
+      - label: 标题
+        name: title
+        widget: string
+        hint: "手动换行：标题中输入 | 或 <br> 即可在指定位置换行（最多显示 5 行）"
+      - label: 发布日期
+        name: date
+        widget: datetime
+        required: true
+        format: YYYY-MM-DDTHH:mm:ssZ
+      - label: 发布状态
+        name: draft
+        widget: boolean
+        default: true
+        hint: "勾选 = 草稿（保存后站点不显示）；取消勾选并保存 = 发布上线"
+      - label: 归档
+        name: archived
+        widget: boolean
+        default: false
+        required: false
+        hint: "勾选 = 归档（从首页/列表隐藏，保留原链接并显示归档标记）"
+      - label: 单篇卡片样式
+        name: card_style
+        widget: select
+        required: false
+        default: inherit
+        options:
+          - { label: 跟随全局卡片样式, value: inherit }
+          - { label: 网格卡片, value: grid }
+          - { label: 横向长条卡片, value: horizontal }
+          - { label: 全屏杂志封面, value: fullscreen }
+          - { label: 精选横幅（2:1 标题封面）, value: feature }
+        hint: "只控制当前文章在首页/列表中的卡片外观；选择「跟随全局」时使用后台的全站卡片布局"
+      - label: 标签
+        name: tags
+        widget: list
+        required: false
+      - label: 分类
+        name: categories
+        widget: list
+        required: false
+      - label: 摘要
+        name: description
+        widget: string
+        required: false
+      - label: 文章底图（页面顶部横幅，与卡片封面无关）
+        name: background
+        widget: image
+        choose_url: true
+        required: false
+      - label: 全屏标题字体
+        name: entry_title_font
+        widget: fontPreviewSelect
+        required: false
+        default: display
+        hint: "下拉选择后下方预览窗格即时显示字体渲染效果；适用于「全屏杂志封面」和「精选横幅」卡片"
+      - label: 自定义标题字体文件
+        name: entry_title_font_file
+        widget: file
+        required: false
+        hint: "选择「自定义字体」后上传字体文件（推荐 .woff2/.ttf）"
+      - label: 自定义字体名称
+        name: entry_title_font_name
+        widget: string
+        required: false
+        hint: "@font-face 字体名，随意命名（如 MyFont），仅自定义字体时生效"
+      - label: 全屏标题颜色
+        name: entry_title_color
+        widget: color
+        required: false
+        hint: "留空使用默认白色；适用于全屏和精选横幅标题"
+      - label: 全屏标题不透明度
+        name: entry_title_opacity
+        widget: number
+        required: false
+        default: 100
+        min: 0
+        max: 100
+        hint: "0-100，留空默认 100%"
+      - label: 标题字号
+        name: entry_title_size
+        widget: number
+        required: false
+        default: 100
+        min: 60
+        max: 180
+        step: 5
+        hint: "以默认字号为基准调整，100% 为默认，范围 60%-180%"
+      - label: 标题进场效果
+        name: entry_title_effect
+        widget: select
+        required: false
+        default: none
+        options:
+          - { label: 无效果, value: none }
+          - { label: BlurText 模糊逐词, value: blur }
+          - { label: ScrollReveal 滚动揭示, value: reveal }
+          - { label: ShinyText 光泽扫过, value: shiny }
+          - { label: Shuffle 字符洗牌, value: shuffle }
+        hint: "全屏文章卡片进入视口时播放，编辑器下方预览会同步更新"
+      - label: 不在封面显示标题
+        name: entry_hide_title
+        widget: boolean
+        default: false
+        required: false
+        hint: "勾选后全屏封面只显示引文/标签，隐藏标题"
+      - label: 标题悬停乱码转化
+        name: entry_scramble
+        widget: boolean
+        default: true
+        required: false
+        hint: "悬停标题时文本由乱码逐字还原为原标题（韩/日/西里尔乱码池）"
+      - label: 全屏入口标题位置
+        name: entry_align
+        widget: select
+        required: false
+        default: left-bottom
+        options:
+          - { label: 左下, value: left-bottom }
+          - { label: 左中, value: left-center }
+          - { label: 中下, value: center-bottom }
+          - { label: 正中, value: center-center }
+          - { label: 右下, value: right-bottom }
+        hint: "适用于「全屏杂志封面」和「精选横幅」卡片"
+      - label: 卡片封面（首页/列表卡片）
+        name: cover
+        widget: object
+        required: false
+        collapsed: true
+        fields:
+          - label: 封面图片
+            name: image
+            widget: image
+            choose_url: true
+            required: false
+          - label: 封面视频（全屏/精选横幅生效）
+            name: video
+            widget: file
+            choose_url: true
+            required: false
+            accept: ".mp4,.webm,.mov"
+            hint: "设置后全屏卡片会自动播放；精选横幅默认显示首帧，鼠标悬停或聚焦时播放；视频优先于封面图片"
+      - label: 正文
+        name: body
+        widget: markdown
+
+  - name: pages
+    label: 页面
+    label_singular: 页面
+    folder: content
+    create: true
+    filter:
+      field: layout
+      value: page
+    fields:
+      - label: 标题
+        name: title
+        widget: string
+        hint: "手动换行：标题中输入 | 或 <br> 即可在指定位置换行（最多显示 5 行）"
+      - label: 发布状态
+        name: draft
+        widget: boolean
+        default: true
+        hint: "勾选 = 草稿（保存后站点不显示）；取消勾选并保存 = 发布上线"
+      - label: 布局
+        name: layout
+        widget: hidden
+        default: page
+      - label: 正文
+        name: body
+        widget: markdown

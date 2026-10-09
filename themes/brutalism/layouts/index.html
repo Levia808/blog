@@ -1,0 +1,94 @@
+
+{{- define "title" }}{{ site.Title }}{{ end }}
+{{- define "body-class" }}home-page{{ end }}
+{{- define "main" }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
+{{- with site.Data.welcome }}
+<script>window.welcomeCfg = {{ . | jsonify | safeJS }};</script>
+{{- end }}
+{{- $posts := where (where site.RegularPages "Section" "posts") "Params.archived" "ne" true }}
+{{- $latest := first 6 $posts }}
+
+{{ partial "header.html" . }}
+
+<!-- 开屏加载 (白底 + LEVIA + 数字进度) -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-top">
+    <span class="loader-brand">LEVIA<span class="loader-dot">'s</span> BLOG</span>
+    <span class="loader-tag">记录 · 思考 · 分享</span>
+  </div>
+  <div class="loader-mid">
+    <div class="loader-count"><span id="loadNum">0</span><em>%</em></div>
+    <div class="loader-word">加载中…</div>
+  </div>
+  <div class="loader-bar"><i id="loadBar"></i></div>
+</div>
+
+<!-- 开屏欢迎 (瑞士风 hero, 亮色) -->
+<section class="hero-home" id="welcome" aria-label="欢迎">
+  <!-- 变形导航 -->
+  <nav class="hero-nav" id="heroNav" aria-label="主导航">
+    {{- range site.Menus.main }}
+    {{- if not (in (lower .URL) "login") }}
+    <a class="hn-link" href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{- end }}
+    {{- end }}
+  </nav>
+  <a class="ht-wrap" id="heroWrap" href="{{ "" | relLangURL }}" aria-label="{{ site.Title }}">
+    <h1 class="hero-title" id="heroTitle">LEVIA<span class="sub">’s blog</span></h1>
+  </a>
+  <div class="hero-lines" id="heroLines">
+    <i></i><i></i><i></i><i></i>
+    <i>
+      <span class="l-text">Preserving legacies, driving growth</span>
+      <a class="l-arrow" href="#latest-posts" aria-label="向下滚动">↓</a>
+    </i>
+  </div>
+</section>
+
+<section class="container blog-home">
+  <section class="blog-section" aria-labelledby="latest-posts">
+    <div class="blog-section__head" data-reveal>
+      <div class="label">LATEST</div>
+      <h2 id="latest-posts">最新文章</h2>
+      <a class="section-more" href="{{ "archives/" | relLangURL }}">全部 →</a>
+    </div>
+
+    <div class="{{ if eq site.Data.cards.style "horizontal" }}card-list{{ else if eq site.Data.cards.style "fullscreen" }}card-list card-list--fullscreen{{ else if eq site.Data.cards.style "feature" }}card-list card-list--feature{{ else }}grid-3{{ end }}">
+      {{- range $latest }}
+      {{ partial "post-card.html" . }}
+      {{- else }}
+      <div class="blog-empty" data-reveal>
+        <span class="mono">[ EMPTY ]</span>
+        <p>还没有发布文章，期待第一篇内容。</p>
+      </div>
+      {{- end }}
+    </div>
+  </section>
+
+  <section class="home-journey" aria-labelledby="explore-title" data-reveal>
+    <div class="home-journey__intro">
+      <div class="label">EXPLORE</div>
+      <h2 id="explore-title">从不同入口<br>认识这里</h2>
+      <p>文章沉淀想法，动态记录当下，感知保存那些难以归档的片段。</p>
+    </div>
+    <div class="home-journey__links">
+      <a class="journey-link" href="{{ "moments/" | relLangURL }}">
+        <span class="journey-link__index">01</span>
+        <span><strong>动态</strong><small>正在发生的记录与互动</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="journey-link" href="{{ "perception/" | relLangURL }}">
+        <span class="journey-link__index">02</span>
+        <span><strong>感知</strong><small>音乐、视觉与此刻的状态</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="journey-link" href="{{ "about/" | relLangURL }}">
+        <span class="journey-link__index">03</span>
+        <span><strong>关于</strong><small>了解作者与这个站点</small></span>
+        <span class="journey-link__arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </section>
+</section>
+{{- end }}

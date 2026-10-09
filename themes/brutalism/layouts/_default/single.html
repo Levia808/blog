@@ -1,0 +1,90 @@
+
+{{- define "main" }}
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}
+{{- $showToc := and (default $P.ShowToc .Params.ShowToc) .TableOfContents }}
+{{- $tocHTML := .TableOfContents }}
+{{- $bg := "" }}
+{{- $bgVideo := "" }}
+{{- with .Params.background }}
+{{- $bgRel := strings.TrimPrefix "/" (urls.Parse .).Path }}
+{{- $bgRes := resources.Get $bgRel }}
+{{- if $bgRes }}
+{{- if or (strings.HasSuffix $bgRel ".mp4") (strings.HasSuffix $bgRel ".webm") (strings.HasSuffix $bgRel ".mov") }}
+{{- $bgVideo = $bgRes.RelPermalink }}
+{{- else }}
+{{- $bg = $bgRes.Resize "2560x webp q70" }}
+{{- end }}
+{{- end }}
+{{- end }}
+<article class="container article-page" data-component="article-layout">
+  {{- with .Params.background }}
+  {{- if $bgVideo }}
+  <div class="article-bg article-bg--video">
+    <video class="article-bg-video" src="{{ $bgVideo }}" muted playsinline loop autoplay preload="metadata" aria-hidden="true"></video>
+    <div class="video-loading video-loading--bg" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>
+    <div class="article-bg-bar" aria-hidden="true"><div class="article-bg-bar-fill"></div></div>
+  </div>
+  {{- else }}
+  <div class="article-bg" role="img" aria-label="{{ $.Title }} 底图" style="background-image:url('{{ if $bg }}{{ $bg.RelPermalink }}{{ else }}{{ . | relURL }}{{ end }}')"></div>
+  {{- end }}
+  {{- end }}
+  <div class="article-layout">
+    <div class="article-main" data-reveal>
+      {{- if $P.ShowBreadCrumbs }}{{ partial "breadcrumbs.html" . }}{{ end }}
+      <header class="article-header">
+        {{- if .Params.archived }}
+        <div class="article-archived"><span class="status-dot status-draft"></span>此文章已归档，仅保留原文链接</div>
+        {{- end }}
+        <div class="mono article-meta">
+          {{- if $P.ShowReadingTime }}<span>{{ .ReadingTime }} min read</span>{{ end }}
+          {{- if $P.ShowWordCount }}<span>{{ .WordCount }} words</span>{{ end }}
+          {{- if .Date }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>{{ end }}
+        </div>
+      </header>
+      {{- if $showToc }}
+      <aside class="article-toc article-toc--inline" aria-label="目录">
+        <div class="toc-t">[ 目录 ]</div>
+        {{ $tocHTML }}
+      </aside>
+      {{- end }}
+      <div class="article-body">
+        {{ .Content }}
+      </div>
+      {{- with .Params.tags }}
+      <footer class="article-tags">
+        {{- range . }}
+        <a class="tag-pill" href="{{ "tags/" | relLangURL }}{{ . | urlize }}/">{{ . }}</a>
+        {{- end }}
+      </footer>
+      {{- end }}
+    </div>
+    {{- if $showToc }}
+    <aside class="article-toc article-toc--side" aria-label="目录">
+      <div class="toc-t">[ 目录 ]</div>
+      {{ $tocHTML }}
+    </aside>
+    {{- end }}
+  </div>
+
+  {{- if $P.ShowPostNavLinks }}
+  <nav class="post-nav" aria-label="上一条/下一条">
+    {{- with .PrevInSection }}
+    <a class="pn-card prev" href="{{ .RelPermalink }}">
+      <span class="pn-dir"><span class="pn-arrow" aria-hidden="true">←</span> 上一篇</span>
+      <span class="pn-title">{{ .Title }}</span>
+      <span class="pn-meta">{{ with .Date }}{{ .Format "2006 · 01 · 02" }} · {{ end }}{{ .ReadingTime }} min</span>
+    </a>
+    {{- end }}
+    {{- with .NextInSection }}
+    <a class="pn-card next" href="{{ .RelPermalink }}">
+      <span class="pn-dir">下一篇 <span class="pn-arrow" aria-hidden="true">→</span></span>
+      <span class="pn-title">{{ .Title }}</span>
+      <span class="pn-meta">{{ with .Date }}{{ .Format "2006 · 01 · 02" }} · {{ end }}{{ .ReadingTime }} min</span>
+    </a>
+    {{- end }}
+  </nav>
+  {{- end }}
+
+  {{ partial "comments.html" . }}
+</article>
+{{- end }}

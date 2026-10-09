@@ -1,0 +1,75 @@
+baseURL: https://blog-go3.pages.dev/
+locale: zh-cn
+title: "Levia's blog"
+theme: brutalism
+
+enableRobotsTXT: true
+hasCJKLanguage: true
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
+params:
+  env: production
+  author: Levia
+  navLogo: "Levia's blog"
+  description: 个人技术博客 — 记录学习、思考与技术分享。
+  keywords: [博客, 技术, 编程, 学习]
+
+  # 功能开关
+  auth: true              # Supabase 登录 / 个人中心 / 管理后台
+  comments: true          # Supabase 评论区
+  ShowToc: true
+  ShowReadingTime: true
+  ShowWordCount: true
+  ShowBreadCrumbs: true
+  ShowPostNavLinks: true
+
+  socialIcons:
+    - name: github
+      url: https://github.com/Levia808
+
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys:
+      - title
+      - content
+      - summary
+      - tags
+
+menu:
+  main:
+    - name: 动态
+      url: moments/
+      weight: 5
+    - name: 感知
+      url: perception/
+      weight: 6
+    - name: 音乐
+      url: music/
+      weight: 7
+    - name: 归档
+      url: archives/
+      weight: 10
+    - name: 搜索
+      url: search/
+      weight: 15
+    - name: 标签
+      url: tags/
+      weight: 20
+    - name: 关于
+      url: about/
+      weight: 30

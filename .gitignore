@@ -1,0 +1,16 @@
+public/
+resources/
+.hugo_build.lock
+float-player/netease-proxy/.netease-session.json
+music-api/node_modules/
+music-api/.netease-session.json
+
+# Music system
+.env
+.env.*
+!.env.example
+music-sync/node_modules/
+music-sync/.cache/
+music-sync/import/
+data/music/raw/
+data/music/.sync-state.json

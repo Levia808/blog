@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8f4">
+  <meta name="description" content="Levia's blog PWA 导航与动线交互设计稿">
+  <title>PWA 导航设计稿 · Levia's blog</title>
+  <!-- LiquidLens is an independent MIT-licensed community implementation, not an Apple web component. -->
+  <link rel="stylesheet" href="./static/vendor/liquidlens/tokens.css">
+  <link rel="stylesheet" href="./static/vendor/liquidlens/liquid-glass.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e9ece7;
+      --phone: #f7f8f4;
+      --surface: #fff;
+      --surface-soft: #f0f2ed;
+      --ink: #20251f;
+      --muted: #777e75;
+      --line: rgba(32, 37, 31, .1);
+      --accent: #405d47;
+      --accent-ink: #fff;
+      --accent-soft: #e6ece4;
+      --shadow: 0 28px 90px rgba(23, 31, 24, .18), 0 2px 8px rgba(23, 31, 24, .08);
+      --sheet-shadow: 0 -18px 56px rgba(17, 22, 18, .16);
+      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", sans-serif;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --canvas: #101210;
+      --phone: #101210;
+      --surface: #191c19;
+      --surface-soft: #202420;
+      --ink: #eeefe9;
+      --muted: #9a9f96;
+      --line: rgba(237, 239, 232, .11);
+      --accent: #a9c4a8;
+      --accent-ink: #192019;
+      --accent-soft: #283329;
+      --shadow: 0 28px 90px rgba(0, 0, 0, .5), 0 2px 8px rgba(0, 0, 0, .24);
+      --sheet-shadow: 0 -18px 56px rgba(0, 0, 0, .42);
+    }
+    /* Neutral frosted glass only: grayscale fill + blur, with no tint, shine, glow, or colored rim. */
+    :root {
+      --lg-fg: var(--ink);
+      --lg-blur: 18px;
+      --lg-sat: 1;
+      --lg-spec: 0;
+      --lg-tint-h: 0;
+      --lg-tint-s: 0%;
+      --lg-tint-l: 100%;
+      --lg-tint-a: 0;
+      --lg-shadow-inner: none;
+      --lg-shadow-drop: none;
+      --glass-fill: rgba(255, 255, 255, .48);
+      --glass-edge: rgba(0, 0, 0, .08);
+    }
+    :root[data-theme="dark"] {
+      --lg-fg: var(--ink);
+      --glass-fill: rgba(28, 28, 28, .62);
+      --glass-edge: rgba(255, 255, 255, .12);
+    }
+    .liquid-surface { --lg-radius: 24px; }
+    .liquid-surface.lg-glass {
+      background: var(--glass-fill) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(1) !important;
+      backdrop-filter: blur(18px) saturate(1) !important;
+      border: 1px solid var(--glass-edge);
+      box-shadow: none !important;
+    }
+    .liquid-surface.lg-glass::before,
+    .liquid-surface.lg-glass::after { display: none !important; }
+    @media (prefers-reduced-transparency: reduce) {
+      .liquid-surface { background: var(--phone) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: var(--shadow); }
+      .liquid-surface::before, .liquid-surface::after { display: none; }
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; min-height: 100%; background: var(--canvas); }
+    body { min-height: 100svh; margin: 0; color: var(--ink); background: var(--canvas); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    button, input { color: inherit; font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 72%, transparent); outline-offset: 3px; }
+    .presentation { min-height: 100svh; display: grid; grid-template-columns: minmax(320px, 390px) minmax(250px, 370px); align-content: center; justify-content: center; align-items: center; gap: clamp(40px, 8vw, 112px); padding: 48px 24px; }
+    .device { position: relative; width: 100%; height: min(844px, calc(100svh - 64px)); min-height: 620px; overflow: hidden; isolation: isolate; border: 1px solid var(--line); border-radius: 38px; background: var(--phone); box-shadow: var(--shadow); transition: background .2s ease, border-color .2s ease; }
+    .device-scroll { height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+    .device-scroll::-webkit-scrollbar { display: none; }
+    .statusbar { height: 42px; padding: 13px 25px 0; display: flex; align-items: center; justify-content: space-between; color: var(--ink); font-size: 12px; font-weight: 650; letter-spacing: .01em; }
+    .status-right { display: flex; align-items: center; gap: 5px; }
+    .signal { width: 15px; height: 11px; display: inline-block; background: currentColor; clip-path: polygon(0 100%, 0 78%, 20% 78%, 20% 57%, 40% 57%, 40% 36%, 60% 36%, 60% 17%, 80% 17%, 80% 0, 100% 0, 100% 100%); }
+    .battery { width: 18px; height: 9px; border: 1.3px solid currentColor; border-radius: 3px; position: relative; margin-left: 2px; }
+    .battery::before { content: ""; position: absolute; inset: 1.5px 3px 1.5px 1.5px; border-radius: 1px; background: currentColor; }
+    .battery::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 4px; border-radius: 0 2px 2px 0; background: currentColor; }
+    .app-header { position: sticky; top: 0; z-index: 3; display: flex; height: 57px; align-items: center; justify-content: space-between; padding: 0 21px; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 680; letter-spacing: -.035em; }
+    .brand-mark { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; color: var(--accent-ink); background: var(--accent); font-family: Georgia, serif; font-size: 14px; font-weight: 700; }
+    .header-action { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; cursor: pointer; color: var(--muted); }
+    .header-action:hover { background: var(--surface-soft); color: var(--ink); }
+    .header-action svg { width: 20px; height: 20px; }
+    #page { min-height: calc(100% - 99px); padding-bottom: calc(102px + env(safe-area-inset-bottom, 0px)); animation: page-in .22s ease both; }
+    @keyframes page-in { from { opacity: .78; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .page-content { padding: 26px 22px 20px; }
+    .eyebrow { margin: 0 0 11px; color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; }
+    .hero-title { max-width: 300px; margin: 0; font-size: clamp(28px, 7vw, 37px); font-weight: 620; letter-spacing: -.055em; line-height: 1.22; }
+    .hero-copy { max-width: 310px; margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.72; }
+    .section-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 31px 1px 12px; }
+    .section-heading h2 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.035em; }
+    .section-heading span { color: var(--muted); font-size: 12px; }
+    .feature-card { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
+    .feature-art { min-height: 174px; position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 16px; background: linear-gradient(135deg, #dfe7dc, #b7c4b4 54%, #81917e); color: #fff; isolation: isolate; }
+    [data-theme="dark"] .feature-art { background: linear-gradient(135deg, #29382c, #354938 54%, #566e57); color: #edf1e9; }
+    .feature-art::before { content: ""; position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgba(12,16,13,.04) 18%, rgba(12,16,13,.12) 42%, rgba(12,16,13,.74)); pointer-events: none; }
+    .feature-art::after { content: ""; position: absolute; z-index: 1; width: 170px; height: 170px; right: -35px; top: -83px; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; box-shadow: 0 0 0 18px rgba(255,255,255,.08), 0 0 0 38px rgba(255,255,255,.05); pointer-events: none; }
+    .feature-art .pcf-video, .feature-art .feature-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .feature-art--video { background: #1c1c1c; }
+    .feature-art.video-fallback { background-size: cover; background-position: center; }
+    .feature-art.video-fallback::before { background: linear-gradient(180deg, rgba(12,16,13,.08) 18%, rgba(12,16,13,.18) 42%, rgba(12,16,13,.76)); }
+    .archive-row { min-width: 0; }
+    .archive-thumb { position: relative; width: 64px; height: 54px; flex: 0 0 64px; overflow: hidden; border-radius: 10px; background: var(--surface-soft); }
+    .archive-cover-video, .archive-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .archive-video-badge { position: absolute; right: 4px; bottom: 4px; padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,.58); color: white; font-size: 7px; font-weight: 700; letter-spacing: .06em; }
+    .article-row .row-copy h3 { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .art-label { position: relative; z-index: 2; font-family: Georgia, "Songti SC", serif; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-shadow: 0 1px 10px rgba(0,0,0,.36); }
+    .video-loading { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.88); background: rgba(14,17,15,.1); opacity: 1; transition: opacity .2s ease, visibility .2s ease; pointer-events: none; }
+    .video-loading.is-hidden { opacity: 0; visibility: hidden; }
+    .video-spinner { width: 18px; height: 18px; border: 1.5px solid rgba(255,255,255,.32); border-top-color: #fff; border-radius: 50%; animation: video-spin .8s linear infinite; }
+    @keyframes video-spin { to { transform: rotate(360deg); } }
+    .pcf-video-bar { position: absolute; z-index: 3; right: 0; bottom: 0; left: 0; height: 2px; background: rgba(255,255,255,.24); }
+    .pcf-video-bar-fill { width: 0; height: 100%; background: #c5d9c3; transition: width .12s linear; }
+    .video-cover-note { margin-top: 7px; color: var(--muted); font-size: 10px; }
+    .card-copy { padding: 17px 17px 16px; }
+    .card-meta { color: var(--muted); font-size: 11px; }
+    .card-copy h3 { margin: 8px 0 7px; font-size: 19px; font-weight: 620; letter-spacing: -.045em; line-height: 1.4; }
+    .card-copy p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .row-card { display: flex; gap: 14px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .row-number { flex: 0 0 34px; color: var(--muted); font-family: Georgia, serif; font-size: 13px; }
+    .row-copy { min-width: 0; flex: 1; }
+    .row-copy h3 { margin: 0 0 5px; font-size: 15px; font-weight: 620; letter-spacing: -.025em; }
+    .row-copy p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .row-arrow { color: var(--muted); font-size: 17px; }
+    .moment { padding: 18px 0; border-bottom: 1px solid var(--line); }
+    .moment-top { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--accent-ink); background: var(--accent); font-family: Georgia, serif; font-size: 16px; }
+    .moment-author { font-size: 13px; font-weight: 650; }
+    .moment-time { margin-left: auto; color: var(--muted); font-size: 11px; }
+    .moment p { margin: 12px 0 0 44px; font-size: 14px; line-height: 1.72; }
+    .moment-tag { display: inline-flex; margin: 11px 0 0 44px; padding: 5px 9px; border-radius: 999px; color: var(--muted); background: var(--surface-soft); font-size: 11px; }
+    .search-box { display: flex; gap: 10px; align-items: center; margin-top: 23px; padding: 0 14px; height: 49px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); color: var(--muted); }
+    .search-box svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .search-box input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
+    .search-results { margin-top: 18px; }
+    .topic-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+    .topic-chip { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; }
+    .dock { position: absolute; z-index: 5; right: 15px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 15px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; min-height: 66px; padding: 6px; border: 1px solid color-mix(in srgb, var(--line) 72%, transparent); border-radius: 23px; }
+    .dock.liquid-surface { --lg-radius: 23px; }
+    .dock-button { min-width: 0; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 16px; background: transparent; color: var(--muted); cursor: pointer; transition: color .16s ease, background .16s ease, transform .16s ease; touch-action: manipulation; }
+    .dock-button:hover { color: var(--ink); background: var(--surface-soft); }
+    .dock-button:active { transform: scale(.96); }
+    .dock-button[aria-current="page"] { color: var(--ink); background: rgba(120, 120, 120, .14); }
+    .dock-button[aria-expanded="true"] { color: var(--ink); background: rgba(120, 120, 120, .12); }
+    [data-theme="dark"] .dock-button[aria-current="page"] { background: rgba(255, 255, 255, .13); }
+    [data-theme="dark"] .dock-button[aria-expanded="true"] { background: rgba(255, 255, 255, .1); }
+    .dock-button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+    .dock-button span { overflow: hidden; max-width: 100%; font-size: 10px; font-weight: 570; line-height: 1; white-space: nowrap; }
+    .flow-notes { width: min(100%, 370px); color: var(--ink); }
+    .flow-kicker { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .flow-kicker::before { width: 19px; height: 1px; background: currentColor; content: ""; }
+    .flow-notes h1 { margin: 0; font-size: clamp(32px, 5vw, 48px); font-weight: 610; letter-spacing: -.065em; line-height: 1.08; }
+    .flow-lead { margin: 17px 0 28px; color: var(--muted); font-size: 15px; line-height: 1.8; }
+    .flow-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+    .flow-list li { display: grid; grid-template-columns: 32px 1fr; gap: 13px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .flow-index { color: var(--accent); font-family: Georgia, serif; font-size: 13px; }
+    .flow-list strong { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 650; }
+    .flow-list span:last-child { color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .flow-footer { margin-top: 20px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    .flow-footer kbd { padding: 2px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); font: inherit; }
+    .scrim { position: absolute; z-index: 9; inset: 0; visibility: hidden; opacity: 0; background: rgba(0, 0, 0, .18); transition: opacity .2s ease, visibility .2s ease; }
+    .scrim.is-open { visibility: visible; opacity: 1; }
+    .sheet { position: absolute; z-index: 10; right: 0; bottom: 0; left: 0; max-height: min(80%, 690px); overflow: hidden; padding: 9px 20px calc(18px + env(safe-area-inset-bottom, 0px)); border: 1px solid color-mix(in srgb, var(--line) 72%, transparent); border-bottom: 0; border-radius: 27px 27px 0 0; transform: translateY(105%); visibility: hidden; transition: transform .27s cubic-bezier(.2, .78, .22, 1), visibility .27s; }
+    .sheet.liquid-surface { --lg-radius: 27px; box-shadow: none !important; }
+    .sheet.is-open { visibility: visible; transform: translateY(0); }
+    .sheet-handle { width: 35px; height: 4px; margin: 0 auto 16px; border-radius: 99px; background: color-mix(in srgb, var(--muted) 38%, transparent); }
+    .sheet-head { display: flex; align-items: center; min-height: 39px; gap: 11px; }
+    .sheet-back, .sheet-close { flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--surface-soft); color: var(--ink); cursor: pointer; }
+    .sheet-back { font-size: 22px; line-height: 1; }
+    .sheet-back[hidden] { display: none; }
+    .sheet-title-wrap { flex: 1; min-width: 0; }
+    .sheet-title { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.045em; }
+    .sheet-caption { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .sheet-close { font-size: 21px; }
+    .sheet-body { max-height: min(57svh, 480px); overflow-y: auto; overscroll-behavior: contain; padding: 18px 0 2px; scrollbar-width: none; }
+    .sheet-body::-webkit-scrollbar { display: none; }
+    .menu-group-label { margin: 0 0 7px 2px; color: var(--muted); font-size: 10px; font-weight: 670; letter-spacing: .11em; text-transform: uppercase; }
+    .menu-row { width: 100%; min-height: 61px; display: flex; align-items: center; gap: 13px; padding: 9px 3px; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; }
+    .menu-row:last-child { border-bottom: 0; }
+    .menu-symbol { width: 37px; height: 37px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 13px; background: var(--surface-soft); color: var(--ink); }
+    .menu-symbol svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .menu-copy { min-width: 0; flex: 1; }
+    .menu-copy strong { display: block; font-size: 14px; font-weight: 620; }
+    .menu-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .menu-chevron { color: var(--muted); font-size: 19px; }
+    .menu-row:active .menu-symbol { background: var(--accent-soft); color: var(--accent); }
+    .sheet-divider { height: 1px; margin: 17px 0; background: var(--line); }
+    .theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--surface-soft); }
+    .theme-option { min-height: 39px; border: 0; border-radius: 11px; background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
+    .theme-option[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .09); font-weight: 620; }
+    .install-row { width: 100%; min-height: 53px; display: flex; align-items: center; gap: 13px; margin-top: 14px; padding: 6px 2px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+    .toast { position: absolute; z-index: 20; left: 50%; bottom: calc(93px + env(safe-area-inset-bottom, 0px)); max-width: calc(100% - 34px); padding: 11px 16px; border-radius: 999px; background: var(--ink); color: var(--phone); font-size: 12px; text-align: center; opacity: 0; pointer-events: none; transform: translate(-50%, 9px); transition: opacity .18s ease, transform .18s ease; }
+    .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+    .prototype-stamp { display: none; }
+    .empty-state { padding: 22px 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    @media (max-width: 760px) {
+      html, body { min-height: 100%; background: var(--phone); }
+      .presentation { display: block; min-height: 100svh; padding: 0; }
+      .device { width: 100%; height: 100svh; min-height: 560px; border: 0; border-radius: 0; box-shadow: none; }
+      .flow-notes { display: none; }
+      .statusbar { padding-left: max(25px, env(safe-area-inset-left)); padding-right: max(25px, env(safe-area-inset-right)); }
+      .app-header { padding-left: max(21px, env(safe-area-inset-left)); padding-right: max(21px, env(safe-area-inset-right)); }
+      .dock { right: max(15px, env(safe-area-inset-right)); left: max(15px, env(safe-area-inset-left)); }
+    }
+    @media (max-width: 370px) {
+      .page-content { padding-right: 18px; padding-left: 18px; }
+      .dock { right: 10px; left: 10px; }
+      .dock-button span { font-size: 9px; }
+      .sheet { padding-right: 16px; padding-left: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="presentation" aria-label="PWA 导航交互设计原型">
+    <section class="device" aria-label="手机预览">
+      <div class="device-scroll" id="deviceScroll">
+        <div class="statusbar" aria-hidden="true"><span>9:41</span><span class="status-right"><span>5G</span><i class="signal"></i><i class="battery"></i></span></div>
+        <header class="app-header lg-glass liquid-surface" data-glass data-lg-refraction="0" data-lg-bezel="0" data-lg-blur="18" data-lg-saturation="1">
+          <div class="brand"><span class="brand-mark">L</span><span>Levia's blog</span></div>
+          <button class="header-action" id="headerSearch" type="button" aria-label="搜索文章">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+        <div class="prototype-stamp">PWA · 交互原型</div>
+        <div id="page" tabindex="-1" aria-live="polite"></div>
+      </div>
+      <nav class="dock lg-glass liquid-surface" data-glass data-lg-refraction="0" data-lg-bezel="0" data-lg-blur="18" data-lg-saturation="1" aria-label="主导航">
+        <button class="dock-button" type="button" data-route="home" aria-current="page" aria-label="首页">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 10 8.5-7 8.5 7v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3.5 19z"/><path d="M9 20.5v-7h6v7"/></svg><span>首页</span>
+        </button>
+        <button class="dock-button" type="button" data-route="articles" aria-label="文章">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l4 4v13H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M14.5 3.8v4h4M8 12h8M8 16h8"/></svg><span>文章</span>
+        </button>
+        <button class="dock-button" type="button" data-route="moments" aria-label="动态">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5 8 8 0 0 1-3.8-.9L4 20l1.8-4.2A7.5 7.5 0 1 1 20 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01" stroke-width="2.5"/></svg><span>动态</span>
+        </button>
+        <button class="dock-button" id="moreButton" type="button" aria-label="更多，打开菜单" aria-haspopup="dialog" aria-expanded="false" aria-controls="moreSheet">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="19" cy="12" r="1.1"/></svg><span>更多</span>
+        </button>
+      </nav>
+      <div class="scrim" id="scrim" aria-hidden="true"></div>
+      <section class="sheet lg-glass liquid-surface" data-glass data-lg-refraction="0" data-lg-bezel="0" data-lg-blur="18" data-lg-saturation="1" id="moreSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-describedby="sheetCaption" aria-hidden="true" inert>
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <button class="sheet-back" id="sheetBack" type="button" aria-label="返回更多菜单" hidden>‹</button>
+          <div class="sheet-title-wrap"><h2 class="sheet-title" id="sheetTitle">更多</h2><p class="sheet-caption" id="sheetCaption">轻松找到你想继续的内容</p></div>
+          <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭菜单">×</button>
+        </div>
+        <div class="sheet-body" id="sheetBody"></div>
+      </section>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </section>
+    <aside class="flow-notes" aria-label="设计说明">
+      <div class="flow-kicker">PWA navigation · v1</div>
+      <h1>少一点打扰，<br>多一点顺手。</h1>
+      <p class="flow-lead">围绕“浏览—发现—继续阅读”重排手机端导航。主入口始终稳定，更多操作按需出现，不用滑动寻找。</p>
+      <ol class="flow-list">
+        <li><span class="flow-index">01</span><span><strong>四个固定入口</strong><span>首页、文章、动态、更多等宽排列；选中态不挤动邻近按钮。</span></span></li>
+        <li><span class="flow-index">02</span><span><strong>更多内容分层呈现</strong><span>先选内容分类，再进入二级菜单；关闭、返回都始终明确可见。</span></span></li>
+        <li><span class="flow-index">03</span><span><strong>舒适连续的阅读</strong><span>文章列表、动态流和搜索入口可直接触达；主题选项集中在更多菜单。</span></span></li>
+      </ol>
+      <p class="flow-footer">试试底部导航和“更多”菜单。菜单支持点击遮罩、右上角关闭与 <kbd>Esc</kbd> 退出；主题按钮可切换系统、浅色、深色预览。</p>
+    </aside>
+  </main>
+  <script src="./static/vendor/liquidlens/liquid-glass.js"></script>
+  <script>
+    (() => {
+      if (window.LiquidGlass) {
+        window.LiquidGlass.init({ refraction: 0, bezel: 0, blur: 18, saturation: 1, specular: 0, tintHue: 0, tintOpacity: 0, quality: 160 });
+      }
+      const root = document.documentElement;
+      const page = document.getElementById('page');
+      const deviceScroll = document.getElementById('deviceScroll');
+      const dockButtons = [...document.querySelectorAll('[data-route]')];
+      const moreButton = document.getElementById('moreButton');
+      const sheet = document.getElementById('moreSheet');
+      const scrim = document.getElementById('scrim');
+      const sheetBody = document.getElementById('sheetBody');
+      const sheetTitle = document.getElementById('sheetTitle');
+      const sheetCaption = document.getElementById('sheetCaption');
+      const sheetBack = document.getElementById('sheetBack');
+      const sheetClose = document.getElementById('sheetClose');
+      const toast = document.getElementById('toast');
+      // Representative records mirror content/posts front matter. Paths keep the Hugo
+      // public URL (/images/...), while assetURL maps them to /public/images/ only in this local preview.
+      const posts = [
+        { id: 'hello-world', date: '2026.08.08 · 阅读 2 分钟', title: 'Hello World!｜This is my new blog!', desc: '你好世界。这是第一篇博客文章，记录这个使用 Hugo 搭建的个人博客。', category: '随笔', href: '/posts/hello-world/', cover: { image: '/images/pexels-ömerhan-datlar-5382283_hu_c5cdc2ef40c44908.webp' }, background: '/images/pexels-tigran-manukyan-33097708_hu_d5d7af2042cd70fc.webp' },
+        { id: 'video-test', date: '2026.08.08 · 视频', title: '视频功能测试｜全屏视频封面和内嵌视频', desc: '原工程 cover.video 视频封面示例；保留静音、内联、循环、视口暂停与图片回退。', category: '测试', href: '/posts/2026-08-07-%E8%A7%86%E9%A2%91%E6%B5%8B%E8%AF%95/', cover: { image: '', video: '/images/Cyberpunk 2077 Night City 4K animated wallpaper.mp4' }, background: 'https://picsum.photos/id/296/1920/1280.webp' },
+        { id: 'build-modern-blog', date: '2026.08.08 · 阅读 4 分钟', title: '构建现代化个人博客 #1', desc: '从 Hugo 到双线部署的完整实践。一份代码，两边构建。', category: '技术', href: '/posts/build-modern-blog/', cover: { image: '', video: '/images/Five days in the Faroe Islands.Full video linked.mp4' }, background: '/images/wallhaven-yq2w3x_hu_4650ea203083ba90.webp' }
+      ];
+      let currentRoute = 'home';
+      let sheetLevel = 'root';
+      let priorFocus = null;
+      let toastTimer = 0;
+      let themePreference = 'system';
+      let coverVideoObserver = null;
+      let activeCoverVideo = null;
+      let coverVideoInView = false;
+
+      const icons = {
+        reading: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 11h6"/></svg>',
+        discover: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.3 4.3"/></svg>',
+        about: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+        account: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>',
+        install: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/></svg>'
+      };
+      const titles = { home: '首页', articles: '文章', moments: '动态', search: '搜索', tags: '标签', about: '关于', profile: '个人主页', install: '安装博客' };
+
+      function assetURL(path) {
+        if (!path) return '';
+        const value = String(path).trim();
+        if (/^(https?:|data:|blob:)/i.test(value)) return value;
+        const normalized = '/' + value.replace(/^\/+/, '').split('/').map(segment => encodeURIComponent(decodeURIComponentSafe(segment))).join('/');
+        // The local prototype server exposes Hugo's existing build output under /public.
+        // Production Hugo output places the same files directly at /images/.
+        if ((location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.port === '8765') {
+          return new URL('./public' + normalized, location.href).href;
+        }
+        return normalized;
+      }
+      function decodeURIComponentSafe(value) {
+        try { return decodeURIComponent(value); } catch (_) { return value; }
+      }
+      function coverPoster(post) {
+        return post.cover?.image || post.background || '';
+      }
+      function renderMedia(post, { archive = false } = {}) {
+        const videoSrc = post.cover?.video ? assetURL(post.cover.video) : '';
+        const posterSrc = coverPoster(post) ? assetURL(coverPoster(post)) : '';
+        if (videoSrc) {
+          const classes = archive ? 'archive-cover-video' : 'pcf-video';
+          const preload = archive ? 'none' : 'metadata';
+          const poster = posterSrc ? ` poster="${escapeHTML(posterSrc)}"` : '';
+          const controls = archive ? ` data-archive-preview="1"` : '';
+          const progress = archive ? '' : '<div class="pcf-video-bar" aria-hidden="true"><div class="pcf-video-bar-fill"></div></div>';
+          return `<video class="${classes}" src="${escapeHTML(videoSrc)}"${poster} muted playsinline loop preload="${preload}" aria-hidden="true"${controls}></video>${archive ? '<span class="archive-video-badge">VIDEO</span>' : '<div class="video-loading" data-video-loading aria-hidden="true"><span class="video-spinner"></span></div>' + progress}`;
+        }
+        return posterSrc ? `<img class="${archive ? 'archive-cover-image' : 'pcf-video'}" src="${escapeHTML(posterSrc)}" alt="" loading="lazy" decoding="async">` : '';
+      }
+      function renderHome() {
+        const latest = posts[0];
+        const videoPost = posts.find(post => post.cover?.video);
+        const latestPoster = coverPoster(latest);
+        const videoMedia = renderMedia(videoPost);
+        return `<section class="page-content"><p class="eyebrow">PERSONAL NOTES · 2026</p><h1 class="hero-title">为每一次好奇，<br>留一页。</h1><p class="hero-copy">你好，我是 Levia。这里记录技术、生活，以及那些还在慢慢成形的想法。</p><div class="section-heading"><h2>最近写下</h2><span>持续更新</span></div><article class="feature-card"><div class="feature-art">${latestPoster ? `<img class="feature-image" src="${escapeHTML(assetURL(latestPoster))}" alt="" loading="lazy" decoding="async">` : ''}<span class="art-label">${escapeHTML(latest.category)}</span></div><div class="card-copy"><span class="card-meta">${escapeHTML(latest.date)}</span><h3>${escapeHTML(latest.title)}</h3><p>${escapeHTML(latest.desc)}</p></div></article><div class="section-heading"><h2>动态视频封面</h2><span>原工程 cover.video</span></div><article class="feature-card"><div class="feature-art feature-art--video" data-video-cover>${videoMedia}<span class="art-label">VIDEO COVER · ${escapeHTML(videoPost.id)}</span></div><div class="card-copy"><span class="card-meta">${escapeHTML(videoPost.date)}</span><h3>${escapeHTML(videoPost.title)}</h3><p>${escapeHTML(videoPost.desc)}</p><p class="video-cover-note">沿用文章的 cover.video / cover.image / background 字段；应用离开此页或视频离开视口时自动暂停，系统开启减少动态效果时保留封面图。</p></div></article><div class="section-heading"><h2>继续探索</h2><span>从这里出发</span></div><button class="row-card" data-go="articles" style="width:100%;border-top:0;border-right:0;border-left:0;background:none;text-align:left;cursor:pointer"><span class="row-number">01</span><span class="row-copy"><h3>文章归档</h3><p>按时间重新发现写过的内容</p></span><span class="row-arrow">›</span></button><button class="row-card" data-go="moments" style="width:100%;border-right:0;border-left:0;background:none;text-align:left;cursor:pointer"><span class="row-number">02</span><span class="row-copy"><h3>最近动态</h3><p>轻一点的近况与碎片想法</p></span><span class="row-arrow">›</span></button></section>`;
+      }
+      function renderArticles(query = '') {
+        const visible = posts.filter(post => (post.title + post.desc + post.category).toLowerCase().includes(query.trim().toLowerCase()));
+        return `<section class="page-content"><p class="eyebrow">THE JOURNAL</p><h1 class="hero-title">文章</h1><p class="hero-copy">慢慢写下来的东西，也值得慢慢读。</p><div class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><input id="articleFilter" type="search" placeholder="搜索文章" value="${escapeHTML(query)}" aria-label="搜索文章"></div><div class="search-results">${visible.length ? visible.map((post, index) => `<article class="row-card article-row" data-archive-card="${escapeHTML(post.id)}"><span class="row-number">${String(index + 1).padStart(2, '0')}</span><span class="archive-thumb">${renderMedia(post, { archive: true })}</span><span class="row-copy"><h3>${escapeHTML(post.title)}</h3><p>${escapeHTML(post.category)} · ${escapeHTML(post.date)}</p></span><span class="row-arrow">›</span></article>`).join('') : '<p class="empty-state">没有找到相关内容。试试其他关键词。</p>'}</div></section>`;
+      }
+      function renderMoments() {
+        return `<section class="page-content"><p class="eyebrow">SMALL UPDATES</p><h1 class="hero-title">动态</h1><p class="hero-copy">比文章轻一点的记录，想到哪里就写到哪里。</p><article class="moment"><div class="moment-top"><span class="avatar">L</span><span class="moment-author">Levia</span><span class="moment-time">2 天前</span></div><p>给首页留白之后，终于觉得这些字有地方呼吸了。好的界面可能就是这样：你不需要一直想着它。</p><span class="moment-tag">设计随记</span></article><article class="moment"><div class="moment-top"><span class="avatar">L</span><span class="moment-author">Levia</span><span class="moment-time">5 天前</span></div><p>周末翻了一些旧笔记。过去觉得没用的想法，过一阵子再看，常常会长出新的方向。</p><span class="moment-tag">日常</span></article><article class="moment"><div class="moment-top"><span class="avatar">L</span><span class="moment-author">Levia</span><span class="moment-time">上周</span></div><p>最近在重新整理博客的移动端体验。先解决动线，再考虑动效。</p><span class="moment-tag">进行中</span></article></section>`;
+      }
+      function escapeHTML(value) { return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]); }
+      function stopCoverVideo() {
+        if (coverVideoObserver) { coverVideoObserver.disconnect(); coverVideoObserver = null; }
+        page.querySelectorAll('video[data-archive-preview]').forEach(video => video.pause());
+        if (activeCoverVideo && !activeCoverVideo.paused) activeCoverVideo.pause();
+        activeCoverVideo = null;
+        coverVideoInView = false;
+      }
+      function initCoverVideo() {
+        const video = page.querySelector('video.pcf-video');
+        if (!video) return;
+        activeCoverVideo = video;
+        const card = video.closest('.feature-art');
+        const loader = card?.querySelector('[data-video-loading]');
+        const progress = card?.querySelector('.pcf-video-bar-fill');
+        const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const hideLoader = () => loader?.classList.add('is-hidden');
+        video.addEventListener('loadeddata', hideLoader, { once: true });
+        video.addEventListener('error', () => {
+          hideLoader();
+          card?.classList.add('video-fallback');
+        }, { once: true });
+        video.addEventListener('timeupdate', () => {
+          if (progress && video.duration && Number.isFinite(video.duration)) progress.style.width = ((video.currentTime / video.duration) * 100).toFixed(2) + '%';
+        });
+        const play = () => {
+          if (reducedMotion || document.visibilityState !== 'visible') return;
+          const result = video.play();
+          if (result?.catch) result.catch(() => { /* autoplay policy: keep poster fallback */ });
+        };
+        if (reducedMotion) { video.pause(); hideLoader(); return; }
+        if ('IntersectionObserver' in window) {
+          coverVideoObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+              coverVideoInView = entry.isIntersecting && entry.intersectionRatio >= 0.12;
+              if (coverVideoInView) play(); else video.pause();
+            });
+          }, { root: deviceScroll, rootMargin: '120px 0px', threshold: [0, 0.12] });
+          coverVideoObserver.observe(video);
+        } else { coverVideoInView = true; play(); }
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') page.querySelectorAll('video[data-archive-preview]').forEach(video => video.pause());
+        if (!activeCoverVideo) return;
+        if (document.visibilityState !== 'visible') activeCoverVideo.pause();
+        else if (coverVideoInView) {
+          const result = activeCoverVideo.play();
+          if (result?.catch) result.catch(() => {});
+        }
+      });
+      const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+      motionPreference.addEventListener?.('change', event => {
+        if (!activeCoverVideo) return;
+        if (event.matches) activeCoverVideo.pause();
+        else if (coverVideoInView && document.visibilityState === 'visible') {
+          const result = activeCoverVideo.play();
+          if (result?.catch) result.catch(() => {});
+        }
+      });
+      function initArchiveVideoPreviews() {
+        page.querySelectorAll('[data-archive-card] video[data-archive-preview]').forEach(video => {
+          const card = video.closest('[data-archive-card]');
+          const preview = () => {
+            if (motionPreference.matches || document.visibilityState !== 'visible') return;
+            video.play()?.catch(() => {});
+          };
+          const reset = () => { video.pause(); try { video.currentTime = 0; } catch (_) {} };
+          card?.addEventListener('pointerenter', preview);
+          card?.addEventListener('focusin', preview);
+          card?.addEventListener('pointerleave', reset);
+          card?.addEventListener('focusout', event => {
+            if (!event.currentTarget.contains(event.relatedTarget)) reset();
+          });
+        });
+      }
+      function renderRoute(route, { focus = false } = {}) {
+        stopCoverVideo();
+        currentRoute = route;
+        page.innerHTML = route === 'home' ? renderHome() : route === 'articles' ? renderArticles() : route === 'moments' ? renderMoments() : renderSimple(route);
+        if (route === 'home') initCoverVideo();
+        if (route === 'articles') initArchiveVideoPreviews();
+        page.setAttribute('aria-label', (titles[route] || '页面') + '内容');
+        dockButtons.forEach(button => {
+          if (button.dataset.route === route) button.setAttribute('aria-current', 'page');
+          else button.removeAttribute('aria-current');
+        });
+        deviceScroll.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (focus) page.focus({ preventScroll: true });
+      }
+      function renderSimple(route) {
+        const data = {
+          search: ['搜索', '从文章标题、主题和分类中寻找线索。', `<div class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><input id="globalSearch" type="search" placeholder="试试“设计”" aria-label="搜索博客内容"></div><div class="search-results" id="globalResults"><p class="empty-state">输入关键词，开始搜索。</p></div>`],
+          tags: ['标签', '按兴趣主题，探索相关内容。', '<div class="topic-chips"><button class="topic-chip" data-tag="技术"># 技术</button><button class="topic-chip" data-tag="设计"># 设计</button><button class="topic-chip" data-tag="随笔"># 随笔</button><button class="topic-chip" data-tag="创造"># 创造</button><button class="topic-chip" data-tag="生活"># 生活</button></div><div class="search-results" id="tagResults"></div>'],
+          about: ['关于', '这是一个记录技术、生活与持续好奇的个人博客。', '<article class="feature-card" style="margin-top:25px"><div class="card-copy"><span class="card-meta">A SMALL CORNER OF THE INTERNET</span><h3>你好，我是 Levia。</h3><p>我喜欢把学到的东西整理清楚，也相信认真记录本身就是一种创造。谢谢你路过这里。</p></div></article>'],
+          profile: ['个人主页', '个人资料与账户入口的展示占位。', '<article class="moment"><div class="moment-top"><span class="avatar">L</span><span class="moment-author">Levia</span></div><p>这是公开个人主页的预览区域。登录、收藏与账户管理不会在设计稿中连接真实服务。</p></article>'],
+          install: ['安装博客', '将博客添加到主屏幕，获得更专注的阅读体验。', '<button class="menu-row" data-install-confirm><span class="menu-symbol">' + icons.install + '</span><span class="menu-copy"><strong>添加到主屏幕</strong><small>此原型不会触发系统安装提示</small></span><span class="menu-chevron">›</span></button>']
+        }[route] || ['页面', '该入口仅用于展示导航路径。', ''];
+        return `<section class="page-content"><p class="eyebrow">LEVIA'S BLOG</p><h1 class="hero-title">${data[0]}</h1><p class="hero-copy">${data[1]}</p>${data[2]}</section>`;
+      }
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2300);
+      }
+      function setTheme(preference) {
+        themePreference = preference;
+        const effective = preference === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : preference;
+        root.dataset.theme = effective;
+        document.querySelector('meta[name="theme-color"]').content = effective === 'dark' ? '#101210' : '#f7f8f4';
+        document.querySelectorAll('.theme-option').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === preference)));
+      }
+      const mediaTheme = matchMedia('(prefers-color-scheme: dark)');
+      mediaTheme.addEventListener?.('change', () => { if (themePreference === 'system') setTheme('system'); });
+
+      const menuPages = {
+        root: { title: '更多', caption: '轻松找到你想继续的内容' },
+        reading: { title: '内容', caption: '浏览不同形式的记录' },
+        discover: { title: '发现', caption: '从主题或关键词开始探索' },
+        account: { title: '个人', caption: '个人信息与博客设置' }
+      };
+      function menuRow(icon, title, caption, action, target) {
+        return `<button class="menu-row" type="button" data-menu-action="${action}" data-target="${target || ''}"><span class="menu-symbol">${icons[icon]}</span><span class="menu-copy"><strong>${title}</strong><small>${caption}</small></span><span class="menu-chevron">›</span></button>`;
+      }
+      function renderMenuLevel(level) {
+        sheetLevel = level;
+        const meta = menuPages[level] || menuPages.root;
+        sheetTitle.textContent = meta.title;
+        sheetCaption.textContent = meta.caption;
+        sheetBack.hidden = level === 'root';
+        if (level === 'root') {
+          sheetBody.innerHTML = `<p class="menu-group-label">探索</p>${menuRow('reading', '内容', '动态、感知与文章归档', 'submenu', 'reading')}${menuRow('discover', '发现', '搜索文章与浏览标签', 'submenu', 'discover')}${menuRow('about', '关于', '了解这个博客', 'navigate', 'about')}<div class="sheet-divider"></div><p class="menu-group-label">个人设置</p>${menuRow('account', '个人与账户', '主页、安装与偏好设置', 'submenu', 'account')}<div class="sheet-divider"></div><p class="menu-group-label">外观</p><div class="theme-options" role="group" aria-label="主题偏好"><button type="button" class="theme-option" data-theme-choice="system" aria-pressed="false">跟随系统</button><button type="button" class="theme-option" data-theme-choice="light" aria-pressed="false">浅色</button><button type="button" class="theme-option" data-theme-choice="dark" aria-pressed="false">深色</button></div><button class="install-row" type="button" data-menu-action="navigate" data-target="install"><span class="menu-symbol">${icons.install}</span><span class="menu-copy"><strong>安装博客</strong><small>添加到主屏幕，随时打开</small></span><span class="menu-chevron">›</span></button>`;
+        } else if (level === 'reading') {
+          sheetBody.innerHTML = `<p class="menu-group-label">阅读</p>${menuRow('reading', '文章归档', '按时间浏览全部文章', 'navigate', 'articles')}${menuRow('reading', '感知', '专题与长篇内容', 'navigate', 'articles')}${menuRow('reading', '动态', '最近的想法与近况', 'navigate', 'moments')}`;
+        } else if (level === 'discover') {
+          sheetBody.innerHTML = `<p class="menu-group-label">发现</p>${menuRow('discover', '搜索', '在博客中寻找关键词', 'navigate', 'search')}${menuRow('discover', '标签', '按主题发现相关文章', 'navigate', 'tags')}`;
+        } else {
+          sheetBody.innerHTML = `<p class="menu-group-label">账户</p>${menuRow('account', '个人主页', '查看公开资料', 'navigate', 'profile')}${menuRow('install', '安装博客', '添加到手机主屏幕', 'navigate', 'install')}<div class="sheet-divider"></div><p class="empty-state">这里仅展示导航结构，不会连接或修改真实账户设置。</p>`;
+        }
+        setTheme(themePreference);
+        sheetBody.scrollTop = 0;
+        if (sheet.classList.contains('is-open')) {
+          const focusTarget = level === 'root' ? sheetBody.querySelector('[data-menu-action]') : sheetBack;
+          focusTarget?.focus({ preventScroll: true });
+        }
+      }
+      function openSheet() {
+        priorFocus = document.activeElement;
+        renderMenuLevel('root');
+        sheet.inert = false;
+        sheet.setAttribute('aria-hidden', 'false');
+        scrim.classList.add('is-open');
+        sheet.classList.add('is-open');
+        moreButton.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(() => sheetClose.focus({ preventScroll: true }));
+      }
+      function closeSheet({ restore = true } = {}) {
+        if (!sheet.classList.contains('is-open')) return;
+        sheet.classList.remove('is-open');
+        scrim.classList.remove('is-open');
+        moreButton.setAttribute('aria-expanded', 'false');
+        sheet.setAttribute('aria-hidden', 'true');
+        sheet.inert = true;
+        renderMenuLevel('root');
+        if (restore && priorFocus?.isConnected) priorFocus.focus({ preventScroll: true });
+      }
+      function navigate(route) {
+        closeSheet({ restore: false });
+        renderRoute(route, { focus: true });
+        if (location.hash !== '#' + route) history.pushState({ route }, '', '#' + route);
+      }
+      dockButtons.forEach(button => {
+        if (!button.dataset.route) return;
+        button.addEventListener('click', () => navigate(button.dataset.route));
+      });
+      moreButton.addEventListener('click', () => sheet.classList.contains('is-open') ? closeSheet() : openSheet());
+      document.getElementById('headerSearch').addEventListener('click', () => navigate('search'));
+      sheetClose.addEventListener('click', () => closeSheet());
+      sheetBack.addEventListener('click', () => renderMenuLevel('root'));
+      scrim.addEventListener('click', () => closeSheet());
+      sheet.addEventListener('click', event => {
+        const theme = event.target.closest('[data-theme-choice]');
+        if (theme) { setTheme(theme.dataset.themeChoice); return; }
+        const row = event.target.closest('[data-menu-action]');
+        if (!row) return;
+        if (row.dataset.menuAction === 'submenu') renderMenuLevel(row.dataset.target);
+        else if (row.dataset.menuAction === 'navigate') navigate(row.dataset.target);
+      });
+      page.addEventListener('click', event => {
+        const go = event.target.closest('[data-go]');
+        if (go) navigate(go.dataset.go);
+        const tag = event.target.closest('[data-tag]');
+        if (tag) {
+          navigate('articles');
+          const input = document.getElementById('articleFilter');
+          if (input) { input.value = tag.dataset.tag; input.dispatchEvent(new Event('input')); }
+        }
+        if (event.target.closest('[data-install-confirm]')) showToast('设计稿预览：这里不会启动实际安装流程');
+      });
+      page.addEventListener('input', event => {
+        if (event.target.id === 'articleFilter') {
+          const value = event.target.value;
+          const cursor = event.target.selectionStart;
+          page.innerHTML = renderArticles(value);
+          initArchiveVideoPreviews();
+          const next = document.getElementById('articleFilter');
+          next.focus(); next.setSelectionRange(cursor, cursor);
+        }
+        if (event.target.id === 'globalSearch') {
+          const value = event.target.value.trim().toLowerCase();
+          const results = document.getElementById('globalResults');
+          const found = posts.filter(post => (post.title + post.desc + post.category).toLowerCase().includes(value));
+          results.innerHTML = value ? (found.length ? found.map(post => `<article class="row-card"><span class="row-number">↳</span><span class="row-copy"><h3>${post.title}</h3><p>${post.category} · ${post.date}</p></span></article>`).join('') : '<p class="empty-state">没有找到相关内容。换个关键词试试。</p>') : '<p class="empty-state">输入关键词，开始搜索。</p>';
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && sheet.classList.contains('is-open')) { closeSheet(); return; }
+        if (event.key === 'Tab' && sheet.classList.contains('is-open')) {
+          const focusable = [...sheet.querySelectorAll('button:not([disabled]):not([hidden]), input:not([disabled])')].filter(el => !el.closest('[hidden]'));
+          if (!focusable.length) return;
+          const first = focusable[0], last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+      });
+      window.addEventListener('popstate', () => {
+        const route = location.hash.slice(1);
+        renderRoute(titles[route] ? route : 'home', { focus: true });
+      });
+      setTheme('system');
+      const initial = location.hash.slice(1);
+      renderRoute(titles[initial] ? initial : 'home');
+      renderMenuLevel('root');
+    })();
+  </script>
+</body>
+</html>

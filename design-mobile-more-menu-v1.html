@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f6f2">
+<title>更多菜单 · 双端设计稿</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f5f6f2;
+  --surface: #fff;
+  --surface-2: #f0f1ec;
+  --ink: #171915;
+  --text: #30332d;
+  --muted: #686c64;
+  --line: rgba(23, 25, 21, .12);
+  --moss: #455b48;
+  --moss-soft: #e6ebe3;
+  --shadow: 0 22px 70px rgba(17, 19, 15, .12);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #10110f;
+  --surface: #181916;
+  --surface-2: #20211e;
+  --ink: #eeefe9;
+  --text: #d2d4cd;
+  --muted: #a0a399;
+  --line: rgba(238, 239, 233, .13);
+  --moss: #a9bba8;
+  --moss-soft: #293229;
+  --shadow: 0 25px 75px rgba(0, 0, 0, .38);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scrollbar-color: var(--muted) transparent; scrollbar-width: thin; }
+::selection { background: var(--moss-soft); color: var(--ink); }
+.menu-scroll::-webkit-scrollbar { width: 4px; }
+.menu-scroll::-webkit-scrollbar-thumb { border-radius: 4px; background: color-mix(in srgb, var(--muted) 42%, transparent); }
+body {
+  min-width: 320px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  transition: background .2s, color .2s;
+}
+button { color: inherit; font: inherit; }
+.canvas { width: min(1160px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 64px; }
+.topline { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 38px; }
+.wordmark { color: var(--ink); font-size: 13px; font-weight: 650; letter-spacing: -.02em; }
+.wordmark small { color: var(--muted); font-size: 11px; font-weight: 450; }
+.preview-controls { display: flex; align-items: center; gap: 8px; }
+.preview-controls button {
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.preview-controls button:hover { border-color: color-mix(in srgb, var(--moss) 42%, var(--line)); color: var(--ink); }
+.theme-toggle {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 12px;
+}
+.intro { max-width: 680px; margin-bottom: 36px; }
+.intro h1 { margin: 0 0 10px; color: var(--ink); font-size: clamp(30px, 4vw, 42px); letter-spacing: -.055em; line-height: 1.08; }
+.intro p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.boards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 28px; }
+.board { min-width: 0; }
+.board-head { display: flex; width: min(100%, 390px); min-height: 45px; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 auto 14px; }
+.board-head h2 { margin: 0; color: var(--ink); font-size: 17px; letter-spacing: -.03em; }
+.board-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.device {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 390px);
+  height: 704px;
+  min-height: 704px;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.device-bar { display: flex; height: 36px; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; letter-spacing: .015em; }
+.device-top { display: flex; height: 58px; align-items: center; justify-content: space-between; padding-inline: 22px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 14px; font-weight: 650; }
+.brandmark { display: flex; align-items: center; gap: 8px; }
+.brand-dot { width: 23px; height: 23px; border: 1px solid var(--line); border-radius: 50%; background: #ecebe4; }
+.top-action { display: inline-grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.top-action:hover, .close:hover { border-color: var(--line); background: var(--surface-2); color: var(--ink); }
+.fake-content { padding: 24px 22px; color: var(--muted); }
+.fake-title { margin: 0 0 6px; color: var(--ink); font-size: 25px; letter-spacing: -.045em; }
+.fake-copy { margin: 0; font-size: 12px; }
+.feed-line { height: 1px; margin: 18px 0; background: var(--line); }
+.feed-card { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.feed-card b { display: block; margin-bottom: 6px; color: var(--text); font-size: 13px; font-weight: 560; }
+.feed-card span { font-size: 11px; line-height: 1.6; }
+.web-drawer {
+  position: absolute;
+  z-index: 2;
+  right: 4px;
+  bottom: 5px;
+  left: 4px;
+  display: flex;
+  height: min(75%, 540px);
+  max-height: calc(100% - 112px);
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px 22px 14px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .2);
+  overscroll-behavior: contain;
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), visibility .3s;
+}
+.web-drawer.closed { visibility: hidden; transform: translateY(100%); pointer-events: none; }
+.web-drawer.dragging { transition: none; }
+.web-drawer, .pwa-sheet { will-change: transform; }
+.web-scrim, .sheet-scrim { position: absolute; z-index: 1; background: rgba(12, 13, 11, .42); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); transition: opacity .22s, visibility .22s; }
+.web-scrim { inset: 36px 0 0; }
+.web-scrim.closed, .sheet-scrim.closed { visibility: hidden; opacity: 0; }
+.drawer-head, .sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head { flex: 0 0 auto; margin-bottom: 4px; }
+.drawer-head h3, .sheet-head h3 { margin: 0; color: var(--ink); font-size: 18px; font-weight: 640; letter-spacing: -.035em; }
+.close { display: inline-flex; min-width: 52px; min-height: 44px; align-items: center; justify-content: center; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; transition: background .16s, color .16s; }
+.menu-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.web-drawer .menu-scroll, .pwa-sheet .menu-scroll { flex: 1 1 auto; }
+.web-drawer .group { margin-top: 13px; }
+.web-drawer .group-label { margin-bottom: 4px; }
+.web-drawer .navrow { min-height: 48px; }
+.web-grabber { position: relative; width: 48px; height: 24px; flex: 0 0 24px; margin: 0 auto 5px; cursor: grab; touch-action: none; user-select: none; }
+.web-grabber::after { position: absolute; top: 10px; left: 7px; width: 34px; height: 4px; border-radius: 4px; background: var(--muted); content: ""; opacity: .32; }
+.web-menu-view[hidden] { display: none; }
+.web-menu-view.is-active { animation: menu-view-in .18s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes menu-view-in { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: translateX(0); } }
+.subnav-head { display: flex; min-height: 52px; align-items: center; gap: 14px; margin-bottom: 12px; }
+.subnav-head h4 { margin: 0; color: var(--ink); font-size: 16px; font-weight: 620; letter-spacing: -.025em; }
+.back-link { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; padding: 0 4px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; }
+.back-link svg { width: 16px; height: 16px; }
+.category-row { min-height: 64px; }
+.category-row > span { gap: 12px; }
+.category-copy { display: grid; gap: 3px; }
+.category-copy strong { color: var(--ink); font-size: 14px; font-weight: 590; }
+.category-copy small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.group { margin-top: 20px; }
+.group-label { margin: 0 0 7px; color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: .04em; }
+.navrow { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 2px; border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
+.navrow > span { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.navrow.primary { color: var(--ink); font-weight: 590; }
+.navrow .chev { width: 7px; height: 7px; flex: 0 0 7px; margin-right: 3px; transform: rotate(45deg); border-top: 1.5px solid currentColor; border-right: 1.5px solid currentColor; color: var(--muted); transition: transform .18s, color .18s; }
+.appearance { flex: 0 0 auto; margin-top: 18px; padding-top: 0; }
+.appearance-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+.appearance-head strong { color: var(--text); font-size: 12px; font-weight: 580; }
+.appearance-head span { color: var(--muted); font-size: 11px; }
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border-radius: 9px; background: var(--surface-2); }
+.segmented button { min-height: 44px; padding: 7px 4px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; }
+.segmented button.selected { background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .08); color: var(--ink); }
+.account-list { margin-top: 16px; padding-top: 0; }
+.account-list .group-label { margin-bottom: 2px; }
+.pwa-home { display: flex; min-height: 704px; flex-direction: column; }
+.pwa-feed { flex: 1; padding: 21px 22px 110px; }
+.pwa-feed h3 { margin: 0; color: var(--ink); font-size: 24px; letter-spacing: -.04em; }
+.pwa-feed p { color: var(--muted); font-size: 12px; }
+.pwa-nav { position: absolute; z-index: 1; bottom: max(17px, env(safe-area-inset-bottom)); left: 50%; display: grid; width: calc(100% - 36px); height: 64px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 5px; transform: translateX(-50%); border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: 0 8px 28px rgba(0, 0, 0, .08); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.pwa-nav button { display: grid; min-width: 0; min-height: 48px; place-content: center; gap: 3px; border: 0; border-radius: 13px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; }
+.pwa-nav button .nav-icon { width: 18px; height: 18px; stroke-width: 1.7; }
+.pwa-nav button.active { background: var(--moss-soft); color: var(--moss); font-weight: 650; }
+.pwa-nav button[aria-expanded="true"] { background: var(--surface-2); color: var(--ink); }
+.sheet-scrim { inset: 36px 0 0; }
+.pwa-sheet {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  max-height: calc(100% - 52px);
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px 24px calc(18px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -12px 34px rgba(0, 0, 0, .14);
+  overscroll-behavior: contain;
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .28s;
+}
+.pwa-sheet.closed { visibility: hidden; transform: translateY(100%); pointer-events: none; }
+.pwa-sheet:not(.closed) { transition-delay: 0s; }
+.pwa-sheet.closed .grabber { cursor: default; }
+.grabber { position: relative; width: 48px; height: 24px; flex: 0 0 24px; margin: 0 auto 5px; cursor: grab; touch-action: none; user-select: none; }
+.grabber::after { position: absolute; top: 10px; left: 7px; width: 34px; height: 4px; border-radius: 4px; background: var(--muted); content: ""; opacity: .32; }
+.pwa-sheet.dragging { transition: none; }
+.sheet-head { flex: 0 0 auto; margin-bottom: 4px; }
+.pwa-sheet .group { margin-top: 10px; }
+.pwa-sheet .menu-scroll { flex: 0 1 auto; }
+.pwa-sheet .menu-scroll > .group:first-child { margin-top: 4px; }
+.pwa-sheet .group-label { margin-bottom: 4px; }
+.pwa-sheet .navrow { min-height: 48px; }
+.pwa-sheet .appearance { margin-top: 14px; padding-top: 0; }
+.pwa-sheet .account-list { margin-top: 14px; padding-top: 0; }
+.pwa-sheet .sheet-bottom { height: 0; flex: 0 0 0; }
+.fineprint { max-width: 390px; margin: 13px auto 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.fineprint b { color: var(--text); font-weight: 600; }
+#demoToast { position: fixed; z-index: 20; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; padding: 10px 15px; transform: translate(-50%, 10px); border: 1px solid var(--line); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); color: var(--ink); font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; }
+#demoToast.visible { transform: translate(-50%, 0); opacity: 1; }
+.navrow:focus-visible, .back-link:focus-visible, .top-action:focus-visible, .close:focus-visible, .preview-controls button:focus-visible, .segmented button:focus-visible, .pwa-nav button:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.navrow:focus:not(:focus-visible), .back-link:focus:not(:focus-visible), .top-action:focus:not(:focus-visible), .close:focus:not(:focus-visible), .preview-controls button:focus:not(:focus-visible), .segmented button:focus:not(:focus-visible), .pwa-nav button:focus:not(:focus-visible) { outline: none; }
+.navrow:hover { color: var(--ink); }
+.navrow:hover .chev { color: var(--moss); transform: translateX(2px) rotate(45deg); }
+.navrow:active, .close:active, .top-action:active, .preview-controls button:active, .segmented button:active, .pwa-nav button:active { background: var(--surface-2); }
+@media (max-width: 860px) {
+  .canvas { width: min(520px, calc(100% - 28px)); padding-top: 26px; }
+  .topline { margin-bottom: 28px; }
+  .preview-controls { gap: 6px; }
+  .preview-controls button { padding-inline: 11px; }
+  .topline { flex-wrap: wrap; }
+  .intro { margin-bottom: 26px; }
+  .boards { grid-template-columns: 1fr; gap: 32px; }
+  .board-head { min-height: 42px; margin-bottom: 10px; }
+  .device { height: 710px; min-height: 710px; }
+  .web-drawer { height: min(76%, 560px); }
+  .pwa-home { min-height: 710px; }
+}
+@media (max-width: 380px) {
+  .canvas { width: calc(100% - 24px); }
+  .topline { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .preview-controls { width: 100%; }
+  .preview-controls button { flex: 1 1 0; white-space: nowrap; }
+  .device { border-radius: 24px; }
+  .web-drawer { right: 4px; left: 4px; padding-inline: 18px; }
+  .pwa-sheet { padding-inline: 20px; }
+  .device-top, .fake-content { padding-inline: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+</style></head>
+<body><main class="canvas"><header class="topline"><div class="wordmark">LEVIA <small>’s blog · 菜单设计</small></div><div class="preview-controls"><button id="accountPreview" type="button" aria-pressed="false">预览：未登录</button><button class="theme-toggle" id="themeToggle" type="button">切换深色预览</button></div></header><section class="intro"><h1>更多，保持简单。</h1><p>移动网页沿用完整站点导航；安装版 PWA 将高频入口留在 Dock，只把低频目的地和设置收进「更多」。</p></section><div class="boards">
+<section class="board" aria-labelledby="webTitle"><header class="board-head"><div><h2 id="webTitle">移动网页</h2><p>分类进入二级页 · 偏好与账户常驻</p></div></header><div class="device"><div class="device-bar"><span>9:41</span><span>blog-go3.pages.dev</span><span>•••</span></div><div class="device-top"><span class="brandmark"><i class="brand-dot"></i>LEVIA’s blog</span><button class="top-action open-web-menu" type="button" aria-label="关闭更多菜单" aria-expanded="true" aria-controls="webMoreDrawer">更多</button></div><div class="fake-content"><h3 class="fake-title">动态</h3><p class="fake-copy">记录此刻，也留住日常。</p><div class="feed-line"></div><article class="feed-card"><b>Levia</b><span>一些关于日常、技术与生活的片段。</span></article><article class="feed-card"><b>Levia</b><span>让内容自然呼吸，导航只在需要时出现。</span></article></div>
+<div class="web-scrim" aria-hidden="true"></div><aside id="webMoreDrawer" class="web-drawer" role="dialog" aria-modal="false" aria-label="网页端更多菜单" aria-hidden="false"><div class="web-grabber" aria-hidden="true"></div><div class="drawer-head"><h3>更多</h3><button class="close" aria-label="关闭菜单">完成</button></div><div class="menu-scroll">
+<div class="web-menu-view is-active" data-web-view="root"><div class="group"><p class="group-label">浏览</p><button class="navrow category-row" type="button" aria-expanded="false" aria-controls="webContentMenu" data-web-open-view="content"><span><span class="category-copy"><strong>内容</strong><small>动态、感知与文章归档</small></span></span><span class="chev" aria-hidden="true"></span></button><button class="navrow category-row" type="button" aria-expanded="false" aria-controls="webDiscoverMenu" data-web-open-view="discover"><span><span class="category-copy"><strong>发现</strong><small>搜索与标签</small></span></span><span class="chev" aria-hidden="true"></span></button></div><div class="group"><p class="group-label">站点</p><a class="navrow" href="#" data-demo-link="关于本站"><span>关于本站</span><span class="chev" aria-hidden="true"></span></a></div></div>
+<section class="web-menu-view" id="webContentMenu" data-web-view="content" aria-labelledby="webContentTitle" hidden><header class="subnav-head"><button class="back-link" type="button" data-web-back>返回</button><h4 id="webContentTitle">内容</h4></header><nav aria-label="内容导航"><a class="navrow primary" href="#" aria-current="page" data-demo-link="动态"><span>动态</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="感知"><span>感知</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="文章归档"><span>文章归档</span><span class="chev" aria-hidden="true"></span></a></nav></section>
+<section class="web-menu-view" id="webDiscoverMenu" data-web-view="discover" aria-labelledby="webDiscoverTitle" hidden><header class="subnav-head"><button class="back-link" type="button" data-web-back>返回</button><h4 id="webDiscoverTitle">发现</h4></header><nav aria-label="发现导航"><a class="navrow" href="#" data-demo-link="搜索"><span>搜索</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="标签"><span>标签</span><span class="chev" aria-hidden="true"></span></a></nav></section></div><div class="appearance"><div class="appearance-head"><strong>外观</strong><span>跟随系统</span></div><div class="segmented" role="group" aria-label="选择外观"><button class="selected" data-theme-choice="system">自动</button><button data-theme-choice="light">明亮</button><button data-theme-choice="dark">暗黑</button></div><div class="account-list"><p class="group-label">账户</p><a class="navrow auth-signed-out" href="#" data-demo-link="登录"><span>登录</span><span class="chev" aria-hidden="true"></span></a><a class="navrow auth-signed-in" href="#" data-demo-link="个人主页" hidden><span>个人主页</span><span class="chev" aria-hidden="true"></span></a><button class="navrow auth-signed-in" type="button" data-demo-link="退出登录" hidden><span>退出登录</span></button></div></div></aside></div><p class="fineprint"><b>移动网页：</b>先选内容或发现，再进入对应页面；关于、外观与账户在一级可见。</p></section>
+<section class="board" aria-labelledby="pwaTitle"><header class="board-head"><div><h2 id="pwaTitle">安装版 PWA</h2><p>Dock 管高频 · 更多直达低频页面</p></div></header><div class="device"><div class="device-bar"><span>9:41</span><span>● ● ●</span><span>100%</span></div><div class="pwa-home"><div class="device-top"><span class="brandmark"><i class="brand-dot"></i>LEVIA’s blog</span><button class="top-action" type="button" aria-label="搜索" data-demo-link="搜索"><i data-lucide="search" aria-hidden="true"></i></button></div><div class="pwa-feed"><h3>动态</h3><p>记录此刻，也留住日常。</p><div class="feed-line"></div><article class="feed-card"><b>Levia</b><span>Dock 保留首页、文章与动态；搜索独立，不在这里重复。</span></article><article class="feed-card"><b>Levia</b><span>「更多」直达低频页面，外观与账户放在下方。</span></article></div><nav class="pwa-nav" aria-label="PWA 主导航"><button data-demo-link="首页"><i class="nav-icon" data-lucide="house" aria-hidden="true"></i>首页</button><button data-demo-link="文章"><i class="nav-icon" data-lucide="book-open" aria-hidden="true"></i>文章</button><button class="active" aria-current="page" data-demo-link="动态"><i class="nav-icon" data-lucide="message-circle" aria-hidden="true"></i>动态</button><button aria-label="关闭更多菜单" aria-expanded="true" aria-controls="pwaMoreSheet"><i class="nav-icon" data-lucide="ellipsis" aria-hidden="true"></i>更多</button></nav></div><div class="sheet-scrim"></div><section id="pwaMoreSheet" class="pwa-sheet" role="dialog" aria-modal="false" aria-label="PWA 更多菜单" aria-hidden="false"><div class="grabber"></div><header class="sheet-head"><h3>更多</h3><button class="close" aria-label="关闭菜单">完成</button></header><div class="menu-scroll">
+<div class="group"><p class="group-label">站点页面</p><a class="navrow" href="#" data-demo-link="感知"><span>感知</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="文章归档"><span>文章归档</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="标签"><span>标签</span><span class="chev" aria-hidden="true"></span></a><a class="navrow" href="#" data-demo-link="关于本站"><span>关于本站</span><span class="chev" aria-hidden="true"></span></a></div></div><div class="appearance"><div class="appearance-head"><strong>外观</strong><span>跟随系统</span></div><div class="segmented" role="group" aria-label="选择外观"><button class="selected" data-theme-choice="system">自动</button><button data-theme-choice="light">明亮</button><button data-theme-choice="dark">暗黑</button></div><div class="account-list"><p class="group-label">账户</p><a class="navrow auth-signed-out" href="#" data-demo-link="登录"><span>登录</span><span class="chev" aria-hidden="true"></span></a><a class="navrow auth-signed-in" href="#" data-demo-link="个人主页" hidden><span>个人主页</span><span class="chev" aria-hidden="true"></span></a><button class="navrow auth-signed-in" type="button" data-demo-link="退出登录" hidden><span>退出登录</span></button></div></div><div class="sheet-bottom"></div></section></div><p class="fineprint"><b>安装版 PWA：</b>Dock 放高频入口；「更多」直达其他页面，外观与账户独立分组。</p></section>
+</div></main><div id="demoToast" role="status" aria-live="polite"></div><script>
+const root=document.documentElement;
+const webDrawer=document.querySelector('.web-drawer');
+const webScrim=document.querySelector('.web-scrim');
+const pwaSheet=document.querySelector('.pwa-sheet');
+const pwaScrim=document.querySelector('.sheet-scrim');
+const webTrigger=document.querySelector('.open-web-menu');
+const pwaTrigger=document.querySelector('.pwa-nav button:last-child');
+let webReturnFocus=webTrigger;
+let pwaReturnFocus=pwaTrigger;
+
+const setWebOpen=open=>{
+  if(open && !webDrawer.classList.contains('closed'))return;
+  if(!open && webDrawer.classList.contains('closed'))return;
+  webDrawer.classList.toggle('closed',!open);
+  webScrim.classList.toggle('closed',!open);
+  webDrawer.setAttribute('aria-hidden',String(!open));
+  webDrawer.inert=!open;
+  webTrigger.setAttribute('aria-expanded',String(open));
+  webTrigger.setAttribute('aria-label',open?'关闭更多菜单':'打开更多菜单');
+  if(open){webReturnFocus=document.activeElement;setPwaOpen(false);setWebView('root');webDrawer.querySelector('.close').focus()}
+  else if(webReturnFocus?.isConnected)webReturnFocus.focus();
+};
+const setPwaOpen=open=>{
+  if(open && !pwaSheet.classList.contains('closed'))return;
+  if(!open && pwaSheet.classList.contains('closed'))return;
+  pwaSheet.classList.toggle('closed',!open);
+  pwaScrim.classList.toggle('closed',!open);
+  pwaSheet.setAttribute('aria-hidden',String(!open));
+  pwaSheet.inert=!open;
+  pwaTrigger.setAttribute('aria-expanded',String(open));
+  pwaTrigger.setAttribute('aria-label',open?'关闭更多菜单':'打开更多菜单');
+  if(open){pwaReturnFocus=document.activeElement;setWebOpen(false);pwaSheet.querySelector('.close').focus()}
+  else if(pwaReturnFocus?.isConnected)pwaReturnFocus.focus();
+};
+let previousWebView='root';
+const setWebView=view=>{
+  webDrawer.querySelectorAll('[data-web-view]').forEach(panel=>{
+    const active=panel.dataset.webView===view;
+    panel.hidden=!active;
+    panel.classList.toggle('is-active',active);
+    panel.setAttribute('aria-hidden',String(!active));
+  });
+  webDrawer.querySelectorAll('[data-web-open-view]').forEach(trigger=>{
+    trigger.setAttribute('aria-expanded',String(trigger.dataset.webOpenView===view));
+  });
+  if(view==='content'||view==='discover')previousWebView=view;
+};
+webDrawer.querySelectorAll('[data-web-open-view]').forEach(button=>button.addEventListener('click',()=>{
+  setWebView(button.dataset.webOpenView);
+  webDrawer.querySelector(`[data-web-view="${button.dataset.webOpenView}"] .back-link`).focus();
+}));
+webDrawer.querySelectorAll('[data-web-back]').forEach(button=>button.addEventListener('click',()=>{
+  setWebView('root');
+  webDrawer.querySelector(`[data-web-open-view="${previousWebView}"]`).focus();
+}));
+webTrigger.addEventListener('click',()=>setWebOpen(webDrawer.classList.contains('closed')));
+document.querySelector('.web-drawer .close').addEventListener('click',()=>setWebOpen(false));
+webScrim.addEventListener('click',()=>setWebOpen(false));
+const webGrabber=document.querySelector('.web-grabber');
+let webDragStartY=null;
+webGrabber.addEventListener('pointerdown',event=>{
+  webDragStartY=event.clientY;
+  webGrabber.setPointerCapture(event.pointerId);
+  webDrawer.classList.add('dragging');
+});
+webGrabber.addEventListener('pointermove',event=>{
+  if(webDragStartY===null)return;
+  webDrawer.style.transform=`translateY(${Math.max(0,event.clientY-webDragStartY)}px)`;
+});
+const finishWebDrag=event=>{
+  if(webDragStartY===null)return;
+  const offset=Math.max(0,event.clientY-webDragStartY);
+  webDragStartY=null;
+  webDrawer.classList.remove('dragging');
+  webDrawer.style.transform='';
+  if(offset>84)setWebOpen(false);
+};
+webGrabber.addEventListener('pointerup',finishWebDrag);
+webGrabber.addEventListener('pointercancel',()=>{
+  if(webDragStartY===null)return;
+  webDragStartY=null;
+  webDrawer.classList.remove('dragging');
+  webDrawer.style.transform='';
+});
+pwaTrigger.addEventListener('click',()=>setPwaOpen(pwaSheet.classList.contains('closed')));
+document.querySelector('.pwa-sheet .close').addEventListener('click',()=>setPwaOpen(false));
+pwaScrim.addEventListener('click',()=>setPwaOpen(false));
+const grabber=document.querySelector('.grabber');
+let dragStartY=null;
+grabber.addEventListener('pointerdown',event=>{
+  dragStartY=event.clientY;
+  grabber.setPointerCapture(event.pointerId);
+  pwaSheet.classList.add('dragging');
+});
+grabber.addEventListener('pointermove',event=>{
+  if(dragStartY===null)return;
+  const offset=Math.max(0,event.clientY-dragStartY);
+  pwaSheet.style.transform=`translateY(${offset}px)`;
+});
+const finishSheetDrag=event=>{
+  if(dragStartY===null)return;
+  const offset=Math.max(0,event.clientY-dragStartY);
+  dragStartY=null;
+  pwaSheet.classList.remove('dragging');
+  pwaSheet.style.transform='';
+  if(offset>84)setPwaOpen(false);
+};
+grabber.addEventListener('pointerup',finishSheetDrag);
+grabber.addEventListener('pointercancel',event=>{
+  if(dragStartY===null)return;
+  dragStartY=null;
+  pwaSheet.classList.remove('dragging');
+  pwaSheet.style.transform='';
+});
+
+let accountSignedIn=false;
+const accountPreview=document.getElementById('accountPreview');
+const applyAccountState=signedIn=>{
+  accountSignedIn=signedIn;
+  document.querySelectorAll('.auth-signed-out').forEach(item=>item.hidden=signedIn);
+  document.querySelectorAll('.auth-signed-in').forEach(item=>item.hidden=!signedIn);
+  accountPreview.textContent=`预览：${signedIn?'已登录':'未登录'}`;
+  accountPreview.setAttribute('aria-pressed',String(signedIn));
+  accountPreview.setAttribute('aria-label',`切换账户状态，当前${signedIn?'已登录':'未登录'}`);
+};
+accountPreview.addEventListener('click',()=>applyAccountState(!accountSignedIn));
+let themeChoice='system';
+const media=matchMedia('(prefers-color-scheme: dark)');
+const applyTheme=choice=>{
+  themeChoice=choice;
+  root.dataset.theme=choice==='system'?(media.matches?'dark':'light'):choice;
+  document.querySelector('meta[name="theme-color"]').content=root.dataset.theme==='dark'?'#10110f':'#f5f6f2';
+  document.querySelectorAll('.segmented').forEach(group=>group.querySelectorAll('[data-theme-choice]').forEach(item=>{
+    const selected=item.dataset.themeChoice===choice;
+    item.classList.toggle('selected',selected);
+    item.setAttribute('aria-pressed',String(selected));
+  }));
+  document.querySelectorAll('.appearance-head span').forEach(label=>label.textContent=choice==='system'?'跟随系统':choice==='light'?'明亮':'暗黑');
+  document.getElementById('themeToggle').textContent=root.dataset.theme==='dark'?'切换明亮预览':'切换深色预览';
+};
+document.querySelectorAll('.segmented [data-theme-choice]').forEach(button=>button.addEventListener('click',()=>applyTheme(button.dataset.themeChoice)));
+media.addEventListener?.('change',()=>{if(themeChoice==='system')applyTheme('system')});
+document.getElementById('themeToggle').addEventListener('click',()=>applyTheme(root.dataset.theme==='dark'?'light':'dark'));
+document.addEventListener('click',event=>{
+  const link=event.target.closest('[data-demo-link]');
+  if(!link)return;
+  event.preventDefault();
+  if(link.dataset.demoLink==='退出登录')applyAccountState(false);
+  if(webDrawer.contains(link))setWebOpen(false);
+  else if(pwaSheet.contains(link))setPwaOpen(false);
+  const toast=document.getElementById('demoToast');
+  toast.textContent=`${link.dataset.demoLink} · 设计预览`;
+  toast.classList.add('visible');
+  clearTimeout(window.demoToastTimer);
+  window.demoToastTimer=setTimeout(()=>toast.classList.remove('visible'),1600);
+});
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){
+    if(!webDrawer.classList.contains('closed')&&webDrawer.contains(document.activeElement))setWebOpen(false);
+    else if(!pwaSheet.classList.contains('closed')&&pwaSheet.contains(document.activeElement))setPwaOpen(false);
+  }
+});
+const previewParams=new URLSearchParams(location.search);
+const previewTheme=previewParams.get('theme');
+applyAccountState(previewParams.get('account')==='signed-in');
+applyTheme(['light','dark','system'].includes(previewTheme)?previewTheme:'system');
+const previewWebView=previewParams.get('web');
+if(previewWebView==='content'||previewWebView==='discover')setWebView(previewWebView);
+</script><script type="module">import{createIcons,House,BookOpen,MessageCircle,Ellipsis,Search}from'https://esm.sh/lucide@0.468.0';createIcons({icons:{House,BookOpen,MessageCircle,Ellipsis,Search}});</script></body></html>

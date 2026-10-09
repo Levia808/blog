@@ -1,0 +1,46 @@
+
+{{- $P := site.Data.site -}}{{- if not $P }}{{ $P = site.Params }}{{ end -}}<!DOCTYPE html>
+<html lang="{{ site.Language.Locale | default "zh-cn" }}" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script>
+    (function () {
+      function isMediaTarget(target) {
+        return target && target.closest && target.closest('img, video, .th-viewer, .gslide-media');
+      }
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (type) {
+        document.addEventListener(type, function (event) {
+          if (!isMediaTarget(event.target)) event.preventDefault();
+        }, { passive: false });
+      });
+      document.addEventListener('touchmove', function (event) {
+        if (event.touches && event.touches.length > 1 && !isMediaTarget(event.target)) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+    }());
+  </script>
+  <meta name="generator" content="Hugo {{ hugo.Version }}">
+  <title>{{ block "title" . }}{{ if not .IsHome }}{{ .Title }} · {{ end }}{{ site.Title }}{{ end }}</title>
+  {{ partial "head.html" . }}
+</head>
+<body class="{{ block "body-class" . }}{{ end }}{{ if not (eq .Layout "admin") }} site-has-nav{{ end }} nav-behavior-{{ $P.navBehavior | default "auto" }}" data-nav-behavior="{{ $P.navBehavior | default "auto" }}">
+  <a class="skip-link" href="#main">跳转到主要内容</a>
+  {{- if not (eq .Layout "admin") }}
+  {{- if not .IsHome }}
+  {{ partial "header.html" . }}
+  {{- end }}
+  {{- end }}
+  <main id="main" class="site-main">
+    {{ block "main" . }}{{ end }}
+  </main>
+  {{- if not (eq .Layout "admin") }}
+  {{ partial "footer.html" . }}
+  {{- if $P.auth }}
+  {{ partial "auth-modal.html" . }}
+  {{- end }}
+  {{- end }}
+  {{ partial "scripts.html" . }}
+</body>
+</html>

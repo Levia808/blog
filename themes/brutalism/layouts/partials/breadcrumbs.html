@@ -1,0 +1,12 @@
+<nav class="breadcrumb" aria-label="面包屑">
+  <a href="{{ "" | relLangURL }}">~</a>
+  {{- template "breadcrumb-trail" (dict "p1" . "p2" .) }}
+</nav>
+{{- define "breadcrumb-trail" }}
+{{- if .p1.Parent -}}
+{{- template "breadcrumb-trail" (dict "p1" .p1.Parent "p2" .p2 ) }}
+{{- end -}}
+{{- if not .p1.IsHome }}
+<span class="bc-sep">/</span>{{ if not (eq .p1 .p2) }}<a href="{{ .p1.RelPermalink }}">{{ .p1.Title }}</a>{{ else }}<span class="bc-current">{{ .p1.Title }}</span>{{ end }}
+{{- end }}
+{{- end }}

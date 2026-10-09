@@ -1,0 +1,26 @@
+{{- define "main" }}
+<section class="container terms-page">
+  <header class="list-header" data-reveal>
+    <div class="label">{{ .Kind | title }}</div>
+    <h1 class="list-title">{{ .Title }}</h1>
+    <p class="mono list-count">{{ len .Pages }} items</p>
+  </header>
+  <div class="tag-index" data-reveal>
+    <aside class="tag-index__aside">
+      <p class="tag-index__eyebrow mono">TAG MAP</p>
+      <p class="tag-index__text">按主题进入文章集合，数字代表该标签下的内容数量。</p>
+    </aside>
+    <div class="tag-index__grid">
+    {{- range .Pages }}
+    {{- $count := len .Pages -}}
+    {{- $bar := mul (math.Min $count 12) 8 -}}
+    <a class="tag-tile" href="{{ .RelPermalink }}" style="--tag-weight: {{ $bar }}%;">
+      <span class="tag-tile__name">{{ .Title }}</span>
+      <span class="tag-tile__count mono">{{ $count }}</span>
+      <span class="tag-tile__bar" aria-hidden="true"></span>
+    </a>
+    {{- end }}
+    </div>
+  </div>
+</section>
+{{- end }}
