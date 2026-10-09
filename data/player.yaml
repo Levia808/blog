@@ -4,6 +4,7 @@ autoLoad: true
 playlistId: "163114086"
 proxyBase: "https://blog-music-api.onrender.com"
 limit: 200
+initialLimit: 18
 level: "higher"
 side: "left"
 fontSize: 4
@@ -15,3 +16,5 @@ minOpacity: 0.05
 blur: 2
 smoothing: 100
 inset: 80
+playlistTimeout: 9000
+cacheTtl: 604800000

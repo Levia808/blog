@@ -9,9 +9,34 @@
 {{- $playerJsVersion = .ModTime.UnixMilli -}}
 {{- end -}}
 <link rel="stylesheet" href="{{ "float-player/float-player.css" | relURL }}?v={{ $playerCssVersion }}">
+{{- with .proxyBase }}
+<link rel="preconnect" href="{{ . }}" crossorigin>
+<link rel="dns-prefetch" href="{{ . }}">
+{{- end }}
 <script src="{{ "vendor/media-chrome-4.19.3.min.js" | relURL }}" defer></script>
 <script>
 window.__FLOAT_PLAYER_CONFIG = {{ . | jsonify | safeJS }};
+(function () {
+  var config = window.__FLOAT_PLAYER_CONFIG || {};
+  if (config.enabled === false || !config.autoLoad || !config.playlistId || !config.proxyBase || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)) return;
+  var params = new URLSearchParams();
+  params.set('id', config.playlistId);
+  params.set('limit', String(config.initialLimit || config.limit || 18));
+  params.set('level', config.level || 'exhigh');
+  var url = String(config.proxyBase).replace(/\/$/, '') + '/api/netease/playlist?' + params.toString();
+  var controller = window.AbortController ? new AbortController() : null;
+  var timer = controller ? window.setTimeout(function () { controller.abort(); }, Number(config.playlistTimeout || 9000)) : 0;
+  var request = fetch(url, {
+    mode: 'cors',
+    credentials: 'omit',
+    cache: 'no-store',
+    signal: controller ? controller.signal : undefined
+  }).finally(function () {
+    if (timer) window.clearTimeout(timer);
+  });
+  request.catch(function () {});
+  window.__FLOAT_PLAYER_BOOTSTRAP = { url: url, promise: request, used: false };
+})();
 </script>
 <script src="{{ "float-player/float-player.js" | relURL }}?v={{ $playerJsVersion }}" defer></script>
 {{- end -}}

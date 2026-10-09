@@ -21,7 +21,9 @@
     blur: 2,
     smoothing: 190,
     inset: 80,
-    playlistTimeout: 15000
+    playlistTimeout: 9000,
+    initialLimit: 18,
+    cacheTtl: 7 * 24 * 60 * 60 * 1000
   };
   function parseConfigScalar(raw) {
     var value = String(raw == null ? '' : raw).trim();
@@ -46,10 +48,10 @@
   }
 
   function loadRuntimeConfig() {
-    if (window.__FLOAT_PLAYER_CONFIG_URL === false) return Promise.resolve({});
-    var url = window.__FLOAT_PLAYER_CONFIG_URL || 'https://raw.githubusercontent.com/Levia808/blog/main/data/player.yaml';
+    var url = window.__FLOAT_PLAYER_CONFIG_URL;
+    if (!url || url === false) return Promise.resolve({});
     var controller = window.AbortController ? new AbortController() : null;
-    var timer = controller ? window.setTimeout(function () { controller.abort(); }, 2200) : 0;
+    var timer = controller ? window.setTimeout(function () { controller.abort(); }, 1600) : 0;
     var requestUrl = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'v=' + Date.now();
     return fetch(requestUrl, {
       cache: 'no-store',
@@ -64,8 +66,10 @@
     });
   }
 
-  loadRuntimeConfig().then(function (runtimeConfig) {
-    var cfg = Object.assign({}, defaults, window.__FLOAT_PLAYER_CONFIG || {}, runtimeConfig || {});
+  var bootConfig = Object.assign({}, defaults, window.__FLOAT_PLAYER_CONFIG || {});
+
+  function initPlayer(runtimeConfig) {
+    var cfg = Object.assign({}, bootConfig, runtimeConfig || {});
     window.__FLOAT_PLAYER_RUNTIME_CONFIG = cfg;
     if (cfg.enabled === false || document.querySelector('.fp-wheel-player')) return;
 
@@ -108,6 +112,7 @@
     root.innerHTML = [
       '<button class="fp-wheel-anchor" id="fpWheelAnchor" type="button" aria-label="展开音乐列表">',
       '<span class="fp-wheel-arrow" aria-hidden="true"></span>',
+      '<span class="fp-anchor-loader fp-geometric-loader" aria-hidden="true"></span>',
       '</button>',
       '<div class="fp-wheel-panel" id="fpWheelPanel" role="listbox" tabindex="0" aria-label="歌曲列表" data-lenis-prevent-wheel>',
       '<div class="fp-song-wheel" id="fpSongWheel"></div>',
@@ -115,7 +120,10 @@
       '</div>',
       '<media-controller class="fp-media-controller" audio>',
       '<media-control-bar class="fp-transport">',
-      '<img class="fp-transport-cover" id="fpTransportCover" alt="" draggable="false" hidden>',
+      '<span class="fp-transport-cover-shell" id="fpTransportCoverShell" hidden>',
+      '<i class="fp-geometric-loader fp-geometric-loader--cover" aria-hidden="true"></i>',
+      '<img class="fp-transport-cover" id="fpTransportCover" alt="" loading="eager" fetchpriority="high" decoding="async" draggable="false">',
+      '</span>',
       '<div class="fp-transport-meta">',
       '<span class="fp-transport-title" id="fpTransportTitle"></span>',
       '<span class="fp-transport-artist" id="fpTransportArtist"></span>',
@@ -127,7 +135,7 @@
       '<media-play-button class="fp-transport-play"></media-play-button>',
       '<media-volume-range class="fp-transport-volume" aria-label="音量"></media-volume-range>',
       '</media-control-bar>',
-      '<audio id="fpAudio" slot="media" preload="metadata"></audio>',
+      '<audio id="fpAudio" slot="media" preload="none"></audio>',
       '</media-controller>'
     ].join('');
     document.body.appendChild(root);
@@ -140,10 +148,19 @@
   var songWheel = player.querySelector('#fpSongWheel');
   var songStatus = player.querySelector('#fpSongStatus');
   var transport = player.querySelector('.fp-transport');
+  var transportCoverShell = player.querySelector('#fpTransportCoverShell');
   var transportCover = player.querySelector('#fpTransportCover');
   var transportTitle = player.querySelector('#fpTransportTitle');
   var transportArtist = player.querySelector('#fpTransportArtist');
   var audio = player.querySelector('#fpAudio');
+
+  transportCover.addEventListener('load', function () {
+    transportCoverShell.classList.remove('is-loading', 'is-error');
+  });
+  transportCover.addEventListener('error', function () {
+    transportCoverShell.classList.remove('is-loading');
+    transportCoverShell.classList.add('is-error');
+  });
 
   songWheel.style.setProperty('--ow-font-size', Number(cfg.fontSize || defaults.fontSize) + 'rem');
   songWheel.style.setProperty('--ow-inset', Number(cfg.inset || defaults.inset) + 'px');
@@ -166,7 +183,11 @@
     playlistStatus: 'idle',
     playlistPromise: null,
     playlistRequestId: '',
+    playlistRequestSeq: 0,
+    playlistRequestToken: 0,
+    playlistRequestLimit: 0,
     loadedPlaylistId: '',
+    loadedPlaylistLimit: 0,
     uiRafs: [],
     failedTracks: {}
   };
@@ -275,12 +296,72 @@
     }
   }
 
+  function normalizeTracks(nextTracks) {
+    return (Array.isArray(nextTracks) ? nextTracks : []).map(function (track) {
+      return {
+        id: String(track.id || track.songId || track.url || ''),
+        name: track.name || 'Untitled',
+        artist: track.artist || 'Unknown Artist',
+        cover: track.cover || '',
+        url: track.url || ''
+      };
+    }).filter(function (track) {
+      return track.url;
+    });
+  }
+
+  function playlistCacheKey(id, options) {
+    var proxy = String(cfg.proxyBase || defaults.proxyBase);
+    try {
+      proxy = new URL(proxy, location.href).origin;
+    } catch (error) {
+      // Keep a stable fallback key if an older browser rejects URL parsing.
+    }
+    return 'levia:float-player:playlist:v4:' + encodeURIComponent(proxy) + ':' + String(id) + ':' + String((options && options.level) || cfg.level || 'exhigh');
+  }
+
+  function readPlaylistCache(id, options) {
+    try {
+      var raw = window.localStorage.getItem(playlistCacheKey(id, options));
+      if (!raw) return null;
+      var cached = JSON.parse(raw);
+      if (!cached || !Array.isArray(cached.tracks) || !cached.savedAt) return null;
+      if (Date.now() - Number(cached.savedAt) > Number(cfg.cacheTtl || defaults.cacheTtl)) return null;
+      var cachedTracks = normalizeTracks(cached.tracks);
+      return cachedTracks.length
+        ? { limit: Number(cached.limit || cachedTracks.length), tracks: cachedTracks }
+        : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writePlaylistCache(id, options, nextTracks, requestedLimit) {
+    try {
+      var key = playlistCacheKey(id, options);
+      var existing = JSON.parse(window.localStorage.getItem(key) || 'null');
+      var cacheIsFresh = existing && existing.savedAt
+        && Date.now() - Number(existing.savedAt) <= Number(cfg.cacheTtl || defaults.cacheTtl);
+      if (cacheIsFresh && Number(existing.limit || 0) > Number(requestedLimit || 0)) return;
+      window.localStorage.setItem(key, JSON.stringify({
+        savedAt: Date.now(),
+        limit: Number(requestedLimit || nextTracks.length),
+        tracks: normalizeTracks(nextTracks)
+      }));
+    } catch (error) {
+      // Storage is an optimization only. A full or disabled store must not break playback.
+    }
+  }
+
   function render() {
     songWheel.innerHTML = tracks.map(function (track, index) {
       var cover = safeImageUrl(track.cover);
+      var coverMarkup = cover
+        ? '<img class="fp-song-cover" src="' + escapeText(cover) + '" alt="" draggable="false" loading="lazy" decoding="async">'
+        : '<span class="fp-song-cover fp-song-cover-placeholder" aria-hidden="true"><i class="fp-geometric-loader fp-geometric-loader--thumb"></i></span>';
       return [
         '<button class="fp-song" type="button" role="option" data-index="', index, '" aria-label="', escapeText(track.name), ' ', escapeText(track.artist), '">',
-        cover ? '<img class="fp-song-cover" src="' + escapeText(cover) + '" alt="" draggable="false" loading="lazy" decoding="async">' : '',
+        coverMarkup,
         '<span class="fp-song-meta">',
         '<span class="fp-song-title"><span class="fp-song-marquee"><span>', escapeText(track.name), '</span></span></span>',
         '<span class="fp-song-artist"><span class="fp-song-marquee"><span>', escapeText(track.artist), '</span></span></span>',
@@ -314,15 +395,27 @@
     var track = tracks[state.current];
     if (!track) {
       player.classList.remove('has-tracks');
+      transportCoverShell.hidden = true;
+      transportCoverShell.classList.remove('is-loading');
+      transportTitle.textContent = '';
+      transportArtist.textContent = '';
       return;
     }
     player.classList.add('has-tracks');
     transportTitle.textContent = track.name;
     transportArtist.textContent = track.artist;
     var cover = safeImageUrl(track.cover);
-    transportCover.hidden = !cover;
-    if (cover && transportCover.src !== cover) transportCover.src = cover;
-    if (!cover) transportCover.removeAttribute('src');
+    transportCoverShell.hidden = !cover;
+    if (cover) {
+      if (transportCover.src !== cover) {
+        transportCoverShell.classList.remove('is-error');
+        transportCoverShell.classList.add('is-loading');
+        transportCover.src = cover;
+      }
+    } else {
+      transportCoverShell.classList.remove('is-loading');
+      transportCover.removeAttribute('src');
+    }
   }
 
   function syncAudio() {
@@ -331,7 +424,8 @@
     var next = new URL(track.url, location.href).href;
     if (audio.currentSrc !== next && audio.src !== next) {
       audio.src = track.url;
-      audio.load();
+      // Keep metadata/network work behind an explicit user play action.
+      if (state.playing) audio.load();
     }
   }
 
@@ -355,49 +449,111 @@
     });
   }
 
+  function fetchPlaylist(url, timeoutMs) {
+    var bootstrap = window.__FLOAT_PLAYER_BOOTSTRAP;
+    if (bootstrap && !bootstrap.used && bootstrap.url === url && bootstrap.promise) {
+      bootstrap.used = true;
+      return bootstrap.promise;
+    }
+    return fetchWithTimeout(url, { cache: 'no-store', mode: 'cors', credentials: 'omit' }, timeoutMs);
+  }
+
   function setPlaylistStatus(message, retry) {
     songStatus.hidden = !message;
     songStatus.innerHTML = message
-      ? (retry
-        ? '<button class="fp-song-retry" type="button">歌单加载失败，点击重试</button>'
-        : escapeText(message))
+      ? (message === 'loading'
+        ? '<span class="fp-loading-indicator" role="status" aria-label="正在加载歌单"><i class="fp-geometric-loader" aria-hidden="true"></i><span class="fp-visually-hidden">正在加载播放列表</span></span>'
+        : (retry
+          ? '<button class="fp-song-retry" type="button">歌单加载失败，点击重试</button>'
+          : '<span>' + escapeText(message) + '</span>'))
       : '';
+    player.classList.toggle('is-playlist-loading', message === 'loading');
+    player.setAttribute('aria-busy', message === 'loading' ? 'true' : 'false');
   }
 
-  function replaceTracks(nextTracks) {
-    tracks = nextTracks.map(function (track) {
-      return {
-        name: track.name || 'Untitled',
-        artist: track.artist || 'Unknown Artist',
-        cover: track.cover || '',
-        url: track.url || ''
-      };
-    }).filter(function (track) {
-      return track.url;
-    });
-    state.current = 0;
-    state.selected = 0;
-    state.pos = 0;
-    state.target = 0;
-    state.playing = false;
+  function replaceTracks(nextTracks, options) {
+    options = options || {};
+    var previousTracks = tracks;
+    var previous = previousTracks[state.current];
+    var previousId = previous && previous.id;
+    var selectedTrack = previousTracks[state.selected];
+    var selectedId = selectedTrack && selectedTrack.id;
+    var wasPlaying = state.playing;
+    var previousTime = audio.currentTime || 0;
+    var normalized = normalizeTracks(nextTracks);
+    if (!normalized.length) return false;
+    tracks = normalized;
+    var nextIndex = options.preservePlayback && previousId
+      ? tracks.findIndex(function (track) { return track.id === previousId; })
+      : -1;
+    var nextSelected = options.preservePlayback && selectedId
+      ? tracks.findIndex(function (track) { return track.id === selectedId; })
+      : -1;
+    state.current = nextIndex >= 0 ? nextIndex : 0;
+    state.selected = nextSelected >= 0 ? nextSelected : state.current;
+    state.pos = state.selected;
+    state.target = state.selected;
     state.failedTracks = {};
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
+    if (!options.preservePlayback || nextIndex < 0) {
+      state.playing = false;
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+    }
     render();
+    if (options.preservePlayback && nextIndex >= 0 && wasPlaying) {
+      state.playing = true;
+      syncAudio();
+      if (previousTime > 0) audio.currentTime = previousTime;
+      audio.play().catch(function () {
+        state.playing = false;
+        syncTransport();
+        layout();
+      });
+    }
+    return true;
+  }
+
+  function schedulePlaylistRefresh(id) {
+    var initialLimit = Number(cfg.initialLimit || 0);
+    var fullLimit = Number(cfg.limit || 0);
+    if (!id || !initialLimit || !fullLimit || fullLimit <= initialLimit) return;
+    var refresh = function () {
+      if (state.playlistRequestId !== String(id) || state.playlistStatus === 'error') return;
+      loadPlaylist(id, { limit: fullLimit, level: cfg.level, background: true, force: true }).catch(function () {});
+    };
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(refresh, { timeout: 1800 });
+    } else {
+      window.setTimeout(refresh, 1200);
+    }
   }
 
   function loadPlaylist(id, options) {
+    options = options || {};
     if (!id) return Promise.reject(new Error('Playlist id is required.'));
     id = String(id);
-    if (state.playlistStatus === 'loading' && state.playlistPromise && state.playlistRequestId === id) return state.playlistPromise;
-    if (state.playlistStatus === 'loaded' && state.loadedPlaylistId === id) return Promise.resolve({ tracks: tracks });
+    var requestedLimit = Number(options.limit || cfg.limit || 30);
+    if (state.playlistStatus === 'loading' && state.playlistPromise && state.playlistRequestId === id && state.playlistRequestLimit >= requestedLimit) return state.playlistPromise;
+    if (!options.force && state.playlistStatus === 'loaded' && state.loadedPlaylistId === id && state.loadedPlaylistLimit >= requestedLimit) return Promise.resolve({ tracks: tracks });
+
+    if (!tracks.length) {
+      var cached = readPlaylistCache(id, options);
+      if (cached) {
+        replaceTracks(cached.tracks, { preservePlayback: false });
+        state.loadedPlaylistId = id;
+        state.loadedPlaylistLimit = cached.limit;
+      }
+    }
+
+    var requestToken = ++state.playlistRequestSeq;
+    state.playlistRequestToken = requestToken;
     state.playlistStatus = 'loading';
     state.playlistRequestId = id;
-    setPlaylistStatus('正在加载歌单…');
-    state.playlistPromise = fetchWithTimeout(
+    state.playlistRequestLimit = requestedLimit;
+    if (!tracks.length) setPlaylistStatus('loading');
+    state.playlistPromise = fetchPlaylist(
       buildPlaylistEndpoint(id, options),
-      { cache: 'no-store' },
       Number(cfg.playlistTimeout || defaults.playlistTimeout)
     )
       .then(function (response) {
@@ -405,29 +561,33 @@
         return response.json();
       })
       .then(function (payload) {
-        if (state.playlistRequestId !== id) return payload;
+        if (state.playlistRequestToken !== requestToken) return payload;
         if (!payload || !payload.ok) throw new Error((payload && payload.error) || 'Playlist proxy returned an error.');
         var playableTracks = Array.isArray(payload.tracks)
           ? payload.tracks.filter(function (track) {
             return track && typeof track.url === 'string' && /^https?:\/\//i.test(track.url);
           })
           : [];
-        if (!playableTracks.length) {
-          throw new Error('No playable tracks returned for playlist ' + id + '.');
+        if (!playableTracks.length) throw new Error('No playable tracks returned for playlist ' + id + '.');
+        var hasMoreCompleteLoadedTracks = state.loadedPlaylistId === id
+          && state.loadedPlaylistLimit > requestedLimit
+          && tracks.length > playableTracks.length;
+        if (!hasMoreCompleteLoadedTracks) {
+          replaceTracks(playableTracks, { preservePlayback: true });
         }
-        replaceTracks(playableTracks);
+        writePlaylistCache(id, options, playableTracks, requestedLimit);
         state.playlistStatus = 'loaded';
         state.playlistPromise = null;
         state.loadedPlaylistId = id;
+        state.loadedPlaylistLimit = Math.max(state.loadedPlaylistLimit, requestedLimit);
         setPlaylistStatus('');
-
         return payload;
       }).catch(function (error) {
-        if (state.playlistRequestId === id) {
-          state.playlistStatus = 'error';
-          state.playlistPromise = null;
-          setPlaylistStatus('歌单加载失败，点击重试', true);
-        }
+        if (state.playlistRequestToken !== requestToken) return { stale: true };
+        state.playlistStatus = tracks.length ? 'loaded' : 'error';
+        state.playlistPromise = null;
+        if (!tracks.length) setPlaylistStatus('歌单加载失败，点击重试', true);
+        else setPlaylistStatus('');
         throw error;
       });
     return state.playlistPromise;
@@ -435,7 +595,7 @@
 
   function loadPlaylistWithRetry(id, options) {
     return loadPlaylist(id, options).catch(function (error) {
-      if (state.playlistRequestId !== String(id)) throw error;
+      if (state.playlistRequestId !== String(id) || tracks.length) throw error;
       return new Promise(function (resolve) {
         window.setTimeout(resolve, 900);
       }).then(function () {
@@ -811,7 +971,19 @@
   setUI({ anchorX: 0, anchorOpacity: 1, anchorScale: 1, wheelX: -28 * sideSign(), wheelOpacity: 0 });
   render();
   if (cfg.autoLoad && cfg.playlistId) {
-    loadPlaylistWithRetry(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function () {});
+    loadPlaylistWithRetry(cfg.playlistId, { limit: cfg.initialLimit || cfg.limit, level: cfg.level }).then(function () {
+      schedulePlaylistRefresh(cfg.playlistId);
+    }).catch(function () {});
   }
-  });
+  }
+
+  // Inline Hugo config is the fast path. An explicitly supplied URL keeps the
+  // legacy override semantics without making the normal blog page wait for it.
+  if (window.__FLOAT_PLAYER_CONFIG_URL) {
+    loadRuntimeConfig().then(function (runtimeConfig) {
+      initPlayer(runtimeConfig);
+    });
+  } else {
+    initPlayer({});
+  }
 })();
