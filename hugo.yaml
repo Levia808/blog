@@ -61,6 +61,9 @@ menu:
     - name: 音乐
       url: music/
       weight: 7
+    - name: 我的音乐库
+      url: my-music/
+      weight: 8
     - name: 归档
       url: archives/
       weight: 10

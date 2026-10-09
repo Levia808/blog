@@ -1,0 +1,581 @@
+{{ define "main" }}
+<article class="music-upload-page">
+  <header class="page-header">
+    <h1>{{ .Title }}</h1>
+    {{ if .Content }}
+    <div class="page-description">{{ .Content }}</div>
+    {{ end }}
+  </header>
+
+  <div class="auth-required" id="authRequired">
+    <p>请先<a href="/login/">登录</a>以管理你的音乐库</p>
+  </div>
+
+  <div class="music-upload-container" id="musicUploadContainer" hidden>
+
+    <!-- Upload Section -->
+    <section class="upload-section">
+      <h2>上传音频文件</h2>
+      <div class="upload-form">
+        <input type="file" id="audioFileInput" accept="audio/*" multiple hidden>
+        <button type="button" id="selectAudioBtn" class="btn-primary">选择音频文件</button>
+        <div class="upload-info">
+          <p>支持格式: MP3, WAV, OGG, M4A, FLAC</p>
+          <p>最大文件大小: 50MB</p>
+        </div>
+        <div id="uploadQueue" class="upload-queue"></div>
+      </div>
+    </section>
+
+    <!-- My Library -->
+    <section class="my-library-section">
+      <div class="section-header">
+        <h2>我的音乐库 (<span id="libraryCount">0</span>)</h2>
+        <button type="button" id="refreshLibraryBtn" class="btn-secondary">刷新</button>
+      </div>
+      <div id="libraryError" class="error-message" hidden></div>
+      <div id="libraryLoading" class="loading-message">加载中...</div>
+      <div id="libraryList" class="library-list" hidden></div>
+      <div id="libraryEmpty" class="empty-message" hidden>
+        <p>还没有上传音乐</p>
+        <p class="hint">点击上方按钮上传你的音频文件</p>
+      </div>
+    </section>
+
+  </div>
+</article>
+
+<script>
+(function() {
+  'use strict';
+
+  if (!window.blogSupabase) {
+    document.getElementById('authRequired').hidden = false;
+    return;
+  }
+
+  const supabase = window.blogSupabase;
+  const authRequired = document.getElementById('authRequired');
+  const uploadContainer = document.getElementById('musicUploadContainer');
+  const audioFileInput = document.getElementById('audioFileInput');
+  const selectAudioBtn = document.getElementById('selectAudioBtn');
+  const uploadQueue = document.getElementById('uploadQueue');
+  const libraryList = document.getElementById('libraryList');
+  const libraryLoading = document.getElementById('libraryLoading');
+  const libraryEmpty = document.getElementById('libraryEmpty');
+  const libraryError = document.getElementById('libraryError');
+  const libraryCount = document.getElementById('libraryCount');
+  const refreshLibraryBtn = document.getElementById('refreshLibraryBtn');
+
+  let currentUser = null;
+
+  async function checkAuth() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      currentUser = user;
+      authRequired.hidden = true;
+      uploadContainer.hidden = false;
+      loadLibrary();
+    } else {
+      authRequired.hidden = false;
+      uploadContainer.hidden = true;
+    }
+  }
+
+  async function uploadAudioFile(file) {
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      throw new Error('文件大小超过 50MB 限制');
+    }
+
+    const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/x-m4a', 'audio/flac'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('不支持的音频格式');
+    }
+
+    // Create upload item UI
+    const uploadItem = document.createElement('div');
+    uploadItem.className = 'upload-item';
+    uploadItem.innerHTML = `
+      <div class="upload-filename">${escapeHtml(file.name)}</div>
+      <div class="upload-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">0%</div>
+      </div>
+      <div class="upload-status"></div>
+    `;
+    uploadQueue.appendChild(uploadItem);
+
+    const progressFill = uploadItem.querySelector('.progress-fill');
+    const progressText = uploadItem.querySelector('.progress-text');
+    const statusEl = uploadItem.querySelector('.upload-status');
+
+    try {
+      // Upload to Supabase Storage
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const path = `${currentUser.id}/${timestamp}-${safeName}`;
+
+      statusEl.textContent = '上传中...';
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-audio')
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress) => {
+            const percent = Math.round((progress.loaded / progress.total) * 100);
+            progressFill.style.width = percent + '%';
+            progressText.textContent = percent + '%';
+          }
+        });
+
+      if (uploadError) throw uploadError;
+
+      statusEl.textContent = '处理元数据...';
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-audio')
+        .getPublicUrl(path);
+
+      // Extract metadata (simplified, would use proper audio metadata library in production)
+      const title = file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+
+      // Save to database
+      const { data: libraryData, error: dbError } = await supabase
+        .from('music_library')
+        .insert({
+          user_id: currentUser.id,
+          title: title,
+          artist: 'Unknown Artist',
+          audio_path: path,
+          audio_url: publicUrl,
+          file_size: file.size,
+          mime_type: file.type,
+          source: 'upload',
+          metadata: {}
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      statusEl.textContent = '✓ 上传完成';
+      uploadItem.classList.add('upload-success');
+
+      setTimeout(() => {
+        uploadItem.remove();
+        loadLibrary();
+      }, 2000);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      statusEl.textContent = '✗ ' + (error.message || '上传失败');
+      uploadItem.classList.add('upload-error');
+    }
+  }
+
+  async function loadLibrary() {
+    libraryLoading.hidden = false;
+    libraryList.hidden = true;
+    libraryEmpty.hidden = true;
+    libraryError.hidden = true;
+
+    try {
+      const { data, error } = await supabase
+        .from('music_library')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        libraryLoading.hidden = true;
+        libraryEmpty.hidden = false;
+        libraryCount.textContent = '0';
+        return;
+      }
+
+      libraryCount.textContent = data.length;
+      libraryList.innerHTML = data.map(track => `
+        <div class="library-item" data-id="${track.id}">
+          <div class="library-info">
+            <div class="library-title">${escapeHtml(track.title)}</div>
+            <div class="library-artist">${escapeHtml(track.artist || 'Unknown')}</div>
+            <div class="library-meta">
+              <span class="library-source">${track.source}</span>
+              ${track.duration ? `<span class="library-duration">${formatDuration(track.duration)}</span>` : ''}
+              <span class="library-size">${formatSize(track.file_size)}</span>
+            </div>
+          </div>
+          <div class="library-actions">
+            <button type="button" class="btn-icon btn-play" data-id="${track.id}" title="播放">▶</button>
+            <button type="button" class="btn-icon btn-delete" data-id="${track.id}" title="删除">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      libraryLoading.hidden = true;
+      libraryList.hidden = false;
+
+      // Add event listeners
+      libraryList.querySelectorAll('.btn-play').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          const track = data.find(t => t.id === id);
+          if (track && window.FloatPlayer) {
+            window.FloatPlayer.expand();
+            // Would need to integrate with float player to add this track
+          }
+        });
+      });
+
+      libraryList.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          if (!confirm('确定要删除这首歌曲吗？')) return;
+          await deleteTrack(id);
+        });
+      });
+
+    } catch (error) {
+      console.error('Load library error:', error);
+      libraryLoading.hidden = true;
+      libraryError.textContent = error.message || '加载失败';
+      libraryError.hidden = false;
+    }
+  }
+
+  async function deleteTrack(id) {
+    try {
+      const { data: track } = await supabase
+        .from('music_library')
+        .select('audio_path')
+        .eq('id', id)
+        .single();
+
+      if (track) {
+        // Delete from storage
+        await supabase.storage
+          .from('user-audio')
+          .remove([track.audio_path]);
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from('music_library')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      loadLibrary();
+    } catch (error) {
+      alert('删除失败: ' + error.message);
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function formatDuration(seconds) {
+    if (!seconds) return '';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function formatSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  // Event listeners
+  selectAudioBtn.addEventListener('click', () => {
+    audioFileInput.click();
+  });
+
+  audioFileInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      await uploadAudioFile(file);
+    }
+
+    audioFileInput.value = '';
+  });
+
+  refreshLibraryBtn.addEventListener('click', () => {
+    loadLibrary();
+  });
+
+  // Initial load
+  checkAuth();
+
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      checkAuth();
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      authRequired.hidden = false;
+      uploadContainer.hidden = true;
+    }
+  });
+
+})();
+</script>
+
+<style>
+.music-upload-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.auth-required {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+}
+
+.music-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.upload-section,
+.my-library-section {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-primary {
+  background: var(--primary-color, #0066cc);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover, #0052a3);
+}
+
+.btn-secondary {
+  background: var(--secondary-bg, #f0f0f0);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--hover-bg, #e0e0e0);
+}
+
+.upload-info {
+  font-size: 0.9rem;
+  color: var(--secondary-text, #666);
+}
+
+.upload-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.upload-item {
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.upload-filename {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border-color, #e0e0e0);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color, #0066cc);
+  transition: width 0.3s;
+}
+
+.progress-text {
+  min-width: 3rem;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.upload-status {
+  font-size: 0.9rem;
+  color: var(--secondary-text, #666);
+}
+
+.upload-success .upload-status {
+  color: #28a745;
+}
+
+.upload-error .upload-status {
+  color: #dc3545;
+}
+
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.library-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  padding: 1rem;
+  transition: background 0.2s;
+}
+
+.library-item:hover {
+  background: var(--hover-bg, #f5f5f5);
+}
+
+.library-info {
+  flex: 1;
+}
+
+.library-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.library-artist {
+  font-size: 0.9rem;
+  color: var(--secondary-text, #666);
+  margin-bottom: 0.5rem;
+}
+
+.library-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--secondary-text, #888);
+}
+
+.library-source {
+  text-transform: capitalize;
+}
+
+.library-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border-color, #e0e0e0);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--hover-bg, #f0f0f0);
+}
+
+.btn-play:hover {
+  border-color: var(--primary-color, #0066cc);
+  color: var(--primary-color, #0066cc);
+}
+
+.btn-delete:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.loading-message,
+.empty-message,
+.error-message {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--secondary-text, #666);
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+.empty-message .hint {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .library-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .library-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+}
+</style>
+{{ end }}
