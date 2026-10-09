@@ -6,11 +6,8 @@
 
   var defaults = {
     enabled: true,
-    autoLoad: false,
-    playlistId: '',
-    proxyBase: 'http://127.0.0.1:4188',
-    limit: 30,
-    level: 'exhigh',
+    autoLoad: true,
+    catalogUrl: '/data/music/catalog.json',
     side: 'left',
     fontSize: 3,
     spacing: 1.4,
@@ -22,6 +19,7 @@
     smoothing: 190,
     inset: 80
   };
+
   function parseConfigScalar(raw) {
     var value = String(raw == null ? '' : raw).trim();
     if (!value) return '';
@@ -67,14 +65,12 @@
     window.__FLOAT_PLAYER_RUNTIME_CONFIG = cfg;
     if (cfg.enabled === false || document.querySelector('.fp-wheel-player')) return;
 
+  var tracks = [];
   var fallbackTracks = [
-    { name: 'Prism Drift', artist: 'Night Tape Unit', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-    { name: 'Chrome Afterimage', artist: 'Sora Frequency', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-    { name: 'Slow Orbit', artist: 'Velvet Switch', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
+    { name: 'Prism Drift', artist: 'Night Tape Unit', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', provider: 'demo' },
+    { name: 'Chrome Afterimage', artist: 'Sora Frequency', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', provider: 'demo' },
+    { name: 'Slow Orbit', artist: 'Velvet Switch', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', provider: 'demo' }
   ];
-  var tracks = (window.__FLOAT_PLAYER_TRACKS && window.__FLOAT_PLAYER_TRACKS.length)
-    ? window.__FLOAT_PLAYER_TRACKS.slice()
-    : fallbackTracks.slice();
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -126,7 +122,8 @@
     drag: null,
     dragMoved: false,
     playing: false,
-    uiRafs: []
+    uiRafs: [],
+    currentMatchIndex: 0
   };
 
   function setVar(node, name, value) {
@@ -202,9 +199,14 @@
 
   function render() {
     songWheel.innerHTML = tracks.map(function (track, index) {
+      var statusLabel = '';
+      if (track.status === 'needs-review') statusLabel = ' <span class="fp-song-status">需复核</span>';
+      else if (track.status === 'external-only') statusLabel = ' <span class="fp-song-status">外链</span>';
+      else if (track.provider && track.provider !== 'demo') statusLabel = ' <span class="fp-song-provider">' + escapeText(track.provider) + '</span>';
+
       return [
         '<button class="fp-song" type="button" role="option" data-index="', index, '">',
-        '<span class="fp-song-title">', escapeText(track.name), '</span>',
+        '<span class="fp-song-title">', escapeText(track.name), statusLabel, '</span>',
         '<span class="fp-song-artist">', escapeText(track.artist), '</span>',
         '</button>'
       ].join('');
@@ -215,7 +217,7 @@
 
   function syncAudio() {
     var track = tracks[state.current];
-    if (!track) return;
+    if (!track || !track.url) return;
     var next = new URL(track.url, location.href).href;
     if (audio.currentSrc !== next && audio.src !== next) {
       audio.src = track.url;
@@ -223,50 +225,100 @@
     }
   }
 
-  function buildPlaylistEndpoint(id, options) {
-    var params = new URLSearchParams();
-    params.set('id', id);
-    params.set('limit', String((options && options.limit) || cfg.limit || 30));
-    params.set('level', (options && options.level) || cfg.level || 'exhigh');
-    return String(cfg.proxyBase || defaults.proxyBase).replace(/\/$/, '') + '/api/netease/playlist?' + params.toString();
+  function tryNextMatch() {
+    var track = tracks[state.current];
+    if (!track || !track.allMatches || track.allMatches.length === 0) return false;
+
+    var nextIndex = state.currentMatchIndex + 1;
+    if (nextIndex >= track.allMatches.length) return false;
+
+    var nextMatch = track.allMatches[nextIndex];
+    if (nextMatch.status !== 'playable' || !nextMatch.streamUrl) return false;
+
+    state.currentMatchIndex = nextIndex;
+    track.url = nextMatch.streamUrl;
+    track.provider = nextMatch.provider;
+
+    console.log('Trying fallback source:', nextMatch.provider);
+    syncAudio();
+    return true;
   }
 
   function replaceTracks(nextTracks) {
-    tracks = nextTracks.map(function (track) {
-      return {
-        name: track.name || 'Untitled',
-        artist: track.artist || 'Unknown Artist',
-        url: track.url || ''
-      };
-    }).filter(function (track) {
-      return track.url;
-    });
+    tracks = nextTracks;
     state.current = 0;
     state.selected = 0;
     state.pos = 0;
     state.target = 0;
     state.playing = false;
+    state.currentMatchIndex = 0;
     audio.pause();
     audio.removeAttribute('src');
     audio.load();
     render();
   }
 
-  function loadPlaylist(id, options) {
-    if (!id) return Promise.reject(new Error('Playlist id is required.'));
-    return fetch(buildPlaylistEndpoint(String(id), options), { cache: 'no-store' })
+  function loadCatalog() {
+    var catalogUrl = cfg.catalogUrl || defaults.catalogUrl;
+    var fullUrl = new URL(catalogUrl, location.href).href;
+
+    return fetch(fullUrl, { cache: 'no-store' })
       .then(function (response) {
-        if (!response.ok) throw new Error('Playlist proxy HTTP ' + response.status);
+        if (!response.ok) throw new Error('Catalog HTTP ' + response.status);
         return response.json();
       })
-      .then(function (payload) {
-        if (!payload || !payload.ok) throw new Error((payload && payload.error) || 'Playlist proxy returned an error.');
-        if (!Array.isArray(payload.tracks) || !payload.tracks.length) {
-          throw new Error('No playable tracks returned for playlist ' + id + '.');
+      .then(function (catalog) {
+        if (!catalog || !catalog.tracks || !Array.isArray(catalog.tracks)) {
+          throw new Error('Invalid catalog format');
         }
-        replaceTracks(payload.tracks);
-        expand();
-        return payload;
+
+        var playableTracks = [];
+        catalog.tracks.forEach(function (track) {
+          if (!track.matches || track.matches.length === 0) return;
+
+          var bestMatch = null;
+          var bestIndex = track.bestMatch >= 0 ? track.bestMatch : -1;
+
+          if (bestIndex >= 0 && bestIndex < track.matches.length) {
+            bestMatch = track.matches[bestIndex];
+          }
+
+          if (!bestMatch) {
+            for (var i = 0; i < track.matches.length; i++) {
+              if (track.matches[i].status === 'playable' && track.matches[i].streamUrl) {
+                bestMatch = track.matches[i];
+                bestIndex = i;
+                break;
+              }
+            }
+          }
+
+          if (!bestMatch || bestMatch.status !== 'playable' || !bestMatch.streamUrl) return;
+
+          playableTracks.push({
+            name: track.title || 'Untitled',
+            artist: track.artist || 'Unknown',
+            url: bestMatch.streamUrl,
+            provider: bestMatch.provider || 'unknown',
+            status: bestMatch.status,
+            sourceUrl: bestMatch.sourceUrl,
+            attribution: bestMatch.attribution,
+            allMatches: track.matches.filter(function (m) {
+              return m.status === 'playable' && m.streamUrl;
+            })
+          });
+        });
+
+        if (playableTracks.length === 0) {
+          console.warn('No playable tracks in catalog, using fallback');
+          return fallbackTracks;
+        }
+
+        return playableTracks;
+      })
+      .catch(function (error) {
+        console.error('Failed to load catalog:', error.message);
+        return fallbackTracks;
       });
   }
 
@@ -370,14 +422,20 @@
   }
 
   function playTrack(index) {
+    if (index < 0 || index >= tracks.length) return;
     state.current = clamp(index, 0, tracks.length - 1);
     state.selected = state.current;
     state.target = state.current;
     state.playing = true;
+    state.currentMatchIndex = 0;
     syncAudio();
     startLoop();
     layout();
-    audio.play().catch(function () {});
+    audio.play().catch(function (error) {
+      console.error('Play failed:', error);
+      state.playing = false;
+      layout();
+    });
   }
 
   function pauseTrack() {
@@ -473,33 +531,87 @@
   audio.addEventListener('play', function () {
     state.playing = true;
     layout();
+    if ('mediaSession' in navigator && tracks[state.current]) {
+      var track = tracks[state.current];
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.name,
+        artist: track.artist,
+        album: track.provider || '',
+        artwork: []
+      });
+    }
   });
+
   audio.addEventListener('pause', layout);
+
   audio.addEventListener('ended', function () {
-    if (state.current < tracks.length - 1) playTrack(state.current + 1);
-    else pauseTrack();
+    if (state.current < tracks.length - 1) {
+      playTrack(state.current + 1);
+    } else {
+      pauseTrack();
+    }
   });
+
+  audio.addEventListener('error', function (event) {
+    console.error('Audio error:', event);
+    var canRetry = tryNextMatch();
+    if (canRetry) {
+      audio.play().catch(function () {
+        console.error('Fallback source also failed');
+        state.playing = false;
+        layout();
+      });
+    } else {
+      state.playing = false;
+      layout();
+    }
+  });
+
   window.addEventListener('resize', layout);
+
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', function () {
+      if (tracks[state.current]) audio.play();
+    });
+    navigator.mediaSession.setActionHandler('pause', function () {
+      audio.pause();
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', function () {
+      if (state.current > 0) playTrack(state.current - 1);
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', function () {
+      if (state.current < tracks.length - 1) playTrack(state.current + 1);
+    });
+  }
 
   window.FloatPlayer = {
     audio: audio,
     expand: expand,
     collapse: collapse,
-    loadPlaylist: loadPlaylist,
-    playUrl: function (name, artist, url) {
-      tracks.push({ name: name || 'Untitled', artist: artist || 'Unknown Artist', url: url || '' });
-      render();
-      expand();
-      playTrack(tracks.length - 1);
+    loadCatalog: loadCatalog,
+    reload: function () {
+      loadCatalog().then(function (nextTracks) {
+        replaceTracks(nextTracks);
+      }).catch(function (error) {
+        console.error('Reload failed:', error);
+      });
     }
   };
 
   setUI({ anchorX: 0, anchorOpacity: 1, anchorScale: 1, wheelX: -28 * sideSign(), wheelOpacity: 0 });
-  render();
-  if (cfg.autoLoad && cfg.playlistId) {
-    loadPlaylist(cfg.playlistId, { limit: cfg.limit, level: cfg.level }).catch(function (error) {
-      console.error(error);
+
+  if (cfg.autoLoad) {
+    loadCatalog().then(function (loadedTracks) {
+      replaceTracks(loadedTracks);
+      expand();
+    }).catch(function (error) {
+      console.error('Initial load failed:', error);
+      replaceTracks(fallbackTracks);
     });
+  } else {
+    replaceTracks(fallbackTracks);
+    render();
   }
+
   });
 })();

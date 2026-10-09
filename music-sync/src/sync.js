@@ -369,6 +369,13 @@ async function sync(options = {}) {
     await mkdir(DATA_ROOT, { recursive: true });
     await writeFile(CATALOG_PATH, JSON.stringify(catalog, null, 2), 'utf8');
     console.log(`\nCatalog saved to: ${CATALOG_PATH}`);
+
+    // Also copy to static directory for Hugo
+    const STATIC_MUSIC_DIR = join(PROJECT_ROOT, '..', 'static', 'data', 'music');
+    const STATIC_CATALOG_PATH = join(STATIC_MUSIC_DIR, 'catalog.json');
+    await mkdir(STATIC_MUSIC_DIR, { recursive: true });
+    await writeFile(STATIC_CATALOG_PATH, JSON.stringify(catalog, null, 2), 'utf8');
+    console.log(`Static catalog saved to: ${STATIC_CATALOG_PATH}`);
   }
 
   console.log('\n=== Summary ===');
