@@ -712,6 +712,25 @@
     layout();
   }
 
+  function changeTrack(direction) {
+    if (!tracks.length) return;
+    var next = clamp(state.current + direction, 0, tracks.length - 1);
+    if (next === state.current) return;
+
+    if (state.playing) {
+      playTrack(next);
+      return;
+    }
+
+    state.current = next;
+    state.selected = next;
+    state.pos = next;
+    state.target = next;
+    syncTransport();
+    syncAudio();
+    layout();
+  }
+
   anchor.addEventListener('pointerdown', function (event) {
     if (state.expanded || (event.pointerType === 'mouse' && event.button !== 0)) return;
     var rect = anchor.getBoundingClientRect();
@@ -896,23 +915,44 @@
   wheel.addEventListener('pointercancel', endDrag);
 
   document.addEventListener('keydown', function (event) {
+    var target = event.target;
+    var isEditable = target && target.closest && target.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+    if (event.isComposing || isEditable) return;
+
     if (event.key === 'Escape') {
       collapse();
+    } else if (state.expanded && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && event.key === 'ArrowLeft') {
+      if (event.repeat) return;
+      event.preventDefault();
+      event.stopPropagation();
+      changeTrack(-1);
+    } else if (state.expanded && event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && event.key === 'ArrowRight') {
+      if (event.repeat) return;
+      event.preventDefault();
+      event.stopPropagation();
+      changeTrack(1);
     } else if (state.expanded && (event.key === 'ArrowUp' || event.key === 'ArrowLeft')) {
       event.preventDefault();
       applyTarget(state.target - 1, true);
     } else if (state.expanded && (event.key === 'ArrowDown' || event.key === 'ArrowRight')) {
       event.preventDefault();
       applyTarget(state.target + 1, true);
-    } else if (state.expanded && (event.key === 'Enter' || event.key === ' ')) {
+    } else if (state.expanded && !event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'Enter' || event.key === ' ' || event.code === 'Space')) {
       event.preventDefault();
+      event.stopPropagation();
+      if (event.key === ' ' || event.code === 'Space') {
+        if (event.repeat) return;
+        if (state.playing) pauseTrack();
+        else if (tracks.length) playTrack(state.current);
+        return;
+      }
       if (state.selected === state.current && state.playing) {
         pauseTrack();
         return;
       }
       playTrack(state.selected);
     }
-  });
+  }, true);
 
   audio.addEventListener('play', function () {
     state.playing = true;
