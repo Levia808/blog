@@ -2900,6 +2900,25 @@
     }
   }, true);
 
+  function setMomentManageMenuOpen(menu, open, options) {
+    if (!menu) return;
+    var card = menu.closest('.moment-card');
+    var trigger = menu.parentElement && menu.parentElement.querySelector('[data-moment-manage-toggle]');
+    menu.hidden = !open;
+    if (card) card.classList.toggle('is-menu-open', !!open);
+    if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open && !(options && options.focus === false)) {
+      var firstItem = menu.querySelector('[role="menuitem"]');
+      if (firstItem) firstItem.focus();
+    }
+  }
+
+  function closeMomentManageMenus(except) {
+    listEl.querySelectorAll('[data-moment-manage-menu]:not([hidden])').forEach(function (openMenu) {
+      if (openMenu !== except) setMomentManageMenuOpen(openMenu, false, { focus: false });
+    });
+  }
+
   listEl.addEventListener('keydown', function (e) {
     var menu = e.target.closest('[data-moment-manage-menu]');
     if (!menu) return;
@@ -2907,16 +2926,14 @@
     var index = items.indexOf(document.activeElement);
     if (e.key === 'Escape') {
       e.preventDefault();
-      menu.hidden = true;
+      setMomentManageMenuOpen(menu, false, { focus: false });
       var trigger = menu.parentElement && menu.parentElement.querySelector('[data-moment-manage-toggle]');
-      if (trigger) { trigger.setAttribute('aria-expanded', 'false'); trigger.focus(); }
+      if (trigger) trigger.focus();
     } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && items.length) {
       e.preventDefault();
       items[(index + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
     } else if (e.key === 'Tab') {
-      menu.hidden = true;
-      var tabTrigger = menu.parentElement && menu.parentElement.querySelector('[data-moment-manage-toggle]');
-      if (tabTrigger) tabTrigger.setAttribute('aria-expanded', 'false');
+      setMomentManageMenuOpen(menu, false, { focus: false });
     }
   });
 
@@ -2926,34 +2943,17 @@
       var manageWrap = manageToggle.closest('.moment-manage');
       var manageMenu = manageWrap && manageWrap.querySelector('[data-moment-manage-menu]');
       var willOpen = !!(manageMenu && manageMenu.hidden);
-      listEl.querySelectorAll('[data-moment-manage-menu]:not([hidden])').forEach(function (openMenu) {
-        openMenu.hidden = true;
-        var trigger = openMenu.parentElement && openMenu.parentElement.querySelector('[data-moment-manage-toggle]');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-      });
-      if (manageMenu && willOpen) {
-        manageMenu.hidden = false;
-        manageToggle.setAttribute('aria-expanded', 'true');
-        var firstItem = manageMenu.querySelector('[role="menuitem"]');
-        if (firstItem) firstItem.focus();
-      }
+      closeMomentManageMenus(manageMenu);
+      if (manageMenu) setMomentManageMenuOpen(manageMenu, willOpen);
       return;
     }
     listEl.querySelectorAll('[data-moment-manage-menu]:not([hidden])').forEach(function (openMenu) {
-      if (!openMenu.contains(e.target)) {
-        openMenu.hidden = true;
-        var trigger = openMenu.parentElement && openMenu.parentElement.querySelector('[data-moment-manage-toggle]');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-      }
+      if (!openMenu.contains(e.target)) setMomentManageMenuOpen(openMenu, false, { focus: false });
     });
     var chosenManageAction = e.target.closest('[data-moment-edit], [data-moment-visibility], [data-moment-delete]');
     if (chosenManageAction) {
       var actionMenu = chosenManageAction.closest('[data-moment-manage-menu]');
-      if (actionMenu) {
-        actionMenu.hidden = true;
-        var actionTrigger = actionMenu.parentElement && actionMenu.parentElement.querySelector('[data-moment-manage-toggle]');
-        if (actionTrigger) actionTrigger.setAttribute('aria-expanded', 'false');
-      }
+      if (actionMenu) setMomentManageMenuOpen(actionMenu, false, { focus: false });
     }
     var editBtn = e.target.closest('[data-moment-edit]');
     if (editBtn) {
