@@ -404,4 +404,145 @@
   <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
 </div>
 <script src="{{ "js/audio-metadata.js" | relURL }}"></script>
+<script src="{{ "js/admin-music.js" | relURL }}"></script>
+<style>
+/* Music Management Styles */
+.music-upload-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.music-upload-item {
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  padding: 1rem;
+  background: var(--panel-bg, #1a1a1a);
+}
+
+.music-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.music-upload-filename {
+  font-weight: 500;
+  color: var(--white, #fff);
+}
+
+.music-upload-meta {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background: var(--bg, #0d0d0d);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.music-upload-meta strong {
+  color: var(--white, #fff);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.music-meta-artist {
+  color: var(--secondary-text, #999);
+}
+
+.music-upload-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0;
+}
+
+.music-upload-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border-color, #333);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.music-upload-progress-fill {
+  height: 100%;
+  background: var(--primary, #0066cc);
+  transition: width 0.3s ease;
+}
+
+.music-upload-progress-text {
+  min-width: 3rem;
+  text-align: right;
+  font-size: 0.9rem;
+  color: var(--secondary-text, #999);
+}
+
+.music-upload-status {
+  font-size: 0.9rem;
+  color: var(--secondary-text, #999);
+  margin-top: 0.5rem;
+}
+
+.music-upload-success .music-upload-status {
+  color: #28a745;
+}
+
+.music-upload-error .music-upload-status {
+  color: #dc3545;
+}
+
+.music-upload-success .music-upload-progress-fill {
+  background: #28a745;
+}
+
+.music-upload-error .music-upload-progress-fill {
+  background: #dc3545;
+}
+
+.music-cover-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.music-cover-placeholder {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border-color, #333);
+  border-radius: 4px;
+  font-size: 24px;
+  color: var(--secondary-text, #666);
+}
+
+.music-source-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: var(--border-color, #333);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.admin-table td:first-child {
+  width: 60px;
+}
+
+@media (max-width: 768px) {
+  .music-upload-meta {
+    font-size: 0.85rem;
+  }
+
+  .music-cover-thumb,
+  .music-cover-placeholder {
+    width: 40px;
+    height: 40px;
+  }
+}
+</style>
 {{- end }}
