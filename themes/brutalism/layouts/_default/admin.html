@@ -22,9 +22,10 @@
       <a href="#" data-admin-section="comments"><span class="dm-idx">04</span>评论审核<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="users"><span class="dm-idx">05</span>用户管理<span class="dm-arr">››</span></a>
       <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
-      <a href="#" data-admin-section="settings"><span class="dm-idx">07</span>系统设置<span class="dm-arr">››</span></a>
-      <a href="#" data-admin-section="platform"><span class="dm-idx">08</span>平台管理<span class="dm-arr">›››</span></a>
-      <a href="#" data-admin-section="player"><span class="dm-idx">09</span>播放器配置<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="music"><span class="dm-idx">07</span>音乐管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="settings"><span class="dm-idx">08</span>系统设置<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="platform"><span class="dm-idx">09</span>平台管理<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="player"><span class="dm-idx">10</span>播放器配置<span class="dm-arr">››</span></a>
     </nav>
     <div class="drawer-user">
       <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
@@ -45,6 +46,7 @@
           <a href="#" class="an-item" data-admin-section="comments"><span class="an-dot"></span>评论审核</a>
           <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>用户管理</a>
           <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
+          <a href="#" class="an-item" data-admin-section="music"><span class="an-dot"></span>音乐管理</a>
           <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>系统设置</a>
           <a href="#" class="an-item" data-admin-section="platform"><span class="an-dot"></span>平台管理</a>
           <a href="#" class="an-item" data-admin-section="player"><span class="an-dot"></span>播放器配置</a>
@@ -136,6 +138,52 @@
           </div>
           <p class="auth-error" id="adminMediaError" hidden></p>
           <div class="media-grid" id="adminMediaGrid"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="music" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">音频文件</p><h3>音乐管理</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" data-admin-refresh="music">刷新</button>
+              <button type="button" class="btn btn-primary" id="adminMusicUploadBtn">上传音频</button>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>支持格式：</strong>MP3, WAV, OGG, M4A, FLAC（最大 50MB）<br>
+            <strong>自动提取：</strong>标题、艺术家、专辑、时长、封面等元信息
+          </div>
+
+          <input type="file" id="adminMusicInput" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden>
+
+          <div id="adminMusicUploadQueue" class="music-upload-queue"></div>
+
+          <p class="auth-error" id="adminMusicError" hidden></p>
+
+          <div class="stat-grid" style="margin-bottom: 2rem;">
+            <div class="stat"><span class="st-label">总曲目</span><span class="st-value" id="adminMusicCount">—</span></div>
+            <div class="stat"><span class="st-label">总大小</span><span class="st-value" id="adminMusicTotalSize">—</span></div>
+            <div class="stat"><span class="st-label">总时长</span><span class="st-value" id="adminMusicTotalDuration">—</span></div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>封面</th>
+                  <th>标题</th>
+                  <th>艺术家</th>
+                  <th>专辑</th>
+                  <th>时长</th>
+                  <th>大小</th>
+                  <th>来源</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="adminMusicTable"></tbody>
+            </table>
+          </div>
+          <div class="hint" id="adminMusicHint"></div>
         </section>
 
         <section class="admin-panel" data-admin-panel="settings" hidden>
@@ -355,4 +403,5 @@
   </div>
   <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
 </div>
+<script src="{{ "js/audio-metadata.js" | relURL }}"></script>
 {{- end }}
