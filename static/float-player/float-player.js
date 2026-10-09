@@ -716,19 +716,7 @@
     if (!tracks.length) return;
     var next = clamp(state.current + direction, 0, tracks.length - 1);
     if (next === state.current) return;
-
-    if (state.playing) {
-      playTrack(next);
-      return;
-    }
-
-    state.current = next;
-    state.selected = next;
-    state.pos = next;
-    state.target = next;
-    syncTransport();
-    syncAudio();
-    layout();
+    playTrack(next);
   }
 
   anchor.addEventListener('pointerdown', function (event) {
