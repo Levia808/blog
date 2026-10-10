@@ -24,6 +24,7 @@
 {{- if and $P.auth (eq .Layout "profile") (fileExists "static/js/profile.js") }}
 <script defer src="{{ "js/profile.js" | relURL }}"></script>
 {{- end }}
-{{- if and $P.auth (eq .Layout "admin") (fileExists "static/js/admin.js") }}
-<script defer src="{{ "js/admin.js" | relURL }}?v={{ now.Unix }}"></script>
+{{- if and $P.auth (eq .Layout "admin") }}
+{{- if fileExists "static/js/audio-metadata.js" }}<script defer src="{{ "js/audio-metadata.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
+{{- if fileExists "static/js/admin.js" }}<script defer src="{{ "js/admin.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
 {{- end }}

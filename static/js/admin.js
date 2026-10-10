@@ -2535,10 +2535,13 @@
         var emailEl = document.getElementById('adminUserEmail');
         var avatarEl = document.getElementById('adminUserAvatar');
         var roleEl = document.getElementById('adminRole');
+        var roleSmEl = document.getElementById('adminRoleSm');
+        var roleName = String(adminProfile.role || 'user').toUpperCase();
         if (nameEl) nameEl.textContent = name;
         if (emailEl) emailEl.textContent = user.email;
         if (avatarEl && avatar) avatarEl.src = avatar;
-        if (roleEl) roleEl.textContent = String(adminProfile.role || 'user').toUpperCase();
+        if (roleEl) roleEl.textContent = roleName;
+        if (roleSmEl) roleSmEl.textContent = roleName;
         /* 超管可新增账号 (后台本身仅 superadmin 可进, 按钮兜底显示) */
         var addUserBtn = document.getElementById('adminAddUserBtn');
         if (addUserBtn) {

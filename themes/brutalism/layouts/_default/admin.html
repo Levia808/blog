@@ -1,446 +1,387 @@
 {{- define "body-class" }}admin-only admin-modern-dark{{ end }}
-{{- define "head-css" }}
-<link rel="stylesheet" href="{{ "css/admin-modern.css" | relURL }}">
-{{- end }}
 {{- define "main" }}
-<div class="admin-wrap-modern">
+<div class="admin-wrap">
+  <div class="admin-mobile-bar" id="adminMobileBar">
+    <span class="an-logo-sm">{{ site.Title }}<span class="an-role" id="adminRoleSm">—</span></span>
+    <button type="button" class="admin-burger" id="adminDrawerToggle" aria-label="打开菜单" aria-expanded="false">
+      <span class="admin-menu-icon lottie-icon" data-lottie-src="{{ "vendor/lottie-icons/menu.json" | relURL }}" aria-hidden="true"><svg class="lottie-fallback" viewBox="0 0 256 256" width="22" height="22" fill="currentColor"><path d="M224,128a8,8,0,1,1-8,8H40a8,8,0,0,1,0-16H216a8,8,0,0,1,8,8ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></svg></span>
+    </button>
+  </div>
+  <div class="drawer-mask" id="adminDrawerMask" hidden aria-hidden="true"></div>
+  <aside class="drawer admin-drawer" id="adminDrawer" role="dialog" aria-modal="true" aria-label="后台导航" aria-hidden="true">
+    <div class="drawer-head">
+      <span class="drawer-logo">{{ site.Title }}</span>
+      <button type="button" class="drawer-close" id="adminDrawerClose" aria-label="关闭菜单">
+        <svg viewBox="0 0 256 256" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M205.7,194.3a8.1,8.1,0,0,1-11.4,11.4L128,139.3,61.7,205.7a8.1,8.1,0,0,1-11.4,0,8.2,8.2,0,0,1,0-11.4L116.7,128,50.3,61.7A8.1,8.1,0,0,1,61.7,50.3L128,116.7,194.3,50.3a8.1,8.1,0,0,1,11.4,11.4L139.3,128Z"/></svg>
+      </button>
+    </div>
+    <nav class="drawer-menu">
+      <a href="#" class="active" data-admin-section="dashboard"><span class="dm-idx">01</span>仪表盘<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="posts"><span class="dm-idx">02</span>文章管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="archive"><span class="dm-idx">03</span>内容归档<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="comments"><span class="dm-idx">04</span>评论审核<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="users"><span class="dm-idx">05</span>用户管理<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="media"><span class="dm-idx">06</span>媒体库<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="music"><span class="dm-idx">07</span>音乐库<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="settings"><span class="dm-idx">08</span>系统设置<span class="dm-arr">››</span></a>
+      <a href="#" data-admin-section="platform"><span class="dm-idx">09</span>平台管理<span class="dm-arr">›››</span></a>
+      <a href="#" data-admin-section="player"><span class="dm-idx">10</span>播放器配置<span class="dm-arr">››</span></a>
+    </nav>
+    <div class="drawer-user">
+      <a href="{{ "profile/" | relLangURL }}"><span class="dm-idx">•</span>个人主页</a>
+      <button type="button" id="adminDrawerLogout"><span class="dm-idx">×</span>退出登录</button>
+    </div>
+    <div class="drawer-foot mono">build {{ now.Year }} · hugo v{{ hugo.Version }}</div>
+  </aside>
+  <div class="admin-shell" id="adminPage">
+    <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="spinner-modern" aria-hidden="true"></span><span class="state-tag">[ 加载中 ]</span><p>正在加载管理面板…</p></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
+    <div id="adminContent" hidden>
+      <aside class="admin-nav">
+        <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
+        <nav class="an-menu" aria-label="后台导航">
+          <a href="#" class="an-item active" data-admin-section="dashboard"><span class="an-dot"></span>仪表盘</a>
+          <a href="#" class="an-item" data-admin-section="posts"><span class="an-dot"></span>文章管理</a>
+          <a href="#" class="an-item" data-admin-section="archive"><span class="an-dot"></span>内容归档</a>
+          <a href="#" class="an-item" data-admin-section="comments"><span class="an-dot"></span>评论审核</a>
+          <a href="#" class="an-item" data-admin-section="users"><span class="an-dot"></span>用户管理</a>
+          <a href="#" class="an-item" data-admin-section="media"><span class="an-dot"></span>媒体库</a>
+          <a href="#" class="an-item" data-admin-section="music"><span class="an-dot"></span>音乐库</a>
+          <a href="#" class="an-item" data-admin-section="settings"><span class="an-dot"></span>系统设置</a>
+          <a href="#" class="an-item" data-admin-section="platform"><span class="an-dot"></span>平台管理</a>
+          <a href="#" class="an-item" data-admin-section="player"><span class="an-dot"></span>播放器配置</a>
+        </nav>
+        <div class="an-user">
+          <img src="{{ "favicon.svg" | relURL }}" alt="" id="adminUserAvatar">
+          <div><div class="au-name" id="adminUserName">—</div><div class="au-email" id="adminUserEmail">—</div></div>
+          <button type="button" class="au-out" id="adminLogoutBtn" title="退出登录">↗</button>
+        </div>
+      </aside>
 
-  <!-- Loading State -->
-  <div id="adminLoading" class="state-card" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:var(--admin-bg);">
-    <div style="text-align:center;">
-      <div class="spinner-modern"></div>
-      <p style="color:var(--admin-text-secondary);margin-top:1rem;">加载管理面板...</p>
+      <div class="an-content">
+        <section class="admin-panel" data-admin-panel="dashboard">
+          <div class="an-head">
+            <div><p class="an-head-sub" id="adminIdentity">控制台</p><h3>仪表盘</h3></div>
+            <div class="an-actions">
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary" id="cmsNewPost">+ 新建文章</a>
+              <button type="button" class="btn" id="adminRefreshBtn" data-admin-refresh="stats">刷新状态</button>
+            </div>
+          </div>
+          <div class="dashboard-status-row"><span class="admin-status" id="dashboardGhStatus"><span class="status-dot status-draft"></span>GitHub: 未授权</span><span class="hint" id="dashboardSyncHint"></span></div>
+          <div class="stat-grid">
+            <div class="stat"><span class="st-label">文章数</span><span class="st-value" id="adminPostCount">—</span></div>
+            <div class="stat"><span class="st-label">首页卡片</span><span class="st-value" id="adminHomeCardCount">—</span></div>
+            <div class="stat"><span class="st-label">评论数</span><span class="st-value" id="adminCommentCount">—</span></div>
+            <div class="stat"><span class="st-label">用户数</span><span class="st-value" id="adminUserCount">—</span></div>
+            <div class="stat"><span class="st-label">待审核</span><span class="st-value" id="adminPendingCommentCount">—</span></div>
+          </div>
+          <div>
+            <div class="panel-title">最近文章</div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPostTable"></tbody></table></div>
+            <div class="hint" id="adminPostHint"></div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="posts" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">内容管理</p><h3>文章管理</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="ghAuthBtn">GitHub 授权</button>
+              <a href="{{ "admin-cms/" | relURL }}" class="btn btn-primary">+ 新建文章</a>
+            </div>
+          </div>
+          <div class="note" id="ghPublishNote">发布 = 将仓库文章的「草稿」状态改为「已发布」并提交，站点自动重建上线。首次使用请先授权 GitHub。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminPublishTable"></tbody></table></div>
+          <div class="hint" id="adminPublishHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="archive" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">内容归档</p><h3>已归档文章</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="archive">刷新</button></div>
+          </div>
+          <div class="note" id="ghArchiveNote">归档的文章会从首页与列表隐藏，仍可通过原链接访问并显示归档标记。在「文章管理」中可对任意文章执行归档，或在此取消归档。</div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>标题</th><th>状态</th><th>日期</th><th>操作</th></tr></thead><tbody id="adminArchiveTable"></tbody></table></div>
+          <div class="hint" id="adminArchiveHint"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="comments" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">评论审核</p><h3>评论管理</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="comments">刷新</button></div>
+          </div>
+          <div class="filter-row"><label>状态筛选</label><select id="adminCommentFilter"><option value="">全部</option><option value="pending">待审核</option><option value="approved">已通过</option><option value="rejected">已拒绝</option><option value="hidden">已隐藏</option></select></div>
+          <p class="auth-error" id="adminCommentError" role="alert" aria-live="assertive" hidden></p>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>评论</th><th>文章</th><th>作者</th><th>状态</th><th>时间</th><th>操作</th></tr></thead><tbody id="adminCommentTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="users" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">账号管理</p><h3>用户管理</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" data-admin-refresh="users">刷新</button>
+              <button type="button" class="btn is-primary" id="adminAddUserBtn" hidden>＋ 新增账号</button>
+            </div>
+          </div>
+          <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>头像</th><th>名称</th><th>邮箱</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="adminUserTable"></tbody></table></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="media" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">文件资产</p><h3>媒体库</h3></div>
+            <div class="an-actions"><button type="button" class="btn" data-admin-refresh="media">刷新</button></div>
+          </div>
+          <div class="upload-row"><input type="file" id="adminMediaInput" accept="image/*,video/*,audio/*,font/*,.ttf,.otf,.woff,.woff2,.eot"><button type="button" class="btn btn-primary" id="adminMediaUpload">上传媒体</button></div>
+          <div class="upload-progress" id="adminUploadProgress" hidden>
+            <div class="upload-progress-track"><div class="upload-progress-fill" id="adminUploadProgressFill"></div></div>
+            <span class="upload-progress-text" id="adminUploadProgressText">0%</span>
+          </div>
+          <p class="auth-error" id="adminMediaError" hidden></p>
+          <div class="media-grid" id="adminMediaGrid"></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="music" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">媒体资产</p><h3>音乐库</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" data-admin-refresh="music">刷新</button>
+              <button type="button" class="btn btn-primary" id="adminMusicUploadBtn">上传音频</button>
+            </div>
+          </div>
+          <input type="file" id="adminMusicInput" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden>
+          <div class="note music-note">支持 MP3、M4A、OGG、FLAC、WAV，单个文件最大 50 MB。上传时会自动读取标题、艺术家、专辑、封面和时长。
+          </div>
+          <div id="adminMusicUploadQueue" class="upload-queue-modern" aria-live="polite"></div>
+          <div class="music-stat-grid" aria-label="音乐库统计">
+            <div class="stat stat-compact"><span class="st-label">总曲目</span><span class="st-value" id="adminMusicTotalCount">0</span></div>
+            <div class="stat stat-compact"><span class="st-label">总大小</span><span class="st-value" id="adminMusicTotalSize">0 MB</span></div>
+            <div class="stat stat-compact"><span class="st-label">总时长</span><span class="st-value" id="adminMusicTotalDuration">0:00</span></div>
+          </div>
+          <div id="adminMusicLibrary" class="music-library-modern">
+            <div class="state-card music-empty">
+              <span class="music-empty-mark" aria-hidden="true">♪</span>
+              <strong>还没有上传音乐</strong>
+              <span>点击右上角“上传音频”开始建立你的播放库。</span>
+            </div>
+          </div>
+          <p class="auth-error" id="adminMusicError" role="alert" aria-live="assertive" hidden></p>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="settings" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">系统配置</p><h3>设置</h3></div>
+          </div>
+          <div class="font-preview-panel">
+            <h4 class="fp-title">标题字体预览</h4>
+            <p class="fp-desc">文章编辑器「全屏标题字体」中的选项对应效果（设备字体渲染）</p>
+            <div class="font-preview-list" id="fontPreviewList"></div>
+          </div>
+          <div class="note"><strong>GitHub 发布授权</strong>：<span class="mono" id="ghAuthStatus">未授权</span> — <button type="button" class="admin-row-action" id="ghAuthBtn2">立即授权</button></div>
+
+          <div class="panel-title">导航栏行为</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>全局导航栏</span>
+              <select id="cfgNavBehavior">
+                <option value="auto">动态收起（下滚隐藏，上滚展开）</option>
+                <option value="fixed">常驻显示</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgNavSaveBtn">保存导航设置</button>
+              <button type="button" class="btn" id="cfgNavReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgNavError" hidden></p>
+          </div>
+
+          <div class="panel-title">欢迎页配置（打字机 + 动效参数）</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>打字机文本</span><textarea id="cfgTypewriterText" rows="2" placeholder="写代码，也写生活。记录学习与思考。"></textarea></label>
+            <label class="sf-field"><span>打字速度 (ms/字)</span><input type="number" id="cfgTypeSpeed" min="20" max="400"></label>
+            <label class="sf-field"><span>删除速度 (ms/字)</span><input type="number" id="cfgDeleteSpeed" min="10" max="300"></label>
+            <label class="sf-field"><span>停顿时长 (ms)</span><input type="number" id="cfgPause" min="200" max="10000" step="100"></label>
+            <label class="sf-field"><span>字重范围 (from)</span><input type="text" id="cfgVariationFrom" placeholder="'wght' 400"></label>
+            <label class="sf-field"><span>字重范围 (to)</span><input type="text" id="cfgVariationTo" placeholder="'wght' 900"></label>
+            <label class="sf-field"><span>指针半径</span><input type="number" id="cfgRadius" min="40" max="400"></label>
+            <label class="sf-field"><span>衰减方式</span><select id="cfgFalloff"><option value="linear">linear</option><option value="exponential">exponential</option><option value="gaussian">gaussian</option></select></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgSaveBtn">保存配置</button>
+              <button type="button" class="btn" id="cfgReloadBtn">重新加载</button>
+            </div>
+            <p class="auth-error" id="cfgError" hidden></p>
+          </div>
+
+          <div class="panel-title">文章卡片样式</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>卡片布局</span>
+              <select id="cfgCardStyle">
+                <option value="grid">当前样式（3:2 封面网格）</option>
+                <option value="horizontal">横向长条卡片（封面在左）</option>
+                <option value="fullscreen">全屏杂志封面入口</option>
+                <option value="feature">精选横幅（2:1 标题封面）</option>
+              </select>
+            </label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgCardSaveBtn">保存卡片样式</button>
+              <span class="hint" id="cfgCardHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgCardError" hidden></p>
+          </div>
+
+          <div class="panel-title">Threads 串文转发</div>
+          <div class="note">已迁移至「<strong>平台管理</strong>」侧栏页：自动登录 / Cookie 管理 / 串文爬取统一在那里操作。</div>
+
+          <div class="panel-title">样式预览</div>
+          <div class="card-preview">
+            <div class="cp-col" data-cp="grid">
+              <div class="cp-label">[ 当前样式 · 网格 ]</div>
+              <div class="cp-grid" id="cpGridPreview"></div>
+            </div>
+            <div class="cp-col" data-cp="horizontal">
+              <div class="cp-label">[ 横向长条 ]</div>
+              <div class="cp-hlist" id="cpHListPreview"></div>
+            </div>
+            <div class="cp-col cp-col-full" data-cp="fullscreen">
+              <div class="cp-label">[ 全屏杂志封面 ]</div>
+              <div class="cp-fullscreen" id="cpFsPreview">
+                <div class="cp-fs">
+                  <div class="cp-fs-inner">
+                    <div class="cp-fs-date">2026 · 08 · 06 · 6 min</div>
+                    <div class="cp-fs-title">构建现代化个人博客</div>
+                    <div class="cp-fs-quote">从 Hugo 到双线部署的完整实践。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cp-col cp-col-full" data-cp="feature">
+              <div class="cp-label">[ 精选横幅 · 2:1 ]</div>
+              <div class="cp-feature" id="cpFeaturePreview">
+                <div class="cp-feature-inner">
+                  <div class="cp-fs-date">2026 · 08 · 06 · 6 min</div>
+                  <div class="cp-fs-title">构建现代化个人博客</div>
+                  <div class="cp-fs-quote">更适合列表中强调重点文章的横向封面。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note" style="border-left-color:var(--faint);"><strong>站点配置</strong>：编辑仓库内 <span class="mono">hugo.yaml</span> · <span class="mono">static/admin-cms/config.yml</span> · <span class="mono">themes/brutalism/</span></div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="platform" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">Threads 自动转发链</p><h3>平台管理</h3></div>
+            <div class="an-actions">
+              <span class="hint" id="pltStatus" style="margin:0;align-self:center;"></span>
+              <button type="button" class="btn" data-admin-refresh="platform">刷新状态</button>
+            </div>
+          </div>
+          <div class="note">自动链路：<strong>浏览器登录</strong> 或 <strong>账号密码登录</strong> → 获取登录态 Cookie → 用 Cookie <strong>爬取串文</strong>生成静态资源。Cookie 仅保存在你本机浏览器（localStorage）。</div>
+
+          <div class="panel-title">浏览器登录（推荐 · 免输密码）</div>
+          <div class="settings-form">
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsBrowserLogin">打开浏览器登录</button>
+              <button type="button" class="btn" id="cfgThreadsBrowserCancel" hidden>取消等待</button>
+              <span class="hint" id="cfgThreadsBrowserHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsBrowserError" hidden></p>
+            <div class="note">点击按钮 → 在弹出的真实 Chrome 窗口中登录 Threads（支持验证码 / 双因素）→ 登录成功后 Cookie 自动读取并保存。首次使用需先运行一键启动器：<span class="mono">threads-repost/bridge/chrome-debug.sh</span>（Windows 用 <span class="mono">chrome-debug.bat</span>），它会启动调试 Chrome 与本机 Cookie 桥（端口 9222 / 8788，仅本机可访问）。</div>
+          </div>
+
+          <div class="panel-title">自动登录（账号密码）</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>Threads / Instagram 账号</span><input type="text" id="cfgThreadsUser" placeholder="用户名或邮箱" autocomplete="username"></label>
+            <label class="sf-field"><span>密码</span><input type="password" id="cfgThreadsPass" placeholder="密码" autocomplete="current-password"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsLogin">自动登录</button>
+              <span class="hint" id="cfgThreadsLoginHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsLoginError" hidden></p>
+          </div>
+
+          <div class="panel-title">登录态 Cookie</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Cookie（自动登录后自动填充；手动登录时可从浏览器复制 <span class="mono">sessionid=…; ds_user_id=…</span>）</span><input type="password" id="cfgThreadsCookie" placeholder="sessionid=…; ds_user_id=…" autocomplete="off"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsSave">保存 Cookie</button>
+              <button type="button" class="btn" id="cfgThreadsTest">测试连接</button>
+              <button type="button" class="btn" id="cfgThreadsClear">清除</button>
+            </div>
+            <p class="auth-error" id="cfgThreadsError" hidden></p>
+          </div>
+
+          <div class="panel-title">爬取串文</div>
+          <div class="settings-form">
+            <label class="sf-field sf-wide"><span>Threads 链接</span><input type="text" id="cfgThreadsUrl" placeholder="https://www.threads.net/@user/post/xxx 或 https://www.threads.com/@user/post/xxx"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="cfgThreadsFetch">爬取并生成资源</button>
+              <span class="hint" id="cfgThreadsHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="cfgThreadsFetchError" hidden></p>
+            <div class="note">爬取在 Supabase Edge Function 执行（部署：<span class="mono">supabase functions deploy threads-fetch</span>），结果存 <span class="mono">threads-reposts</span> 存储桶，文章中的串文链接会自动渲染成转发卡片。</div>
+          </div>
+        </section>
+
+        <section class="admin-panel" data-admin-panel="player" hidden>
+          <div class="an-head">
+            <div><p class="an-head-sub">FLOAT PLAYER</p><h3>播放器配置</h3></div>
+            <div class="an-actions">
+              <button type="button" class="btn" id="playerCfgReloadBtn">重新加载</button>
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn">保存配置</button>
+            </div>
+          </div>
+
+          <div class="note"><strong>数据源</strong>：前台只请求你自己的代理服务，例如 <span class="mono">http://127.0.0.1:4188/api/netease/playlist</span>。线上部署时把代理地址改成你的正式 API。</div>
+
+          <div class="panel-title">网易云自动化</div>
+          <div class="settings-form">
+            <div class="sf-field sf-wide">
+              <span>登录与解析</span>
+              <div class="sf-actions">
+                <button type="button" class="btn" id="playerProxyStatusBtn">检查代理</button>
+                <button type="button" class="btn btn-primary" id="playerQrLoginBtn">扫码登录</button>
+                <button type="button" class="btn" id="playerPlaylistTestBtn">测试歌单</button>
+                <button type="button" class="btn" id="playerLogoutBtn">退出网易云</button>
+              </div>
+            </div>
+            <div class="note sf-wide" id="playerProxyStatus">尚未检查代理状态。</div>
+            <div class="sf-field sf-wide" id="playerLoginQr" hidden></div>
+          </div>
+
+          <div class="panel-title">播放源</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>启用播放器</span><select id="playerEnabled"><option value="true">启用</option><option value="false">关闭</option></select></label>
+            <label class="sf-field"><span>自动加载歌单</span><select id="playerAutoLoad"><option value="false">手动</option><option value="true">自动</option></select></label>
+            <label class="sf-field"><span>网易云歌单 ID</span><input type="text" id="playerPlaylistId" placeholder="3778678"></label>
+            <label class="sf-field sf-wide"><span>代理地址</span><input type="url" id="playerProxyBase" placeholder="http://127.0.0.1:4188"></label>
+            <label class="sf-field"><span>加载数量</span><input type="number" id="playerLimit" min="1" max="200"></label>
+            <label class="sf-field"><span>音质等级</span><select id="playerLevel"><option value="standard">standard</option><option value="higher">higher</option><option value="exhigh">exhigh</option><option value="lossless">lossless</option><option value="hires">hires</option></select></label>
+          </div>
+
+          <div class="panel-title">弧形交互</div>
+          <div class="settings-form">
+            <label class="sf-field"><span>吸附侧</span><select id="playerSide"><option value="left">左侧</option><option value="right">右侧</option></select></label>
+            <label class="sf-field"><span>字号 rem</span><input type="number" id="playerFontSize" min="1.6" max="5" step="0.1"></label>
+            <label class="sf-field"><span>行距倍率</span><input type="number" id="playerSpacing" min="0.8" max="2.4" step="0.05"></label>
+            <label class="sf-field"><span>倾斜角度</span><input type="number" id="playerTilt" min="0" max="18" step="0.5"></label>
+            <label class="sf-field"><span>弧度强度</span><input type="number" id="playerCurve" min="0" max="2.5" step="0.05"></label>
+            <label class="sf-field"><span>淡出强度</span><input type="number" id="playerFade" min="0" max="0.8" step="0.01"></label>
+            <label class="sf-field"><span>最小透明度</span><input type="number" id="playerMinOpacity" min="0" max="0.5" step="0.01"></label>
+            <label class="sf-field"><span>模糊强度</span><input type="number" id="playerBlur" min="0" max="8" step="0.1"></label>
+            <label class="sf-field"><span>缓动时间</span><input type="number" id="playerSmoothing" min="60" max="600" step="10"></label>
+            <label class="sf-field"><span>文字内缩</span><input type="number" id="playerInset" min="24" max="180" step="1"></label>
+            <div class="sf-actions">
+              <button type="button" class="btn btn-primary" id="playerCfgSaveBtn2">保存播放器配置</button>
+              <span class="hint" id="playerCfgHint" style="margin:0;align-self:center;"></span>
+            </div>
+            <p class="auth-error" id="playerCfgError" hidden></p>
+          </div>
+        </section>
+
+        <div class="auth-error" id="adminError" hidden></div>
+      </div>
     </div>
   </div>
-
-  <!-- Unauthorized State -->
-  <div id="adminUnauthorized" class="state-card" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;background:var(--admin-bg);">
-    <div class="card-modern" style="max-width:400px;text-align:center;">
-      <svg class="icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <h2 style="font-size:1.5rem;font-weight:700;margin:1rem 0 0.5rem;">无访问权限</h2>
-      <p style="color:var(--admin-text-secondary);margin-bottom:1.5rem;">此页面仅管理员可访问</p>
-      <a href="{{ "" | relLangURL }}" class="btn-modern btn-modern-primary">返回首页</a>
-    </div>
-  </div>
-
-  <!-- Main Admin Content -->
-  <div id="adminContent" hidden>
-
-    <!-- Top Bar -->
-    <div class="admin-topbar">
-      <div>
-        <h1>{{ site.Title }}</h1>
-        <p style="color:var(--admin-text-secondary);margin-top:0.5rem;display:flex;align-items:center;gap:0.5rem;">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span id="adminUserName">—</span>
-          <span style="opacity:0.5;">·</span>
-          <span id="adminRole">—</span>
-        </p>
-      </div>
-      <div class="admin-topbar-actions">
-        <button type="button" class="btn-modern" id="adminRefreshBtn">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-          刷新
-        </button>
-        <button type="button" class="btn-modern-icon" id="adminLogoutBtn" title="退出登录">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tab Navigation -->
-    <div class="tabs-modern">
-      <button type="button" class="tab-modern active" data-admin-tab="dashboard">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        仪表盘
-      </button>
-      <button type="button" class="tab-modern" data-admin-tab="music">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-        音乐库
-      </button>
-      <button type="button" class="tab-modern" data-admin-tab="player">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-        播放器
-      </button>
-      <button type="button" class="tab-modern" data-admin-tab="posts">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-        文章
-      </button>
-    </div>
-
-    <!-- Dashboard Panel -->
-    <div class="admin-tab-panel" data-admin-panel="dashboard">
-
-      <!-- Stats Grid -->
-      <div class="stats-grid-modern animate-fade-in-up">
-        <div class="stat-card-modern">
-          <div class="stat-icon-wrapper" style="--stat-color: #0a84ff;">
-            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </div>
-          <div class="stat-label-modern">文章数</div>
-          <div class="stat-value-modern" id="adminPostCount">—</div>
-          <div class="stat-meta-modern">已发布内容</div>
-        </div>
-
-        <div class="stat-card-modern">
-          <div class="stat-icon-wrapper" style="--stat-color: #32d74b;">
-            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <div class="stat-label-modern">评论数</div>
-          <div class="stat-value-modern" id="adminCommentCount">—</div>
-          <div class="stat-meta-modern">用户互动</div>
-        </div>
-
-        <div class="stat-card-modern">
-          <div class="stat-icon-wrapper" style="--stat-color: #ff453a;">
-            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          </div>
-          <div class="stat-label-modern">音乐数</div>
-          <div class="stat-value-modern" id="adminMusicCount">—</div>
-          <div class="stat-meta-modern">音频文件</div>
-        </div>
-
-        <div class="stat-card-modern">
-          <div class="stat-icon-wrapper" style="--stat-color: #ff9f0a;">
-            <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <div class="stat-label-modern">用户数</div>
-          <div class="stat-value-modern" id="adminUserCount">—</div>
-          <div class="stat-meta-modern">注册用户</div>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="card-modern" style="margin-top:2rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <h3 style="font-size:1.25rem;font-weight:600;">最近文章</h3>
-          <a href="{{ "admin-cms/" | relURL }}" class="btn-modern btn-modern-primary">
-            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            新建文章
-          </a>
-        </div>
-        <div class="table-modern-wrapper">
-          <table class="table-modern">
-            <thead>
-              <tr>
-                <th>标题</th>
-                <th>状态</th>
-                <th>日期</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="adminPostTable">
-              <tr><td colspan="4" style="text-align:center;color:var(--admin-text-secondary);padding:2rem;">
-                <div class="spinner-modern" style="margin:0 auto 1rem;"></div>
-                加载中...
-              </td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Music Library Panel -->
-    <div class="admin-tab-panel" data-admin-panel="music" hidden>
-
-      <div class="card-modern" style="margin-bottom:1.5rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <div>
-            <h3 style="font-size:1.25rem;font-weight:600;margin-bottom:0.25rem;">我的音乐库</h3>
-            <p style="color:var(--admin-text-secondary);font-size:0.875rem;">管理你上传的音频文件</p>
-          </div>
-          <div style="display:flex;gap:0.75rem;">
-            <button type="button" class="btn-modern" data-admin-refresh="music">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-              刷新
-            </button>
-            <button type="button" class="btn-modern btn-modern-primary" id="adminMusicUploadBtn">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              上传音频
-            </button>
-          </div>
-        </div>
-
-        <input type="file" id="adminMusicInput" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden>
-
-        <div class="alert-modern alert-info">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div>
-            <strong>自动提取元信息</strong><br>
-            支持 MP3、M4A、OGG、FLAC、WAV（最大 50MB）<br>
-            自动提取标题、艺术家、专辑、封面、时长等信息
-          </div>
-        </div>
-
-        <!-- Upload Queue -->
-        <div id="adminMusicUploadQueue" class="upload-queue-modern"></div>
-
-        <!-- Music Stats -->
-        <div class="stats-grid-modern" style="grid-template-columns:repeat(3,1fr);margin:1.5rem 0;">
-          <div class="stat-card-modern" style="padding:1.5rem;">
-            <div class="stat-label-modern" style="font-size:0.75rem;">总曲目</div>
-            <div class="stat-value-modern" style="font-size:2rem;" id="adminMusicTotalCount">0</div>
-          </div>
-          <div class="stat-card-modern" style="padding:1.5rem;">
-            <div class="stat-label-modern" style="font-size:0.75rem;">总大小</div>
-            <div class="stat-value-modern" style="font-size:2rem;" id="adminMusicTotalSize">0 MB</div>
-          </div>
-          <div class="stat-card-modern" style="padding:1.5rem;">
-            <div class="stat-label-modern" style="font-size:0.75rem;">总时长</div>
-            <div class="stat-value-modern" style="font-size:2rem;" id="adminMusicTotalDuration">0:00</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Music Track List -->
-      <div class="music-library-modern" id="adminMusicLibrary">
-        <div class="card-modern" style="text-align:center;padding:3rem;">
-          <svg class="icon-xl" style="margin:0 auto 1rem;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          <p style="color:var(--admin-text-secondary);font-size:1rem;">还没有上传音乐</p>
-          <p style="color:var(--admin-text-secondary);font-size:0.875rem;margin-top:0.5rem;">
-            点击上方"上传音频"按钮添加你的音乐
-          </p>
-        </div>
-      </div>
-
-      <div class="alert-modern alert-error" id="adminMusicError" hidden></div>
-    </div>
-
-    <!-- Player Config Panel -->
-    <div class="admin-tab-panel" data-admin-panel="player" hidden>
-
-      <div class="card-modern" style="margin-bottom:1.5rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <div>
-            <h3 style="font-size:1.25rem;font-weight:600;margin-bottom:0.25rem;">播放器配置</h3>
-            <p style="color:var(--admin-text-secondary);font-size:0.875rem;">悬浮轮盘播放器设置</p>
-          </div>
-          <button type="button" class="btn-modern btn-modern-primary" id="playerCfgSaveBtn">
-            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            保存配置
-          </button>
-        </div>
-
-        <div class="alert-modern alert-warning">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div>
-            <strong>数据源</strong><br>
-            前台只请求你自己的代理服务。线上部署时把代理地址改成你的正式 API。
-          </div>
-        </div>
-
-        <!-- Player Source -->
-        <div class="form-section-modern">
-          <h4 class="form-section-title">播放源</h4>
-          <div class="form-grid-modern">
-
-            <div class="input-group-modern">
-              <label>启用播放器</label>
-              <select id="playerEnabled" class="input-modern">
-                <option value="true">启用</option>
-                <option value="false">关闭</option>
-              </select>
-            </div>
-
-            <div class="input-group-modern">
-              <label>自动加载</label>
-              <select id="playerAutoLoad" class="input-modern">
-                <option value="true">自动</option>
-                <option value="false">手动</option>
-              </select>
-            </div>
-
-            <div class="input-group-modern" style="grid-column:1/-1;">
-              <label>网易云歌单 ID</label>
-              <input type="text" id="playerPlaylistId" class="input-modern" placeholder="163114086">
-            </div>
-
-            <div class="input-group-modern" style="grid-column:1/-1;">
-              <label>代理地址</label>
-              <input type="url" id="playerProxyBase" class="input-modern" placeholder="https://blog-music-api.onrender.com">
-            </div>
-
-            <div class="input-group-modern">
-              <label>加载数量</label>
-              <input type="number" id="playerLimit" class="input-modern" min="1" max="200" value="200">
-            </div>
-
-            <div class="input-group-modern">
-              <label>音质等级</label>
-              <select id="playerLevel" class="input-modern">
-                <option value="standard">standard</option>
-                <option value="higher">higher</option>
-                <option value="exhigh">exhigh</option>
-                <option value="lossless">lossless</option>
-              </select>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- Player Style -->
-        <div class="form-section-modern">
-          <h4 class="form-section-title">弧形交互</h4>
-          <div class="form-grid-modern">
-
-            <div class="input-group-modern">
-              <label>吸附侧</label>
-              <select id="playerSide" class="input-modern">
-                <option value="left">左侧</option>
-                <option value="right">右侧</option>
-              </select>
-            </div>
-
-            <div class="input-group-modern">
-              <label>字号 rem</label>
-              <input type="number" id="playerFontSize" class="input-modern" min="1.6" max="5" step="0.1" value="4">
-            </div>
-
-            <div class="input-group-modern">
-              <label>行距倍率</label>
-              <input type="number" id="playerSpacing" class="input-modern" min="0.8" max="2.4" step="0.05" value="1.4">
-            </div>
-
-            <div class="input-group-modern">
-              <label>倾斜角度</label>
-              <input type="number" id="playerTilt" class="input-modern" min="0" max="18" step="0.5" value="6">
-            </div>
-
-            <div class="input-group-modern">
-              <label>弧度强度</label>
-              <input type="number" id="playerCurve" class="input-modern" min="0" max="2.5" step="0.05" value="1">
-            </div>
-
-            <div class="input-group-modern">
-              <label>淡出强度</label>
-              <input type="number" id="playerFade" class="input-modern" min="0" max="0.8" step="0.01" value="0.25">
-            </div>
-
-          </div>
-        </div>
-
-        <div class="alert-modern alert-error" id="playerCfgError" hidden></div>
-        <div class="alert-modern alert-success" id="playerCfgHint" hidden></div>
-      </div>
-    </div>
-
-    <!-- Posts Panel -->
-    <div class="admin-tab-panel" data-admin-panel="posts" hidden>
-      <div class="card-modern">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <div>
-            <h3 style="font-size:1.25rem;font-weight:600;margin-bottom:0.25rem;">文章管理</h3>
-            <p style="color:var(--admin-text-secondary);font-size:0.875rem;">发布与管理文章</p>
-          </div>
-          <div style="display:flex;gap:0.75rem;">
-            <button type="button" class="btn-modern" id="ghAuthBtn">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-              GitHub 授权
-            </button>
-            <a href="{{ "admin-cms/" | relURL }}" class="btn-modern btn-modern-primary">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              新建文章
-            </a>
-          </div>
-        </div>
-
-        <div class="alert-modern alert-info">
-          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div>发布 = 将仓库文章的「草稿」状态改为「已发布」并提交，站点自动重建上线。</div>
-        </div>
-
-        <div class="table-modern-wrapper">
-          <table class="table-modern">
-            <thead>
-              <tr>
-                <th>标题</th>
-                <th>状态</th>
-                <th>日期</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="adminPublishTable">
-              <tr><td colspan="4" style="text-align:center;color:var(--admin-text-secondary);padding:2rem;">
-                <div class="spinner-modern" style="margin:0 auto 1rem;"></div>
-                加载中...
-              </td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Toast Notifications -->
-  <div class="toast-wrap" id="toastWrap" aria-live="polite" style="position:fixed;top:1rem;right:1rem;z-index:10000;display:flex;flex-direction:column;gap:0.5rem;"></div>
-
+  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
 </div>
-
-<script src="{{ "js/audio-metadata.js" | relURL }}"></script>
-<script src="{{ "js/admin.js" | relURL }}"></script>
-<script>
-// Modern UI enhancements
-(function() {
-  'use strict';
-
-  // Tab switching
-  document.addEventListener('click', function(e) {
-    var tab = e.target.closest('[data-admin-tab]');
-    if (!tab) return;
-
-    var tabName = tab.dataset.adminTab;
-
-    // Update tabs
-    document.querySelectorAll('[data-admin-tab]').forEach(function(t) {
-      t.classList.toggle('active', t === tab);
-    });
-
-    // Update panels
-    document.querySelectorAll('[data-admin-panel]').forEach(function(panel) {
-      panel.hidden = panel.dataset.adminPanel !== tabName;
-    });
-
-    // Load data when switching to music tab
-    if (tabName === 'music' && window.loadMusicLibrary) {
-      window.loadMusicLibrary();
-    }
-  });
-
-  // Modern toast notification
-  window.showToastModern = function(message, type) {
-    var wrap = document.getElementById('toastWrap');
-    if (!wrap) return;
-
-    var toast = document.createElement('div');
-    toast.className = 'toast-modern toast-' + (type || 'info');
-
-    var icons = {
-      success: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-      error: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-      warning: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-      info: '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-    };
-
-    toast.innerHTML = '<div style="display:flex;align-items:center;gap:0.75rem;">' +
-      icons[type || 'info'] +
-      '<span style="font-weight:500;">' + message + '</span>' +
-      '</div>';
-
-    wrap.appendChild(toast);
-
-    setTimeout(function() {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(100px)';
-      setTimeout(function() { toast.remove(); }, 300);
-    }, 3000);
-  };
-
-  // Override original showToast
-  if (window.showToast) {
-    window.showToast = window.showToastModern;
-  }
-
-})();
-</script>
 {{- end }}
