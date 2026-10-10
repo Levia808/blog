@@ -86,7 +86,7 @@
   }
 
   /* ── 面板切换 ── */
-  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'settings', 'platform', 'player'];
+  var sections = ['dashboard', 'posts', 'archive', 'comments', 'users', 'media', 'music', 'settings', 'platform', 'player'];
 
   function switchSection(name) {
     sections.forEach(function (section) {
@@ -96,6 +96,11 @@
         link.classList.toggle('active', section === name);
       });
     });
+
+    // Load data when switching to music panel
+    if (name === 'music' && typeof loadMusicLibrary === 'function') {
+      loadMusicLibrary();
+    }
   }
 
   document.querySelectorAll('[data-admin-section]').forEach(function (link) {
@@ -1914,6 +1919,12 @@
         if (refresh.dataset.adminRefresh === 'media') {
           var count = await loadMedia();
         }
+        if (refresh.dataset.adminRefresh === 'music') {
+          if (typeof loadMusicLibrary === 'function') {
+            await loadMusicLibrary();
+            showToast('音乐库已刷新', 'success');
+          }
+        }
         if (refresh.dataset.adminRefresh === 'archive') await refreshPosts();
         if (refresh.dataset.adminRefresh === 'platform') updatePlatformStatus();
       } catch (error) {
@@ -2210,6 +2221,291 @@
     }
   });
 
+  /* ═══════════════════════════════════════════════════════════════
+     音乐管理系统
+     ═══════════════════════════════════════════════════════════════ */
+
+  // 加载音乐库
+  async function loadMusicLibrary() {
+    try {
+      var library = document.getElementById('adminMusicLibrary');
+      if (!library) return;
+
+      var tracks = await Storage.list({ bucket: 'user-audio', prefix: adminProfile.user_id + '/' });
+
+      if (!tracks || tracks.length === 0) {
+        library.innerHTML = '<div class="card-modern" style="text-align:center;padding:3rem;">' +
+          '<svg class="icon-xl" style="margin:0 auto 1rem;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+          '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
+          '<p style="color:var(--admin-text-secondary);font-size:1rem;">还没有上传音乐</p>' +
+          '<p style="color:var(--admin-text-secondary);font-size:0.875rem;margin-top:0.5rem;">点击上方"上传音频"按钮添加你的音乐</p></div>';
+        updateMusicStats(0, 0, 0);
+        return;
+      }
+
+      // 从数据库获取元数据
+      var { data: musicData, error } = await window.supabase
+        .from('music_library')
+        .select('*')
+        .eq('user_id', adminProfile.user_id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      var totalSize = 0;
+      var totalDuration = 0;
+
+      library.innerHTML = musicData.map(function(track) {
+        totalSize += track.file_size || 0;
+        totalDuration += track.duration || 0;
+
+        var coverImg = track.cover_url
+          ? '<img src="' + escapeHtml(track.cover_url) + '" alt="封面" loading="lazy">'
+          : '<div style="background:var(--admin-surface-hover);width:100%;height:100%;display:flex;align-items:center;justify-content:center;">' +
+            '<svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>';
+
+        return '<div class="music-track-modern">' +
+          '<div class="music-track-cover">' + coverImg + '</div>' +
+          '<div class="music-track-info">' +
+            '<div class="music-track-title">' + escapeHtml(track.title || track.file_name) + '</div>' +
+            '<div class="music-track-meta">' +
+              escapeHtml(track.artist || '未知艺术家') +
+              (track.album ? ' · ' + escapeHtml(track.album) : '') +
+            '</div>' +
+            '<div class="music-track-meta" style="font-size:0.75rem;opacity:0.6;">' +
+              formatDuration(track.duration) + ' · ' + formatFileSize(track.file_size) + ' · ' +
+              (track.source === 'upload' ? '自传' : '第三方') +
+            '</div>' +
+          '</div>' +
+          '<div class="music-track-actions">' +
+            '<button type="button" class="btn-modern-icon" onclick="playMusicTrack(\'' + track.id + '\', \'' + escapeHtml(track.audio_url) + '\')" title="播放">' +
+              '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>' +
+            '</button>' +
+            '<button type="button" class="btn-modern-icon" onclick="editMusicTrack(\'' + track.id + '\')" title="编辑">' +
+              '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+              '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+            '</button>' +
+            '<button type="button" class="btn-modern-icon" onclick="deleteMusicTrack(\'' + track.id + '\', \'' + escapeHtml(track.storage_path) + '\')" title="删除">' +
+              '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      updateMusicStats(musicData.length, totalSize, totalDuration);
+    } catch (error) {
+      showError(errorText(error), 'adminMusicError');
+    }
+  }
+
+  function updateMusicStats(count, size, duration) {
+    var countEl = document.getElementById('adminMusicTotalCount');
+    var sizeEl = document.getElementById('adminMusicTotalSize');
+    var durationEl = document.getElementById('adminMusicTotalDuration');
+
+    if (countEl) countEl.textContent = count;
+    if (sizeEl) sizeEl.textContent = formatFileSize(size);
+    if (durationEl) durationEl.textContent = formatDuration(duration);
+  }
+
+  function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 MB';
+    var mb = bytes / (1024 * 1024);
+    if (mb < 1) return (bytes / 1024).toFixed(1) + ' KB';
+    return mb.toFixed(1) + ' MB';
+  }
+
+  function formatDuration(seconds) {
+    if (!seconds || seconds === 0) return '0:00';
+    var mins = Math.floor(seconds / 60);
+    var secs = Math.floor(seconds % 60);
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+  }
+
+  // 上传音频文件
+  async function uploadMusicFile(file) {
+    if (!file) return;
+
+    var maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      showToast('文件过大（最大 50MB）', 'error');
+      return;
+    }
+
+    var queue = document.getElementById('adminMusicUploadQueue');
+    if (!queue) return;
+
+    var itemId = 'upload-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    var queueItem = document.createElement('div');
+    queueItem.className = 'upload-item-modern';
+    queueItem.id = itemId;
+    queueItem.innerHTML =
+      '<div class="upload-item-header">' +
+        '<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
+        '<div class="upload-item-info">' +
+          '<div class="upload-item-filename">' + escapeHtml(file.name) + '</div>' +
+          '<div class="upload-item-status">正在提取元信息...</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="upload-item-progress">' +
+        '<div class="upload-progress-bar"><div class="upload-progress-fill" style="width:0%"></div></div>' +
+        '<div class="upload-progress-text">0%</div>' +
+      '</div>';
+
+    queue.appendChild(queueItem);
+
+    try {
+      // 提取元信息
+      var metadata = { title: file.name.replace(/\.[^.]+$/, ''), artist: '未知艺术家' };
+
+      if (window.AudioMetadata && typeof window.AudioMetadata.extract === 'function') {
+        try {
+          metadata = await window.AudioMetadata.extract(file);
+        } catch (e) {
+          console.warn('元信息提取失败，使用默认值', e);
+        }
+      }
+
+      var statusEl = queueItem.querySelector('.upload-item-status');
+      var progressFill = queueItem.querySelector('.upload-progress-fill');
+      var progressText = queueItem.querySelector('.upload-progress-text');
+
+      if (statusEl) statusEl.textContent = '上传中...';
+
+      // 上传到 Supabase Storage
+      var timestamp = Date.now();
+      var safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      var storagePath = adminProfile.user_id + '/' + timestamp + '-' + safeName;
+
+      var { data: uploadData, error: uploadError } = await window.supabase.storage
+        .from('user-audio')
+        .upload(storagePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: function(progress) {
+            var percent = Math.round((progress.loaded / progress.total) * 100);
+            if (progressFill) progressFill.style.width = percent + '%';
+            if (progressText) progressText.textContent = percent + '%';
+          }
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 获取公开 URL
+      var { data: urlData } = window.supabase.storage
+        .from('user-audio')
+        .getPublicUrl(storagePath);
+
+      // 保存到数据库
+      var { data: dbData, error: dbError } = await window.supabase
+        .from('music_library')
+        .insert({
+          user_id: adminProfile.user_id,
+          file_name: file.name,
+          title: metadata.title || file.name.replace(/\.[^.]+$/, ''),
+          artist: metadata.artist || '未知艺术家',
+          album: metadata.album || null,
+          duration: metadata.duration || 0,
+          file_size: file.size,
+          storage_path: storagePath,
+          audio_url: urlData.publicUrl,
+          cover_url: metadata.coverDataUrl || null,
+          source: 'upload'
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      if (statusEl) {
+        statusEl.textContent = '上传成功';
+        queueItem.classList.add('upload-success');
+      }
+
+      showToast('上传成功: ' + file.name, 'success');
+
+      setTimeout(function() {
+        queueItem.remove();
+      }, 3000);
+
+    } catch (error) {
+      var statusEl = queueItem.querySelector('.upload-item-status');
+      if (statusEl) {
+        statusEl.textContent = '上传失败: ' + errorText(error);
+        queueItem.classList.add('upload-error');
+      }
+      showToast('上传失败: ' + file.name, 'error');
+    }
+  }
+
+  // 播放音轨
+  window.playMusicTrack = function(trackId, audioUrl) {
+    if (window.FloatPlayer && typeof window.FloatPlayer.playUrl === 'function') {
+      window.FloatPlayer.playUrl(audioUrl);
+      showToast('开始播放', 'success');
+    } else {
+      window.open(audioUrl, '_blank');
+    }
+  };
+
+  // 编辑音轨
+  window.editMusicTrack = async function(trackId) {
+    var newTitle = prompt('修改标题:');
+    if (!newTitle || !newTitle.trim()) return;
+
+    try {
+      var { error } = await window.supabase
+        .from('music_library')
+        .update({ title: newTitle.trim() })
+        .eq('id', trackId)
+        .eq('user_id', adminProfile.user_id);
+
+      if (error) throw error;
+
+      showToast('修改成功', 'success');
+      await loadMusicLibrary();
+    } catch (error) {
+      showToast('修改失败: ' + errorText(error), 'error');
+    }
+  };
+
+  // 删除音轨
+  window.deleteMusicTrack = async function(trackId, storagePath) {
+    if (!confirm('确定要删除这首音乐吗？此操作不可恢复。')) return;
+
+    try {
+      // 删除存储文件
+      var { error: storageError } = await window.supabase.storage
+        .from('user-audio')
+        .remove([storagePath]);
+
+      if (storageError) console.warn('存储删除失败:', storageError);
+
+      // 删除数据库记录
+      var { error: dbError } = await window.supabase
+        .from('music_library')
+        .delete()
+        .eq('id', trackId)
+        .eq('user_id', adminProfile.user_id);
+
+      if (dbError) throw dbError;
+
+      showToast('删除成功', 'success');
+      await loadMusicLibrary();
+    } catch (error) {
+      showToast('删除失败: ' + errorText(error), 'error');
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════════════════
+     认证初始化
+     ═══════════════════════════════════════════════════════════════ */
+
   function whenAuthReady(cb) {
     if (window.Auth) { cb(); return; }
     var tries = 0;
@@ -2256,6 +2552,27 @@
         };
         if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
         if (drawerLogout) drawerLogout.addEventListener('click', doLogout);
+
+        /* 音乐上传按钮绑定 */
+        var musicUploadBtn = document.getElementById('adminMusicUploadBtn');
+        var musicInput = document.getElementById('adminMusicInput');
+        if (musicUploadBtn && musicInput) {
+          musicUploadBtn.addEventListener('click', function() {
+            musicInput.click();
+          });
+          musicInput.addEventListener('change', async function(e) {
+            var files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            for (var i = 0; i < files.length; i++) {
+              await uploadMusicFile(files[i]);
+            }
+
+            e.target.value = '';
+            await loadMusicLibrary();
+          });
+        }
+
         await loadDashboard();
         loadNavBehaviorConfig();
         updateGhAuthStatus();
