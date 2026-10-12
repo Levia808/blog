@@ -11,7 +11,7 @@
   var userDropdown = document.getElementById('userDropdown');
   var userMenuTrigger = document.getElementById('userMenuTrigger');
   var logoutBtn = document.getElementById('logoutBtn');
-  var githubLoginBtn = document.getElementById('githubLogin');
+  var githubLoginBtn = document.getElementById('githubLogin') || document.getElementById('githubSignIn');
   var adminLink = document.getElementById('adminLink');
   var cmsLink = document.getElementById('cmsLink');
   var mobileAdminLink = document.getElementById('mobileAdminLink');
@@ -218,27 +218,54 @@
   }
 
   // Login
-  var loginForm = document.getElementById('loginForm');
+  var loginForm = document.getElementById('loginForm') || document.getElementById('signInForm');
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       clearErrors();
       var fd = new FormData(this);
+      var standalone = loginForm.id === 'signInForm';
+      var submit = loginForm.querySelector('[type=submit]');
+      if (submit) { submit.disabled = true; submit.setAttribute('aria-busy', 'true'); }
       Auth.signIn(fd.get('email'), fd.get('password'))
-        .then(function () { closeAuth(); updateAuthUI(); })
-        .catch(function (err) { handleError('loginError', err); });
+        .then(function () {
+          if (standalone) {
+            var redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
+            // Accept only same-origin absolute paths; prevent open redirects.
+            if (redirect.charAt(0) !== '/' || redirect.indexOf('//') === 0 || redirect.indexOf('\\') !== -1) redirect = '/';
+            window.location.assign(redirect);
+            return;
+          }
+          closeAuth();
+          updateAuthUI();
+        })
+        .catch(function (err) {
+          if (standalone) showStandaloneAuthMessage(err.message || '登录失败，请检查邮箱和密码后重试。', true);
+          else handleError('loginError', err);
+        })
+        .finally(function () { if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); } });
     });
   }
 
   // Register
-  var registerForm = document.getElementById('registerForm');
+  var registerForm = document.getElementById('registerForm') || document.getElementById('signUpForm');
   if (registerForm) {
     registerForm.addEventListener('submit', function (e) {
       e.preventDefault();
       clearErrors();
       var fd = new FormData(this);
-      Auth.signUp(fd.get('email'), fd.get('password'), fd.get('displayName'))
-        .then(function () {
+      var standalone = registerForm.id === 'signUpForm';
+      var submit = registerForm.querySelector('[type=submit]');
+      if (submit) { submit.disabled = true; submit.setAttribute('aria-busy', 'true'); }
+      Auth.signUp(fd.get('email'), fd.get('password'), fd.get('displayName') || fd.get('username'))
+        .then(function (result) {
+          if (standalone) {
+            var needsEmailConfirmation = result && result.user && !result.session;
+            showStandaloneAuthMessage(needsEmailConfirmation ? '注册成功，请查收邮箱并完成验证后登录。' : '注册成功，正在进入博客…', false);
+            if (!needsEmailConfirmation) window.setTimeout(function () { window.location.assign('/'); }, 700);
+            else showPanel('login');
+            return;
+          }
           document.getElementById('registerSuccess') ||
             (function () {
               var p = document.createElement('p');
@@ -249,8 +276,54 @@
             })();
           showPanel('login');
         })
-        .catch(function (err) { handleError('registerError', err); });
+        .catch(function (err) {
+          if (standalone) showStandaloneAuthMessage(err.message || '注册失败，请稍后重试。', true);
+          else handleError('registerError', err);
+        })
+        .finally(function () { if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); } });
     });
+  }
+
+  // Standalone /login/ page controls (separate from the header auth modal).
+  var standaloneLogin = document.getElementById('signInForm');
+  var standaloneRegister = document.getElementById('signUpForm');
+  if (standaloneLogin && standaloneRegister) {
+    document.querySelectorAll('#loginPage [data-action="signup"], #loginPage [data-action="signin"]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var registering = link.dataset.action === 'signup';
+        standaloneLogin.classList.toggle('is-hidden', registering);
+        standaloneRegister.classList.toggle('is-hidden', !registering);
+        document.querySelectorAll('#loginPage [data-mode]').forEach(function (item) {
+          item.classList.toggle('is-hidden', item.dataset.mode === (registering ? 'signin' : 'signup'));
+        });
+        var title = document.querySelector('#loginPage .login-title');
+        if (title) title.textContent = registering ? '创建账户' : '登录';
+        clearStandaloneAuthMessage();
+      });
+    });
+  }
+
+  function showStandaloneAuthMessage(message, isError) {
+    var node = document.getElementById('standaloneAuthMessage');
+    if (!node) {
+      node = document.createElement('p');
+      node.id = 'standaloneAuthMessage';
+      node.className = isError ? 'auth-error' : 'auth-success';
+      node.setAttribute('role', isError ? 'alert' : 'status');
+      var page = document.getElementById('loginPage');
+      var inner = page && page.querySelector('.login-form-inner');
+      var form = document.getElementById('signInForm');
+      if (inner && form) inner.insertBefore(node, form.nextSibling);
+    }
+    node.className = isError ? 'auth-error' : 'auth-success';
+    node.textContent = message;
+    node.hidden = false;
+  }
+
+  function clearStandaloneAuthMessage() {
+    var node = document.getElementById('standaloneAuthMessage');
+    if (node) { node.hidden = true; node.textContent = ''; }
   }
 
   // Reset Password

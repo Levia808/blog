@@ -35,7 +35,7 @@
   </aside>
   <div class="admin-shell" id="adminPage">
     <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="spinner-modern" aria-hidden="true"></span><span class="state-tag">[ 加载中 ]</span><p>正在加载管理面板…</p></div>
-    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>此页面仅管理员可访问。</p><a href="{{ "" | relLangURL }}" class="btn btn-primary">返回首页</a></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>请先登录具有管理员权限的账号，或确认当前账号状态。</p><a href="{{ "login/?redirect=%2Fadmin%2F" | relLangURL }}" class="btn btn-primary">前往登录</a><a href="{{ "" | relLangURL }}" class="btn">返回首页</a></div>
     <div id="adminContent" hidden>
       <aside class="admin-nav">
         <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
