@@ -25,7 +25,6 @@
 <script defer src="{{ "js/profile.js" | relURL }}"></script>
 {{- end }}
 {{- if and $P.auth (eq .Layout "admin") }}
-<script defer src="{{ "vendor/hyalite/hyalite.js" | relURL }}?v=0.5.0"></script>
 {{- if fileExists "static/js/audio-metadata.js" }}<script defer src="{{ "js/audio-metadata.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
 {{- if fileExists "static/js/admin.js" }}<script defer src="{{ "js/admin.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
 {{- end }}

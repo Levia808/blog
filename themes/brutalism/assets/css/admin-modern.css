@@ -367,7 +367,6 @@ body.admin-only a {
 
 .drawer-mask {
   background: rgba(3, 5, 4, .72);
-  backdrop-filter: blur(4px);
 }
 
 /* ── Main content ──────────────────────────────────────────── */
@@ -875,301 +874,88 @@ body.admin-only a {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Hyalite / Liquid Glass desktop treatment
-   The checker field is intentionally monochrome: the material, not a
-   decorative tint, supplies the hierarchy. Hyalite upgrades the same
-   surfaces to true edge refraction in Chromium and falls back to blur.
+   Flat monochrome admin treatment
+   No blur, refraction, gradients, or glass effects. Surfaces are
+   intentionally opaque so hierarchy comes from spacing, borders, and type.
    ───────────────────────────────────────────────────────────── */
 :root {
-  --admin-bg: #050505;
-  --admin-surface: rgba(13, 13, 13, .78);
-  --admin-surface-2: rgba(25, 25, 25, .72);
-  --admin-surface-3: rgba(38, 38, 38, .78);
-  --admin-line: rgba(255, 255, 255, .13);
-  --admin-line-strong: rgba(255, 255, 255, .26);
+  --admin-bg: #080808;
+  --admin-surface: #111111;
+  --admin-surface-2: #181818;
+  --admin-surface-3: #222222;
+  --admin-line: rgba(255,255,255,.12);
+  --admin-line-strong: rgba(255,255,255,.24);
   --admin-text: #f5f5f5;
-  --admin-text-soft: #c7c7c7;
-  --admin-text-muted: #8d8d8d;
-  --admin-accent: #f0f0f0;
-  --admin-accent-strong: #ffffff;
+  --admin-text-soft: #c8c8c8;
+  --admin-text-muted: #8b8b8b;
+  --admin-accent: #f2f2f2;
+  --admin-accent-strong: #fff;
   --admin-accent-ink: #080808;
   --admin-success: #d7d7d7;
-  --admin-warning: #bcbcbc;
-  --admin-danger: #efb0b0;
-  --admin-shadow: 0 24px 80px rgba(0, 0, 0, .44), 0 2px 10px rgba(0, 0, 0, .36);
-  --admin-grid-line: rgba(255, 255, 255, .105);
-  --admin-grid-line-strong: rgba(255, 255, 255, .14);
-  --hyalite-fallback: blur(18px) saturate(1.06);
+  --admin-warning: #bdbdbd;
+  --admin-danger: #f0aaaa;
+  --admin-shadow: 0 18px 48px rgba(0,0,0,.28);
+  --admin-grid-line: rgba(255,255,255,.07);
+  --admin-grid-line-strong: rgba(255,255,255,.11);
 }
 
 html:has(body.admin-only) {
-  background-color: #050505;
+  background-color: var(--admin-bg);
   background-image:
     linear-gradient(var(--admin-grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--admin-grid-line) 1px, transparent 1px),
     linear-gradient(var(--admin-grid-line-strong) 1px, transparent 1px),
     linear-gradient(90deg, var(--admin-grid-line-strong) 1px, transparent 1px);
   background-size: 28px 28px, 28px 28px, 140px 140px, 140px 140px;
-  background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
+  color-scheme: dark;
 }
 
 body.admin-only,
 body.admin-modern-dark {
-  background-color: transparent;
-  background-image:
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,.06), transparent 32rem),
-    radial-gradient(circle at 88% 100%, rgba(255,255,255,.04), transparent 34rem);
-}
-
-.admin-wrap {
-  background: transparent;
-}
-
-.admin-shell,
-.admin-nav,
-.an-content,
-#adminLoading,
-#adminUnauthorized {
-  background-color: transparent;
-}
-
-.admin-shell {
-  border-color: rgba(255,255,255,.22);
-  background: rgba(8, 8, 8, .56);
-  -webkit-backdrop-filter: var(--hyalite-fallback);
-  backdrop-filter: var(--hyalite-fallback);
-  box-shadow: var(--admin-shadow), inset 0 1px 0 rgba(255,255,255,.1);
-}
-
-.admin-nav {
-  border-right-color: rgba(255,255,255,.16);
-  background: rgba(10, 10, 10, .42);
-  -webkit-backdrop-filter: var(--hyalite-fallback);
-  backdrop-filter: var(--hyalite-fallback);
-}
-
-.an-logo {
-  border-bottom-color: rgba(255,255,255,.16);
-}
-
-.an-item,
-.btn,
-.btn-modern,
-.btn-modern-icon,
-.admin-row-action,
-.admin-user,
-.an-user,
-.admin-mobile-bar,
-.admin-drawer {
-  -webkit-backdrop-filter: blur(14px) saturate(1.04);
-  backdrop-filter: blur(14px) saturate(1.04);
-}
-
-.an-item:hover,
-.an-item:focus-visible,
-.an-item.active {
-  background: rgba(255,255,255,.1);
-  border-color: rgba(255,255,255,.21);
-}
-
-.an-item.active::after,
-.an-item.active .an-dot {
-  background: #fff;
-}
-
-.btn,
-.btn-modern,
-.btn-modern-icon,
-.admin-row-action {
-  border-color: rgba(255,255,255,.18);
-  background: rgba(255,255,255,.055);
-  color: var(--admin-text-soft);
-}
-
-.btn:hover,
-.btn:focus-visible,
-.btn-modern:hover,
-.btn-modern:focus-visible,
-.btn-modern-icon:hover,
-.btn-modern-icon:focus-visible,
-.admin-row-action:hover,
-.admin-row-action:focus-visible {
-  border-color: rgba(255,255,255,.38);
-  background: rgba(255,255,255,.13);
-  color: #fff;
-}
-
-.btn-primary,
-.btn-modern-primary {
-  border-color: rgba(255,255,255,.54);
-  background: rgba(255,255,255,.9);
-  color: #080808;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 8px 24px rgba(0,0,0,.24);
-}
-
-.btn-primary:hover,
-.btn-primary:focus-visible,
-.btn-modern-primary:hover,
-.btn-modern-primary:focus-visible {
-  border-color: #fff;
-  background: #fff;
-  color: #000;
-  box-shadow: inset 0 1px 0 #fff, 0 12px 30px rgba(0,0,0,.32);
-}
-
-.an-head,
-.stat,
-.admin-table-wrap,
-.settings-form,
-.font-preview-panel,
-.card-preview,
-.note,
-.state-card,
-.media-item,
-.admin-media-item,
-.music-track-modern,
-.upload-item-modern,
-.toast,
-.panel-title {
-  border-color: rgba(255,255,255,.15);
-  background: rgba(16,16,16,.56);
-  -webkit-backdrop-filter: var(--hyalite-fallback);
-  backdrop-filter: var(--hyalite-fallback);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 12px 34px rgba(0,0,0,.16);
-}
-
-.an-head {
-  border: 1px solid rgba(255,255,255,.11);
-  border-radius: var(--admin-radius);
-  padding: 18px 20px;
-  background: rgba(9,9,9,.48);
-}
-
-.stat:hover,
-.music-track-modern:hover,
-.media-item:hover,
-.admin-media-item:hover {
-  border-color: rgba(255,255,255,.32);
-  background: rgba(255,255,255,.09);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 16px 38px rgba(0,0,0,.26);
-}
-
-.admin-table-wrap {
-  overflow: auto;
-}
-
-.admin-table th {
-  color: #efefef;
-  background: rgba(255,255,255,.045);
-}
-
-.admin-table tbody tr:hover {
-  background: rgba(255,255,255,.07);
-}
-
-.admin-row-select,
-.sf-field input,
-.sf-field textarea,
-.sf-field select {
-  border-color: rgba(255,255,255,.17);
-  background: rgba(0,0,0,.38);
-  color: #f4f4f4;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.admin-row-select:focus,
-.sf-field input:focus,
-.sf-field textarea:focus,
-.sf-field select:focus {
-  border-color: rgba(255,255,255,.58);
-  box-shadow: 0 0 0 3px rgba(255,255,255,.1), inset 0 1px 0 rgba(255,255,255,.08);
-}
-
-.note,
-.state-card,
-.panel-title {
-  background: rgba(0,0,0,.32);
-}
-
-.note {
-  border-left-color: rgba(255,255,255,.7);
-}
-
-.note strong,
-.note .mono,
-.note code,
-.admin-status-approved,
-.admin-row-action.is-primary {
-  color: #fff;
-}
-
-.status-dot.status-published,
-.admin-status-approved {
-  background: #f4f4f4;
-}
-
-.admin-status-pending,
-.status-dot.status-draft {
-  background: #999;
-  color: #d2d2d2;
-}
-
-.spinner-modern {
-  border-color: rgba(255,255,255,.16);
-  border-top-color: #fff;
-}
-
-.toast {
-  background: rgba(22,22,22,.7);
-}
-
-/* The actual Hyalite engine writes these two variables per element. */
-[data-hyalite-glass] {
-  -webkit-backdrop-filter: var(--hyalite, var(--hyalite-fallback));
-  backdrop-filter: var(--hyalite, var(--hyalite-fallback));
-  box-shadow: var(--hyalite-edge, inset 0 1px 0 rgba(255,255,255,.1), 0 18px 42px rgba(0,0,0,.24));
-}
-
-@media (max-width: 820px) {
-  html:has(body.admin-only) {
-    background-size: 22px 22px, 22px 22px, 110px 110px, 110px 110px;
-  }
-  .admin-shell {
-    background: rgba(7,7,7,.7);
-  }
-}
-
-/* Final cascade guard: the legacy Swiss layer is intentionally kept for the
-   content shell, but must not repaint the production admin surfaces. */
-body.admin-only,
-body.admin-modern-dark {
-  background-color: #050505 !important;
-  background-image:
-    radial-gradient(circle at 18% 0%, rgba(255,255,255,.06), transparent 32rem),
-    radial-gradient(circle at 88% 100%, rgba(255,255,255,.04), transparent 34rem) !important;
-  color: #f5f5f5 !important;
+  background: var(--admin-bg);
+  color: var(--admin-text);
 }
 
 body.admin-only .site-main,
 body.admin-only .admin-wrap,
 body.admin-only .an-content {
-  background-color: transparent !important;
-  background-image: none !important;
-  color: #f5f5f5 !important;
+  background: transparent !important;
+  color: var(--admin-text);
 }
 
 body.admin-only .admin-shell {
-  background: rgba(8, 8, 8, .56) !important;
-  border: 1px solid rgba(255,255,255,.22) !important;
+  background: var(--admin-surface) !important;
+  border: 1px solid var(--admin-line-strong) !important;
   border-radius: var(--admin-radius-lg) !important;
-  color: #f5f5f5 !important;
+  box-shadow: var(--admin-shadow);
 }
 
 body.admin-only .admin-nav {
-  background: rgba(10, 10, 10, .42) !important;
-  border-right-color: rgba(255,255,255,.16) !important;
-  color: #c7c7c7 !important;
+  background: #0d0d0d !important;
+  border-right: 1px solid var(--admin-line) !important;
+}
+
+body.admin-only .an-head,
+body.admin-only .stat,
+body.admin-only .admin-table-wrap,
+body.admin-only .settings-form,
+body.admin-only .font-preview-panel,
+body.admin-only .card-preview,
+body.admin-only .note,
+body.admin-only .state-card,
+body.admin-only .media-item,
+body.admin-only .admin-media-item,
+body.admin-only .music-track-modern,
+body.admin-only .upload-item-modern,
+body.admin-only .toast,
+body.admin-only .panel-title {
+  background: var(--admin-surface-2) !important;
+  border-color: var(--admin-line) !important;
+  box-shadow: none !important;
+}
+
+body.admin-only .an-head {
+  background: var(--admin-surface) !important;
 }
 
 body.admin-only .an-logo,
@@ -1190,30 +976,87 @@ body.admin-only label,
 body.admin-only .sf-field label,
 body.admin-only .note,
 body.admin-only .state-tag {
-  color: #f5f5f5 !important;
+  color: var(--admin-text) !important;
 }
 
 body.admin-only .an-item:hover,
 body.admin-only .an-item:focus-visible,
-body.admin-only .an-item.active {
-  background: rgba(255,255,255,.1) !important;
-  border-color: rgba(255,255,255,.21) !important;
-  color: #fff !important;
+body.admin-only .an-item.active,
+body.admin-only .admin-table tbody tr:hover,
+body.admin-only .stat:hover,
+body.admin-only .music-track-modern:hover,
+body.admin-only .media-item:hover,
+body.admin-only .admin-media-item:hover {
+  background: var(--admin-surface-3) !important;
+  border-color: var(--admin-line-strong) !important;
+  box-shadow: none !important;
 }
 
-body.admin-only .admin-table th,
-body.admin-only .admin-table tbody tr:hover {
-  background: rgba(255,255,255,.055) !important;
+body.admin-only .btn,
+body.admin-only .btn-modern,
+body.admin-only .btn-modern-icon,
+body.admin-only .admin-row-action,
+body.admin-only .admin-row-select,
+body.admin-only .sf-field input,
+body.admin-only .sf-field textarea,
+body.admin-only .sf-field select {
+  background: var(--admin-surface-2) !important;
+  border-color: var(--admin-line) !important;
+  color: var(--admin-text-soft) !important;
+  box-shadow: none !important;
+}
+
+body.admin-only .btn:hover,
+body.admin-only .btn:focus-visible,
+body.admin-only .btn-modern:hover,
+body.admin-only .btn-modern:focus-visible,
+body.admin-only .btn-modern-icon:hover,
+body.admin-only .btn-modern-icon:focus-visible,
+body.admin-only .admin-row-action:hover,
+body.admin-only .admin-row-action:focus-visible {
+  background: var(--admin-surface-3) !important;
+  border-color: var(--admin-line-strong) !important;
+  color: var(--admin-text) !important;
+}
+
+body.admin-only .btn-primary,
+body.admin-only .btn-modern-primary {
+  background: var(--admin-accent) !important;
+  border-color: var(--admin-accent) !important;
+  color: var(--admin-accent-ink) !important;
+}
+
+body.admin-only .admin-table th {
+  background: #1d1d1d !important;
+  color: var(--admin-text-soft) !important;
+}
+
+body.admin-only .admin-table td,
+body.admin-only .admin-table th {
+  border-bottom-color: var(--admin-line) !important;
+}
+
+body.admin-only .note {
+  border-left-color: var(--admin-accent) !important;
+}
+
+body.admin-only .spinner-modern {
+  border-color: var(--admin-line) !important;
+  border-top-color: var(--admin-accent) !important;
 }
 
 @media (max-width: 820px) {
+  html:has(body.admin-only) {
+    background-size: 22px 22px, 22px 22px, 110px 110px, 110px 110px;
+  }
   body.admin-only .admin-shell {
-    background: rgba(7,7,7,.78) !important;
+    background: var(--admin-bg) !important;
     border: 0 !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
   }
   body.admin-only .admin-mobile-bar {
-    background: rgba(10,10,10,.88) !important;
-    color: #f5f5f5 !important;
+    background: #0d0d0d !important;
+    color: var(--admin-text) !important;
   }
 }

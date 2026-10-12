@@ -13,52 +13,6 @@
     element.hidden = false;
   }
 
-  /* Hyalite is progressive enhancement: the CSS glass fallback is always present;
-     Chromium receives the real refraction filter once the authenticated shell exists. */
-  var hyaliteStarted = false;
-  function initHyalite() {
-    if (hyaliteStarted) return;
-    hyaliteStarted = true;
-    var selector = [
-      '.admin-shell', '.admin-nav', '.an-head', '.stat', '.admin-table-wrap',
-      '.settings-form', '.font-preview-panel', '.card-preview', '.note', '.state-card',
-      '.media-item', '.admin-media-item', '.music-track-modern', '.upload-item-modern',
-      '.toast', '.panel-title', '.admin-drawer', '.admin-mobile-bar'
-    ].join(',');
-    var opts = {
-      bevel: 18,
-      thickness: 26,
-      slope: .88,
-      blur: 5,
-      dispersion: 0,
-      shade: .38,
-      rim: .68,
-      edgeW: 1.2,
-      sat: 1,
-      light: 132,
-      smooth: 1,
-      materialize: 160,
-      settle: 90
-    };
-    var mark = function () {
-      document.querySelectorAll(selector).forEach(function (node) {
-        node.setAttribute('data-hyalite-glass', '');
-        if (window.Hyalite) window.Hyalite.attach(node, opts);
-      });
-    };
-    mark();
-    if (window.Hyalite) window.Hyalite.watch(document.body, '[data-hyalite-glass]', opts);
-    if (window.MutationObserver) {
-      var observer = new MutationObserver(function (records) {
-        var shouldMark = records.some(function (record) {
-          return record.type === 'childList' && record.addedNodes.length;
-        });
-        if (shouldMark) mark();
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
-  }
-
   function escapeHtml(value) {
     return String(value || '').replace(/[&<>'"]/g, function (character) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character];
@@ -2623,7 +2577,6 @@
         }
 
         await loadDashboard();
-        initHyalite();
         loadNavBehaviorConfig();
         updateGhAuthStatus();
       } catch (error) {
