@@ -341,30 +341,31 @@
     });
   }
 
-  // GitHub Login
+  // GitHub OAuth must be initiated through Supabase so its state/PKCE data
+  // and session exchange remain intact. A direct GitHub fallback bypasses that flow.
   if (githubLoginBtn) {
     githubLoginBtn.addEventListener('click', function () {
       githubLoginBtn.disabled = true;
-      githubLoginBtn.textContent = '跳转中...';
-      var fallbackTimer = setTimeout(function() {
-        // 如果 Supabase 没反应，直接打开发 GitHub OAuth
-        var params = new URLSearchParams({
-          client_id: 'Ov23lij9x9gnpRXSOY8w',
-          redirect_uri: 'https://iyquixzprfwkglaqptxj.supabase.co/auth/v1/callback',
-          scope: 'read:user user:email'
+      var originalLabel = githubLoginBtn.textContent;
+      githubLoginBtn.textContent = '正在连接 GitHub…';
+      clearStandaloneAuthMessage();
+      clearErrors();
+
+      Promise.resolve()
+        .then(function () {
+          if (!window.Auth || typeof Auth.signInWithGitHub !== 'function') {
+            throw new Error('登录服务未能加载，请刷新页面后重试。');
+          }
+          return Auth.signInWithGitHub();
+        })
+        .catch(function (err) {
+          githubLoginBtn.disabled = false;
+          githubLoginBtn.textContent = originalLabel;
+          var message = err && err.message ? err.message : '暂时无法连接 GitHub，请检查网络后重试。';
+          if (document.getElementById('loginPage')) showStandaloneAuthMessage(message, true);
+          else handleError('loginError', { message: message });
+          console.error('GitHub OAuth 启动失败:', err);
         });
-        window.location.href = 'https://github.com/login/oauth/authorize?' + params.toString();
-      }, 3000);
-      Auth.signInWithGitHub().then(function() {
-        clearTimeout(fallbackTimer);
-      }).catch(function(err) {
-        clearTimeout(fallbackTimer);
-        githubLoginBtn.disabled = false;
-        githubLoginBtn.textContent = 'GitHub 登录';
-        alert('登录失败: ' + (err.message || err));
-        console.error('GitHub 登录失败:', err);
-        handleError('loginError', err);
-      });
     });
   }
 
