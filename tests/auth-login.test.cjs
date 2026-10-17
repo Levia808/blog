@@ -7,7 +7,7 @@ const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
 async function testOAuth() {
   const calls = [];
   let status = 200, message = '', offline = false, hang = false, oauthError = null;
-  const window = { location: { origin: 'https://blog-go3.pages.dev', hostname: 'blog-go3.pages.dev' },
+  const window = { location: { origin: 'https://l3via.cc.cd', hostname: 'l3via.cc.cd' },
     localStorage: {}, supabase: { createClient: () => ({ auth: { signInWithOAuth: async (options) => {
       calls.push(options); return { data: {}, error: oauthError };
     } } }) } };
@@ -23,7 +23,7 @@ async function testOAuth() {
   vm.runInContext(read('static/js/supabase.js'), context);
   await window.Auth.signInWithGitHub();
   assert.equal(calls[0].provider, 'github');
-  assert.equal(calls[0].options.redirectTo, 'https://blog-go3.pages.dev/profile/');
+  assert.equal(calls[0].options.redirectTo, 'https://l3via.cc.cd/profile/');
   window.location = { origin: 'https://levia808.github.io', hostname: 'levia808.github.io' };
   await window.Auth.signInWithGitHub();
   assert.equal(calls[1].options.redirectTo, 'https://levia808.github.io/blog/profile/');

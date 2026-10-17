@@ -18,7 +18,7 @@ const config = {
   proxyPort: Number(process.env.NETEASE_PROXY_PORT || process.env.PORT || 4188),
   proxyHost: process.env.NETEASE_PROXY_HOST || '127.0.0.1',
   cookieFile: process.env.NETEASE_COOKIE_FILE || path.join(repoRoot, 'float-player', 'netease-proxy', '.netease-session.json'),
-  adminUrl: process.env.FLOAT_PLAYER_ADMIN_URL || 'https://blog-go3.pages.dev/admin/'
+  adminUrl: process.env.FLOAT_PLAYER_ADMIN_URL || 'https://l3via.cc.cd/admin/'
 };
 
 const children = [];

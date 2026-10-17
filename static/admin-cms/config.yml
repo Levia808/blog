@@ -22,9 +22,9 @@ public_folder: /images
 # 图片上传到 assets/images 后由主题 Hugo Pipes 自动压缩: 卡片封面 320px · 文章底图 2K
 
 locale: zh-cn
-site_url: https://blog-go3.pages.dev/
-display_url: https://blog-go3.pages.dev/
-logo_url: https://blog-go3.pages.dev/favicon.svg
+site_url: https://l3via.cc.cd/
+display_url: https://l3via.cc.cd/
+logo_url: https://l3via.cc.cd/favicon.svg
 
 collections:
   - label: 卡片样式

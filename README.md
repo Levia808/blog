@@ -4,7 +4,7 @@
 
 | 项 | 值 |
 |---|----|
-| 站点 | `https://blog-go3.pages.dev/`（Cloudflare Pages）+ `https://levia808.github.io/blog/`（GitHub Pages） |
+| 站点 | `https://l3via.cc.cd/`（GitHub Pages 主站）+ `https://blog-go3.pages.dev/`（Cloudflare Pages 备用） |
 | 框架 | Hugo v0.164.0 extended + 自制 brutalism 主题（themes/brutalism，独立主题，无 submodule） |
 | 本地路径 | `/home/levia/blog` |
 | 仓库 | `https://github.com/Levia808/blog`（main 分支） |
@@ -220,7 +220,7 @@ git push
 
 ```
 本地编辑 → git push → GitHub main 分支
-                          ├── GitHub Actions → GitHub Pages (levia808.github.io/blog/)
+                          ├── GitHub Actions → GitHub Pages (l3via.cc.cd/)
                           └── Cloudflare Pages Webhook → hugo build → blog-go3.pages.dev
 ```
 

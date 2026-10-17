@@ -9,5 +9,5 @@ bucket_name = "levia-blog-media"
 [vars]
 SUPABASE_URL = "https://iyquixzprfwkglaqptxj.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qaeQu7qThhK4ASwtivmyyQ_8AQG-QcT"
-ALLOWED_ORIGINS = "https://blog-go3.pages.dev,https://levia808.github.io"
+ALLOWED_ORIGINS = "https://l3via.cc.cd,https://www.l3via.cc.cd,https://blog-go3.pages.dev,https://levia808.github.io"
 # Set INTERNAL_TOKEN with `wrangler secret put INTERNAL_TOKEN`, never here.

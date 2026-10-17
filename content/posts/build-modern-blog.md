@@ -35,7 +35,7 @@ ShowToc: true
 Hugo 以极快的构建速度著称。全站 22 个页面，冷构建仅需几十毫秒。
 
 ```yaml
-baseURL: https://blog-go3.pages.dev/
+baseURL: https://l3via.cc.cd/
 theme: brutalism
 markup:
   goldmark:

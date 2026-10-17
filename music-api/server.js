@@ -9,9 +9,9 @@ const { timingSafeEqual } = require('crypto');
 
 const PORT = Number(process.env.PORT || 4188);
 const HOST = process.env.HOST || '0.0.0.0';
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://levia808.github.io';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://l3via.cc.cd';
 const CORS_ORIGINS = new Set(
-  [CORS_ORIGIN, 'https://levia808.github.io', 'https://blog-go3.pages.dev']
+  [CORS_ORIGIN, 'https://l3via.cc.cd', 'https://www.l3via.cc.cd', 'https://levia808.github.io', 'https://blog-go3.pages.dev']
     .flatMap((value) => String(value).split(','))
     .map((value) => value.trim())
     .filter(Boolean)

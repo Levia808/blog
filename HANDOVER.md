@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-10-18 · Codex（用户已授权发布下述网站修复；R2 云端切换尚未启用，认证仍受 Supabase 402 限制）
+> 最后更新：2026-10-18 · Codex（网站修复已发布至 Cloudflare/GitHub Pages，提交 `7db4fa9`；R2 云端切换尚未启用，认证仍受 Supabase 402 限制）
 
 ---
 
@@ -12,8 +12,8 @@
 |----|-----|
 | 本地路径 | `/home/levia/blog` |
 | 仓库 | `https://github.com/Levia808/blog`（main 分支） |
-| **主站（用户访问）** | `https://blog-go3.pages.dev/`（**Cloudflare Pages**） |
-| 镜像站 | `https://levia808.github.io/blog/`（GitHub Pages） |
+| **主站（用户访问）** | `https://l3via.cc.cd/`（**GitHub Pages 自定义域名**） |
+| 备用站 | `https://blog-go3.pages.dev/`（Cloudflare Pages） |
 | 框架 | Hugo **v0.164.0 extended**（webp 图像处理必须 extended） |
 | 主题 | **brutalism**（自制独立主题 `themes/brutalism/`，无正式版本号） |
 | 内容管理 | **Sveltia CMS**（`/admin-cms/`）+ **自定义后台**（`/admin/`） |
@@ -102,6 +102,20 @@ SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB =
 
 网站将发布 GitHub 入口/事件绑定/真实认证/402 提示修复，以及 HDR 保护压缩与可选 R2 存储适配。`params.mediaOrigin` 仍为空：R2 Worker 与两个 Edge Functions 的源代码纳入版本管理，但不创建 R2 计费资源、不部署这些服务、不更改 secrets、不执行迁移或 SQL。§0.2–0.3 中「未部署」为当时阶段状态；网站是否已更新需核对本轮发布提交、CI 与线上资源，不能据源文件存在推断。
 
+**发布结果（已验证）**：普通推送提交 [`7db4fa97cade0ffc30cce0803ed33fef54edf630`](https://github.com/Levia808/blog/commit/7db4fa97cade0ffc30cce0803ed33fef54edf630) 至 main；[GitHub Actions 39068069579](https://github.com/Levia808/blog/actions/runs/39068069579) 的 build/deploy 与同一提交的 Cloudflare Pages check 均 success。主站与镜像的 `supabase.js`、`auth-ui.js`、`theme.js`、`media-policy.js`、`media-storage.js`、`moments.js`、`pwa-sync.js`、`image-compress.worker.js` SHA-256 均与发布源码一致。线上 390×844 浏览器验证 GitHub 按钮显示、单次点击、402 留页提示与按钮恢复。截图 `/tmp/blog-login-production-20261018.png`。
+
+**工作区基线**：本目录 `.git` 为只读挂载，使用 `/tmp/blog-deploy-20261018-pALnF4` 的临时发布副本聚焦提交 35 个文件并推送，保留了本目录和无关未跟踪文件。故本目录 HEAD 仍为 `49f9f61`，当前业务代码差异已上线；本段发布记录为验收后本地补记。后续工作先核对远端 main，避免重复提交已上线内容。临时副本保留了提交及构建生成的三个未跟踪预览视频，预览视频没有进入 Git 提交。
+
+## 0.5 2026-10-18 自定义域名迁移
+
+用户指定新主域名 `l3via.cc.cd` 并授权直接上线。已核对四条 GitHub Pages A 记录和 `www → Levia808.github.io` CNAME；仓库 Pages 设置已经绑定该域名，发布源仍为 GitHub Actions。Actions 模式不依赖 CNAME 文件。
+
+- `hugo.yaml` 的 baseURL、CMS 站点/Logo 地址、本机播放器后台入口改为 `https://l3via.cc.cd/`。CI 读取唯一的 Hugo 配置，移除强制 `/blog/` 构建地址，保证脚本、样式、导航、RSS 和 sitemap 使用根路径。Cloudflare Pages 保留为备用入口。
+- 音乐 API 与预备 R2 网关加入新域名及 www 的明确 Origin，保留旧域名，未改为通配符。音乐服务当前是否已自动部署，以实际 CORS 回包为准；R2 网关依旧未启用。
+- 已在 Supabase 控制台保存 Site URL `https://l3via.cc.cd/`，添加精确回调 `https://l3via.cc.cd/profile/`，保留既有白名单。GitHub OAuth 应用仍回调 Supabase API 域名，无需修改其 client secret 或 provider callback。原有 402 平台限制独立存在。
+- 域名初次检查时 HTTP 已到达 GitHub Pages，HTTPS 证书状态为 `new`，尚未覆盖该域名。需要 GitHub 签发完成后启用 Enforce HTTPS，禁止通过关闭证书校验或浏览器安全警告来验收。
+- 发布前执行新域名 OAuth 回调测试、真实本地音乐 API CORS 预检、Hugo 根路径/OG/RSS/sitemap/静态资源核验。发布提交与线上证书、HTTPS 强制和实际 CORS 结果待验收后补记。
+
 ## 1. 技术架构
 
 ```
@@ -128,9 +142,9 @@ push main
  ├─ GitHub Actions (deploy.yml):
  │    1. gen-fonts.py     生成 static/fonts.json (字体清单) + 发布 assets 字体副本
  │    2. 视频自动重编码   .github/transcode.py (HEVC/AV1 → H.264, 降 1080p)
- │    3. hugo --minify    --baseURL https://levia808.github.io/blog/
- │    4. deploy-pages     → GH Pages (levia808.github.io/blog/)
- └─ Cloudflare Pages webhook → CF 独立构建 (blog-go3.pages.dev, 主站)
+ │    3. hugo --minify    (baseURL=https://l3via.cc.cd/)
+ │    4. deploy-pages     → GH Pages (l3via.cc.cd/)
+ └─ Cloudflare Pages webhook → CF 独立构建 (blog-go3.pages.dev, 备用)
 ```
 
 **⚠️ 已知风险（重要）**：CF Pages 曾在 2026-08-08 14:35 后停更（构建未更新，编辑器页面长期旧版）。

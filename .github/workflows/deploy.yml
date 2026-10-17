@@ -41,7 +41,7 @@ jobs:
           python3 .github/transcode.py
 
       - name: Build
-        run: hugo --minify --baseURL https://levia808.github.io/blog/
+        run: hugo --minify
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

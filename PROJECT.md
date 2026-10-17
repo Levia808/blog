@@ -1,7 +1,7 @@
 # 项目移植文档（Levia's Blog）
 
 > 供接手方（AI/开发者）完整理解项目架构、构建链路、CMS 体系与已知问题。
-> 主站：https://blog-go3.pages.dev （Cloudflare Pages）｜仓库：`Levia808/blog`（main 分支）
+> 主站：https://l3via.cc.cd （GitHub Pages）｜备用：https://blog-go3.pages.dev （Cloudflare Pages）｜仓库：`Levia808/blog`（main 分支）
 
 ---
 
@@ -11,7 +11,7 @@
 |----|----|
 | 静态站点 | Hugo（extended，本地 v0.164） |
 | 主题 | 自定义 `themes/brutalism` |
-| 部署 | GitHub Actions → GH Pages + **Cloudflare Pages（主站）** |
+| 部署 | GitHub Actions → **GH Pages（主站）** + Cloudflare Pages（备用） |
 | 内容管理 | **Sveltia CMS**（`/admin-cms/`）+ **自定义后台**（`/admin/`） |
 | 后端服务 | Supabase（认证、媒体存储、评论、动态、个人中心） |
 | 媒体存储 | Supabase `media` bucket（后台上传）+ GitHub `assets/images`（CMS 上传） |
@@ -58,12 +58,12 @@ hugo --minify                              # 生产构建（每次改动后必�
 1. `checkout@v5`（Node 20 弃用已规避）
 2. `python3 .github/gen-fonts.py` —— 扫描 assets/images + static/images 字体 → 复制发布 → 生成 `static/fonts.json`
 3. `python3 .github/transcode.py` —— 非 H.264 视频自动转码（HEVC/AV1 → H.264 + faststart，超 1080p 降级）
-4. `hugo --minify --baseURL https://levia808.github.io/blog/`
+4. `hugo --minify`（读取 `hugo.yaml` 中的 `https://l3via.cc.cd/`）
 5. 上传 artifact → deploy-pages
 
 ### 部署双线
-- **GH Pages**：Actions 自动（可靠，始终最新）
-- **CF Pages（主站 blog-go3.pages.dev）**：独立绑定仓库 push 触发，**曾出现停更**（见注意事项）
+- **GH Pages（主站 l3via.cc.cd）**：Actions 自动，自定义域名使用根路径，不含 `/blog/`
+- **CF Pages（备用 blog-go3.pages.dev）**：独立绑定仓库 push 触发，**曾出现停更**（见注意事项）
 
 ### 提交规范
 ```bash
