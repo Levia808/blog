@@ -4,6 +4,7 @@
 // 权限: 仅 superadmin (JWT → get_my_profile RPC)
 // 行为: avatar_base64 (webp ≤1MB) → 上传 avatars/{user_id}/avatar.webp (upsert) → profiles.avatar_url 带 ?v= 缓存破坏
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { mediaStorage } from '../_shared/media-storage.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
@@ -77,7 +78,8 @@ Deno.serve(async (req) => {
         return json({ error: '头像需为 1MB 以内的图片' }, 400);
       }
       const path = targetId + '/avatar.webp';
-      const { error: upErr } = await admin.storage.from('avatars').upload(path, bytes, {
+      const storage = mediaStorage(admin.storage);
+      const { error: upErr } = await storage.from('avatars').upload(path, bytes, {
         contentType: 'image/webp',
         upsert: true,
         cacheControl: '3600'
@@ -86,7 +88,7 @@ Deno.serve(async (req) => {
         console.error('admin-update-profile: avatar upload failed', upErr.message);
         return json({ error: '头像上传失败: ' + upErr.message }, 500);
       }
-      const { data: pub } = admin.storage.from('avatars').getPublicUrl(path);
+      const { data: pub } = storage.from('avatars').getPublicUrl(path);
       update.avatar_url = pub.publicUrl + '?v=' + Date.now();
     } else if (avatarUrl) {
       update.avatar_url = avatarUrl;

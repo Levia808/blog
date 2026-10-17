@@ -6,6 +6,7 @@
 //      图片: 服务端代拉原图转存 (解决 fbcdn 签名 URL 过期) + 用 Storage 图像转换生成低分辨率预览 URL
 //      卡片显示预览图 (render/image 按需缩放, CDN 缓存), 放大查看用原图 (media[].url=原图, media[].preview=预览)
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { mediaStorage } from '../_shared/media-storage.ts';
 Deno.serve(async (req) => {
   // CORS 预检: 浏览器跨域调用必须 (否则 FunctionsFetchError)
   if (req.method === 'OPTIONS') {
@@ -119,17 +120,18 @@ Deno.serve(async (req) => {
 
 /** 写入 storage (公共桶 threads-reposts, 不存在则自动创建); 头像 fbcdn URL 浏览器端被 CORP 拦截 → 服务端代拉转存 */
 async function saveToStorage(result: any) {
-  const supabase = createClient(
+  const client = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
+  const supabase = { storage: mediaStorage(client.storage) };
 
   async function putJson() {
     const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
     let { error: upErr } = await supabase.storage
       .from('threads-reposts')
       .upload(result.id + '.json', blob, { upsert: true, contentType: 'application/json' });
-    if (upErr && /not found|不存在|bucket/i.test(upErr.message)) {
+    if (upErr && !Deno.env.get('BLOG_MEDIA_ORIGIN') && /not found|不存在|bucket/i.test(upErr.message)) {
       // 桶缺失或未公开 → 自动创建/设为公开后重试 (service role 权限足够)
       await supabase.storage.createBucket('threads-reposts', { public: true, upsert: true })
         .catch(() => {});
@@ -191,11 +193,16 @@ function ctToExt(ct: string): string {
   if (c.includes('webp')) return '.webp';
   if (c.includes('png')) return '.png';
   if (c.includes('gif')) return '.gif';
+  if (c.includes('avif')) return '.avif';
+  if (c.includes('heic') || c.includes('heif')) return '.heic';
   return '.jpg';
 }
 
 /* 预览 URL: Storage 图像转换 (object/public → render/image/public + 缩放参数), 按需生成并 CDN 缓存 */
 function renderPreviewUrl(originalPublicUrl: string, width = 640): string {
+  // shortcut: R2 serves the source until the offline optimizer creates a preview.
+  const r2 = (Deno.env.get('BLOG_MEDIA_ORIGIN') || '').replace(/\/$/, '');
+  if (r2 && originalPublicUrl.startsWith(r2 + '/')) return originalPublicUrl + '?source=original';
   return String(originalPublicUrl).replace('/object/public/', '/render/image/public/')
     + '?width=' + width + '&quality=80&resize=contain';
 }
@@ -244,13 +251,13 @@ function imageSizeFromBytes(buf: ArrayBuffer): { w: number; h: number } {
 
 /* 图片下载 + 原图档回退: 预览档 url (无 stp=e35 / 带 width) 去掉参数后可能仍返回低分辨率
    → 附加 stp=dst-jpg_e35 (IG CDN 原图质量档) 重试, 取更高分辨率结果 */
-async function downloadImageWithFallback(url: string): Promise<{ buf: ArrayBuffer; w: number; h: number } | null> {
+async function downloadImageWithFallback(url: string): Promise<{ buf: ArrayBuffer; w: number; h: number; ct: string } | null> {
   const base = originalImageUrl(url);
   const attempts = [
     base,
     base + (base.includes('?') ? '&' : '?') + 'stp=dst-jpg_e35'
   ];
-  let best: { buf: ArrayBuffer; w: number; h: number } | null = null;
+  let best: { buf: ArrayBuffer; w: number; h: number; ct: string } | null = null;
   for (const u of attempts) {
     try {
       const res = await fetch(u, {
@@ -259,8 +266,10 @@ async function downloadImageWithFallback(url: string): Promise<{ buf: ArrayBuffe
       if (!res.ok) continue;
       const buf = await res.arrayBuffer();
       if (!buf || buf.byteLength === 0) continue;
+      const ct = (res.headers.get('content-type') || '').split(';')[0].toLowerCase();
+      if (!/^image\/(jpeg|png|webp|gif|avif|heic|heif)$/.test(ct)) continue;
       const s = imageSizeFromBytes(buf);
-      const cand = { buf, w: s.w, h: s.h };
+      const cand = { buf, w: s.w, h: s.h, ct };
       /* 保留更高分辨率结果 */
       if (!best || (cand.w * cand.h) > (best.w * best.h)) best = cand;
       /* 第一轮已高清 (>=800px) → 无需重试; 第二轮 (e35) 无论结果都停止 */
@@ -284,9 +293,9 @@ async function processMediaImages(supabase: any, result: any): Promise<{ changed
     try {
       const dl = await downloadImageWithFallback(m.url);
       if (!dl || !dl.buf || dl.buf.byteLength === 0) continue;
-      const ct = 'image/jpeg';
+      const ct = dl.ct;
       const base = 'media/' + result.id + '/' + i;
-      const origName = base + '.jpg';
+      const origName = base + ctToExt(ct);
       paths.push(origName);
       const { error: oErr } = await supabase.storage
         .from('threads-reposts')
@@ -316,7 +325,8 @@ async function processMediaVideos(supabase: any, result: any): Promise<{ changed
   for (let i = 0; i < media.length; i++) {
     const m = media[i];
     if (!m || m.type !== 'video' || !m.url) continue;
-    if (/supabase\.co\/storage/.test(m.url)) { paths.push('media/' + result.id + '/' + i + '.mp4'); continue; } /* 已转存 */
+    const r2 = (Deno.env.get('BLOG_MEDIA_ORIGIN') || '').replace(/\/$/, '');
+    if (/supabase\.co\/storage/.test(m.url) || (r2 && m.url.startsWith(r2 + '/'))) { paths.push('media/' + result.id + '/' + i + '.mp4'); continue; }
     try {
       const res = await fetch(m.url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/146.0.0.0 Safari/537.36' }

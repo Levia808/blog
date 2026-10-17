@@ -11,7 +11,7 @@
   var userDropdown = document.getElementById('userDropdown');
   var userMenuTrigger = document.getElementById('userMenuTrigger');
   var logoutBtn = document.getElementById('logoutBtn');
-  var githubLoginBtn = document.getElementById('githubLogin') || document.getElementById('githubSignIn');
+  var githubLoginBtns = document.querySelectorAll('#githubLogin, #githubSignIn');
   var adminLink = document.getElementById('adminLink');
   var cmsLink = document.getElementById('cmsLink');
   var mobileAdminLink = document.getElementById('mobileAdminLink');
@@ -218,8 +218,7 @@
   }
 
   // Login
-  var loginForm = document.getElementById('loginForm') || document.getElementById('signInForm');
-  if (loginForm) {
+  document.querySelectorAll('#loginForm, #signInForm').forEach(function (loginForm) {
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       clearErrors();
@@ -230,6 +229,8 @@
       Auth.signIn(fd.get('email'), fd.get('password'))
         .then(function () {
           if (standalone) {
+            if (fd.get('rememberMe')) localStorage.setItem('blog_login_email', String(fd.get('email')));
+            else localStorage.removeItem('blog_login_email');
             var redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
             // Accept only same-origin absolute paths; prevent open redirects.
             if (redirect.charAt(0) !== '/' || redirect.indexOf('//') === 0 || redirect.indexOf('\\') !== -1) redirect = '/';
@@ -245,11 +246,10 @@
         })
         .finally(function () { if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); } });
     });
-  }
+  });
 
   // Register
-  var registerForm = document.getElementById('registerForm') || document.getElementById('signUpForm');
-  if (registerForm) {
+  document.querySelectorAll('#registerForm, #signUpForm').forEach(function (registerForm) {
     registerForm.addEventListener('submit', function (e) {
       e.preventDefault();
       clearErrors();
@@ -282,12 +282,19 @@
         })
         .finally(function () { if (submit) { submit.disabled = false; submit.removeAttribute('aria-busy'); } });
     });
-  }
+  });
 
   // Standalone /login/ page controls (separate from the header auth modal).
   var standaloneLogin = document.getElementById('signInForm');
   var standaloneRegister = document.getElementById('signUpForm');
   if (standaloneLogin && standaloneRegister) {
+    document.querySelectorAll('#loginPage [data-action="reset"]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        clearErrors();
+        openAuth('reset');
+      });
+    });
     document.querySelectorAll('#loginPage [data-action="signup"], #loginPage [data-action="signin"]').forEach(function (link) {
       link.addEventListener('click', function (event) {
         event.preventDefault();
@@ -343,7 +350,7 @@
 
   // GitHub OAuth must be initiated through Supabase so its state/PKCE data
   // and session exchange remain intact. A direct GitHub fallback bypasses that flow.
-  if (githubLoginBtn) {
+  githubLoginBtns.forEach(function (githubLoginBtn) {
     githubLoginBtn.addEventListener('click', function () {
       githubLoginBtn.disabled = true;
       var originalLabel = githubLoginBtn.textContent;
@@ -367,7 +374,7 @@
           console.error('GitHub OAuth 启动失败:', err);
         });
     });
-  }
+  });
 
   // Logout
   if (logoutBtn) {

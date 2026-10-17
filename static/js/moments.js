@@ -85,7 +85,7 @@
     var base = threadsStorageBase;
     if (!base) {
       try {
-        base = window.blogSupabase.storage.from('threads-reposts').getPublicUrl('x.json').data.publicUrl.replace('/x.json', '');
+        base = window.BlogStorage.from('threads-reposts').getPublicUrl('x.json').data.publicUrl.replace('/x.json', '');
       } catch (e) { base = ''; }
       threadsStorageBase = base;
     }
@@ -2811,8 +2811,8 @@
   /* ── 旧数据自动补建预览图 ──
      历史动态无 preview 文件 → 原图(6MB+)回退导致滚动卡顿。
      管理员浏览时后台压缩原图并上传 preview (600px webp), 一次性, 之后全部优化生效 */
-  function buildPreviewForLegacy(img) {
-    if (!window.blogSupabase || !currentProfile || currentProfile.role !== 'superadmin') return;
+  async function buildPreviewForLegacy(img) {
+    if (!window.BlogStorage || !window.Admin || !currentProfile || currentProfile.role !== 'superadmin') return;
     /* 仅 ≥4 张的动态补建 (1-3 张保持原图不压缩) */
     var card = img.closest('.moment-card');
     var mediaLen = card ? (momentMediaCache[card.dataset.momentId] || []).length : 0;
@@ -2821,45 +2821,31 @@
     if (!url || url.indexOf('blob:') === 0 || url.indexOf('/preview-') >= 0) return;
     if (img.dataset.previewBuilt) return;
     img.dataset.previewBuilt = '1';
-    var previewUrl = mediaPreviewUrl(url);
-    /* 已有 preview 则跳过 */
-    fetch(previewUrl, { method: 'HEAD' }).then(function (res) {
-      if (res.ok) return;
-      /* 后台压缩: fetch(有 CORS) → createImageBitmap → canvas → webp 600px */
-      fetch(url).then(function (r) { return r.blob(); }).then(function (blob) {
-        return (window.createImageBitmap ? createImageBitmap(blob) : Promise.reject());
-      }).then(function (bmp) {
-        var maxW = 600;
-        var scale = Math.min(1, maxW / bmp.width);
-        var w = Math.max(1, Math.round(bmp.width * scale));
-        var h = Math.max(1, Math.round(bmp.height * scale));
-        var canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
-        canvas.toBlob(function (out) {
-          if (!out) return;
-          var marker = '/object/public/media/';
-          var i = url.indexOf(marker);
-          if (i < 0) return;
-          var pathPart = url.slice(i + marker.length).split('?')[0];
-          var slash = pathPart.lastIndexOf('/');
-          var previewPath = pathPart.slice(0, slash + 1) + 'preview-' + pathPart.slice(slash + 1);
-          var file = new File([out], previewPath.split('/').pop(), { type: 'image/webp' });
-          window.blogSupabase.storage.from('media').upload(previewPath, file, {
-            upsert: true,
-            contentType: 'image/webp',
-            cacheControl: '3600'
-          }).then(function (r) {
-            if (!r.error && img.isConnected) {
-              /* 补建成功: 立即切换预览图 (当前帧已加载原图, 下一轮起生效) */
-              img.src = previewUrl;
-              img.dataset.previewBuilt = '2';
-            }
-          }).catch(function () {});
-        }, 'image/webp', 0.7);
-      }).catch(function () {});
-    }).catch(function () {});
+    try {
+      var storage = window.BlogStorage.from('media');
+      var base = storage.getPublicUrl('').data.publicUrl;
+      // Only build beside the source; migrated and legacy storage may coexist.
+      if (url.indexOf(base) !== 0) return;
+      var pathPart = decodeURIComponent(url.slice(base.length).split(/[?#]/)[0]);
+      var slash = pathPart.lastIndexOf('/');
+      var previewPath = pathPart.slice(0, slash + 1) + 'preview-' + pathPart.slice(slash + 1);
+      var previewUrl = storage.getPublicUrl(previewPath).data.publicUrl;
+      var existing = await fetch(previewUrl, { method: 'HEAD' });
+      if (existing.status !== 404) return;
+      var response = await fetch(url);
+      if (!response.ok) return;
+      var blob = await response.blob();
+      var file = new File([blob], pathPart.split('/').pop(), { type: blob.type });
+      var pair = await window.Admin.compressImage(file);
+      if (!pair || !pair.preview) return;
+      var result = await storage.upload(previewPath, pair.preview, {
+        upsert: false, contentType: pair.preview.type, cacheControl: '3600'
+      });
+      if (!result.error && img.isConnected) {
+        img.src = previewUrl;
+        img.dataset.previewBuilt = '2';
+      }
+    } catch (_) {}
   }
 
   /* 视频元数据就绪 → 隐藏 spinner */

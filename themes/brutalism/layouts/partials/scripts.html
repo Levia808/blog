@@ -6,8 +6,11 @@
 {{- end }}
 {{- if $P.auth }}
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-{{- if fileExists "static/js/supabase.js" }}<script defer src="{{ "js/supabase.js" | relURL }}"></script>{{ end }}
-{{- if fileExists "static/js/auth-ui.js" }}<script defer src="{{ "js/auth-ui.js" | relURL }}"></script>{{ end }}
+<script>window.BLOG_MEDIA_ORIGIN = {{ site.Params.mediaOrigin | default "" | jsonify | safeJS }};</script>
+<script defer src="{{ "js/media-policy.js" | relURL }}?v={{ now.Unix }}"></script>
+<script defer src="{{ "js/media-storage.js" | relURL }}?v={{ now.Unix }}"></script>
+{{- if fileExists "static/js/supabase.js" }}<script defer src="{{ "js/supabase.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
+{{- if fileExists "static/js/auth-ui.js" }}<script defer src="{{ "js/auth-ui.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
 {{- end }}
 {{- if and $P.comments (not (eq .Layout "admin")) (fileExists "static/js/comments.js") }}
 <script defer src="{{ "js/comments.js" | relURL }}?v={{ now.Unix }}"></script>

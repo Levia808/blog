@@ -32,9 +32,12 @@ jobs:
       - name: 生成字体库清单 (自动收录媒体库字体)
         run: python3 .github/gen-fonts.py
 
-      - name: 视频自动重编码 (任何编码 → H.264)
+      - name: 视频优化 (限制长边，保留 HDR)
         run: |
-          ffmpeg -version >/dev/null 2>&1 || sudo apt-get update && sudo apt-get install -y ffmpeg
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
           python3 .github/transcode.py
 
       - name: Build

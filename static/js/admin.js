@@ -2231,9 +2231,15 @@
       var library = document.getElementById('adminMusicLibrary');
       if (!library) return;
 
-      var tracks = await Storage.list({ bucket: 'user-audio', prefix: adminProfile.user_id + '/' });
+      var { data: musicData, error } = await window.blogSupabase
+        .from('music_library')
+        .select('*')
+        .eq('user_id', adminProfile.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      musicData = musicData || [];
 
-      if (!tracks || tracks.length === 0) {
+      if (musicData.length === 0) {
         library.innerHTML = '<div class="card-modern" style="text-align:center;padding:3rem;">' +
           '<svg class="icon-xl" style="margin:0 auto 1rem;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
           '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' +
@@ -2242,15 +2248,6 @@
         updateMusicStats(0, 0, 0);
         return;
       }
-
-      // 从数据库获取元数据
-      var { data: musicData, error } = await window.supabase
-        .from('music_library')
-        .select('*')
-        .eq('user_id', adminProfile.user_id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
 
       var totalSize = 0;
       var totalDuration = 0;
@@ -2380,9 +2377,9 @@
       // 上传到 Supabase Storage
       var timestamp = Date.now();
       var safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      var storagePath = adminProfile.user_id + '/' + timestamp + '-' + safeName;
+      var storagePath = adminProfile.id + '/' + timestamp + '-' + safeName;
 
-      var { data: uploadData, error: uploadError } = await window.supabase.storage
+      var { data: uploadData, error: uploadError } = await window.BlogStorage
         .from('user-audio')
         .upload(storagePath, file, {
           cacheControl: '3600',
@@ -2397,15 +2394,15 @@
       if (uploadError) throw uploadError;
 
       // 获取公开 URL
-      var { data: urlData } = window.supabase.storage
+      var { data: urlData } = window.BlogStorage
         .from('user-audio')
         .getPublicUrl(storagePath);
 
       // 保存到数据库
-      var { data: dbData, error: dbError } = await window.supabase
+      var { data: dbData, error: dbError } = await window.blogSupabase
         .from('music_library')
         .insert({
-          user_id: adminProfile.user_id,
+          user_id: adminProfile.id,
           file_name: file.name,
           title: metadata.title || file.name.replace(/\.[^.]+$/, ''),
           artist: metadata.artist || '未知艺术家',
@@ -2420,7 +2417,10 @@
         .select()
         .single();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        await window.BlogStorage.from('user-audio').remove([storagePath]);
+        throw dbError;
+      }
 
       if (statusEl) {
         statusEl.textContent = '上传成功';
@@ -2459,11 +2459,11 @@
     if (!newTitle || !newTitle.trim()) return;
 
     try {
-      var { error } = await window.supabase
+      var { error } = await window.blogSupabase
         .from('music_library')
         .update({ title: newTitle.trim() })
         .eq('id', trackId)
-        .eq('user_id', adminProfile.user_id);
+        .eq('user_id', adminProfile.id);
 
       if (error) throw error;
 
@@ -2480,18 +2480,18 @@
 
     try {
       // 删除存储文件
-      var { error: storageError } = await window.supabase.storage
+      var { error: storageError } = await window.BlogStorage
         .from('user-audio')
         .remove([storagePath]);
 
-      if (storageError) console.warn('存储删除失败:', storageError);
+      if (storageError) throw storageError;
 
       // 删除数据库记录
-      var { error: dbError } = await window.supabase
+      var { error: dbError } = await window.blogSupabase
         .from('music_library')
         .delete()
         .eq('id', trackId)
-        .eq('user_id', adminProfile.user_id);
+        .eq('user_id', adminProfile.id);
 
       if (dbError) throw dbError;
 

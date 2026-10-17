@@ -1565,11 +1565,11 @@ html.js [data-reveal].reveal-visible {
 .login-only .nav-mobile,
 .login-only .site-footer { display: none; }
 .login-only .site-main { display: flex; min-height: 100dvh; overflow: hidden; }
-.login-page { flex: 1; min-height: 0; height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
+.login-page { flex: 1; min-height: 0; height: 100dvh; max-height: 100dvh; overflow-x: hidden; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg); }
 @media (min-width: 861px) {
   .login-page { flex-direction: row; }
 }
-.login-form-col { flex: 1 1 50%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: clamp(18px, 4vh, 32px) 24px; overflow: hidden; }
+.login-form-col { flex: 1 1 50%; min-height: 0; display: flex; align-items: safe center; justify-content: center; padding: clamp(18px, 4vh, 32px) 24px; overflow: hidden; }
 .login-form-wrap { width: 100%; max-width: 420px; max-height: 100%; overflow: hidden; }
 .login-back { display: inline-block; font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-bottom: clamp(18px, 6vh, 56px); transition: color .2s; }
 .login-back:hover { color: var(--accent); }
@@ -1649,8 +1649,6 @@ body.page-leave {
 @media (max-height: 720px) {
   .login-title { font-size: 36px; }
   .login-desc { margin-bottom: 14px; }
-  .login-divider,
-  .login-google { display: none; }
 }
 
 @media (max-width: 860px) {
@@ -1658,8 +1656,6 @@ body.page-leave {
   .login-back { margin-bottom: 16px; }
   .login-title { font-size: clamp(32px, 10vw, 42px); }
   .login-desc { margin: 8px 0 16px; }
-  .login-divider,
-  .login-google { display: none; }
 }
 
 @media (max-height: 620px) {

@@ -1301,20 +1301,11 @@
     });
   }
 
-  /* ── 登录 / 注册页 (独立页面, 静态演示) ── */
+  /* ── 登录页外观；认证统一由 auth-ui.js 处理 ── */
   function initLoginPage() {
     var page = document.getElementById('loginPage');
     if (!page) return;
     var signInForm = document.getElementById('signInForm');
-    var signUpForm = document.getElementById('signUpForm');
-
-    function toast(msg) {
-      var t = document.getElementById('loginToast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(function () { t.classList.remove('show'); }, 2600);
-    }
-
     /* 密码可见切换 */
     page.querySelectorAll('.pw-toggle').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -1331,64 +1322,6 @@
           motion.animate(btn, { scale: [1, 0.94, 1] }, { type: motion.spring, stiffness: 520, damping: 30 }).finished.catch(function () {});
         }
       });
-    });
-
-    /* 登录/注册切换 */
-    page.querySelectorAll('[data-action="signup"], [data-action="signin"]').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        var up = a.dataset.action === 'signup';
-        signInForm.classList.toggle('is-hidden', up);
-        signUpForm.classList.toggle('is-hidden', !up);
-        page.querySelectorAll('[data-mode]').forEach(function (s) {
-          s.classList.toggle('is-hidden', s.dataset.mode === (up ? 'signin' : 'signup'));
-        });
-        var t = document.querySelector(up ? '.login-title' : '.login-title');
-        if (up) t.textContent = '创建账户';
-        else t.textContent = '登录';
-      });
-    });
-
-    /* 重置密码 (演示) */
-    page.querySelectorAll('[data-action="reset"]').forEach(function (a) {
-      a.addEventListener('click', function (e) { e.preventDefault(); toast('重置链接已发送到你的邮箱（演示）'); });
-    });
-
-    /* 记住我 + 提交 */
-    signInForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = signInForm.querySelector('[name="email"]').value.trim();
-      var remember = signInForm.querySelector('[name="rememberMe"]').checked;
-      if (!email || !signInForm.querySelector('[name="password"]').value) { toast('请填写邮箱和密码'); return; }
-      if (remember) localStorage.setItem('blog_login_email', email);
-      toast('登录成功，欢迎回来！');
-      setTimeout(function () { window.location.href = '/'; }, 1200);
-    });
-
-    signUpForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var email = signUpForm.querySelector('[name="email"]').value.trim();
-      var pw = signUpForm.querySelector('[name="password"]').value;
-      if (!signUpForm.querySelector('[name="username"]').value.trim() || !email || !pw) { toast('请填写完整信息'); return; }
-      if (pw.length < 6) { toast('密码至少 6 位'); return; }
-      toast('账户创建成功！');
-      setTimeout(function () { window.location.href = '/'; }, 1200);
-    });
-
-    /* GitHub 登录 (OAuth) */
-    var g = document.getElementById('githubSignIn');
-    if (g) g.addEventListener('click', function () {
-      if (window.Auth && typeof window.Auth.signInWithGitHub === 'function') {
-        g.disabled = true;
-        g.textContent = '跳转中…';
-        window.Auth.signInWithGitHub().catch(function (e) {
-          g.disabled = false;
-          g.textContent = '使用 GitHub 继续';
-          toast('GitHub 登录失败：' + ((e && e.message) || e));
-        });
-      } else {
-        toast('登录服务未就绪，请稍后重试');
-      }
     });
 
     /* 记住我预填 */

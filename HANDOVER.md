@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-09-05 · opencode（Threads 媒体生命周期补丁：hover Promise 竞态、切页/隐藏停止预览、查看器关闭释放视频、多指触摸保护）
+> 最后更新：2026-10-18 · Codex（用户已授权发布下述网站修复；R2 云端切换尚未启用，认证仍受 Supabase 402 限制）
 
 ---
 
@@ -28,6 +28,79 @@
 **Docker**（Windows 开发）：`Dockerfile` + `docker-compose.yml`（`ghcr.io/gohugoio/hugo:v0.164.0`，`docker compose up` → :1313，Windows bind mount 使用 `--noTimes`）。
 
 ---
+
+## 0.1 2026-10-18 线上故障：Storage 超额（尚未恢复）
+
+**已验证**：数据库仍在运行，SQL Editor 的只读 `SELECT` 可执行，数据库约 28.75 MB。Auth health、REST 动态查询、Storage 状态、桶列表及公开媒体请求返回 HTTP 402，错误为 `exceed_storage_size_quota`。线上 `/moments/` 显示「暂时无法连接，恢复后会重新加载动态」。本故障不是本地 Docker 数据库停止。
+
+- Supabase 项目：`iyquixzprfwkglaqptxj`；组织：`tgnywxjkribpgtlpgwxm`，Free 套餐。
+- 当前周期：2026-10-06 至 2026-11-06；控制台显示周期平均 Storage 用量 **1.517 GB / 1 GB**。平均用量与实时文件总大小是不同指标。
+- 控制台提示升级可立即解限，或等待新周期；清理后何时解除当前限制尚未验证。用户明确选择保持免费，接受恢复时间不确定。
+
+SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB = 1024² bytes，非完整物理存储审计）：
+
+| 桶 | 文件数 | 大小 MiB |
+|---|---:|---:|
+| media | 423 | 1435.64 |
+| threads-reposts | 72 | 21.39 |
+| avatars | 4 | 0.60 |
+
+`media` 内 WebP 共 410 个，约 1350.39 MiB；按文件名约定区分，原图 332 个 / 1313.25 MiB，预览 78 个 / 37.15 MiB。161 个原图大于 1 MiB。最大的 WebP 约 16.38 MiB。已查看的大文件条目有 `media_assets` 登记，不能据此认定可删除。已检查的本地 `static/` 约 3.5 MB、`public/` 约 32 MB，没有这些云端原图的完整副本。
+
+**免费恢复方案（尚未执行）**：先取得官方支持的 Storage 备份/替换访问能力，下载并校验原图备份，再抽样验证压缩画质和实际节省量，经审核后按原路径替换大图；目标总占用低于 800 MiB，留出后续上传空间。现有 `Admin.compressImage` 已生成 WebP 原图与预览，可作为画质参数参考；不能未经样本验证就承诺压缩比例。若改用其他托管，需单独核对私有动态的媒体访问权限与全部 URL 引用。
+
+**当前阻塞**：正常文件下载及桶列表也被 402 阻断，无法先备份再压缩。用户明确授权后，已通过控制台提交 Billing 支持工单；页面显示 `Support request sent`，确认项目为 `Levia's blog`，未显示工单编号。“Allow support access to your project” 保持关闭；工单仅申请免费临时解限/官方恢复流程，不授权付费、删除数据或支持团队项目访问。Free 支持为尽力响应，无时限保证。等待官方回复或提供恢复通道后再继续实际备份与压缩。
+
+已发送工单内容摘要：
+
+> Subject: Free plan storage restriction blocks backup and optimization (HTTP 402)
+>
+> Project: iyquixzprfwkglaqptxj (Levia's blog). Organization: tgnywxjkribpgtlpgwxm (Free plan).
+>
+> Auth health, REST reads, Storage bucket listing and public media download return HTTP 402 with exceed_storage_size_quota. SQL Editor SELECT queries still work. Current billing cycle: 2026-10-06 to 2026-11-06. Dashboard average Storage usage: 1.517 GB / 1 GB; database size: 28.75 MB. Current storage.objects totals: media 423 files / 1435.64 MiB; threads-reposts 72 files / 21.39 MiB; avatars 4 files / 0.60 MiB. WebP originals total 1313.25 MiB, including 161 files over 1 MiB.
+>
+> We want to remain on Free, download and verify backups, then compress oversized WebP originals and replace them through the supported Storage API while preserving URLs. Target total storage below 800 MiB; actual savings require sample verification. Current 402 restrictions block the backup downloads. No objects or storage metadata have been deleted. No paid upgrade is requested.
+>
+> Could you temporarily allow the supported Storage operations needed for backup and optimization, or provide the official recovery procedure? Please confirm whether the current cycle's average usage will still block requests after live storage is below quota, and whether a manual restriction review is possible. Please do not delete files or enable paid services.
+
+**恢复验收（待执行）**：Auth health、匿名动态查询、公开媒体下载恢复正常；实际浏览器能加载公开动态及图片；本人登录、个人资料与授权操作再用真实账号验证。当前仅完成只读诊断，未修改代码、数据库、媒体文件或套餐，未部署。
+
+参考：[Storage 用量及周期平均规则](https://supabase.com/docs/guides/platform/manage-your-usage/storage-size)；[官方禁止通过 SQL 删除 Storage 元数据来清理文件](https://supabase.com/docs/guides/troubleshooting/storage-unexpectedly-high-usage-or-exceed_storage_size_quota-errors-ae21a5)。
+
+## 0.2 2026-10-18 Supabase + R2：本地阶段完成，尚未切换线上
+
+用户选择 Supabase + R2，并要求适当缩小图片/视频尺寸、保留 HDR；Cloudflare Google 登录回调停在加载页后，用户明确选择「先完成代码和本地验证」。完整配置、迁移、回滚及限制见 [`media-worker/README.md`](media-worker/README.md)。
+
+- 新增私有 R2 桶的 Worker 网关，写入校验 Supabase 身份/active 权限，支持上传进度、视频 Range、条件写入、防覆盖和独立服务端 secret。前端、PWA、头像、媒体库/音频及两个上传类 Edge Functions 接入同一存储契约。
+- `params.mediaOrigin` 尚未配置，线上/本地默认仍走旧 Supabase；未创建云端桶、配置真实密钥或部署。R2 出错不会静默写回旧桶；旧媒体删除仍识别 Supabase URL。原有 public 桶可见性契约不变，Worker 公共 URL 不等于私有附件鉴权。
+- 普通图片与预览分别限制长边 2560px/600px；HDR 增益图及无法安全保留的格式、动画保留源字节。离线视频限制长边 1920px，PQ/HLG 保留 HEVC 10-bit 与色彩/mastering/CLL 元数据；动态 HDR 或不明信号保留源字节。浏览器/Worker 不自动转码视频，HDR 图片与动态 HDR 暂不缩放；旧 SDR WebP 不能恢复 HDR。
+- 新增只读清单 SQL、校验备份/压缩/回读 SHA-256 的可恢复迁移脚本。仅全部上传验证通过后生成切换与反向 SQL，均不自动执行；源文件不删除。Threads JSON 内部链接随清单重写。历史版本、仓库与离线任务另需引用审计后才能清理旧文件。
+- 已通过：默认/R2 配置 Hugo 构建、前端/PWA 回归、Worker 权限/路径/大小/防覆盖与 Range 测试、Wrangler 本地真实 R2 流式读写/列表/删除、两个 Edge Function 打包检查、迁移断点/校验测试、实际 FFmpeg PQ/HLG/SDR 合成样本。HDR 设备观感、真实用户媒体、云端 R2/Supabase 联调及切换 SQL 执行均未验证。
+
+2026-10-18 继续优化构建：
+
+- 历史预览补建复用 HDR 保护压缩，只对确认 404 的当前存储文件补建，正确处理编码路径，不跨旧 Supabase/R2 写入或覆盖已有预览。前台 Canvas 失败时返回输入、释放对象 URL，避免上传等待不结束或错误标注 WebP。
+- 修正 R2 完整读取也携带 range 元数据导致误返回 206 的问题；新增后缀/开放/截断 Range、416、If-Range 与 ETag 列表/弱标记处理，并在 HEAD/GET 间对象变化时回退完整读取。已在真实本地 workerd 中复验，测试对象已删除。
+- 迁移先校验全清单，失败重跑撤下旧切换 SQL、保留上次回滚 SQL；对象重新验证前清除旧成功标记，目标 origin/清单大小变化会停止。前端、Edge 与迁移工具统一严格验证 HTTPS origin，服务密钥上传禁止跟随重定向。
+- FFmpeg 修复 1920px 以下奇数尺寸视频的 4:2:0 编码失败，并验证 321×241 → 320×240、AAC 音轨及样本时长。CI 仅在没有 FFmpeg 时安装，避免 shell 条件优先级导致多余安装。
+- 新增前台压缩、旧预览、Edge 存储回归；已完成全部媒体/PWA 测试、Worker dry-run、Edge 打包与默认/R2/GitHub 镜像路径三种 Hugo 构建，并检查构建后脚本顺序、配置注入及资源字节。Hugo 存在原有 `.Site.Data` 弃用提示，当前构建成功，未扩展修改主题数据调用。
+
+## 0.3 2026-10-18 GitHub 登录修复与当前平台阻塞
+
+- 现场复验 `/auth/v1/health` 与 `/auth/v1/authorize?provider=github` 均返回 HTTP 402、`exceed_storage_size_quota`。控制台仍显示组织级 All services restricted，Storage 1.517 / 1 GB，周期 10 月 6 日至 11 月 6 日。这会在到达 GitHub 之前阻断登录；R2 代码尚未部署，且媒体迁走也不能保证当前周期立即解除限制。
+- 已确认既有支持工单的提交成功界面；没有发现免费立即解限入口，没有重复发送工单或变更付费套餐。维持用户先前选择的免费恢复路径，真实登录仍依赖平台恢复。未修改 OAuth provider、密钥、重定向白名单或角色权限。
+- 修复窄屏/矮屏 CSS 隐藏 GitHub 入口的问题，短横屏允许纵向滚动、避免表单顶部被居中裁切。修复认证脚本只绑定隐藏弹窗按钮而忽略独立登录按钮的问题。
+- 移除 `themes/brutalism/static/js/theme.js` 中重复 OAuth 及模拟登录/注册成功处理，保留密码显示与邮箱预填；由 `auth-ui.js` 统一绑定弹窗和独立页面的真实认证。重置密码打开真实表单，记住邮箱只在真实登录成功后处理。
+- GitHub OAuth 前先检查认证服务（10 秒超时、不缓存）。402 时留在原页面显示具体原因并恢复按钮；健康时仍使用 Supabase OAuth 与现有主站/镜像回调，不直接绕过认证服务。`auth-ui.js` 增加版本参数，避免旧脚本缓存。
+- 已验证：`node tests/auth-login.test.cjs`（健康/配额/网络/超时/provider 错误、镜像回调、每次点击单个处理器、认证失败无演示跳转）；前台压缩与 PWA 回归；Hugo 构建；浏览器 390×844、1200×600、844×390 下按钮可见/可点击及真实 402 提示。未验证成功的真实 GitHub 会话，因为平台仍受限；本轮未部署。
+
+参考：[Supabase 402 服务限制](https://supabase.com/docs/guides/troubleshooting/http-status-codes)、[周期平均 Storage 用量](https://supabase.com/docs/guides/platform/manage-your-usage/storage-size)。
+
+## 0.4 2026-10-18 发布范围
+
+用户明确要求「这里的改动你直接上线」，授权发布 §0.2–0.3 的网站改动。使用现有 main → GitHub Actions / Cloudflare Pages 链路，发布前执行全部新增媒体/认证测试、原有 PWA 回归及实际构建流水线。与本轮无关的未跟踪报告、音乐目录和模板备份不纳入提交。
+
+网站将发布 GitHub 入口/事件绑定/真实认证/402 提示修复，以及 HDR 保护压缩与可选 R2 存储适配。`params.mediaOrigin` 仍为空：R2 Worker 与两个 Edge Functions 的源代码纳入版本管理，但不创建 R2 计费资源、不部署这些服务、不更改 secrets、不执行迁移或 SQL。§0.2–0.3 中「未部署」为当时阶段状态；网站是否已更新需核对本轮发布提交、CI 与线上资源，不能据源文件存在推断。
 
 ## 1. 技术架构
 
@@ -356,6 +429,7 @@ design-*.html                  设计稿 (浏览器直接打开, 见 §6.5)
 
 | 日期 | 提交 | 内容 |
 |------|------|------|
+| 2026-10-18 | 本地文档更新 | 确认云端 `exceed_storage_size_quota` 导致 Auth/REST/Storage HTTP 402，SQL Editor 只读查询正常。完成存储桶及大图占用诊断；用户选择保持免费并明确授权发送临时解限工单，已确认提交成功。恢复尚受平台限制，未压缩、删除媒体或修改业务代码；详情见 §0.1。 |
 | 08-14 | `82d3bdd` | **真实 Chrome 验证并补齐 Threads 媒体最终修复**：本地 Hugo + Chrome CDP 注入混排卡片测试。验证结果：卡片轮播 `page=1/x=-100%`，圆点/按钮状态同步；独立查看器可 `1/3→2/3→3/3→1/3`；视频 hover `paused=false currentTime≈0.9 readyState=4` 且播放键 opacity=0，移出 `paused=true currentTime=0.001`；查看器切回视频 `paused=false readyState=4 currentTime>0`。补充查看器视频 `muted` + 显式 `play()`。`node --check static/js/moments.js` 与 `hugo --minify` 通过并已推送。 |
 | 08-14 | `70c7db7` | **重做 Threads 混排媒体查看器**：前版显式切页使用 `transform: translateX(calc(var(--th-page) * -100%))`，CSS 变量乘法兼容性不可靠，导致页码变但视觉不动。已改为 JS 写入明确百分比 `--th-page-x: -100%/-200%...`，CSS 只读 `translateX(var(--th-page-x,0%))`。同时彻底移除 Threads 媒体对 GLightbox 的依赖，新增独立 `.th-viewer`：图片/视频同一数组、按钮/键盘/触摸左右切换、视频用原生 `<video controls autoplay playsinline>` 渲染，避免 GLightbox 本地视频封装导致进度条走但画面静止及箭头不可用。 |
 | 08-14 | `eb3009a` | **修复 Threads 混排轮播/放大查看无法左右切换与视频静帧问题**：卡片内轮播不再依赖浏览器 `scrollLeft/scrollTo`（易被 video/scroll-snap/原生控件干扰），改为 `data-page` + transform 显式切页；箭头/圆点/键盘/触控板横滑统一调用 `scrollThreadsMediaTo`，`syncThreadsNav` 读取页码状态。此版仍尝试用 GLightbox `content` slide 承载本地视频，后续由 `70c7db7` 改为独立查看器。 |

@@ -271,7 +271,9 @@
   function workerScriptURL() {
     if (workerURL) return workerURL;
     var script = Array.prototype.find.call(document.scripts, function (s) { return /\/pwa-sync\.js(?:\?|$)/.test(s.src); });
-    workerURL = script ? new URL('image-compress.worker.js', script.src).href : new URL('/js/image-compress.worker.js', location.origin).href;
+    var url = script ? new URL('image-compress.worker.js', script.src) : new URL('/js/image-compress.worker.js', location.origin);
+    if (script) url.search = new URL(script.src).search;
+    workerURL = url.href;
     return workerURL;
   }
 
@@ -287,6 +289,7 @@
         if (done) return;
         done = true; clearTimeout(timer); worker.terminate();
         var data = event.data || {};
+        if (data.preserveOriginal) { resolve({ original: file, preview: null }); return; }
         if (!data.original && !data.preview) { resolve(null); return; }
         try {
           var name = String(file.name || 'image').replace(/\.[^.]+$/, '.webp');

@@ -55,6 +55,25 @@ var Auth = window.Auth = {
   },
 
   async signInWithGitHub() {
+    // OAuth normally navigates without checking whether the project can serve Auth.
+    var controller = new AbortController();
+    var timeout = setTimeout(function () { controller.abort(); }, 10000);
+    var health;
+    var detail = {};
+    try {
+      health = await fetch(SUPABASE_URL + '/auth/v1/health', {
+        headers: { apikey: SUPABASE_ANON_KEY }, cache: 'no-store', signal: controller.signal
+      });
+      if (!health.ok) detail = await health.json().catch(function () { return {}; });
+    } catch (_) {
+      throw new Error('暂时无法连接登录服务，请检查网络后重试。');
+    } finally { clearTimeout(timeout); }
+    if (!health.ok) {
+      if (health.status === 402 && /exceed_storage_size_quota/.test(detail && detail.message || '')) {
+        throw new Error('登录暂不可用：博客存储超出 Supabase 免费额度，认证服务已受限。请等待管理员恢复服务后重试。');
+      }
+      throw new Error('登录服务暂不可用（HTTP ' + health.status + '），请稍后重试。');
+    }
     var profileUrl = window.location.origin + '/profile/';
     // GitHub Pages 需要 /blog/ 前缀
     if (window.location.hostname === 'levia808.github.io') {
@@ -163,11 +182,15 @@ var Profile = window.Profile = {
       throw new Error('头像图片不能超过 5 MB');
     }
     var avatarFile = options.compressedFile || file;
+    if (!options.skipCompression && !options.compressedFile) {
+      var pair = await Admin.compressImage(file);
+      avatarFile = pair && (pair.preview || pair.original) || file;
+    }
     const fileExt = avatarFile.name.split('.').pop() || 'png';
     const filePath = `${userId}/avatar.${fileExt}`;
 
     await assertExpectedUser();
-    const { error: uploadError } = await blogSupabase.storage
+    const { error: uploadError } = await window.BlogStorage
       .from('avatars')
       .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type, cacheControl: '3600' });
 
@@ -178,7 +201,7 @@ var Profile = window.Profile = {
       throw uploadError;
     }
 
-    const { data: { publicUrl } } = blogSupabase.storage
+    const { data: { publicUrl } } = window.BlogStorage
       .from('avatars')
       .getPublicUrl(filePath);
 
@@ -403,7 +426,7 @@ var Admin = window.Admin = {
     // 1. 查记录取 storage 路径
     const { data: rec, error: e1 } = await blogSupabase
       .from('media_assets')
-      .select('id, storage_path')
+      .select('id, storage_path, public_url')
       .eq('id', mediaId)
       .maybeSingle();
     if (e1) throw e1;
@@ -414,7 +437,8 @@ var Admin = window.Admin = {
       if (slash > 0) {
         removePaths.push(rec.storage_path.slice(0, slash + 1) + 'preview-' + rec.storage_path.slice(slash + 1));
       }
-      const { error: e2 } = await blogSupabase.storage.from('media').remove(removePaths);
+      var storage = /\/storage\/v1\/object\/public\/media\//.test(rec.public_url || '') ? blogSupabase.storage : window.BlogStorage;
+      const { error: e2 } = await storage.from('media').remove(removePaths);
       if (e2) throw e2;
     }
     // 3. 删除媒体记录 (storage 文件已删, RPC 无副作用)
@@ -454,39 +478,36 @@ var Admin = window.Admin = {
     });
   },
 
-  /* 图片上传前压缩: canvas → webp ≤1600px, 大图体积降 80%+ (预览加载提速)
-     GIF/SVG/其他格式保留原文件 */
-  /* 图片双版本压缩: original(≤2560px q0.88, 放大查看) + preview(≤600px q0.7, 预览提速)
-     GIF/SVG 保留原文件 */
-  compressImage(file) {
+  /* HDR/gain-map images keep their source bytes; Canvas WebP cannot preserve them. */
+  async compressImage(file) {
     if (!file || !file.type.startsWith('image/')) return Promise.resolve(file);
-    if (file.type === 'image/gif' || file.type === 'image/svg+xml') return Promise.resolve(file);
+    if (!window.MediaPolicy || await window.MediaPolicy.preserveOriginal(file)) return file;
     return new Promise(function (resolve) {
       var url = URL.createObjectURL(file);
       var img = new Image();
-      img.onload = function () {
-        var nw = img.naturalWidth, nh = img.naturalHeight;
-        function render(maxW, quality) {
-          var scale = Math.min(1, maxW / nw);
-          var w = Math.max(1, Math.round(nw * scale));
-          var h = Math.max(1, Math.round(nh * scale));
-          var canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          return new Promise(function (done) {
-            canvas.toBlob(function (blob) { done(blob); }, 'image/webp', quality);
-          });
-        }
-        Promise.all([render(2560, 0.88), render(600, 0.7)]).then(function (blobs) {
-          URL.revokeObjectURL(url);
+      img.onload = async function () {
+        try {
+          var nw = img.naturalWidth, nh = img.naturalHeight;
+          function render(maxW, quality) {
+            var dimensions = window.MediaPolicy.dimensions(nw, nh, maxW);
+            var w = dimensions[0], h = dimensions[1];
+            var canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            return new Promise(function (done) {
+              canvas.toBlob(function (blob) { done(blob && blob.type === 'image/webp' ? blob : null); }, 'image/webp', quality);
+            });
+          }
+          var blobs = await Promise.all([render(2560, 0.88), render(600, 0.7)]);
           var name = file.name.replace(/\.[^.]+$/, '.webp');
           if (!blobs[0] && !blobs[1]) { resolve(file); return; }
           resolve({
-            original: blobs[0] ? new File([blobs[0]], name, { type: 'image/webp' }) : file,
+            original: blobs[0] && blobs[0].size < file.size ? new File([blobs[0]], name, { type: 'image/webp' }) : file,
             preview: blobs[1] ? new File([blobs[1]], 'preview-' + name, { type: 'image/webp' }) : null
           });
-        });
+        } catch (_) { resolve(file); }
+        finally { URL.revokeObjectURL(url); }
       };
       img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
       img.src = url;
@@ -535,7 +556,7 @@ var Admin = window.Admin = {
     var stableId = options.operationId ? String(options.operationId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) : null;
     var filePath = user.id + '/' + (stableId ? 'pwa/' + stableId + '-' : Date.now() + '-') + safeName;
     await assertExpectedUser();
-    var upload = await blogSupabase.storage.from('media').upload(filePath, uploadFile, {
+    var upload = await window.BlogStorage.from('media').upload(filePath, uploadFile, {
       upsert: !!stableId,
       contentType: uploadFile.type,
       cacheControl: '3600',
@@ -544,10 +565,11 @@ var Admin = window.Admin = {
     if (upload.error) throw upload.error;
     /* 预览图上传 (不注册媒体库记录) */
     if (previewFile) {
-      var previewPath = user.id + '/' + (stableId ? 'pwa/preview-' + stableId + '-' : 'preview-' + Date.now() + '-') + safeName;
+      var slash = filePath.lastIndexOf('/');
+      var previewPath = filePath.slice(0, slash + 1) + 'preview-' + filePath.slice(slash + 1);
       try {
         await assertExpectedUser();
-        var previewUpload = await blogSupabase.storage.from('media').upload(previewPath, previewFile, {
+        var previewUpload = await window.BlogStorage.from('media').upload(previewPath, previewFile, {
           upsert: !!stableId,
           contentType: 'image/webp',
           cacheControl: '3600'
@@ -558,13 +580,13 @@ var Admin = window.Admin = {
         /* Existing non-PWA behavior treats previews as best-effort. */
       }
     }
-    var publicUrl = blogSupabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
+    var publicUrl = window.BlogStorage.from('media').getPublicUrl(filePath).data.publicUrl;
     try {
       await assertExpectedUser();
       return await this.registerMedia(filePath, uploadFile, publicUrl, stableId ? { operation_id: stableId } : undefined);
     } catch (error) {
       // Keep deterministic PWA objects: retries can upsert and finish registration safely.
-      if (!stableId) await blogSupabase.storage.from('media').remove([filePath]).catch(function () {});
+      if (!stableId) await window.BlogStorage.from('media').remove(previewFile ? [filePath, previewPath] : [filePath]).catch(function () {});
       throw error;
     }
   }
