@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-10-18 · Codex（正在发布 GitHub + Pages 新媒体存储与普通浏览器持久上传队列；Supabase 402 和旧媒体恢复独立受阻；见 §0.7）
+> 最后更新：2026-10-18 · Codex（GitHub + Pages 新媒体存储与持久上传队列已上线，并通过真实授权、上传和部署验收；Supabase 402 和主域名 TLS 连接问题仍受阻；见 §0.7）
 
 ---
 
@@ -156,7 +156,11 @@ SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB =
 
 **发布前验证**：新增 GitHub adapter 与状态 UI 测试，扩展 PWA 回归，覆盖原子提交、幂等重试、并行分支、25 MiB/类型/路径边界、无权限拒绝、伪造 OAuth 消息拒绝、HTML 误命中检测、账号隔离、进度、切页释放/接管、持久回执及 402 提示。Hugo 构建通过。CUA 本地合成测试验证普通标签页的即存即显、上传进度、站内切页持久化；390px 界面无横向溢出；真实文件选择控件在本地合成后台验证，非真实云端上传。合成测试页、账号和文件均位于 `/tmp`，不进入 Git 或线上。
 
-**验收边界**：发布提交、CI、线上文件字节、Pages 响应头和真实 GitHub 授权路径待发布后补记。未迁移或删除 499 个云端文件，未恢复 Supabase 登录/REST，未做真实手机锁屏/后台常驻验证。操作说明见 `PAGES-MEDIA.md`。
+**线上验收（2026-10-18）**：`5293dab55f0d7e5a1517c086f0f6f14dba6b9bee` 已普通推送 main，[GitHub Actions 39117158552](https://github.com/Levia808/blog/actions/runs/39117158552) build/deploy 和 Cloudflare Pages 检查成功；线上 `github-media.js` 与发布源文件字节一致。`https://blog-go3.pages.dev/admin/` 已实际通过 GitHub 授权，核对账号 Levia808 的仓库写权限，Supabase 不可用时能独立进入媒体区。
+
+用户明确授权用已有公开图标 `static/images/pwa-180.png` 真实上传，并清理新增副本。390px 浏览器视口实测立即出现 Blob 预览、全站队列显示等待 Pages；媒体提交 `5770b8186deff454ed99cea0d86d498373a145ae` 原子新增原图及预览，Cloudflare Pages 成功发布后两个 URL 均返回 HTTP 200 `image/png`，SHA-256 与 GitHub 文件一致，sandbox/nosniff/CORS 响应头正确。队列随后自动清空，卡片转为公开地址。新增两个测试副本在本次后续提交中清理，原始 PWA 图标保留；文件会按事先告知保留在 Git 历史中。验收发现旧媒体库错误使用 `/assets/images/` 公开路径，后续修正为 Hugo 的视频输出路径或 GitHub 原始素材 URL。
+
+**验收边界**：主域名 `https://l3via.cc.cd/` 当前在本机直连、现有代理和浏览器均遇到 TLS CONNECTION_CLOSED/UNEXPECTED_EOF；GitHub Pages API 返回证书 approved、HTTPS 强制开启，公共 DNS A 记录正确，尚不能据此定位连接中断原因。备用 Pages 站点可正常使用。未迁移或删除 499 个 Supabase 云端文件，未恢复 Supabase 登录/REST，未做真实手机锁屏/后台常驻验证。操作说明见 `PAGES-MEDIA.md`。
 
 ## 1. 技术架构
 

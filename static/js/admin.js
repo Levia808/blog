@@ -1788,7 +1788,10 @@
         if (!Array.isArray(list)) continue;
         list.forEach(function (f) {
           if (f.type !== 'file') return;
-          files.push({ name: f.name, sha: f.sha, size: f.size, url: (dir.startsWith('static/') ? '/' + dir.slice(7) : '/' + dir) + '/' + encodeURIComponent(f.name), source: 'github', gh_path: dir + '/' + f.name });
+          // Hugo publishes referenced videos under /images; source images may only have resized outputs.
+          var url = '/images/' + encodeURIComponent(f.name);
+          if (dir === 'assets/images' && !/^video\//i.test(guessMime(f.name))) url = f.download_url;
+          files.push({ name: f.name, sha: f.sha, size: f.size, url: url, source: 'github', gh_path: dir + '/' + f.name });
         });
       }
     } catch (e) { /* 目录不存在或未授权时忽略 */ }
