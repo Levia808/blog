@@ -164,6 +164,20 @@ SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB =
 
 **清理验收**：后续提交 `1a27b97c71c56f35c8bc8892e46c856a12a2a337` 已上线，[Actions 39117968557](https://github.com/Levia808/blog/actions/runs/39117968557) 及 Cloudflare 检查成功。当前 Git tree 和线上媒体库均无两个测试副本，待办 0 项，原始图标 HTTP 200；最新部署 `b7825c20.blog-go3.pages.dev` 的两个测试 URL 均 404，生产别名带新查询参数也返回 404。旧生产 URL 仍可从 CDN 读到旧缓存；[Cloudflare 官方资源保留说明](https://developers.cloudflare.com/pages/configuration/serving-pages/#asset-retention) 明确节点可保留至多一周，不宣称彻底擦除。后续同步完善删除提示及关联预览原子删除。旧媒体路径修复后，浏览器实测 3 个视频 readyState=4。
 
+**最终发布**：`7c9db1f078247675e63fab209b791f7091634109` 已上线，[Actions 39118250241](https://github.com/Levia808/blog/actions/runs/39118250241) build/deploy 与 Cloudflare Pages 均成功。新媒体原图/关联预览删除合并一次提交，重复删除不重复部署；相关原子删除、无关文件保留和幂等测试通过，删除对话框说明公开 Git 历史及缓存保留。最终线上 `admin.js`、`github-media.js`、`upload-status.js`、`pwa-sync.js` 均与发布文件 SHA-256 相符；浏览器重新加载后仍为 Levia808 媒体库、待办 0、测试副本 0。截图在私有忽略目录 `.supabase-recovery/2026-10-18/pages-media-final.png`，未提交。最终复查 Supabase Auth health 遇到 TLS EOF，本轮未取得恢复成功证据，不以媒体入口可用代替后端恢复。
+
+## 0.8 2026-10-18 继续处理旧媒体存储
+
+**现场复查**：组织 Usage 仍显示 `Services restricted` / `Storage Size Exceeded`，周期平均用量 1.518 / 1 GB，周期 10-06 至 11-06；Storage Files 页面未加载出可下载桶。Auth health 和一张真实公开原图的当前网络请求均遇到 TLS EOF，没有取得访问恢复证据。通过 SQL Editor 仅执行只读汇总，再次确认 499 对象、1528431962 bytes（1457.63 MiB），三个现有桶 public=true；受限动态 3 条。连接的 Gmail 中近 7 天相关 Supabase 邮件查询未找到回复，不能据此断言其他邮箱没有回信；没有重复发单。
+
+**迁移审计**：当前应用快照识别 215 个公开候选（含匹配的预览），合计 1184294134 bytes；1 个受限对象和 283 个引用不明对象不进入公开 Git 历史，也不删除。全部原始对象中有一个约 42.07 MiB 的 QuickTime 视频，超过 Pages 单文件限制。215 个候选的实际压缩总量尚未知，不能直接把全部源文件复制进双站发布；GitHub Pages 发布站点上限为 1 GB。
+
+**实现与检查**：新增 `scripts/migrate_media_pages.py`，复用现有 R2 工具的本地备份、SHA-256 恢复校验、HDR 保护优化及待审阅 SQL 生成器，不开通 R2。支持私有可见性审计、仅公开候选准备、25 MiB/800 MiB 拦截、防覆盖、格式扩展名修正、Threads JSON 引用审核、实际 Pages 回读校验；不推送、不执行 SQL、不删除源文件。离线合成测试覆盖受限/共享引用、关联预览、HTML 假成功、校验失败撤下旧正向 SQL、不完整准备禁止切换、防覆盖和超限。既有备份测试及实际 FFmpeg PQ/HLG/SDR 合成样本均通过。
+
+私有报告在 `.supabase-recovery/2026-10-18/pages-migration/`：`plan.json`、`public-candidates.json`、`access-attempt.json`。目录 700、报告 600，不发布。实际准备尝试在第一个文件下载时因 TLS EOF 停止；备份文件 0、仓库新增旧媒体文件 0、切换 SQL 0。需要官方恢复可读访问后更新快照、审核候选再运行完整准备；当前不能认定存储已恢复。操作步骤见 `PAGES-MEDIA.md`。
+
+用户本轮明确确认没有旧媒体本地原件或备份，不能走本地匹配恢复。当前汇总只读结果及截图存于同一私有目录的 `current-counts.json` / `current-counts.png`。没有改变存储桶访问权限，没有开通付费资源或尝试通过删除 Storage 元数据解除配额。
+
 ## 1. 技术架构
 
 ```

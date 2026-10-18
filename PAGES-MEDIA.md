@@ -36,4 +36,29 @@
 
 浏览器合成测试仅保存在 `/tmp`，不进入仓库或线上；手机系统的实际后台保活、锁屏及大文件内存表现仍需真实手机验证。
 
-参考：[Pages 文件和构建限制](https://developers.cloudflare.com/pages/platform/limits/)、[Pages 绑定存储](https://developers.cloudflare.com/pages/functions/bindings/)。
+## 旧媒体迁移
+
+`scripts/migrate_media_pages.py` 补齐 Pages 路径，复用原有备份和 HDR 保护压缩。脚本不会推送 Git、运行 SQL 或删除 Supabase 文件。必须先取得实际文件字节；SQL 元数据导出不等于文件备份。
+
+```bash
+# 所有报告、清单、备份和 SQL 必须保存在仓库忽略的私有目录中。
+python3 scripts/migrate_media_pages.py plan \
+  /private/media-inventory.json /private/database-snapshot.json /private/pages-migration
+
+# 审核 public-candidates.json，更新过期的数据库/对象快照后使用新的私有目录。
+# 仅将公开候选写到独立发布副本；不修改正在使用的工作区或自动发布。
+python3 scripts/migrate_media_pages.py prepare \
+  /private/pages-migration /path/to/release-checkout --confirm-public-history
+
+# 审查新增 static/media/<bucket>/import-*/ 文件，再按既有流程提交、发布并确认 CI。
+# 全部 URL 实际回读且 SHA-256 / MIME / 大小一致后，才生成待审阅的切换及回滚 SQL。
+python3 scripts/migrate_media_pages.py verify /private/pages-migration
+```
+
+清单只选取公开动态和公开头像直接引用的文件及其关联预览；白名单、排除可见用户的动态引用优先保护，公共/受限内容共用的文件也排除。引用不明的文件保留原处，不能把它们当成垃圾删除。Threads JSON 若引用未审核的对象，准备阶段停止。
+
+压缩后单文件不得超过 25 MiB，批次不得超过 800 MiB（项目保留双站发布，为 GitHub Pages 的 1 GB 站点上限留出余量）；现有仓库同路径不同内容时拒绝覆盖。压缩改变格式时使用相符扩展名，避免 Pages 返回错误 MIME。备份和优化结果校验后可重跑；任何验证失败均撤下旧的正向切换 SQL，保留已有回滚文件。`prepare` 失败时，`verify` 不能使用未完成的清单。生成 SQL 之后仍需核对实际引用、历史版本和其他离线队列，并人工审阅、执行及验收；受限/不明文件不因本次迁移而解除访问限制。
+
+当前 Supabase 仍受存储超额限制，实际文件下载失败，尚未迁移旧媒体或执行切换 SQL。离线测试：`PYTHONDONTWRITEBYTECODE=1 python3 tests/pages_media_migration_test.py`。
+
+参考：[Pages 文件和构建限制](https://developers.cloudflare.com/pages/platform/limits/)、[Pages 绑定存储](https://developers.cloudflare.com/pages/functions/bindings/)、[GitHub Pages 站点大小限制](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)。
