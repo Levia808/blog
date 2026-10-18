@@ -1,0 +1,5 @@
+/media/*
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy: sandbox; default-src 'none'
+  Access-Control-Allow-Origin: *
+  Cross-Origin-Resource-Policy: cross-origin

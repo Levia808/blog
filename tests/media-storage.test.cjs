@@ -38,5 +38,11 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../static/js/media-stor
   const before = sent;
   assert.ok((await storage.upload('user/photo.webp', new Blob(['ok']))).error);
   assert.equal(sent, before, 'No request is sent after the local session disappears');
+  window.BLOG_MEDIA_BACKEND = 'github-pages';
+  window.BLOG_MEDIA_ORIGIN = '';
+  window.GitHubMedia = { from: (bucket) => ({ provider: 'github-pages', bucket }) };
+  assert.equal(window.BlogStorage.from('media').provider, 'github-pages');
+  assert.equal(window.BlogStorage.from('avatars').provider, 'github-pages');
+  assert.equal(window.BlogStorage.from('threads-reposts').legacy, true, 'existing Threads data stays on its original backend');
   console.log('media storage: opt-in routing, URL encoding, progress and failure isolation passed');
 })().catch((error) => { console.error(error); process.exitCode = 1; });

@@ -149,8 +149,10 @@ function makeDocument() {
   };
   return document;
 }
-function boot({ withIndexedDB = true } = {}) {
+function boot({ withIndexedDB = true, normalBrowser = false, githubMedia = null } = {}) {
   const window = makeWindow();
+  if (normalBrowser) { window.matchMedia = () => ({ matches: false }); window.navigator.standalone = false; }
+  if (githubMedia) window.GitHubMedia = githubMedia;
   const document = makeDocument();
   const Auth = window.Auth;
   const Profile = window.Profile;
@@ -253,14 +255,17 @@ async function flush(app) { await app.window.PwaSync.flush(); }
   const firstTabFlush = app.window.PwaSync.flush();
   for (let i = 0; i < 20 && insertCalls === insertCallsBeforeClaim; i++) await new Promise((resolve) => setImmediate(resolve));
   assert.equal(insertCalls, insertCallsBeforeClaim + 1, 'the first tab has started the write');
+  const dependentUpdate = await app.window.PwaSync.enqueue('user-a', 'moment.update', { id: crossTabId, content: 'edited after create', media: [], updated_at: new Date().toISOString() });
   const secondTab = boot();
   secondTab.window.PwaSync.resume('user-a');
   await secondTab.window.PwaSync.flush();
   assert.equal(insertCalls, insertCallsBeforeClaim + 1, 'a second tab cannot claim an active task');
+  assert.equal((await secondTab.window.PwaSync.pending('user-a')).find((task) => task.id === dependentUpdate.id).status, 'queued', 'a dependent edit cannot overtake an active create');
   releaseInsert();
   insertBarrier = null;
   await firstTabFlush;
   assert.equal(rowsFor('moments').has(crossTabId), true, 'the live claim completes exactly once');
+  assert.equal(rowsFor('moments').get(crossTabId).content, 'edited after create');
 
   // SQL validation / permission errors with a SQLSTATE but no HTTP status are permanent.
   forcedError = { code: '23514', message: 'check constraint violation' };
@@ -287,8 +292,77 @@ async function flush(app) { await app.window.PwaSync.flush(); }
   activeUser = { id: 'user-b' };
   await assert.rejects(app.window.PwaSync.enqueue('user-a', 'profile.update', { values: { display_name: 'wrong' } }), /账号已变化/);
 
+  // A normal browser can persist and publish media while Supabase is unavailable.
+  activeUser = null;
+  let githubUser = { id: 'github:1' }, mediaWrites = 0, pagesReady = false, publishBarrier = null, enteredPublish = false;
+  const githubMedia = {
+    session: async () => ({ user: githubUser }),
+    async upload(file, options) {
+      assert.equal(options.expectedUserId, 'github:1');
+      mediaWrites++;
+      options.onUploadProgress({ loaded: file.size, total: file.size });
+      return { public_url: 'https://pages.test/media/queued.webp', commit: 'synthetic-commit' };
+    },
+    async published() {
+      if (publishBarrier) { const barrier = publishBarrier; publishBarrier = null; enteredPublish = true; await barrier; }
+      if (!pagesReady) { const error = new Error('正在等待 Pages 部署'); error.status = 425; throw error; }
+    }
+  };
+  app = boot({ normalBrowser: true, githubMedia });
+  assert.equal(app.window.PwaSync.enabled, true, 'ordinary mobile tabs use the durable queue');
+  let progressEvents = 0;
+  app.window.PwaSync.on('progress', () => progressEvents++);
+  const mediaFile = new File(['synthetic test media'], 'queued.webp', { type: 'image/webp' });
+  const mediaTask = await app.window.PwaSync.enqueue('github:1', 'repository.media', { file: mediaFile, fileName: mediaFile.name, fileType: mediaFile.type });
+  await flush(app);
+  let waiting = (await app.window.PwaSync.pending('github:1')).find((task) => task.id === mediaTask.id);
+  assert.ok(waiting.payload.file.size && waiting.payload.uploaded, 'retain the local file and the remote receipt while Pages builds');
+  assert.equal(mediaWrites, 1);
+  assert.ok(progressEvents >= 2);
+  pagesReady = true;
+  await new Promise((resolve, reject) => {
+    const request = indexedDB.open('levia-blog-pwa-outbox');
+    request.onsuccess = () => {
+      const tx = request.result.transaction('tasks', 'readwrite');
+      const store = tx.objectStore('tasks');
+      const get = store.get(mediaTask.id);
+      get.onsuccess = () => { get.result.nextAttemptAt = 0; store.put(get.result); };
+      tx.oncomplete = () => { request.result.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+  });
+  let releasePublish;
+  publishBarrier = new Promise((resolve) => { releasePublish = resolve; });
+  const leavingFlush = app.window.PwaSync.flush();
+  for (let i = 0; i < 30 && !enteredPublish; i++) await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(enteredPublish, true);
+  app.window.dispatchEvent({ type: 'pagehide' });
+  for (let i = 0; i < 30; i++) {
+    const leavingTask = (await app.window.PwaSync.pending('github:1')).find((task) => task.id === mediaTask.id);
+    if (leavingTask?.status === 'queued') break;
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  const reopened = boot({ normalBrowser: true, githubMedia });
+  await new Promise((resolve) => setImmediate(resolve));
+  await flush(reopened);
+  assert.equal(mediaWrites, 1, 'after navigation, deployment checks resume without reuploading');
+  assert.equal((await reopened.window.PwaSync.pending('github:1')).length, 0);
+  releasePublish(); await leavingFlush;
+  navigatorState.onLine = false;
+  await reopened.window.PwaSync.enqueue('github:1', 'repository.media', { file: mediaFile, fileName: mediaFile.name });
+  githubUser = { id: 'github:2' };
+  assert.equal((await reopened.window.PwaSync.pending('github:1')).length, 0, 'a different GitHub account cannot read another account\'s files');
+  activeUser = { id: 'user-b' };
+  forcedError = { status: 402, message: 'exceed_storage_size_quota' };
+  navigatorState.onLine = true;
+  const quotaApp = boot({ normalBrowser: true });
+  quotaApp.window.PwaSync.resume('user-b');
+  await quotaApp.window.PwaSync.enqueue('user-b', 'moment.create', { moment: { id: 'quota-draft', user_id: 'user-b', media: [] } });
+  await flush(quotaApp);
+  assert.match((await quotaApp.window.PwaSync.failed('user-b')).find((task) => task.payload.moment?.id === 'quota-draft').lastError, /Supabase 存储超额/);
+
   timers.clear();
-  console.log('PWA sync tests passed: persistence/restart, account isolation, media fallback, CRUD executors, idempotency, cross-tab leases, retry classification, storage errors.');
+  console.log('PWA sync tests passed: browser/PWA persistence, isolated accounts, progress, media deployment resume, CRUD, idempotency, cross-tab leases and quota recovery.');
 })().catch((error) => {
   timers.clear();
   console.error(error);

@@ -1161,8 +1161,7 @@
       extra = media.length - 9;
     }
     var items = displayMedia.map(function (url, i) {
-      var ext = String(url).split('?')[0].split('#')[0].split('.').pop().toLowerCase();
-      var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
+      var isVideo = isVideoUrl(url);
       /* 1-3 张: 原图显示 (不压缩); ≥4 张: 预览图压缩显示 */
       var useOriginal = media.length <= 3;
       var imgUrl = useOriginal ? url : mediaPreviewUrl(url);
@@ -1337,8 +1336,7 @@
   var editMediaSeq = 0;
 
   function editMediaItemHtml(url) {
-    var ext = String(url).split('.').pop().toLowerCase();
-    var isVideo = ['mp4', 'webm', 'ogg', 'mov', 'm4v'].includes(ext);
+    var isVideo = isVideoUrl(url);
     var preview = isVideo
       ? '<video src="' + escapeHtml(url) + '" muted playsinline preload="metadata"></video>'
       : '<img src="' + escapeHtml(mediaPreviewUrl(url)) + '" data-orig="' + escapeHtml(url) + '" alt="" decoding="async">';
@@ -1557,12 +1555,14 @@
   }
 
   var pendingMediaObjectUrls = Object.create(null);
+  var pendingMediaMimeByUrl = Object.create(null);
 
-  function localTaskMediaUrl(task, file, index) {
-    var key = task.id + ':' + index;
+  function localTaskMediaUrl(task, file, index, entry) {
+    var key = task.id + ':' + index + ':' + (entry && entry.operationId || '');
     if (!pendingMediaObjectUrls[key]) {
       try { pendingMediaObjectUrls[key] = URL.createObjectURL(file); }
       catch (_) { return ''; }
+      pendingMediaMimeByUrl[pendingMediaObjectUrls[key]] = entry && entry.fileType || file.type || (isVideoUrl(entry && entry.fileName || file.name || '') ? 'video/unknown' : '');
     }
     return pendingMediaObjectUrls[key];
   }
@@ -1570,8 +1570,9 @@
   function taskMediaForView(task, entries) {
     return (entries || []).map(function (entry, index) {
       if (typeof entry === 'string') return entry;
+      if (entry && entry.file && window.BLOG_MEDIA_BACKEND === 'github-pages') return localTaskMediaUrl(task, entry.file, index, entry);
       if (entry && entry.url) return entry.url;
-      if (entry && entry.file) return localTaskMediaUrl(task, entry.file, index);
+      if (entry && entry.file) return localTaskMediaUrl(task, entry.file, index, entry);
       return '';
     }).filter(Boolean);
   }
@@ -1742,6 +1743,7 @@
 
   function bindPwaMomentSyncEvents() {
     if (!window.PwaSync || !window.PwaSync.enabled) return;
+    window.PwaSync.on('changed', function () { if (currentUser) loadMoments(); });
     ['synced', 'failure', 'discarded'].forEach(function (eventName) {
       window.PwaSync.on(eventName, function (detail) {
         if (!currentUser || !detail.task || detail.task.userId !== currentUser.id) return;
@@ -2459,6 +2461,7 @@
 
 
   function isVideoUrl(url) {
+    if (pendingMediaMimeByUrl && /^video\//i.test(pendingMediaMimeByUrl[url] || '')) return true;
     var path = String(url).split('?')[0].split('#')[0];
     var ext = path.split('.').pop().toLowerCase();
     return ['mp4', 'webm', 'ogg', 'mov', 'm4v'].indexOf(ext) >= 0;
@@ -2467,6 +2470,7 @@
   /* 预览图 URL: 上传时约定 preview- 前缀 (旧数据无预览文件时 404 回退原图) */
   function mediaPreviewUrl(url) {
     var u = String(url);
+    if (/^(blob:|data:)/.test(u)) return u;
     var i = u.lastIndexOf('/');
     if (i < 0) return u;
     return u.slice(0, i + 1) + 'preview-' + u.slice(i + 1);

@@ -5,11 +5,14 @@
   var unauthorized = document.getElementById('adminUnauthorized');
   var content = document.getElementById('adminContent');
   var adminProfile = null;
+  var repositoryMode = false;
 
   function show(element) {
     loading.hidden = true;
     unauthorized.hidden = true;
     content.hidden = true;
+    var repositoryPanel = document.getElementById('repositoryMediaPanel');
+    if (repositoryPanel) repositoryPanel.hidden = true;
     element.hidden = false;
   }
 
@@ -182,12 +185,11 @@
 
   /* ── GitHub 发布模块 ── */
   var GH_REPO = 'Levia808/blog';
-  var GH_OAUTH_URL = 'https://sveltia-cms-auth.18013013170.workers.dev';
   var ghToken = null;
   var ghPostsCache = [];
 
   function getGhToken() {
-    if (ghToken) return ghToken;
+    ghToken = null;
     try { ghToken = window.localStorage.getItem('blog_gh_publish_token') || null; } catch (e) {}
     return ghToken;
   }
@@ -1400,46 +1402,45 @@
     }
   }
 
-  function authorizeGitHub() {
+  async function authorizeGitHub() {
     var authBtn = document.getElementById('ghAuthBtn');
     if (authBtn) { authBtn.classList.add('is-loading'); authBtn.disabled = true; }
-    var state = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    var url = GH_OAUTH_URL + '/auth?provider=github&scope=repo&state=' + state;
-    var popup = window.open(url, 'sveltia_oauth', 'width=560,height=720');
-    if (!popup) {
+    try {
+      await window.GitHubMedia.authorize();
+      if (adminProfile && adminProfile.role === 'superadmin' && adminProfile.account_status === 'active' && !repositoryMode && !content.hidden) updateGhAuthStatus();
+      else await openRepositoryMedia();
+      showToast('GitHub 授权成功', 'success');
+    } catch (e) {
+      var target = document.getElementById('repositoryAuthError');
+      if (target && !unauthorized.hidden) { target.textContent = e.message; target.hidden = false; }
+      else showError(e.message, repositoryMode ? 'adminMediaError' : 'adminError');
+    } finally {
       if (authBtn) { authBtn.classList.remove('is-loading'); authBtn.disabled = false; }
-      showError('浏览器拦截了授权窗口，请允许弹出窗口后重试。');
-      return;
     }
-    window.__ghAuthResolve = function (token) {
-      try { window.localStorage.setItem('blog_gh_publish_token', token); } catch (e) {}
-      ghToken = token;
-      updateGhAuthStatus();
-    };
   }
 
-  window.addEventListener('message', function (event) {
-    if (typeof event.data !== 'string' || !event.data.startsWith('authorizing:github')) return;
-    event.source.postMessage('authorizing:github', event.origin);
-  });
+  async function openRepositoryMedia() {
+    if (window.BLOG_MEDIA_BACKEND !== 'github-pages' || !window.GitHubMedia) return false;
+    var session = await window.GitHubMedia.session();
+    if (!session) return false;
+    repositoryMode = true;
+    var panel = document.getElementById('repositoryMediaPanel');
+    var media = document.querySelector('[data-admin-panel="media"]');
+    document.getElementById('repositoryMediaContent').appendChild(media);
+    media.hidden = false;
+    document.getElementById('repositoryIdentity').textContent = 'GitHub · ' + session.user.login;
+    show(panel);
+    await loadMedia();
+    return true;
+  }
 
-  window.addEventListener('message', function (event) {
-    if (typeof event.data !== 'string' || !event.data.startsWith('authorization:github:')) return;
-    var parts = event.data.split(':');
-    var state = parts[2];
-    var payload = event.data.slice(event.data.indexOf('{'));
-    try {
-      var data = JSON.parse(payload);
-      var authBtn = document.getElementById('ghAuthBtn');
-      if (authBtn) { authBtn.classList.remove('is-loading'); authBtn.disabled = false; }
-      if (state === 'success' && data.token) {
-        window.__ghAuthResolve && window.__ghAuthResolve(data.token);
-        showError('');
-        showToast('GitHub 授权成功', 'success');
-      } else if (data.error) {
-        showToast(data.error, 'error');
-      }
-    } catch (e) {}
+  var repositoryAuth = document.getElementById('repositoryMediaAuth');
+  if (repositoryAuth) repositoryAuth.addEventListener('click', authorizeGitHub);
+  var repositoryLogout = document.getElementById('repositoryLogout');
+  if (repositoryLogout) repositoryLogout.addEventListener('click', function () {
+    window.localStorage.removeItem('blog_gh_publish_token');
+    window.dispatchEvent(new CustomEvent('github-publish:auth'));
+    window.location.reload();
   });
 
   var ghAuthBtn = document.getElementById('ghAuthBtn');
@@ -1727,6 +1728,22 @@
     return 'application/octet-stream';
   }
 
+  var mediaAssets = [];
+  var localMediaUrls = Object.create(null);
+  var mediaRenderGeneration = 0;
+
+  async function renderLocalMedia() {
+    var generation = ++mediaRenderGeneration;
+    var tasks = window.PwaSync ? await window.PwaSync.status() : [];
+    if (generation !== mediaRenderGeneration) return;
+    var local = tasks.filter(function (task) { return task.type === 'repository.media'; }).map(function (task) {
+      if (!localMediaUrls[task.id]) localMediaUrls[task.id] = URL.createObjectURL(task.payload.file);
+      return { id: task.id, name: task.payload.fileName, mime_type: task.payload.fileType, size: task.payload.file.size, public_url: localMediaUrls[task.id], source: 'local', uploaded_url: task.payload.uploaded && task.payload.uploaded.public_url, sync_status: task.status === 'failed' ? '未完成，待处理' : '已存本机，后台发布中' };
+    });
+    Object.keys(localMediaUrls).forEach(function (id) { if (!tasks.some(function (task) { return task.id === id; })) { URL.revokeObjectURL(localMediaUrls[id]); delete localMediaUrls[id]; } });
+    renderMedia(local.concat(mediaAssets.filter(function (asset) { return !local.some(function (item) { return item.uploaded_url && item.uploaded_url === (asset.public_url || asset.url); }); })));
+  }
+
   function renderMedia(assets) {
     var grid = document.getElementById('adminMediaGrid');
     if (!assets.length) {
@@ -1750,11 +1767,11 @@
       } else {
         preview = '<div class="admin-media-audio">FILE</div>';
       }
-      var delBtn = asset.source === 'github'
+      var delBtn = asset.source === 'local' ? '<span>' + escapeHtml(asset.sync_status) + '</span>' : asset.source === 'github'
         ? '<button type="button" class="admin-row-action is-danger" data-gh-media-delete="' + escapeHtml(asset.name) + '" data-gh-sha="' + escapeHtml(asset.sha) + '" data-gh-path="' + escapeHtml(asset.gh_path) + '">删除</button>'
         : '<button type="button" class="admin-row-action is-danger" data-media-delete="' + escapeHtml(asset.id) + '">删除</button>';
       var sourceTag = asset.source === 'github' ? ' · 仓库' : '';
-      return '<article class="admin-media-item">' + preview +
+      return '<article class="admin-media-item"' + (asset.source === 'local' ? ' data-sync-task="' + escapeHtml(asset.id) + '"' : '') + '>' + preview +
         '<div class="admin-media-meta"><strong title="' + escapeHtml(asset.file_name || asset.name) + '">' + escapeHtml(asset.file_name || asset.name) + '</strong>' +
         '<small>' + escapeHtml(mime) + ' · ' + Math.ceil(size / 1024) + ' KB' + sourceTag + '</small>' +
         '<div class="admin-action-group">' + embedBtn +
@@ -1764,14 +1781,14 @@
 
   async function loadGhMedia() {
     if (!getGhToken()) return [];
-    var files = [];
+    var files = window.GitHubMedia ? await window.GitHubMedia.list() : [];
     try {
       for (var dir of ['assets/images', 'static/images']) {
         var list = await ghFetch('/repos/' + GH_REPO + '/contents/' + dir);
         if (!Array.isArray(list)) continue;
         list.forEach(function (f) {
           if (f.type !== 'file') return;
-          files.push({ name: f.name, sha: f.sha, size: f.size, url: '/' + dir + '/' + encodeURIComponent(f.name), source: 'github', gh_path: dir + '/' + f.name });
+          files.push({ name: f.name, sha: f.sha, size: f.size, url: (dir.startsWith('static/') ? '/' + dir.slice(7) : '/' + dir) + '/' + encodeURIComponent(f.name), source: 'github', gh_path: dir + '/' + f.name });
         });
       }
     } catch (e) { /* 目录不存在或未授权时忽略 */ }
@@ -1857,12 +1874,17 @@
 
   async function loadMedia() {
     var results = await Promise.all([
-      Admin.getMedia().catch(function () { return []; }),
+      repositoryMode ? [] : Admin.getMedia().catch(function () { return []; }),
       loadGhMedia()
     ]);
-    var assets = results[0].concat(results[1]);
-    renderMedia(assets);
-    return assets.length;
+    mediaAssets = results[0].concat(results[1]);
+    await renderLocalMedia();
+    return mediaAssets.length;
+  }
+
+  if (window.PwaSync) {
+    ['queued', 'processing', 'failure', 'retrying', 'discarded', 'changed'].forEach(function (name) { window.PwaSync.on(name, function () { renderLocalMedia().catch(function () {}); }); });
+    window.PwaSync.on('synced', function (detail) { if (detail.task && detail.task.type === 'repository.media') loadMedia().catch(function (error) { showError(error.message, 'adminMediaError'); }); });
   }
 
   async function loadDashboard() {
@@ -2186,6 +2208,16 @@
     }
     try {
       uploadButton.disabled = true;
+      if (window.BLOG_MEDIA_BACKEND === 'github-pages' && window.PwaSync) {
+        var session = await window.GitHubMedia.session();
+        if (!session) throw new Error('请先授权 GitHub 仓库发布。');
+        if (file.size > 100 * 1024 * 1024) throw new Error('源文件不能超过 100 MiB，请先压缩；Pages 发布文件上限为 25 MiB。');
+        await window.PwaSync.enqueue(session.user.id, 'repository.media', { file: file, fileName: file.name, fileType: file.type, lastModified: file.lastModified });
+        input.value = '';
+        await renderLocalMedia();
+        showToast('已存到此设备，正在后台发布。', 'info');
+        return;
+      }
       uploadButton.textContent = '上传中…';
       var isFont = /^\.(ttf|otf|woff2?|eot)$/i.test('.' + (file.name.split('.').pop() || ''));
       if (isFont && getGhToken()) {
@@ -2516,15 +2548,17 @@
   }
 
   whenAuthReady(function () {
-    Auth.user().then(async function (user) {
+    (window.Auth ? window.Auth.user() : Promise.resolve(null)).then(async function (user) {
       if (!user) {
         show(unauthorized);
+        try { await openRepositoryMedia(); } catch (e) { showError(e.message, 'repositoryAuthError'); }
         return;
       }
       try {
         adminProfile = await Admin.profile();
         if (!adminProfile || adminProfile.role !== 'superadmin' || adminProfile.account_status !== 'active') {
           show(unauthorized);
+          try { await openRepositoryMedia(); } catch (e) { showError(e.message, 'repositoryAuthError'); }
           return;
         }
         var meta = user.user_metadata || {};
@@ -2580,11 +2614,13 @@
         loadNavBehaviorConfig();
         updateGhAuthStatus();
       } catch (error) {
-        showError(errorText(error));
-        show(content);
+        show(unauthorized);
+        showError(errorText(error), 'repositoryAuthError');
+        try { await openRepositoryMedia(); } catch (e) { showError(e.message, 'repositoryAuthError'); }
       }
-    }).catch(function () {
+    }).catch(async function () {
       show(unauthorized);
+      try { await openRepositoryMedia(); } catch (e) { showError(e.message, 'repositoryAuthError'); }
     });
   });
 })();

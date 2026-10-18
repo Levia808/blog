@@ -18,6 +18,8 @@ outputs:
     - JSON
 
 params:
+  mediaBackend: github-pages
+  pagesMediaOrigin: https://blog-go3.pages.dev
   env: production
   author: Levia
   navLogo: "Levia's blog"

@@ -1,6 +1,8 @@
 # Supabase + R2 媒体接入
 
-当前完成的是代码与本地验证。尚未创建云端 R2 桶、部署 Worker/Edge Functions、启用网站配置或迁移真实文件。Cloudflare 登录回调未完成，用户已选择先完成本地工作；Supabase Storage 的 402 问题仍需官方恢复通道。
+当前线上默认方案已改为 GitHub + Pages，见 [`PAGES-MEDIA.md`](../PAGES-MEDIA.md)。下文保留的是可选 R2 方案；`params.mediaBackend: github-pages` 优先于 `mediaOrigin`。R2 未开通或启用，历史媒体不自动迁移。
+
+当前完成的是代码与本地验证。尚未创建云端 R2 桶、部署 Worker/Edge Functions、启用网站配置或迁移真实文件。2026-10-18 用户已完成 Cloudflare 登录，但在 R2 开通页明确选择暂不开通订阅；Supabase Storage 的 402 问题仍需官方恢复通道。已私有保存应用数据快照及 499 项媒体清单，具体位置与备份边界见 `HANDOVER.md` §0.6。
 
 ## 存储与权限
 

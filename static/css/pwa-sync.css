@@ -1,4 +1,40 @@
-/* Recovery controls are intentionally shown only after a permanent sync failure. */
+/* Queue UI stays clear of the home indicator and remains usable with touch. */
+.upload-status, .upload-publish-receipt {
+  position: fixed;
+  z-index: 12001;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 24px));
+  box-sizing: border-box;
+  border: 1px solid #ffffff26;
+  border-radius: 14px;
+  background: #1c1e1d;
+  color: #f1f1eb;
+  box-shadow: 0 12px 36px #0003;
+  font: 13px/1.5 system-ui, sans-serif;
+}
+.upload-status[hidden] { display: none; }
+.upload-status summary { padding: 14px 16px; min-height: 20px; cursor: pointer; touch-action: manipulation; user-select: none; }
+.upload-status-body { max-height: min(55dvh, 420px); overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 12px; }
+.upload-status-hint { margin: 0 0 12px; color: #b8bcb7; font-size: 12px; }
+.upload-status-task { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid #ffffff1a; overflow-wrap: anywhere; }
+.upload-status-task strong { font-weight: 500; }
+.upload-status-state { color: #b8bcb7; }
+.upload-status progress { width: 100%; height: 5px; accent-color: #d9e6c8; }
+.upload-status-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.upload-status-actions button { min-height: 44px; padding: 6px 12px; border: 1px solid #ffffff30; border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; touch-action: manipulation; user-select: none; }
+.upload-status-actions button:active { background: #ffffff18; }
+.upload-status-actions button:focus-visible, .upload-status summary:focus-visible { outline: 2px solid #d9e6c8; outline-offset: 2px; }
+.upload-publish-receipt { padding: 14px 16px; display: grid; gap: 6px; }
+.upload-publish-receipt a { color: #d9e6c8; }
+.repository-media-panel { grid-column: 1 / -1; width: 100%; min-width: 0; padding: clamp(16px, 4vw, 40px); box-sizing: border-box; }
+.repository-media-panel[hidden] { display: none; }
+.repository-media-panel .an-head { flex-wrap: wrap; gap: 12px; }
+.repository-media-panel .admin-panel { padding: 0; }
+.repository-media-panel .upload-row { flex-wrap: wrap; }
+.repository-media-panel input[type="file"] { max-width: 100%; min-width: 0; font-size: 16px; }
+.admin-media-item[data-sync-task] { opacity: .85; }
+.pwa-sync-recoveries:has(~ .upload-status:not([hidden])) { display: none; }
 .pwa-sync-recoveries {
   position: fixed;
   z-index: 12000;

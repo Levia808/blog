@@ -2,7 +2,7 @@
 
 > 用途：任意 LLM / 新开发者可凭本文档无缝接手工作。
 > 更新规则：每次任务完成后追加「工作日志」并刷新状态，保持本文档为唯一事实源。
-> 最后更新：2026-10-18 · Codex（网站修复已发布至 Cloudflare/GitHub Pages，提交 `7db4fa9`；R2 云端切换尚未启用，认证仍受 Supabase 402 限制）
+> 最后更新：2026-10-18 · Codex（正在发布 GitHub + Pages 新媒体存储与普通浏览器持久上传队列；Supabase 402 和旧媒体恢复独立受阻；见 §0.7）
 
 ---
 
@@ -115,6 +115,48 @@ SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB =
 - 已在 Supabase 控制台保存 Site URL `https://l3via.cc.cd/`，添加精确回调 `https://l3via.cc.cd/profile/`，保留既有白名单。GitHub OAuth 应用仍回调 Supabase API 域名，无需修改其 client secret 或 provider callback。原有 402 平台限制独立存在。
 - 域名初次检查时 HTTP 已到达 GitHub Pages，HTTPS 证书状态为 `new`，尚未覆盖该域名。需要 GitHub 签发完成后启用 Enforce HTTPS，禁止通过关闭证书校验或浏览器安全警告来验收。
 - 发布前执行新域名 OAuth 回调测试、真实本地音乐 API CORS 预检、Hugo 根路径/OG/RSS/sitemap/静态资源核验。发布提交与线上证书、HTTPS 强制和实际 CORS 结果待验收后补记。
+
+**发布验收（已验证）**：提交 [`de8199275445a13750ede4f88a9bd10dcb6ee139`](https://github.com/Levia808/blog/commit/de8199275445a13750ede4f88a9bd10dcb6ee139) 已普通推送至 main；[Actions 39069233048](https://github.com/Levia808/blog/actions/runs/39069233048) build/deploy 与 Cloudflare Pages check 均 success。`https://l3via.cc.cd/` 证书已 approved（到期 2027-01-16），Pages API `https_enforced=true`，HTTP 主域名、HTTP www 和旧 GitHub Pages 地址均实测跳到 HTTPS 主域名并返回 200。
+
+新站登录页关键 JS SHA-256 与发布源码一致，CSS、CMS 配置、manifest、RSS、sitemap、动态/感知/归档/关于路由均 HTTPS 200，页面与资源不含旧 `/blog/` 构建前缀。备用 CF 站 OG/sitemap 也已采用新主域名。音乐 API 对主域名与 www 的 OPTIONS 回包均返回正确的 Allow-Origin，浏览器歌单加载正常；现有 CMS authenticator 对 `site_id=l3via.cc.cd` 返回 GitHub 302，未修改或扩大 OAuth scopes。Supabase 新域名回跳配置已在控制台确认保存；新域名登录仍准确显示现有 402 配额限制。
+
+**剩余边界**：`https://www.l3via.cc.cd/` 当前仍因证书主机名不匹配而未通过验证，主域名 HTTPS 已正常；不能将 HTTP www 的跳转成功等同于 HTTPS www 可用。当前使用不带 www 的主地址。没有绕过 TLS 校验、浏览器警告或改为通配符权限。R2 网关仍未启用，Supabase 402 尚未解除。
+
+本轮依旧使用临时发布副本 `/tmp/blog-domain-20261018`，原工作区 Git 基线保留不变；此验收段为发布后的本地补记。后续修改应以远端 `de81992` 或更新的 main 为基准。主页截图 `/tmp/blog-new-domain-20261018.png`，认证配置截图 `/tmp/blog-new-domain-auth-full-20261018.png`。
+
+## 0.6 2026-10-18 Supabase 恢复续查与私有数据快照
+
+**当前仍未恢复**：本轮实际请求 Auth health、GitHub authorize、REST 动态、Storage 桶列表和一张真实公开 WebP 原图均返回 HTTP 402、`exceed_storage_size_quota`。控制台当前周期平均 Storage 为 **1.514 / 1 GB**，仍显示组织级服务限制；周期仍为 2026-10-06 至 2026-11-06。用户确认此前工单尚未收到回复，没有重复发单。
+
+**已完成的数据保护**：通过仍可用的 SQL Editor，只执行只读 SELECT，导出完整的 499 项媒体元数据清单，以及 14 张 public 应用表共 916 条记录的一致语句快照。包含动态 144 条、动态评论 72 条、用户资料 5 条、媒体登记 186 条；另保存 31 个函数及列、约束、索引、RLS、触发器、序列、枚举和授权等定义。再次独立 SELECT 核对上述主要计数与 Storage 对象数，结果一致。
+
+- 私有目录：`/home/levia/文档/blog/.supabase-recovery/2026-10-18/`，目录权限 700、文件权限 600；已加入根 `.gitignore`，真实内容不进入 Git 或网站构建。
+- `database-snapshot.json`：应用数据及定义；`database-snapshot-query.sql`：对应只读导出语句；`media-inventory.json`：可供现有迁移脚本读取的 JSON 数组。
+- `manifest.json` 与 `SHA256SUMS`：本地 SHA-256 校验信息。已解析 JSON、逐表核对数组长度和声明行数、核对清单路径唯一性及全部文件大小满足现有迁移工具边界；当前元数据合计 1457.63 MiB，磁盘余量约 81 GB。
+- **备份边界**：没有图片/视频的文件字节，没有 auth schema、登录凭据或完整 pg_dump 归档；未做数据库恢复演练。这份应用快照不能代替完整数据库和媒体备份，也不能据此删除云端文件。清单来自公开桶契约，实际切换前仍需核对引用和可见性。
+
+**Cloudflare 当前状态**：用户已手动完成登录，R2 页面显示尚未开通，要求添加自动续订、超额计费的 R2 订阅。已展示实际条款页面并由用户决定；用户明确回复「暂不开通订阅」。没有点击订阅、创建 R2 桶、Worker、管理凭据或设置 secrets，线上 `params.mediaOrigin` 继续留空。
+
+**下一步条件**：先取得 Supabase 官方允许的 Storage 备份访问，或在周期重置后实测访问恢复；不能保证 11 月 6 日立即恢复或持续正常，当前文件仍超过 1 GB。可用后更新清单，再运行现有迁移工具备份与 HDR 保护优化。R2 的云端接入另外依赖用户以后明确完成开通；本轮没有替换成另一收费服务、重建账号规避配额或删文件。
+
+本轮没有修改业务代码、认证权限、数据库行或云端媒体，没有执行网站发布。仅新增私有备份、根忽略规则及恢复记录。计数截图：`/tmp/blog-supabase-recovery-counts-20261018.png`；R2 开通页截图：`/tmp/blog-r2-activation-20261018.png`。
+
+## 0.7 2026-10-18 GitHub + Pages 媒体与移动端队列
+
+用户要求使用 Cloudflare Pages 存储并优化移动端即时显示、后台上传，明确授权直接上线。已解释 Pages 静态发布、25 MiB 单文件限制、GitHub 写权限、部署延迟，以及 Supabase 402 独立存在；用户回复「这两个你都去做」，接受 GitHub + Pages 存储和队列优化一起实施。未开通 R2 订阅。
+
+**实现范围**：新增 `static/js/github-media.js`，复用现有 Sveltia authenticator 和本机 GitHub 发布授权；读取 GitHub 身份并核对仓库 `permissions.push`，OAuth 消息同时验证 popup source 和 authenticator origin。原图及预览用 Git Data API 合并一次提交，普通更新 main、不 force，重试相同路径/内容不重复提交；分支并行变化会重新基于最新 tree 合并。只允许公开媒体路径与文件类型，25 MiB 上限，SVG 要求转为 PNG/WebP。GitHub 仓库现为 public，界面明确提示文件进入公开 Git 历史。
+
+- `params.mediaBackend: github-pages`、`pagesMediaOrigin: https://blog-go3.pages.dev`：新媒体发布到仓库 `static/media/`，由既有构建输出到 Pages `/media/`。原有 Supabase URL 和 `threads-reposts` 后端保留，不把历史串文指向空目录。R2 和上传类 Edge Functions 未启用或切换。
+- 后台新增独立「GitHub 媒体发布」入口。无博客会话或 Supabase 不可用时，仅允许经 GitHub 校验有仓库写权限的账号使用媒体区；不构造 Supabase 用户/管理员权限，不开放用户或评论后台。
+- 原有 IndexedDB outbox 扩展到普通浏览器和全站页面，支持 Supabase 账号及独立 `github:<id>` 发布账号，令牌不写入 IndexedDB。媒体立即显示本机 Blob 预览；上传、等待部署、错误恢复均有全站状态面板。已提交回执和本机文件保留至 Pages 实际可读才移出队列。
+- 跨标签广播、按账号领取的租约及 Web Locks 继续协调；新任务在事务中排序，活跃或等待重试的任务不能被后续编辑越过。切页时尽力释放当前租约并阻止旧页面继续写 main，异常关闭保留租约超时接管。后台网页被手机系统暂停后，恢复执行依赖重新打开/返回网页；不能承诺锁屏常驻上传或字节级断点续传。
+- 修正 402 `exceed_storage_size_quota` 被错误显示为本机空间不足的问题。普通动态、评论、点赞、资料、头像复用现有即时投影；资料失败待办同样保持本机预览。原图/预览沿用 HDR 保护压缩，视频仍应先离线压缩至 Pages 限制内。
+- Pages 媒体路径增加 sandbox/nosniff 响应头和公开 CORS；Service Worker 版本升为 v12。后台旧 OAuth 重复消息处理移到统一模块，其他无关页面没有重构。
+
+**发布前验证**：新增 GitHub adapter 与状态 UI 测试，扩展 PWA 回归，覆盖原子提交、幂等重试、并行分支、25 MiB/类型/路径边界、无权限拒绝、伪造 OAuth 消息拒绝、HTML 误命中检测、账号隔离、进度、切页释放/接管、持久回执及 402 提示。Hugo 构建通过。CUA 本地合成测试验证普通标签页的即存即显、上传进度、站内切页持久化；390px 界面无横向溢出；真实文件选择控件在本地合成后台验证，非真实云端上传。合成测试页、账号和文件均位于 `/tmp`，不进入 Git 或线上。
+
+**验收边界**：发布提交、CI、线上文件字节、Pages 响应头和真实 GitHub 授权路径待发布后补记。未迁移或删除 499 个云端文件，未恢复 Supabase 登录/REST，未做真实手机锁屏/后台常驻验证。操作说明见 `PAGES-MEDIA.md`。
 
 ## 1. 技术架构
 

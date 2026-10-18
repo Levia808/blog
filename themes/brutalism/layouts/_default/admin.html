@@ -35,7 +35,12 @@
   </aside>
   <div class="admin-shell" id="adminPage">
     <div id="adminLoading" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;"><span class="spinner-modern" aria-hidden="true"></span><span class="state-tag">[ 加载中 ]</span><p>正在加载管理面板…</p></div>
-    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 无权限 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">无访问权限</h2><p>请先登录具有管理员权限的账号，或确认当前账号状态。</p><a href="{{ "login/?redirect=%2Fadmin%2F" | relLangURL }}" class="btn btn-primary">前往登录</a><a href="{{ "" | relLangURL }}" class="btn">返回首页</a></div>
+    <div id="adminUnauthorized" class="state-card" style="grid-column:1/-1;border:none;height:100%;justify-content:center;min-height:320px;" hidden><span class="state-tag">[ 管理入口 ]</span><h2 style="font-size:18px;font-weight:500;color:var(--white);font-family:var(--font-display);">登录后管理内容</h2><p>完整后台需要博客管理员账号。仓库协作者可单独授权 GitHub 发布媒体。</p><a href="{{ "login/?redirect=%2Fadmin%2F" | relLangURL }}" class="btn btn-primary">登录博客后台</a><button type="button" id="repositoryMediaAuth" class="btn">GitHub 媒体发布</button><p id="repositoryAuthError" class="auth-error" role="alert" hidden></p><a href="{{ "" | relLangURL }}" class="btn">返回首页</a></div>
+    <section id="repositoryMediaPanel" class="repository-media-panel" hidden>
+      <div class="an-head"><div><p class="an-head-sub" id="repositoryIdentity"></p><h2>媒体发布</h2></div><button type="button" class="btn" id="repositoryLogout">退出 GitHub 发布</button></div>
+      <p class="note">文件先保存到此设备，后台上传并等待 Pages 发布。单文件上限 25 MiB；关闭浏览器后，下次打开本站继续。</p>
+      <div id="repositoryMediaContent"></div>
+    </section>
     <div id="adminContent" hidden>
       <aside class="admin-nav">
         <div class="an-logo">{{ site.Title }}<span class="an-role" id="adminRole">—</span></div>
@@ -132,6 +137,7 @@
             <div class="an-actions"><button type="button" class="btn" data-admin-refresh="media">刷新</button></div>
           </div>
           <div class="upload-row"><input type="file" id="adminMediaInput" accept="image/*,video/*,audio/*,font/*,.ttf,.otf,.woff,.woff2,.eot"><button type="button" class="btn btn-primary" id="adminMediaUpload">上传媒体</button></div>
+          <p class="hint">新文件使用 GitHub + Pages 发布，单文件最多 25 MiB。仅上传公开素材，文件会保留在仓库历史中。图片压缩保留 HDR；视频请先压缩后上传。</p>
           <div class="upload-progress" id="adminUploadProgress" hidden>
             <div class="upload-progress-track"><div class="upload-progress-fill" id="adminUploadProgressFill"></div></div>
             <span class="upload-progress-text" id="adminUploadProgressText">0%</span>

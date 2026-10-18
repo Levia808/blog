@@ -10,6 +10,7 @@
   function encoded(path) { return String(path).split('/').map(encodeURIComponent).join('/'); }
   window.BlogStorage = {
     from: function (bucket) {
+      if (window.BLOG_MEDIA_BACKEND === 'github-pages' && bucket !== 'threads-reposts') return window.GitHubMedia.from(bucket);
       if (!endpoint()) return window.blogSupabase.storage.from(bucket);
       var base = endpoint() + '/object/';
       async function request(path, method, body, headers, onProgress) {

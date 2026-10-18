@@ -45,7 +45,7 @@
 
     if (window.PwaSync && window.PwaSync.enabled) {
       try {
-        var pending = await window.PwaSync.pending(user.id);
+        var pending = (await window.PwaSync.pending(user.id)).concat(await window.PwaSync.failed(user.id));
         pending.forEach(function (task) {
           var payload = task.payload || {};
           if (task.type === 'profile.update') Object.assign(profile, payload.values || {});

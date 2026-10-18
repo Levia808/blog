@@ -187,12 +187,13 @@ var Profile = window.Profile = {
       avatarFile = pair && (pair.preview || pair.original) || file;
     }
     const fileExt = avatarFile.name.split('.').pop() || 'png';
-    const filePath = `${userId}/avatar.${fileExt}`;
+    const avatarVersion = window.BLOG_MEDIA_BACKEND === 'github-pages' ? '-' + String(options.operationId || Date.now()).replace(/[^a-zA-Z0-9_-]/g, '') : '';
+    const filePath = `${userId}/avatar${avatarVersion}.${fileExt}`;
 
     await assertExpectedUser();
     const { error: uploadError } = await window.BlogStorage
       .from('avatars')
-      .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type, cacheControl: '3600' });
+      .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type, cacheControl: '3600', onUploadProgress: options.onUploadProgress });
 
     if (uploadError) {
       if (/permission|policy|RLS|row.?level|not allowed/i.test(uploadError.message || '')) {
@@ -204,6 +205,8 @@ var Profile = window.Profile = {
     const { data: { publicUrl } } = window.BlogStorage
       .from('avatars')
       .getPublicUrl(filePath);
+
+    if (window.BLOG_MEDIA_BACKEND === 'github-pages') await window.GitHubMedia.published(publicUrl);
 
     /* 同名文件覆盖上传, URL 不变 → 浏览器缓存旧图 → 加时间戳强制刷新 */
     await assertExpectedUser();
@@ -519,6 +522,7 @@ var Admin = window.Admin = {
     var user = await Auth.user();
     if (!user) throw new Error('请先登录');
     async function assertExpectedUser() {
+      if (options.assertActive) await options.assertActive();
       if (!options.expectedUserId) return;
       var session = await Auth.session().catch(function () { return null; });
       if (!session || !session.user || session.user.id !== options.expectedUserId) {
@@ -555,18 +559,25 @@ var Admin = window.Admin = {
     var safeName = uploadFile.name.replace(/[^\w.\-]+/g, '-').replace(/^-+|-+$/g, '');
     var stableId = options.operationId ? String(options.operationId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) : null;
     var filePath = user.id + '/' + (stableId ? 'pwa/' + stableId + '-' : Date.now() + '-') + safeName;
+    var storage = window.BlogStorage.from('media');
+    var previewPath;
+    if (previewFile) {
+      var slash = filePath.lastIndexOf('/');
+      previewPath = filePath.slice(0, slash + 1) + 'preview-' + filePath.slice(slash + 1);
+    }
     await assertExpectedUser();
-    var upload = await window.BlogStorage.from('media').upload(filePath, uploadFile, {
+    var uploadOptions = {
       upsert: !!stableId,
       contentType: uploadFile.type,
       cacheControl: '3600',
       onUploadProgress: onProgress || undefined
-    });
+    };
+    var batch = [{ path: filePath, file: uploadFile, options: uploadOptions }];
+    if (previewFile) batch.push({ path: previewPath, file: previewFile, options: { upsert: !!stableId } });
+    var upload = storage.uploadBatch ? await storage.uploadBatch(batch, { onUploadProgress: onProgress, assertActive: options.assertActive }) : await storage.upload(filePath, uploadFile, uploadOptions);
     if (upload.error) throw upload.error;
     /* 预览图上传 (不注册媒体库记录) */
-    if (previewFile) {
-      var slash = filePath.lastIndexOf('/');
-      var previewPath = filePath.slice(0, slash + 1) + 'preview-' + filePath.slice(slash + 1);
+    if (previewFile && !storage.uploadBatch) {
       try {
         await assertExpectedUser();
         var previewUpload = await window.BlogStorage.from('media').upload(previewPath, previewFile, {
@@ -580,7 +591,8 @@ var Admin = window.Admin = {
         /* Existing non-PWA behavior treats previews as best-effort. */
       }
     }
-    var publicUrl = window.BlogStorage.from('media').getPublicUrl(filePath).data.publicUrl;
+    var publicUrl = storage.getPublicUrl(filePath).data.publicUrl;
+    if (storage.provider === 'github-pages') return { public_url: publicUrl, storage_path: filePath, storage_bucket: 'media', file_name: uploadFile.name, mime_type: uploadFile.type, size_bytes: uploadFile.size, source: 'github' };
     try {
       await assertExpectedUser();
       return await this.registerMedia(filePath, uploadFile, publicUrl, stableId ? { operation_id: stableId } : undefined);

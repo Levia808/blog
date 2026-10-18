@@ -1,15 +1,8 @@
-/* Durable PWA-only outbox. Authentication tokens are never copied into IndexedDB. */
+/* Durable browser outbox. Authentication tokens are never copied into IndexedDB. */
 (function () {
   'use strict';
 
-  var standalone = false;
-  try {
-    standalone = !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-      window.navigator.standalone === true;
-  } catch (_) {}
-  if (!standalone) return;
-
-  // Recovery UI is injected only in the installed/standalone app.
+  // Ordinary mobile tabs and installed apps share the same durable queue.
   var recoveryStyles = document.createElement('link');
   recoveryStyles.rel = 'stylesheet';
   recoveryStyles.href = new URL('../css/pwa-sync.css', document.currentScript && document.currentScript.src || location.href).href;
@@ -22,10 +15,17 @@
   var LEASE_RENEW_MS = Math.floor(LEASE_MS / 3);
   var dbPromise = null;
   var activeUserId = null;
+  var repositoryUserId = null;
   var draining = false;
   var retryTimer = null;
   var workerURL = null;
   var shownFailures = Object.create(null);
+  var activeClaims = Object.create(null);
+  var pageLeaving = false;
+  var channel = null;
+  try { if (window.BroadcastChannel) channel = new window.BroadcastChannel('levia-blog-outbox'); } catch (_) {}
+
+  function isActiveUser(id) { return !!id && (id === activeUserId || id === repositoryUserId); }
 
   function uuid() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -35,11 +35,31 @@
     });
   }
 
-  function emit(name, detail) {
+  function emit(name, detail, remote) {
+    name = name.replace(/^pwa-sync:/, '');
+    var eventName = 'pwa-sync:' + name;
     var event;
-    try { event = new CustomEvent(name, { detail: detail }); }
-    catch (_) { event = document.createEvent('CustomEvent'); event.initCustomEvent(name, false, false, detail); }
+    try { event = new CustomEvent(eventName, { detail: detail }); }
+    catch (_) { event = document.createEvent('CustomEvent'); event.initCustomEvent(eventName, false, false, detail); }
     window.dispatchEvent(event);
+    if (channel && !remote && /^(queued|processing|synced|failure|retrying|discarded|progress)$/.test(name)) {
+      try {
+        channel.postMessage(name === 'progress'
+          ? { name: name, detail: { task: { id: detail.task.id, userId: detail.task.userId }, progress: detail.progress, stage: detail.stage } }
+          : { name: 'changed' });
+      } catch (_) {}
+    }
+  }
+
+  if (channel) channel.onmessage = function (event) {
+    var message = event.data || {};
+    if (message.name === 'progress' && message.detail && message.detail.task && isActiveUser(message.detail.task.userId)) emit('progress', message.detail, true);
+    else if (message.name === 'changed') { emit('changed', {}, true); schedule(200); }
+  };
+
+  function progress(task, stage, event) {
+    var value = event && event.total > 0 ? Math.min(1, event.loaded / event.total) : null;
+    emit('progress', { task: task, stage: stage, progress: value });
   }
 
   function openDb() {
@@ -180,7 +200,10 @@
     return function stop() { stopped = true; clearTimeout(timer); };
   }
 
-  function sessionNow() {
+  function sessionNow(userId) {
+    if (userId && userId.indexOf('github:') === 0) {
+      return window.GitHubMedia ? window.GitHubMedia.session() : Promise.resolve(null);
+    }
     if (!window.Auth || typeof window.Auth.session !== 'function') return Promise.resolve(null);
     return window.Auth.session().catch(function () { return null; });
   }
@@ -194,13 +217,14 @@
   async function assertOwner(task) {
     // getSession reads the locally persisted session. Do not add an auth network
     // round-trip ahead of queued work; the actual Supabase request validates it.
-    var session = await sessionNow();
+    var session = await sessionNow(task.userId);
     var user = session && session.user;
     if (!user || user.id !== task.userId) throw defer('请使用创建此任务的原账号登录后继续同步。');
     return user;
   }
 
   async function assertClaim(task) {
+    if (pageLeaving) throw defer('页面已切换，上传将在新页面继续。');
     if (task.claimLost) throw lostClaimError();
     // Renew transactionally before each network side effect. If the lease
     // expired but no other tab took over, the same fenced owner can continue;
@@ -248,6 +272,7 @@
   function messageOf(error) {
     var text = error && (error.message || error.error_description || error.details);
     text = String(text || '同步失败');
+    if (Number(error && (error.status || error.statusCode)) === 402 || /exceed_storage_size_quota|Service for this project is restricted/i.test(text)) return 'Supabase 存储超额限制尚未解除；内容已存本机，恢复后请重试。';
     if (/quota|storage|disk|space/i.test(text)) return '设备空间不足；内容仍保存在待办中，请释放空间后重试。';
     if (/permission|rls|row.level|not allowed|forbidden|42501/i.test(text)) return '当前账号没有此操作权限；原内容保留，可重试或撤销。';
     if (/invalid|malformed|22023|validation/i.test(text)) return '服务端未接受这项内容；原内容保留，可修改后重试或撤销。';
@@ -307,6 +332,7 @@
   async function uploadMedia(file, operationId, task) {
     await assertClaim(task);
     await assertOwner(task);
+    progress(task, '正在压缩图片');
     var pair = await prepareImage(file);
     if (!pair && file && /^image\//i.test(file.type) && !/image\/(?:gif|svg\+xml)/i.test(file.type) &&
         window.Admin && typeof window.Admin.compressImage === 'function') {
@@ -314,9 +340,11 @@
     }
     await assertClaim(task);
     await assertOwner(task);
-    return window.Admin.uploadMedia(file, null, {
+    progress(task, '正在上传文件');
+    return window.Admin.uploadMedia(file, function (event) { progress(task, '正在上传文件', event); }, {
       operationId: operationId,
       expectedUserId: task.userId,
+      assertActive: function () { return assertClaim(task); },
       compressedPair: pair || undefined,
       skipCompression: true
     });
@@ -327,13 +355,14 @@
     for (var i = 0; i < entries.length; i++) {
       var item = entries[i];
       if (typeof item === 'string') { urls.push(item); continue; }
+      if (item && item.url) { urls.push(item.url); continue; }
       if (!item || !item.file) { if (item && item.url) urls.push(item.url); continue; }
       var operationId = item.operationId || (task.id + '-' + i);
       var file = restoreFile(item.file, item);
       var uploaded = await uploadMedia(file, operationId, task);
       var url = uploaded && (uploaded.public_url || uploaded.publicUrl) || uploaded;
       urls.push(url);
-      entries[i] = { url: url, operationId: operationId };
+      entries[i] = Object.assign({}, item, { url: url, operationId: operationId });
       // Save URLs into the exact nested media array before attempting the next upload.
       var mediaPath = task.type === 'moment.create' ? task.payload.moment.media : task.payload.media;
       if (mediaPath) mediaPath[i] = entries[i];
@@ -345,6 +374,10 @@
       });
       if (!persisted) { task.claimLost = true; throw lostClaimError(); }
     }
+    if (window.BLOG_MEDIA_BACKEND === 'github-pages') {
+      progress(task, '正在等待 Pages 部署');
+      for (var url of urls) await window.GitHubMedia.published(url);
+    }
     return urls;
   }
 
@@ -353,10 +386,28 @@
     await assertOwner(task);
     var p = task.payload || {};
     var result;
+    if ((task.type === 'repository.media') !== (task.userId.indexOf('github:') === 0)) throw new Error('同步任务账号类型不匹配。');
     switch (task.type) {
+      case 'repository.media': {
+        progress(task, '正在处理媒体');
+        result = p.uploaded;
+        if (!result) {
+          result = await window.GitHubMedia.upload(restoreFile(p.file, p), {
+            operationId: task.id, expectedUserId: task.userId,
+            assertActive: function () { return assertClaim(task); },
+            onUploadProgress: function (event) { progress(task, '正在上传到仓库', event); }
+          });
+          p.uploaded = result;
+          if (!await mutateClaim(task, function (current, store) { current.payload = p; store.put(current); return true; })) throw lostClaimError();
+        }
+        progress(task, '正在等待 Pages 部署');
+        await window.GitHubMedia.published(result.public_url);
+        break;
+      }
       case 'moment.create': {
         var draft = p.moment;
         var media = await uploadEntries(task, draft.media || []);
+        progress(task, '正在保存动态');
         await assertClaim(task);
         await assertOwner(task);
         result = await insertIdempotent('moments', {
@@ -367,6 +418,7 @@
       }
       case 'moment.update': {
         var updateMedia = await uploadEntries(task, p.media || []);
+        progress(task, '正在保存修改');
         await assertClaim(task);
         await assertOwner(task);
         var changes = { content: p.content || '', media: updateMedia, updated_at: p.updated_at };
@@ -438,7 +490,8 @@
         await assertClaim(task);
         await assertOwner(task);
         result = await window.Profile.uploadAvatar(task.userId, avatarPair && (avatarPair.original || avatarPair.preview) || avatarFile, {
-          operationId: task.id, cacheVersion: task.id, skipCompression: true, expectedUserId: task.userId
+          operationId: task.id, cacheVersion: task.id, skipCompression: true, expectedUserId: task.userId,
+          onUploadProgress: function (event) { progress(task, '正在上传头像', event); }
         });
         break;
       }
@@ -484,12 +537,12 @@
             if (task.status === 'failed') continue;
             if (task.status === 'processing' && Number(task.leaseUntil || 0) > now) {
               if (!nextAt || task.leaseUntil < nextAt) nextAt = task.leaseUntil;
-              continue;
+              break;
             }
             if (task.status !== 'queued' && task.status !== 'processing') continue;
             if (task.status === 'queued' && Number(task.nextAttemptAt || 0) > now) {
               if (!nextAt || task.nextAttemptAt < nextAt) nextAt = task.nextAttemptAt;
-              continue;
+              break;
             }
             // Expired leases are reclaimed directly in this read-write
             // transaction. A new per-claim token fences the old tab out.
@@ -555,15 +608,16 @@
     });
   }
 
-  async function flushUnlocked() {
-    while (activeUserId && navigator.onLine) {
-      var userId = activeUserId;
+  async function flushUnlocked(userId) {
+    while (!pageLeaving && isActiveUser(userId) && navigator.onLine) {
       var claimed = await claimNext(userId);
       if (!claimed.task) {
         if (claimed.nextAt) schedule(claimed.nextAt - Date.now());
         return;
       }
       var task = claimed.task;
+      activeClaims[task.id] = task;
+      emit('processing', { task: task });
       var stopHeartbeat = startClaimHeartbeat(task);
       try {
         var result = await execute(task);
@@ -574,22 +628,25 @@
         if (error && error.pwaDefer) return;
         if (retryAt) { schedule(retryAt - Date.now()); return; }
       } finally {
+        delete activeClaims[task.id];
         stopHeartbeat();
       }
-      if (activeUserId !== userId) return;
+      if (!isActiveUser(userId)) return;
     }
   }
 
   async function flush() {
-    if (!activeUserId || !navigator.onLine || draining) return;
+    if (pageLeaving || (!activeUserId && !repositoryUserId) || !navigator.onLine || draining) return;
     draining = true;
     try {
-      if (navigator.locks && navigator.locks.request) {
-        await navigator.locks.request('levia-blog-pwa-outbox:' + activeUserId, { ifAvailable: true }, function (lock) {
-          if (lock) return flushUnlocked();
-        });
-      } else {
-        await flushUnlocked(); // IDB leases provide the fallback cross-tab claim.
+      for (var userId of [repositoryUserId, activeUserId].filter(Boolean)) {
+        if (navigator.locks && navigator.locks.request) {
+          await navigator.locks.request('levia-blog-pwa-outbox:' + userId, { ifAvailable: true }, function (lock) {
+            if (lock) return flushUnlocked(userId);
+          });
+        } else {
+          await flushUnlocked(userId); // IDB leases provide the fallback cross-tab claim.
+        }
       }
     } catch (error) {
       emit('pwa-sync:queue-error', { error: messageOf(error) });
@@ -598,10 +655,11 @@
 
   function enqueue(userId, type, payload, coalesceKey) {
     if (!userId) return Promise.reject(new Error('请先登录；内容未提交。'));
-    return sessionNow().then(function (session) {
+    return sessionNow(userId).then(function (session) {
       if (!session || !session.user || session.user.id !== userId) {
         throw new Error('当前登录账号已变化；为保护数据，本次操作未保存。');
       }
+      if (type === 'repository.media') resumeRepository(userId);
       return enqueueOwned(userId, type, payload, coalesceKey);
     });
   }
@@ -622,6 +680,7 @@
         var req = store.index('userId').getAll(userId);
         var saved = task;
         req.onsuccess = function () {
+          task.createdAt = Math.max(now, (req.result || []).reduce(function (latest, candidate) { return Math.max(latest, candidate.createdAt || 0); }, 0) + 1);
           if (coalesceKey) {
             var existing = (req.result || []).filter(function (candidate) {
               return candidate.type === type && candidate.coalesceKey === coalesceKey && candidate.status !== 'processing';
@@ -655,7 +714,7 @@
   }
 
   async function ownsCurrentSession(userId) {
-    var session = await sessionNow();
+    var session = await sessionNow(userId);
     return !!(session && session.user && session.user.id === userId);
   }
 
@@ -675,7 +734,7 @@
 
   async function retry(id) {
     var task = await getTask(id);
-    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId) || activeUserId !== task.userId) {
+    if (!task || !isActiveUser(task.userId) || !await ownsCurrentSession(task.userId) || !isActiveUser(task.userId)) {
       throw new Error('只能恢复当前账号自己的待办。');
     }
     var retried = await withTask(id, function (current, store) {
@@ -686,13 +745,13 @@
       return current;
     });
     if (!retried) throw new Error('该待办状态已变化，请刷新后重试。');
-    delete shownFailures[id]; schedule(100);
+    delete shownFailures[id]; emit('queued', { task: retried }); schedule(100);
     return retried;
   }
 
   async function discard(id) {
     var task = await getTask(id);
-    if (!task || task.userId !== activeUserId || !await ownsCurrentSession(task.userId) || activeUserId !== task.userId) {
+    if (!task || !isActiveUser(task.userId) || !await ownsCurrentSession(task.userId) || !isActiveUser(task.userId)) {
       throw new Error('只能清理当前账号自己的待办。');
     }
     var discarded = await withTask(id, function (current, store) {
@@ -757,7 +816,8 @@
       if (oldRecoveries) oldRecoveries.remove();
     }
     activeUserId = nextUserId;
-    if (!activeUserId) return;
+    emit('changed', {});
+    if (!activeUserId) { if (repositoryUserId) schedule(100); return; }
     sessionNow().then(function (session) {
       var user = session && session.user;
       if (!user || user.id !== activeUserId) return;
@@ -770,9 +830,41 @@
     });
   }
 
-  window.addEventListener('online', function () { schedule(100); });
-  window.addEventListener('focus', function () { if (activeUserId) schedule(150); });
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && activeUserId) schedule(100); });
+  function resumeRepository(userId) {
+    repositoryUserId = userId || null;
+    emit('changed', {});
+    if (repositoryUserId) schedule(100);
+  }
+
+  async function status() {
+    var tasks = [];
+    for (var userId of [activeUserId, repositoryUserId].filter(Boolean)) {
+      if (await ownsCurrentSession(userId)) tasks = tasks.concat(await tasksForUser(userId));
+    }
+    return tasks.sort(function (a, b) { return a.createdAt - b.createdAt; });
+  }
+
+  function resumeAll() {
+    sessionNow().then(function (session) { resume(session && session.user && session.user.id); });
+    if (window.GitHubMedia) window.GitHubMedia.session().then(function (session) { resumeRepository(session && session.user && session.user.id); }).catch(function () { resumeRepository(null); });
+  }
+
+  window.addEventListener('online', resumeAll);
+  window.addEventListener('focus', function () { if (activeUserId || repositoryUserId) schedule(150); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) resumeAll(); });
+  window.addEventListener('github-publish:auth', resumeAll);
+  window.addEventListener('pagehide', function () {
+    pageLeaving = true;
+    clearTimeout(retryTimer);
+    Object.keys(activeClaims).forEach(function (id) {
+      mutateClaim(activeClaims[id], function (current, store) {
+        current.status = 'queued'; current.lockId = null; current.leaseUntil = 0; current.nextAttemptAt = 0;
+        store.put(current); return true;
+      }).then(function (released) { if (released) emit('changed', {}); }).catch(function () {});
+    });
+  });
+  window.addEventListener('pageshow', function () { pageLeaving = false; resumeAll(); });
+  window.addEventListener('storage', function (event) { if (event.key === 'blog_gh_publish_token') resumeAll(); });
   if (window.Auth && typeof window.Auth.onAuthChange === 'function') {
     window.Auth.onAuthChange(function (_, session) { resume(session && session.user ? session.user.id : null); });
   }
@@ -782,6 +874,7 @@
     enqueue: enqueue,
     pending: pending,
     failed: failed,
+    status: status,
     retry: retry,
     discard: discard,
     update: updateTask,
@@ -792,4 +885,5 @@
     on: function (name, callback) { window.addEventListener('pwa-sync:' + name, function (event) { callback(event.detail || {}); }); },
     uuid: uuid
   };
+  resumeAll();
 })();

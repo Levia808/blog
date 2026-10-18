@@ -14,7 +14,7 @@
 | 部署 | GitHub Actions → **GH Pages（主站）** + Cloudflare Pages（备用） |
 | 内容管理 | **Sveltia CMS**（`/admin-cms/`）+ **自定义后台**（`/admin/`） |
 | 后端服务 | Supabase（认证、媒体存储、评论、动态、个人中心） |
-| 媒体存储 | Supabase `media` bucket（后台上传）+ GitHub `assets/images`（CMS 上传） |
+| 媒体存储 | 新媒体：GitHub `static/media/` → Cloudflare Pages；旧 Supabase URL 保留。移动端持久队列与限制见 `PAGES-MEDIA.md` |
 
 ---
 

@@ -7,7 +7,9 @@
 {{- if $P.auth }}
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>window.BLOG_MEDIA_ORIGIN = {{ site.Params.mediaOrigin | default "" | jsonify | safeJS }};</script>
+<script>window.BLOG_MEDIA_BACKEND = {{ site.Params.mediaBackend | default "" | jsonify | safeJS }}; window.BLOG_PAGES_MEDIA_ORIGIN = {{ site.Params.pagesMediaOrigin | default "https://blog-go3.pages.dev" | jsonify | safeJS }};</script>
 <script defer src="{{ "js/media-policy.js" | relURL }}?v={{ now.Unix }}"></script>
+<script defer src="{{ "js/github-media.js" | relURL }}?v={{ now.Unix }}"></script>
 <script defer src="{{ "js/media-storage.js" | relURL }}?v={{ now.Unix }}"></script>
 {{- if fileExists "static/js/supabase.js" }}<script defer src="{{ "js/supabase.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
 {{- if fileExists "static/js/auth-ui.js" }}<script defer src="{{ "js/auth-ui.js" | relURL }}?v={{ now.Unix }}"></script>{{ end }}
@@ -18,8 +20,9 @@
 {{- if not (eq .Layout "admin") }}
 {{ partial "float-player.html" . }}
 {{- end }}
-{{- if and $P.auth (or (eq .Layout "moments") (eq .Layout "profile")) (fileExists "static/js/pwa-sync.js") }}
+{{- if and $P.auth (fileExists "static/js/pwa-sync.js") }}
 <script defer src="{{ "js/pwa-sync.js" | relURL }}?v={{ now.Unix }}"></script>
+<script defer src="{{ "js/upload-status.js" | relURL }}?v={{ now.Unix }}"></script>
 {{- end }}
 {{- if and $P.auth (eq .Layout "moments") (fileExists "static/js/moments.js") }}
 <script defer src="{{ "js/moments.js" | relURL }}?v={{ now.Unix }}"></script>
