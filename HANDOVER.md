@@ -162,6 +162,8 @@ SQL Editor 读取 `storage.objects` 元数据得到的当前文件大小（MiB =
 
 **验收边界**：主域名 `https://l3via.cc.cd/` 当前在本机直连、现有代理和浏览器均遇到 TLS CONNECTION_CLOSED/UNEXPECTED_EOF；GitHub Pages API 返回证书 approved、HTTPS 强制开启，公共 DNS A 记录正确，尚不能据此定位连接中断原因。备用 Pages 站点可正常使用。未迁移或删除 499 个 Supabase 云端文件，未恢复 Supabase 登录/REST，未做真实手机锁屏/后台常驻验证。操作说明见 `PAGES-MEDIA.md`。
 
+**清理验收**：后续提交 `1a27b97c71c56f35c8bc8892e46c856a12a2a337` 已上线，[Actions 39117968557](https://github.com/Levia808/blog/actions/runs/39117968557) 及 Cloudflare 检查成功。当前 Git tree 和线上媒体库均无两个测试副本，待办 0 项，原始图标 HTTP 200；最新部署 `b7825c20.blog-go3.pages.dev` 的两个测试 URL 均 404，生产别名带新查询参数也返回 404。旧生产 URL 仍可从 CDN 读到旧缓存；[Cloudflare 官方资源保留说明](https://developers.cloudflare.com/pages/configuration/serving-pages/#asset-retention) 明确节点可保留至多一周，不宣称彻底擦除。后续同步完善删除提示及关联预览原子删除。旧媒体路径修复后，浏览器实测 3 个视频 readyState=4。
+
 ## 1. 技术架构
 
 ```

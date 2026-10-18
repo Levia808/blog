@@ -23,6 +23,7 @@
 - Pages 单文件最多 25 MiB；Free 每月 500 次构建。每个媒体任务的原图和预览只提交一次，部署检查不触发新构建。
 - 普通图片限制长边 2560px，预览 600px；沿用 HDR/动画保护规则。不安全转换的 HDR 图像保留原文件，因此可能需要在本机先处理尺寸。视频不会在手机浏览器中自动转码，应先用现有离线工具压缩到 25 MiB 内，保留 HDR 的限制见 `media-worker/README.md`。
 - 只上传公开素材。文件会进入 Git 历史；普通删除只从当前版本移除，不能清除仓库历史。SVG 需先转为 PNG/WebP，媒体路径在 Pages 上另设 sandbox/nosniff 响应头。
+- 新媒体删除时，原图及关联预览在一次提交中移除。删除完成仍需等待部署；Pages 旧资源缓存可能在节点保留最多一周，不能承诺旧链接立即失效，见 [Pages 资源保留说明](https://developers.cloudflare.com/pages/configuration/serving-pages/#asset-retention)。
 - 原有 Supabase URL 保留，历史文件未迁移或删除。`threads-reposts` 的读写仍使用原后端，以免把历史串文重定向到空目录；Edge Functions 未切换至 GitHub。
 - Supabase 402 仍阻断博客账号登录、动态和评论等云端操作。仓库媒体入口可单独使用；本机待办不等于数据库已经写入。
 - R2 代码作为可选方案保留，当前不启用；切换回旧默认需去掉 `mediaBackend`。已发布的 GitHub URL 不应随切换改写或删除。

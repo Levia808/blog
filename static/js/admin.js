@@ -2116,19 +2116,28 @@
     if (ghDeleteMedia) {
       window.Admin.confirmDialog({
         title: '[ 删除仓库文件 ]',
-        message: '确认删除仓库文件「' + ghDeleteMedia.dataset.ghMediaDelete + '」？此操作会提交删除，不可恢复。',
+        message: '确认从当前版本移除「' + ghDeleteMedia.dataset.ghMediaDelete + '」及关联预览（如有）？文件仍保留在 Git 历史中，Pages 旧缓存可能继续可访问。',
         confirmText: '删除',
         danger: true
       }).then(async function (ok) {
         if (!ok) return;
       try {
         ghDeleteMedia.disabled = true;
-        await ghFetch('/repos/' + GH_REPO + '/contents/' + ghDeleteMedia.dataset.ghPath, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: '删除媒体: ' + ghDeleteMedia.dataset.ghMediaDelete, sha: ghDeleteMedia.dataset.ghSha })
-        });
-        showToast('已删除：' + ghDeleteMedia.dataset.ghMediaDelete, 'success');
+        if (ghDeleteMedia.dataset.ghPath.startsWith('static/media/') && window.GitHubMedia) {
+          var parts = ghDeleteMedia.dataset.ghPath.slice('static/media/'.length).split('/');
+          var bucket = parts.shift();
+          var key = parts.join('/');
+          var previewKey = key.slice(0, key.lastIndexOf('/') + 1) + 'preview-' + key.slice(key.lastIndexOf('/') + 1);
+          var removed = await window.GitHubMedia.from(bucket).remove([key, previewKey]);
+          if (removed.error) throw removed.error;
+        } else {
+          await ghFetch('/repos/' + GH_REPO + '/contents/' + ghDeleteMedia.dataset.ghPath, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: '删除媒体: ' + ghDeleteMedia.dataset.ghMediaDelete, sha: ghDeleteMedia.dataset.ghSha })
+          });
+        }
+        showToast('已提交删除，等待 Pages 发布。', 'success');
         await loadMedia();
       } catch (error) {
         showError(errorText(error));
